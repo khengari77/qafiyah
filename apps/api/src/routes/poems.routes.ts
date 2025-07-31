@@ -39,13 +39,13 @@ app
           );
 
           if (
-            !result?.rows?.length ||
-            !result.rows[0]?.get_random_eligible_poem
+            !result?.length ||
+            !result[ 0 ]?.get_random_eligible_poem
           ) {
             throw new Error("No poem found");
           }
 
-          const poemJson = result.rows[0].get_random_eligible_poem;
+          const poemJson = result[ 0 ].get_random_eligible_poem;
           const poem: RandomPoemLines =
             typeof poemJson === "string" ? JSON.parse(poemJson) : poemJson;
 
@@ -65,7 +65,7 @@ app
             sql`SELECT get_random_eligible_poem_slug()`
           );
 
-          const row = result?.rows?.[0];
+          const row = result?.[ 0 ];
 
           if (!row || !row.get_random_eligible_poem_slug) {
             throw new Error("No poem slug found");
@@ -73,9 +73,9 @@ app
 
           const slug =
             typeof row.get_random_eligible_poem_slug === "object" &&
-            row.get_random_eligible_poem_slug !== null &&
-            "slug" in row.get_random_eligible_poem_slug &&
-            typeof row.get_random_eligible_poem_slug.slug === "string"
+              row.get_random_eligible_poem_slug !== null &&
+              "slug" in row.get_random_eligible_poem_slug &&
+              typeof row.get_random_eligible_poem_slug.slug === "string"
               ? row.get_random_eligible_poem_slug.slug
               : FALLBACK_RANDOM_POEM_SLUG;
 
@@ -101,19 +101,19 @@ app
       const db = c.get("db");
 
       const result = await db.execute(
-        sql`SELECT get_poem_with_related(${slug})`
+        sql`SELECT get_poem_with_related(${ slug })`
       );
 
       if (
         !result ||
-        !result.rows ||
-        !result.rows[0] ||
-        !result.rows[0].get_poem_with_related
+        !result.length ||
+        !result[ 0 ] ||
+        !result[ 0 ].get_poem_with_related
       ) {
         throw new HTTPException(404, { message: "Poem not found" });
       }
 
-      const uncheckedResponseData = result.rows[0]
+      const uncheckedResponseData = result[ 0 ]
         .get_poem_with_related as PoemWithRelatedResponse;
 
       if ("error" in uncheckedResponseData) {
@@ -135,7 +135,7 @@ app
         !poem.era_name ||
         !poem.era_slug
       ) {
-        console.error(`Incomplete poem data for slug: ${slug}`);
+        console.error(`Incomplete poem data for slug: ${ slug }`);
         throw new HTTPException(500, { message: "Incomplete poem data" });
       }
 

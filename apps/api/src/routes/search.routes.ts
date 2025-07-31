@@ -87,13 +87,13 @@ const app = new Hono<AppContext>().get(
         case "poems": {
           dbResult = await db.execute(
             sql`SELECT * FROM search_poems(
-              ${sanitizedQuery}::TEXT,
-              ${page}::INTEGER,
-              ${match_type}::TEXT,
-              ${meterIds ? sql`${meterIds}::INTEGER[]` : sql`NULL::INTEGER[]`},
-              ${eraIds ? sql`${eraIds}::INTEGER[]` : sql`NULL::INTEGER[]`},
-              ${themeIds ? sql`${themeIds}::INTEGER[]` : sql`NULL::INTEGER[]`},
-              ${rhymeIds ? sql`${rhymeIds}::INTEGER[]` : sql`NULL::INTEGER[]`}
+              ${ sanitizedQuery }::TEXT,
+              ${ page }::INTEGER,
+              ${ match_type }::TEXT,
+              ${ meterIds ? sql`${ meterIds }::INTEGER[]` : sql`NULL::INTEGER[]` },
+              ${ eraIds ? sql`${ eraIds }::INTEGER[]` : sql`NULL::INTEGER[]` },
+              ${ themeIds ? sql`${ themeIds }::INTEGER[]` : sql`NULL::INTEGER[]` },
+              ${ rhymeIds ? sql`${ rhymeIds }::INTEGER[]` : sql`NULL::INTEGER[]` }
             )`
           );
           break;
@@ -101,10 +101,10 @@ const app = new Hono<AppContext>().get(
         case "poets": {
           dbResult = await db.execute(
             sql`SELECT * FROM search_poets(
-              ${sanitizedQuery}::TEXT,
-              ${page}::INTEGER,
-              ${match_type}::TEXT,
-              ${eraIds ? sql`${eraIds}::INTEGER[]` : sql`NULL::INTEGER[]`}
+              ${ sanitizedQuery }::TEXT,
+              ${ page }::INTEGER,
+              ${ match_type }::TEXT,
+              ${ eraIds ? sql`${ eraIds }::INTEGER[]` : sql`NULL::INTEGER[]` }
             )`
           );
           break;
@@ -116,7 +116,7 @@ const app = new Hono<AppContext>().get(
         }
       }
 
-      const results = dbResult.rows || [];
+      const results = dbResult || [];
 
       if (results.length === 0 && results !== undefined) {
         return c.json({
@@ -135,8 +135,8 @@ const app = new Hono<AppContext>().get(
       }
 
       const totalResults =
-        results.length > 0 && results[0]?.total_count
-          ? Number(results[0].total_count)
+        results.length > 0 && results[ 0 ]?.total_count
+          ? Number(results[ 0 ].total_count)
           : 0;
       const resultsPerPage = search_type === "poems" ? 5 : 10;
       const totalPages = Math.ceil(totalResults / resultsPerPage);

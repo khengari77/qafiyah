@@ -1,14 +1,13 @@
-import type { NeonClient, NeonDatabase } from "drizzle-orm/neon-serverless";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
 export type Bindings = {
   DATABASE_URL: string;
-  SEARCH_DATABASE_URL: string;
 };
 
 export type AppContext = {
   Bindings: Bindings;
   Variables: {
-    db: NeonDatabase<Record<string, never>> & { $client: NeonClient };
+    db: PostgresJsDatabase<Record<string, never>>;
   };
 };
 
