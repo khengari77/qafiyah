@@ -60,11 +60,18 @@ export default function ErasClientPage() {
     numberOfItems: eras.length,
     itemListElement: itemListElements,
   };
+  let eraLabel = 'عصر';
+  if (eras.length > 2 && eras.length < 11) {
+    eraLabel = 'عصور';
+  }
 
   return (
     <>
       <JsonLd data={jsonLd} />
-      <SectionList title="العصور" dynamicTitle={`جميع العصور (${toArabicDigits(eras.length)} عصر)`}>
+      <SectionList
+        title="العصور"
+        dynamicTitle={`جميع العصور (${toArabicDigits(eras.length)} ${eraLabel})`}
+      >
         {eras.length > 0 ? (
           eras.map(({ id, name, poemsCount, poetsCount, slug }) => (
             <ListCard
