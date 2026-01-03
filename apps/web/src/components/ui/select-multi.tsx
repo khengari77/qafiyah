@@ -180,12 +180,10 @@ export function SelectMulti({
           aria-multiselectable={multiple}
           aria-activedescendant={`option-${highlightedIndex}`}
           style={{
-            maxHeight: '15rem',
             position: 'absolute',
-            bottom: '100%',
             left: 0,
             right: 0,
-            marginBottom: '0.25rem',
+            marginTop: '0.25rem',
             overflowY: 'auto',
           }}
         >
