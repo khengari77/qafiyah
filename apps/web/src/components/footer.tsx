@@ -7,7 +7,6 @@ import {
   DEVELOPER_SITE_URL,
   DEVELOPER_TWITTER_URL,
   GITHUB_REPO_URL,
-  TWITTER_URL,
 } from '@/constants/GLOBALS';
 import { cn } from '@/utils/conversions/cn';
 import React from 'react';
@@ -25,11 +24,9 @@ type FooterLinkProps = {
 
 const footerLinks: readonly FooterLinkProps[] = [
   // visible
-  { label: 'البريد', href: 'mailto:contact@qafiyah.com', screenReadersOnly: false },
-  { label: 'التويتر', href: TWITTER_URL, screenReadersOnly: false },
-  { label: 'الكود', href: GITHUB_REPO_URL, screenReadersOnly: false },
-  { label: 'البيانات', href: DATABASE_DUMPS_URL, screenReadersOnly: false },
-  { label: 'المطور', href: DEVELOPER_SITE_URL, screenReadersOnly: false },
+  { label: 'قاعدة البيانات', href: DATABASE_DUMPS_URL, screenReadersOnly: false },
+  { label: 'السورس كود', href: GITHUB_REPO_URL, screenReadersOnly: false },
+  { label: 'عن المطور', href: DEVELOPER_SITE_URL, screenReadersOnly: false },
   // screen readers only
   { label: 'تويتر المطور', href: DEVELOPER_TWITTER_URL, screenReadersOnly: true },
   { label: 'إنستغرام المطور', href: DEVELOPER_INSTAGRAM_URL, screenReadersOnly: true },
