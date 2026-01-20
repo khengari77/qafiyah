@@ -1,4 +1,4 @@
-import { API_URL, NOT_FOUND_TITLE, SITE_NAME } from '@/constants/GLOBALS';
+import { API_URL, NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { Metadata } from 'next';
 import { toArabicDigits } from 'to-arabic-digits';
@@ -78,12 +78,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         type: 'website',
         siteName: SITE_NAME,
         locale: 'ar_AR',
-        url: `/poets/slug/${slug}/page/${page || 1}`,
+        url: `${SITE_URL}/poets/${slug}/page/${page || 1}`,
         title: `قافية | ديوان ${poetName}`,
         description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
         images: [
           {
-            url: htmlHeadMetadata.openGraphUrl,
+            url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
             width: 1200,
             height: 630,
             type: 'image/png',
@@ -93,7 +93,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       twitter: {
         title: `قافية | ديوان ${poetName}`,
         description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
-        images: [htmlHeadMetadata.openGraphUrl],
+        images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
       },
     };
   } catch (error) {

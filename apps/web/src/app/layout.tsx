@@ -42,12 +42,12 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: SITE_NAME,
     locale: 'ar_AR',
-    url: '/',
+    url: SITE_URL,
     title: htmlHeadMetadata.title,
     description: htmlHeadMetadata.description,
     images: [
       {
-        url: htmlHeadMetadata.openGraphUrl,
+        url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
         width: 1200,
         height: 630,
         type: 'image/png',
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     creator: TWITTER_HANDLE,
     creatorId: TWITTER_ID,
     images: {
-      url: htmlHeadMetadata.twitterSummaryCardImageUrl,
+      url: `${SITE_URL}${htmlHeadMetadata.twitterSummaryCardImageUrl}`,
       height: 480,
       width: 480,
       alt: htmlHeadMetadata.description,

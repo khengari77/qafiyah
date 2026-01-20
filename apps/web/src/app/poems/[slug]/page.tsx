@@ -1,5 +1,5 @@
 import Loading from '@/app/loading';
-import { API_URL, NOT_FOUND_TITLE, SITE_NAME } from '@/constants/GLOBALS';
+import { API_URL, NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { PoemResponseData } from '@/lib/api/types';
 import type { Metadata } from 'next';
@@ -94,12 +94,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         type: 'website',
         siteName: SITE_NAME,
         locale: 'ar_AR',
-        url: `/poems/${slug}`,
+        url: `${SITE_URL}/poems/${slug}`,
         title,
         description,
         images: [
           {
-            url: htmlHeadMetadata.openGraphUrl,
+            url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
             width: 1200,
             height: 630,
             type: 'image/png',
@@ -115,7 +115,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description: `ديوان «${poet_name}» على موقع قافية`,
 
         images: {
-          url: htmlHeadMetadata.twitterSummaryCardImageUrl,
+          url: `${SITE_URL}${htmlHeadMetadata.twitterSummaryCardImageUrl}`,
           height: 480,
           width: 480,
           alt: `ديوان «${poet_name}» على موقع قافية`,

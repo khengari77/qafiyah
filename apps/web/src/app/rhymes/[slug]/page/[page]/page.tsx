@@ -1,4 +1,4 @@
-import { NOT_FOUND_TITLE, SITE_NAME } from '@/constants/GLOBALS';
+import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { Metadata } from 'next';
 import { toArabicDigits } from 'to-arabic-digits';
@@ -70,11 +70,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         type: 'website',
         siteName: SITE_NAME,
         locale: 'ar_AR',
-        url: `/rhymes/${slug}/page/${page || 1}`,
+        url: `${SITE_URL}/rhymes/${slug}/page/${page || 1}`,
         title: `قافية | قصائد على قافية ${rhymePattern}`,
         images: [
           {
-            url: htmlHeadMetadata.openGraphUrl,
+            url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
             width: 1200,
             height: 630,
             type: 'image/png',
@@ -83,7 +83,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       },
       twitter: {
         title: `قافية | قصائد على قافية ${rhymePattern}`,
-        images: [htmlHeadMetadata.openGraphUrl],
+        images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
       },
     };
   }

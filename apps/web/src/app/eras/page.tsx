@@ -1,4 +1,4 @@
-import { SITE_NAME } from '@/constants/GLOBALS';
+import { SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { Metadata } from 'next';
 import ErasClientPage from './client';
@@ -11,11 +11,11 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: SITE_NAME,
     locale: 'ar_AR',
-    url: '/eras',
+    url: `${SITE_URL}/eras`,
     title: 'قافية | تصفح حسب العصور',
     images: [
       {
-        url: htmlHeadMetadata.openGraphUrl,
+        url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
         width: 1200,
         height: 630,
         type: 'image/png',
@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     title: 'قافية | تصفح حسب العصور',
-    images: [htmlHeadMetadata.openGraphUrl],
+    images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
   },
 };
 
