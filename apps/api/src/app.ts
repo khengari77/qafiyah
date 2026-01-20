@@ -41,7 +41,7 @@ app.use(
     exposeHeaders: ["Content-Length", "Content-Type"],
     maxAge: 600,
     credentials: true,
-  })
+  }),
 );
 app.use(dbMiddleware);
 app.use(serveEmojiFavicon("📜"));
@@ -91,7 +91,7 @@ const routes = app
           error: error.message,
           status: error.status,
         },
-        error.status
+        error.status,
       );
     }
 
@@ -102,7 +102,7 @@ const routes = app
         error: "Internal Server Error. Global",
         status: 500,
       },
-      500
+      500,
     );
   });
 

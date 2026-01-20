@@ -8,7 +8,7 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
 
   try {
     if (!c.env.DATABASE_URL) {
-      throw new Error('Database configuration missing');
+      throw new Error("Database configuration missing");
     }
 
     client = postgres(c.env.DATABASE_URL, {
@@ -18,30 +18,28 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
       connect_timeout: 10,
       prepare: false,
       transform: { undefined: null },
-      onnotice: () => { },
+      onnotice: () => {},
     });
 
     const db = drizzle(client);
     c.set("db", db);
     await next();
-
   } catch (error) {
-    console.error('Database error:', error);
+    console.error("Database error:", error);
 
     if (client) {
       try {
         await client.end({ timeout: 2000 });
-      } catch {
-      }
+      } catch {}
     }
 
     return c.json(
       {
         success: false,
-        error: 'Database unavailable',
-        status: 503
+        error: "Database unavailable",
+        status: 503,
       },
-      503
+      503,
     );
   }
 });

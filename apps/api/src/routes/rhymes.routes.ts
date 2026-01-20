@@ -61,11 +61,11 @@ const app = new Hono<AppContext>()
           poemsCount: totalPoemsCount,
           totalUsage: totalPoetsCount + totalPoemsCount,
         };
-      }
+      },
     );
 
     const cleanup = enrichedGroups.sort((a, b) =>
-      a.name.localeCompare(b.name, "ar")
+      a.name.localeCompare(b.name, "ar"),
     );
 
     return c.json(createValidatedResponse("rhymesList", cleanup));
@@ -127,9 +127,9 @@ const app = new Hono<AppContext>()
       };
 
       return c.json(
-        createValidatedResponse("rhymesPoems", responseData, paginationMeta)
+        createValidatedResponse("rhymesPoems", responseData, paginationMeta),
       );
-    }
+    },
   )
   //! ERR HANDLING ------------------------------------------>
   .onError((error, c) => {
@@ -142,7 +142,7 @@ const app = new Hono<AppContext>()
           error: error.message,
           status: error.status,
         },
-        error.status
+        error.status,
       );
     }
 
@@ -152,7 +152,7 @@ const app = new Hono<AppContext>()
         error: "Internal Server Error. RHYMES Route",
         status: 500,
       },
-      500
+      500,
     );
   });
 

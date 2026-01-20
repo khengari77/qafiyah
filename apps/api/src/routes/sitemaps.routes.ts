@@ -57,7 +57,7 @@ const app = new Hono<AppContext>()
       (_, i) => ({
         url: `${API_URL}/sitemaps/poems/${i + 1}`,
         lastmod: new Date().toISOString(),
-      })
+      }),
     );
 
     const xml = generateSitemapIndexXml([...staticSitemaps, ...poemSitemaps]);
@@ -157,7 +157,7 @@ const app = new Hono<AppContext>()
         firstPagePriority: toPriority(0.8),
         baseChangefreq: "monthly",
         basePriority: toPriority(0.6),
-      })
+      }),
     );
 
     const xml = generateUrlEntriesXml([...poetListEntries, ...poetEntries]);
@@ -196,7 +196,7 @@ const app = new Hono<AppContext>()
         firstPagePriority: toPriority(0.8),
         baseChangefreq: "monthly",
         basePriority: toPriority(0.6),
-      })
+      }),
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
@@ -235,7 +235,7 @@ const app = new Hono<AppContext>()
         firstPagePriority: toPriority(0.8),
         baseChangefreq: "monthly",
         basePriority: toPriority(0.6),
-      })
+      }),
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
@@ -274,7 +274,7 @@ const app = new Hono<AppContext>()
         firstPagePriority: toPriority(0.8),
         baseChangefreq: "monthly",
         basePriority: toPriority(0.6),
-      })
+      }),
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
@@ -313,7 +313,7 @@ const app = new Hono<AppContext>()
         firstPagePriority: toPriority(0.8),
         baseChangefreq: "monthly",
         basePriority: toPriority(0.6),
-      })
+      }),
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
@@ -339,7 +339,7 @@ const app = new Hono<AppContext>()
         error: "Internal Server Error. SITEMAPS Route",
         status: 500,
       },
-      500
+      500,
     );
   });
 

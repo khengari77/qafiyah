@@ -37,7 +37,7 @@ export const rhymePoemsResponseSchema = paginatedResponseSchema(
   z.object({
     rhymeDetails: rhymeDetailsSchema,
     poems: z.array(rhymePoemSchema),
-  })
+  }),
 );
 
 // Request schemas

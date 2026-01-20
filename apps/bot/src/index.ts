@@ -51,14 +51,14 @@ function initializeTwitterClient(): Result<TwitterApi> {
     return err(
       error instanceof Error
         ? error
-        : new Error("Failed to initialize Twitter client")
+        : new Error("Failed to initialize Twitter client"),
     );
   }
 }
 
 async function withRetry<T>(
   operation: () => Promise<T>,
-  operationName: string
+  operationName: string,
 ): Promise<Result<T>> {
   for (let attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++) {
     try {
@@ -81,12 +81,12 @@ async function withRetry<T>(
       if (attempt < MAX_RETRY_ATTEMPTS) {
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
         console.log(
-          `⚠️ ${operationName}: Attempt ${attempt}/${MAX_RETRY_ATTEMPTS} failed. Retrying in ${delay}ms...`
+          `⚠️ ${operationName}: Attempt ${attempt}/${MAX_RETRY_ATTEMPTS} failed. Retrying in ${delay}ms...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         console.log(
-          `❌ ${operationName}: All ${MAX_RETRY_ATTEMPTS} attempts failed`
+          `❌ ${operationName}: All ${MAX_RETRY_ATTEMPTS} attempts failed`,
         );
         return err(errorObj);
       }
@@ -110,7 +110,7 @@ async function fetchFormattedPoem(): Promise<Result<string>> {
     const trimmedText = text.trim();
     if (trimmedText.length > MAX_TWEET_LENGTH) {
       throw new Error(
-        `Poem too long for Twitter (${trimmedText.length}/${MAX_TWEET_LENGTH})`
+        `Poem too long for Twitter (${trimmedText.length}/${MAX_TWEET_LENGTH})`,
       );
     }
 
@@ -120,7 +120,7 @@ async function fetchFormattedPoem(): Promise<Result<string>> {
 
 async function postTweet(
   twitterClient: TwitterApi,
-  content: string
+  content: string,
 ): Promise<Result<string>> {
   return await withRetry(async () => {
     const response = await twitterClient.v2.tweet(content);

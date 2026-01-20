@@ -41,7 +41,7 @@ Themes:
 - GET /themes/:slug/page/:page
 
 Repository:
-https://github.com/alwalxed/qafiyah`
+https://github.com/alwalxed/qafiyah`,
   );
 });
 

@@ -19,7 +19,7 @@ export const poetSchema = z.object({
 export const poetsListResponseSchema = paginatedResponseSchema(
   z.object({
     poets: z.array(poetSchema),
-  })
+  }),
 );
 
 // Schema for a poem in the poet's poems list
@@ -41,7 +41,7 @@ export const poetPoemsResponseSchema = paginatedResponseSchema(
   z.object({
     poetDetails: poetDetailsSchema,
     poems: z.array(poetPoemSchema),
-  })
+  }),
 );
 export const poetEraSchema = z.object({
   name: z.string(),

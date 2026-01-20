@@ -58,7 +58,7 @@ export const createPagedEntries = ({
 };
 
 export const generateUrlEntriesXml = (
-  entries: UrlEntry[]
+  entries: UrlEntry[],
 ) => `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${entries
@@ -69,7 +69,7 @@ ${entries
     <lastmod>${entry.lastmod}</lastmod>
     <changefreq>${entry.changefreq}</changefreq>
     <priority>${entry?.priority?.toFixed(1)}</priority>
-  </url>`
+  </url>`,
   )
   .join("")}
 </urlset>`;
@@ -80,7 +80,7 @@ interface SitemapEntry {
 }
 
 export const generateSitemapIndexXml = (
-  entries: SitemapEntry[]
+  entries: SitemapEntry[],
 ) => `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${entries
@@ -89,7 +89,7 @@ ${entries
   <sitemap>
     <loc>${entry.url}</loc>
     <lastmod>${entry.lastmod}</lastmod>
-  </sitemap>`
+  </sitemap>`,
   )
   .join("")}
 </sitemapindex>`;

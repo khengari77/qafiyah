@@ -37,7 +37,7 @@ export const eraPoemsResponseSchema = paginatedResponseSchema(
   z.object({
     eraDetails: eraDetailsSchema,
     poems: z.array(eraPoemSchema),
-  })
+  }),
 );
 
 // Request schemas

@@ -44,7 +44,9 @@ export const paginationMetaSchema = z.object({
   }),
 });
 
-export const createSuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+export const createSuccessResponseSchema = <T extends z.ZodTypeAny>(
+  dataSchema: T,
+) =>
   z.object({
     success: z.literal(true),
     data: dataSchema,
@@ -58,11 +60,12 @@ export const errorResponseSchema = z.object({
   status: nonNegativeIntSchema,
 });
 
-export const createApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
-  z.union([ createSuccessResponseSchema(dataSchema), errorResponseSchema ]);
+export const createApiResponseSchema = <T extends z.ZodTypeAny>(
+  dataSchema: T,
+) => z.union([createSuccessResponseSchema(dataSchema), errorResponseSchema]);
 
 export const createPaginatedResponseSchema = <T extends z.ZodTypeAny>(
-  dataSchema: T
+  dataSchema: T,
 ) =>
   createSuccessResponseSchema(dataSchema).extend({
     meta: paginationMetaSchema,

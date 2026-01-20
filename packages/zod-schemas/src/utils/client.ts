@@ -17,7 +17,7 @@ import {
 export async function fetchWithValidation<T extends ApiResponseType>(
   endpoint: T,
   url: string,
-  params?: Record<string, string>
+  params?: Record<string, string>,
 ): Promise<z.infer<(typeof responseSchemas)[T]>> {
   const queryString = params
     ? `?${new URLSearchParams(params).toString()}`
@@ -40,7 +40,7 @@ export async function fetchWithValidation<T extends ApiResponseType>(
  */
 export function validateParams<T extends ApiEndpoint>(
   endpoint: T,
-  params: unknown
+  params: unknown,
 ): z.infer<any> {
   return validateRequest(endpoint, params);
 }

@@ -16,7 +16,7 @@ const parseIdList = z
       return ids.every(
         (id) =>
           Number.isInteger(Number.parseInt(id, 10)) &&
-          Number.parseInt(id, 10) > 0
+          Number.parseInt(id, 10) > 0,
       );
     }
     return true;
@@ -58,7 +58,7 @@ export const poemsSearchResultSchema = z.object({
     .string()
     .or(z.number())
     .transform((val) =>
-      typeof val === "string" ? Number.parseInt(val, 10) : val
+      typeof val === "string" ? Number.parseInt(val, 10) : val,
     ),
 });
 
@@ -92,7 +92,7 @@ export const poetsSearchResultSchema = z.object({
     .string()
     .or(z.number())
     .transform((val) =>
-      typeof val === "string" ? Number.parseInt(val, 10) : val
+      typeof val === "string" ? Number.parseInt(val, 10) : val,
     ),
 });
 

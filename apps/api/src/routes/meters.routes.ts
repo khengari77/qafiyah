@@ -17,7 +17,7 @@ const app = new Hono<AppContext>()
       .where(inArray(meterStats.name, FORMAL_METERS));
     // ---------------------------------------------->
     const meterStatCleanResults = meterStatResults.sort((a, b) =>
-      a.name.localeCompare(b.name, "ar")
+      a.name.localeCompare(b.name, "ar"),
     );
 
     return c.json(createValidatedResponse("metersList", meterStatCleanResults));
@@ -79,9 +79,9 @@ const app = new Hono<AppContext>()
       };
 
       return c.json(
-        createValidatedResponse("metersPoems", responseData, paginationMeta)
+        createValidatedResponse("metersPoems", responseData, paginationMeta),
       );
-    }
+    },
   )
   //! ERR HANDLING ------------------------------------------>
   .onError((error, c) => {
@@ -94,7 +94,7 @@ const app = new Hono<AppContext>()
           error: error.message,
           status: error.status,
         },
-        error.status
+        error.status,
       );
     }
 
@@ -104,7 +104,7 @@ const app = new Hono<AppContext>()
         error: "Internal Server Error. METERS Route",
         status: 500,
       },
-      500
+      500,
     );
   });
 

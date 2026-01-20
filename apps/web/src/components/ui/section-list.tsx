@@ -6,7 +6,7 @@ type SectionListProps = {
   children: ReactNode;
   title?: string;
   dynamicTitle?: string;
-  customMargin?: string
+  customMargin?: string;
 };
 
 export function SectionList({
@@ -14,7 +14,7 @@ export function SectionList({
   dynamicTitle,
   children,
   noTitle,
-  customMargin
+  customMargin,
 }: SectionListProps) {
   return (
     <SectionWrapper

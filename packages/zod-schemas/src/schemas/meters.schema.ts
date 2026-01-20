@@ -36,7 +36,7 @@ export const meterPoemsResponseSchema = paginatedResponseSchema(
   z.object({
     meterDetails: meterDetailsSchema,
     poems: z.array(meterPoemSchema),
-  })
+  }),
 );
 
 // Request schemas

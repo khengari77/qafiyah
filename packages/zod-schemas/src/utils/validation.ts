@@ -45,27 +45,27 @@ const validationCache = new Map<string, boolean>();
 
 export function validateRequest<T extends ApiEndpoint>(
   endpoint: T,
-  params: unknown
-): z.infer<(typeof requestSchemas)[ T ]> {
-  const schema = requestSchemas[ endpoint ];
+  params: unknown,
+): z.infer<(typeof requestSchemas)[T]> {
+  const schema = requestSchemas[endpoint];
   if (!schema) {
-    throw new Error(`No schema found for endpoint: ${ endpoint }`);
+    throw new Error(`No schema found for endpoint: ${endpoint}`);
   }
   return schema.parse(params);
 }
 
 export function validateResponse<T extends ApiResponseType>(
   endpoint: T,
-  data: unknown
+  data: unknown,
 ): boolean {
-  const cacheKey = `${ endpoint }-${ JSON.stringify(data) }`;
+  const cacheKey = `${endpoint}-${JSON.stringify(data)}`;
   if (validationCache.has(cacheKey)) {
     return validationCache.get(cacheKey)!;
   }
 
-  const schema = responseSchemas[ endpoint ];
+  const schema = responseSchemas[endpoint];
   if (!schema) {
-    throw new Error(`No schema found for endpoint: ${ endpoint }`);
+    throw new Error(`No schema found for endpoint: ${endpoint}`);
   }
 
   const result = schema.safeParse(data).success;
@@ -79,16 +79,16 @@ export function validateResponse<T extends ApiResponseType>(
 
 export function getValidatedResponse<T extends ApiResponseType>(
   endpoint: T,
-  data: unknown
-): z.infer<(typeof responseSchemas)[ T ]> {
-  const schema = responseSchemas[ endpoint ];
+  data: unknown,
+): z.infer<(typeof responseSchemas)[T]> {
+  const schema = responseSchemas[endpoint];
   if (!schema) {
-    throw new Error(`No schema found for endpoint: ${ endpoint }`);
+    throw new Error(`No schema found for endpoint: ${endpoint}`);
   }
 
   const result = schema.safeParse(data);
   if (!result.success) {
-    throw new Error(`Invalid response data for endpoint: ${ endpoint }`);
+    throw new Error(`Invalid response data for endpoint: ${endpoint}`);
   }
   return result.data;
 }

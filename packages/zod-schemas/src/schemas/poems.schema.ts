@@ -37,7 +37,7 @@ export const poemDetailResponseSchema = apiResponseSchema(
     clearTitle: z.string(),
     processedContent: processedPoemContentSchema,
     relatedPoems: z.array(relatedPoemSchema).optional(),
-  })
+  }),
 );
 
 // Schema for random poem excerpt response

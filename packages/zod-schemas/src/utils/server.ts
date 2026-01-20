@@ -13,7 +13,7 @@ import { requestSchemas, responseSchemas } from "./validation";
 export function createValidatedResponse<T extends ApiResponseType>(
   endpoint: T,
   data: z.infer<any>,
-  meta?: Record<string, unknown>
+  meta?: Record<string, unknown>,
 ): z.infer<any> {
   // Get the schema for this endpoint
   const schema = responseSchemas[endpoint];
@@ -42,7 +42,7 @@ export function createValidatedResponse<T extends ApiResponseType>(
  */
 export function validateServerRequest<T extends ApiEndpoint>(
   endpoint: T,
-  params: unknown
+  params: unknown,
 ): z.infer<any> {
   const schema = requestSchemas[endpoint];
   const result = schema.safeParse(params);

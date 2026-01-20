@@ -14,7 +14,7 @@ const app = new Hono<AppContext>()
     const themeStatResults = await db.select().from(themeStats);
     // -------------------------------------------------------->
     const cleanup = themeStatResults.sort(
-      (a, b) => b.poemsCount - a.poemsCount
+      (a, b) => b.poemsCount - a.poemsCount,
     );
 
     return c.json(createValidatedResponse("themesList", cleanup));
@@ -77,9 +77,9 @@ const app = new Hono<AppContext>()
       };
 
       return c.json(
-        createValidatedResponse("themesPoems", responseData, paginationMeta)
+        createValidatedResponse("themesPoems", responseData, paginationMeta),
       );
-    }
+    },
   )
   //! ERR HANDLING ------------------------------------------>
   .onError((error, c) => {
@@ -92,7 +92,7 @@ const app = new Hono<AppContext>()
           error: error.message,
           status: error.status,
         },
-        error.status
+        error.status,
       );
     }
 
@@ -102,7 +102,7 @@ const app = new Hono<AppContext>()
         error: "Internal Server Error. THEMES Route",
         status: 500,
       },
-      500
+      500,
     );
   });
 

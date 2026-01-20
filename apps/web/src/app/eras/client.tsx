@@ -8,7 +8,7 @@ import { SectionSkeleton } from '@/components/ui/skeleton-wrapper';
 import { SITE_URL } from '@/constants/GLOBALS';
 import { getEras } from '@/lib/api/queries';
 import { useQuery } from '@tanstack/react-query';
-import { ArabicNounForms, formatArabicCount } from "arabic-count-format";
+import { ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import { toArabicDigits } from 'to-arabic-digits';
 
 export const runtime = 'edge';
@@ -62,36 +62,36 @@ export default function ErasClientPage() {
     itemListElement: itemListElements,
   };
 
-   const eraForms: ArabicNounForms = {
-			singular: "عصر",
-			dual: "عصران",
-			plural: "عصور",
-		};
+  const eraForms: ArabicNounForms = {
+    singular: 'عصر',
+    dual: 'عصران',
+    plural: 'عصور',
+  };
 
-		const eraLabel = formatArabicCount({
-			count: eras.length,
-			nounForms: eraForms,
-		});
+  const eraLabel = formatArabicCount({
+    count: eras.length,
+    nounForms: eraForms,
+  });
 
   return (
-			<>
-				<JsonLd data={jsonLd} />
-				<SectionList title="العصور" dynamicTitle={`جميع العصور (${eraLabel})`}>
-					{eras.length > 0 ? (
-						eras.map(({ id, name, poemsCount, poetsCount, slug }) => (
-							<ListCard
-								key={id}
-								name={name}
-								href={`/eras/${slug}/page/1/`}
-								title={`${toArabicDigits(poetsCount)} شاعر و ${toArabicDigits(poemsCount)} قصيدة`}
-							/>
-						))
-					) : (
-						<div className="text-red-500 text-center py-8">
-							حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.
-						</div>
-					)}
-				</SectionList>
-			</>
-		);
+    <>
+      <JsonLd data={jsonLd} />
+      <SectionList title="العصور" dynamicTitle={`جميع العصور (${eraLabel})`}>
+        {eras.length > 0 ? (
+          eras.map(({ id, name, poemsCount, poetsCount, slug }) => (
+            <ListCard
+              key={id}
+              name={name}
+              href={`/eras/${slug}/page/1/`}
+              title={`${toArabicDigits(poetsCount)} شاعر و ${toArabicDigits(poemsCount)} قصيدة`}
+            />
+          ))
+        ) : (
+          <div className="text-red-500 text-center py-8">
+            حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.
+          </div>
+        )}
+      </SectionList>
+    </>
+  );
 }

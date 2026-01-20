@@ -15,7 +15,7 @@ const app = new Hono<AppContext>()
     // ---------------------------------------------------->
     const eraStatCleanResults = eraStatResults.sort(
       (a, b) =>
-        ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name)
+        ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name),
     );
 
     return c.json(createValidatedResponse("erasList", eraStatCleanResults));
@@ -77,9 +77,9 @@ const app = new Hono<AppContext>()
       };
 
       return c.json(
-        createValidatedResponse("erasPoems", responseData, paginationMeta)
+        createValidatedResponse("erasPoems", responseData, paginationMeta),
       );
-    }
+    },
   )
   //! ERR HANDLING ------------------------------------------>
   .onError((error, c) => {
@@ -92,7 +92,7 @@ const app = new Hono<AppContext>()
           error: error.message,
           status: error.status,
         },
-        error.status
+        error.status,
       );
     }
 
@@ -102,7 +102,7 @@ const app = new Hono<AppContext>()
         error: "Internal Server Error. ERAS Route",
         status: 500,
       },
-      500
+      500,
     );
   });
 
