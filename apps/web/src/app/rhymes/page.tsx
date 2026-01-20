@@ -1,4 +1,4 @@
-import { SITE_URL } from '@/constants/GLOBALS';
+import { SITE_NAME } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { Metadata } from 'next';
 import RhymesClientPage from './client';
@@ -8,7 +8,10 @@ export const runtime = 'edge';
 export const metadata: Metadata = {
   title: 'قافية | تصفح حسب القوافي',
   openGraph: {
-    url: `${SITE_URL}/rhymes`,
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'ar_AR',
+    url: '/rhymes',
     title: 'قافية | تصفح حسب القوافي',
     images: [
       {

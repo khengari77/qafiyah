@@ -1,5 +1,3 @@
-import { SITE_URL } from './GLOBALS';
-
 export const htmlHeadMetadata = {
   title: 'قافية: مرجع الشعر العربي',
   description:
@@ -18,8 +16,8 @@ export const htmlHeadMetadata = {
     'قصائد مشهورة',
     'شعر نبطي',
   ],
-  openGraphUrl: `${SITE_URL}/open-graph-white.png`,
-  twitterSummaryCardImageUrl: `${SITE_URL}/twitter-summary-card-white.png`,
+  openGraphUrl: '/open-graph-white.png',
+  twitterSummaryCardImageUrl: '/twitter-summary-card-white.png',
   poetName: 'قافية',
   author: 'قافية',
   articleSection: 'شعر',

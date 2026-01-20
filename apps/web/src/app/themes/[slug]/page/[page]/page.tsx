@@ -1,4 +1,4 @@
-import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/GLOBALS';
+import { NOT_FOUND_TITLE, SITE_NAME } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { Metadata } from 'next';
 import { toArabicDigits } from 'to-arabic-digits';
@@ -48,7 +48,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return {
       title,
       openGraph: {
-        url: `${SITE_URL}/themes/${slug}/page/${page || 1}`,
+        type: 'website',
+        siteName: SITE_NAME,
+        locale: 'ar_AR',
+        url: `/themes/${slug}/page/${page || 1}`,
         title,
         images: [
           {

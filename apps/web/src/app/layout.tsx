@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     type: 'website',
     siteName: SITE_NAME,
     locale: 'ar_AR',
-    url: SITE_URL,
+    url: '/',
     title: htmlHeadMetadata.title,
     description: htmlHeadMetadata.description,
     images: [

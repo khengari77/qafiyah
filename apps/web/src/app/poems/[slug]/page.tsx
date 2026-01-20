@@ -1,5 +1,5 @@
 import Loading from '@/app/loading';
-import { API_URL, NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
+import { API_URL, NOT_FOUND_TITLE, SITE_NAME } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { PoemResponseData } from '@/lib/api/types';
 import type { Metadata } from 'next';
@@ -91,7 +91,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         },
       },
       openGraph: {
-        url: `${SITE_URL}/poems/${slug}`,
+        type: 'website',
+        siteName: SITE_NAME,
+        locale: 'ar_AR',
+        url: `/poems/${slug}`,
         title,
         description,
         images: [

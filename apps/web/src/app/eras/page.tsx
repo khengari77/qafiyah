@@ -1,4 +1,4 @@
-import { SITE_URL } from '@/constants/GLOBALS';
+import { SITE_NAME } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { Metadata } from 'next';
 import ErasClientPage from './client';
@@ -8,7 +8,10 @@ export const runtime = 'edge';
 export const metadata: Metadata = {
   title: 'قافية | تصفح حسب العصور',
   openGraph: {
-    url: `${SITE_URL}/eras`,
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'ar_AR',
+    url: '/eras',
     title: 'قافية | تصفح حسب العصور',
     images: [
       {
