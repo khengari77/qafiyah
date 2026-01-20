@@ -18,11 +18,15 @@ export function useSearchType(defaultValue: SearchType = 'poems') {
   );
 }
 
-export function useMatchType(defaultValue: MatchType = 'all') {
-  return useQueryState(
+export function useMatchType(defaultValue: MatchType = 'exact') {
+  const [matchType, setMatchType] = useQueryState(
     'match_type',
     parseAsStringEnum<MatchType>(['all', 'any', 'exact']).withDefault(defaultValue)
   );
+  
+  // Ensure default is always 'exact' when value is null/undefined
+  // withDefault should handle this, but we add a fallback to be safe
+  return [matchType ?? defaultValue, setMatchType] as const;
 }
 
 export function useRhymeIds() {

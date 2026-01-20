@@ -28,7 +28,7 @@ export function useSearch() {
     setThemeIds,
     resetAllParamStates,
   } = useInfiniteQuery({
-    initialMatchType: 'all',
+    initialMatchType: 'exact',
     initialSearchType: 'poems',
     queryKey: 'search',
   });
