@@ -26,56 +26,16 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Cache build output
-        uses: actions/cache@v4
-        id: build-cache
-        with:
-          path: apps/bot/dist
-          key: ${{ runner.os }}-bot-build-${{ hashFiles('apps/bot/src/**/*.ts', 'apps/bot/tsconfig.json') }}
-          restore-keys: |
-            ${{ runner.os }}-bot-build-
-
       - name: Build bot
-        if: steps.build-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @qaf/bot build
 
       - name: Run bot
-        id: run-bot
         env:
           TWITTER_APP_KEY: ${{ secrets.TWITTER_APP_KEY }}
           TWITTER_APP_SECRET: ${{ secrets.TWITTER_APP_SECRET }}
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
         run: pnpm --filter @qaf/bot start
-
-      - name: Report failure
-        if: failure()
-        run: |
-          echo "::error::Workflow failed - Scheduled tweet did not complete successfully"
-          echo "## Workflow Failure Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Job:** Scheduled Tweet" >> $GITHUB_STEP_SUMMARY
-          echo "- **Time:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
-          echo "- **Check the logs above for detailed error messages**" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Common issues:" >> $GITHUB_STEP_SUMMARY
-          echo "- Missing or invalid Twitter API credentials" >> $GITHUB_STEP_SUMMARY
-          echo "- API endpoint unavailable or returning errors" >> $GITHUB_STEP_SUMMARY
-          echo "- Rate limiting from Twitter API" >> $GITHUB_STEP_SUMMARY
-          echo "- Network connectivity issues" >> $GITHUB_STEP_SUMMARY
