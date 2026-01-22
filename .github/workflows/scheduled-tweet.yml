@@ -1,4 +1,4 @@
-name: scheduled-tweet
+name: Scheduled Tweet
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   tweet:
-    name: scheduled-tweet
+    name: Scheduled Tweet
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -19,6 +19,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -42,10 +43,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Cache build output
+        uses: actions/cache@v4
+        id: build-cache
+        with:
+          path: apps/bot/dist
+          key: ${{ runner.os }}-bot-build-${{ hashFiles('apps/bot/src/**/*.ts', 'apps/bot/tsconfig.json') }}
+          restore-keys: |
+            ${{ runner.os }}-bot-build-
+
       - name: Build bot
+        if: steps.build-cache.outputs.cache-hit != 'true'
         run: pnpm --filter @qaf/bot build
 
       - name: Run bot
+        id: run-bot
         env:
           TWITTER_APP_KEY: ${{ secrets.TWITTER_APP_KEY }}
           TWITTER_APP_SECRET: ${{ secrets.TWITTER_APP_SECRET }}
@@ -56,5 +68,14 @@ jobs:
       - name: Report failure
         if: failure()
         run: |
-          echo "Workflow failed"
-          echo "Check the logs above for details"
+          echo "::error::Workflow failed - Scheduled tweet did not complete successfully"
+          echo "## Workflow Failure Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Job:** Scheduled Tweet" >> $GITHUB_STEP_SUMMARY
+          echo "- **Time:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+          echo "- **Check the logs above for detailed error messages**" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Common issues:" >> $GITHUB_STEP_SUMMARY
+          echo "- Missing or invalid Twitter API credentials" >> $GITHUB_STEP_SUMMARY
+          echo "- API endpoint unavailable or returning errors" >> $GITHUB_STEP_SUMMARY
+          echo "- Rate limiting from Twitter API" >> $GITHUB_STEP_SUMMARY
+          echo "- Network connectivity issues" >> $GITHUB_STEP_SUMMARY
