@@ -64,7 +64,7 @@ async function withRetry<T>(
     try {
       const result = await operation();
       if (attempt > 1) {
-        console.log(`🔄 ${operationName} succeeded on attempt ${attempt}`);
+        console.log(`${operationName} succeeded on attempt ${attempt}`);
       }
       return ok(result);
     } catch (error) {
@@ -72,21 +72,20 @@ async function withRetry<T>(
         error instanceof Error ? error : new Error(String(error));
       const message = errorObj.message.toLowerCase();
 
-      // Don't retry rate limits
       if (message.includes("429") || message.includes("too many requests")) {
-        console.log(`🚫 ${operationName}: Rate limited`);
+        console.log(`${operationName}: Rate limited`);
         return err(new Error("Rate limit hit. Aborting."));
       }
 
       if (attempt < MAX_RETRY_ATTEMPTS) {
         const delay = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt - 1);
         console.log(
-          `⚠️ ${operationName}: Attempt ${attempt}/${MAX_RETRY_ATTEMPTS} failed. Retrying in ${delay}ms...`,
+          `${operationName}: Attempt ${attempt}/${MAX_RETRY_ATTEMPTS} failed. Retrying in ${delay}ms...`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         console.log(
-          `❌ ${operationName}: All ${MAX_RETRY_ATTEMPTS} attempts failed`,
+          `${operationName}: All ${MAX_RETRY_ATTEMPTS} attempts failed`,
         );
         return err(errorObj);
       }
@@ -132,33 +131,33 @@ async function postTweet(
 }
 
 async function run(): Promise<void> {
-  console.log("🤖 Starting poem bot...");
+  console.log("Starting poem bot...");
 
   const clientResult = initializeTwitterClient();
   if (!clientResult.ok) {
-    console.error(`❌ Setup failed: ${clientResult.error.message}`);
+    console.error(`Setup failed: ${clientResult.error.message}`);
     process.exit(1);
   }
 
-  console.log("✅ Twitter client initialized");
+  console.log("Twitter client initialized");
   const twitterClient = clientResult.value;
 
   const poemResult = await fetchFormattedPoem();
   if (!poemResult.ok) {
-    console.error(`❌ Failed to fetch poem: ${poemResult.error.message}`);
+    console.error(`Failed to fetch poem: ${poemResult.error.message}`);
     process.exit(1);
   }
 
   const poem = poemResult.value;
-  console.log(`📝 Poem ready (${poem.length}/${MAX_TWEET_LENGTH} chars)`);
+  console.log(`Poem ready (${poem.length}/${MAX_TWEET_LENGTH} chars)`);
 
   const tweetResult = await postTweet(twitterClient, poem);
   if (!tweetResult.ok) {
-    console.error(`❌ Failed to post tweet: ${tweetResult.error.message}`);
+    console.error(`Failed to post tweet: ${tweetResult.error.message}`);
     process.exit(1);
   }
 
-  console.log(`🎉 Successfully tweeted! ID: ${tweetResult.value}`);
+  console.log(`Successfully tweeted! ID: ${tweetResult.value}`);
   process.exit(0);
 }
 

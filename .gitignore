@@ -42,3 +42,9 @@ yarn-error.log*
 *.pem
 packages/zod-schemas/tsup.config.bundled_jjm3lh3p4d.mjs
 *.tsbuildinfo
+
+# Database setup backups
+.db_setup_backups/
+
+# Docker volumes
+docker-compose.override.yml

@@ -1,11 +1,11 @@
-import type { Poem } from "../types";
+import type { RandomPoemLines } from "../types";
 
 /**
  * Extracts a random excerpt from a poem
  * @param poem Poem object
  * @returns Formatted excerpt with poet name
  */
-export function extractPoemExcerpt(poem: Poem): string {
+export function extractPoemExcerpt(poem: RandomPoemLines): string {
   // Use a single split operation and cache the result
   const lines = poem.content.split("*");
   const lineCount = lines.length;
