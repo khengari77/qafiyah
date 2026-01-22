@@ -65,8 +65,11 @@ export default function PoemSlugClientPage() {
           <div className="h-10 bg-zinc-300/40 rounded-md w-3/4 mb-6"></div>
           <div className="h-6 bg-zinc-300/40 rounded-md w-1/2 mb-8"></div>
           <div className="space-y-4 w-full">
-            {Array.from({ length: 8 }).map((_, index) => (
-              <div key={index} className="flex justify-between gap-4 w-full">
+            {Array.from({ length: 8 }, (_, i) => i).map((skeletonId) => (
+              <div
+                key={`skeleton-verse-${skeletonId}`}
+                className="flex justify-between gap-4 w-full"
+              >
                 <div className="h-6 bg-zinc-300/40 rounded-md w-1/2"></div>
                 <div className="h-6 bg-zinc-300/40 rounded-md w-1/2"></div>
               </div>

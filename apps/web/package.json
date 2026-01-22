@@ -6,23 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "type-check": "tsc --noEmit",
     "check": "pnpm run type-check && pnpm run lint",
     "pages:build": "pnpm next-on-pages",
     "preview": "pnpm pages:build && wrangler pages dev",
     "deploy": "pnpm pages:build && wrangler pages deploy",
-    "cf-typegen": "pnpx wrangler types --env-interface CloudflareEnv env.d.ts",
-    "format": "pnpx prettier --write ."
+    "cf-typegen": "pnpx wrangler types --env-interface CloudflareEnv env.d.ts"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint --fix",
-      "pnpx prettier --write"
-    ],
-    "*.{json,md,mdx,css}": [
-      "pnpx prettier --write"
-    ]
+    "*.{js,jsx,ts,tsx,json,md,mdx,css}": ["biome check --write"]
   },
   "simple-git-hooks": {
     "pre-commit": "npx --no -- pnpm lint-staged"
@@ -63,34 +58,18 @@
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "1",
-    "@eslint/eslintrc": "^3",
-    "@eslint/js": "^9.24.0",
-    "@next/eslint-plugin-next": "^15.3.0",
     "@types/node": "^20",
     "@types/pg": "^8.11.11",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@typescript-eslint/eslint-plugin": "^8.29.1",
-    "@typescript-eslint/parser": "^8.29.1",
     "autoprefixer": "^10.4.21",
     "drizzle-kit": "^0.30.6",
-    "eslint": "^9",
-    "eslint-config-next": "15.2.1",
-    "eslint-config-prettier": "^10.1.2",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-jsx-a11y": "^6.10.2",
-    "eslint-plugin-prettier": "^5.2.6",
-    "eslint-plugin-react": "^7.37.5",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-sonarjs": "^3.0.2",
     "lint-staged": "^15.5.0",
     "postcss": "^8.5.3",
-    "prettier": "^3.5.3",
     "simple-git-hooks": "^2.12.1",
     "tailwindcss": "^3.4.17",
     "tailwindcss-debug-screens": "2",
     "typescript": "^5",
-    "typescript-eslint": "^8.29.1",
     "vercel": "^41.5.0",
     "wrangler": "^4.9.1"
   }

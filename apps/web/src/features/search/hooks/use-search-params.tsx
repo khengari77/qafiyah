@@ -23,7 +23,7 @@ export function useMatchType(defaultValue: MatchType = 'exact') {
     'match_type',
     parseAsStringEnum<MatchType>(['all', 'any', 'exact']).withDefault(defaultValue)
   );
-  
+
   // Ensure default is always 'exact' when value is null/undefined
   // withDefault should handle this, but we add a fallback to be safe
   return [matchType ?? defaultValue, setMatchType] as const;

@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { pageStringNumberSchema } from "./common.schema";
+import { z } from 'zod';
+import { pageStringNumberSchema } from './common.schema';
 
 /*
 ------------------------------------------------->
@@ -12,11 +12,9 @@ const parseIdList = z
   .optional()
   .refine((val) => {
     if (val) {
-      const ids = val.split(",").map((v) => v.trim());
+      const ids = val.split(',').map((v) => v.trim());
       return ids.every(
-        (id) =>
-          Number.isInteger(Number.parseInt(id, 10)) &&
-          Number.parseInt(id, 10) > 0,
+        (id) => Number.isInteger(Number.parseInt(id, 10)) && Number.parseInt(id, 10) > 0
       );
     }
     return true;
@@ -30,8 +28,8 @@ export const searchRequestSchema = z.object({
     .max(50)
     .regex(/^[\u0600-\u06FF\s]{2,}$/),
   page: pageStringNumberSchema,
-  search_type: z.enum(["poems", "poets"]),
-  match_type: z.enum(["exact", "all", "any"]),
+  search_type: z.enum(['poems', 'poets']),
+  match_type: z.enum(['exact', 'all', 'any']),
   // optional
   meter_ids: parseIdList,
   era_ids: parseIdList,
@@ -57,9 +55,7 @@ export const poemsSearchResultSchema = z.object({
   total_count: z
     .string()
     .or(z.number())
-    .transform((val) =>
-      typeof val === "string" ? Number.parseInt(val, 10) : val,
-    ),
+    .transform((val) => (typeof val === 'string' ? Number.parseInt(val, 10) : val)),
 });
 
 export const poemsSearchResponseSchema = z.object({
@@ -91,9 +87,7 @@ export const poetsSearchResultSchema = z.object({
   total_count: z
     .string()
     .or(z.number())
-    .transform((val) =>
-      typeof val === "string" ? Number.parseInt(val, 10) : val,
-    ),
+    .transform((val) => (typeof val === 'string' ? Number.parseInt(val, 10) : val)),
 });
 
 export const poetsSearchResponseSchema = z.object({

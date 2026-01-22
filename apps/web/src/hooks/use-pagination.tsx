@@ -23,7 +23,7 @@ export function usePagination({ totalItems = 0, currentPage, slug }: UsePaginati
   // Validate page number and redirect if invalid
   useEffect(() => {
     // Check if page is invalid
-    if (isNaN(currentPage) || currentPage < 1) {
+    if (Number.isNaN(currentPage) || currentPage < 1) {
       router.push('/404');
       return;
     }

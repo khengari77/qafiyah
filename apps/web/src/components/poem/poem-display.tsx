@@ -18,7 +18,7 @@ export type PoemProps = {
 export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedPoems }: PoemProps) {
   const { decreaseFontSize, increaseFontSize, getVerseFontSize, getVerseGap } = useFontSize();
   const { handleTwitterShare } = useTweetUrl();
-  const verseCountNum = parseInt(String(verseCount), 10) || 0;
+  const verseCountNum = Number.parseInt(String(verseCount), 10) || 0;
 
   return (
     <div className="w-full flex justify-center items-start my-14 xs:my-20 lg:my-28">
@@ -39,14 +39,15 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
               </a>
             </h2>
 
-            <a
+            <button
               onClick={handleTwitterShare}
+              type="button"
               className="flex w-full justify-center items-center mt-1 sm:mt-2 cursor-pointer"
             >
               <div className="bg-white/5 px-2 lg:px-4 rounded-md border border-zinc-300/60 flex justify-center items-center text-zinc-600 text-[8px] xxs:text-xs md:text-base">
                 <p>غرد</p>
               </div>
-            </a>
+            </button>
           </div>
 
           <div className="flex w-full md:w-8/12 border border-zinc-300/80 px-2.5 md:px-8 lg:px-16 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl justify-between items-center text-zinc-600 rounded-full">
@@ -78,7 +79,7 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
             <div className="w-full sm:w-11/12 md:w-10/12 xl:w-6/12">
               {verses.map((verse, index) => (
                 <div
-                  key={index}
+                  key={`verse-${index}-${verse[0]?.slice(0, 10) || index}`}
                   className="py-6 md:py-8 border-b border-zinc-50 last:border-b-0 flex flex-col w-full justify-center items-center gap-4"
                   style={{ ...getVerseGap() }}
                 >

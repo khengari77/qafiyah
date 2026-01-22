@@ -3,7 +3,7 @@
 import { Input } from '@/components/shadcn/input';
 import { cn } from '@/lib/utils';
 import { CircleX } from 'lucide-react';
-import { type ChangeEventHandler, type KeyboardEventHandler } from 'react';
+import type { ChangeEventHandler, KeyboardEventHandler } from 'react';
 
 type Props = {
   hasSubmitted: boolean;
@@ -92,9 +92,6 @@ function PreservedErrorSpace({
   validationError: string | null;
   hasSubmitted: boolean;
 }) {
-  {
-    /* Error message container with fixed height to prevent layout shift */
-  }
   return (
     <div tabIndex={-1} className={cn('mb-2 h-4 flex justify-between items-center')}>
       {validationError && hasSubmitted && (

@@ -12,7 +12,7 @@ export function useNavLinks({ isMobile = false, onLinkClick }: Props = {}) {
   const pathname = usePathname();
   const { toggleMobileMenu } = useNavStore();
 
-  const isActive = (href: string) => pathname === href || pathname?.startsWith(href + '/');
+  const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
 
   const handleLinkClick = () => {
     if (isMobile) {

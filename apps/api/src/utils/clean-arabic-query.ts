@@ -8,7 +8,7 @@
 export function cleanArabicQuery(q: string): string {
   return q
     .trim()
-    .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u0621-\u064A\s]/g, "")
-    .replace(/\s+/g, " ")
+    .replace(/[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\u0621-\u064A\s]/g, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }

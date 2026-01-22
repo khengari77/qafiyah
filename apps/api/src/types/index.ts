@@ -1,4 +1,4 @@
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 export type Bindings = {
   DATABASE_URL: string;
@@ -47,6 +47,4 @@ type PoemWithRelatedError = {
   message?: string;
 };
 
-export type PoemWithRelatedResponse =
-  | PoemWithRelatedSuccess
-  | PoemWithRelatedError;
+export type PoemWithRelatedResponse = PoemWithRelatedSuccess | PoemWithRelatedError;

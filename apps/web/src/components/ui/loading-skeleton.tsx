@@ -19,8 +19,11 @@ export function LoadingSkeleton({
 
   return (
     <div className="animate-pulse">
-      {Array.from({ length: count }).map((_, index) => (
-        <div key={index} className={`${height} bg-gray-200 rounded-md ${className}`}></div>
+      {Array.from({ length: count }, (_, i) => i).map((skeletonId) => (
+        <div
+          key={`skeleton-item-${skeletonId}`}
+          className={`${height} bg-gray-200 rounded-md ${className}`}
+        ></div>
       ))}
     </div>
   );

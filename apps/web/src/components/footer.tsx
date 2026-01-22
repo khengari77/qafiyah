@@ -36,7 +36,6 @@ const footerLinks: readonly FooterLinkProps[] = [
 function FooterLink({ label, href, screenReadersOnly }: FooterLinkProps) {
   return (
     <a
-      aria-hidden={screenReadersOnly}
       tabIndex={screenReadersOnly ? -1 : 0}
       className={cn('hover:cursor-pointer hover:underline', screenReadersOnly && 'sr-only')}
       href={href}

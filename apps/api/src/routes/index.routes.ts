@@ -1,7 +1,7 @@
-import { Hono } from "hono";
-import type { AppContext } from "../types";
+import { Hono } from 'hono';
+import type { AppContext } from '../types';
 
-const app = new Hono<AppContext>().get("/", (c) => {
+const app = new Hono<AppContext>().get('/', (c) => {
   return c.text(
     `Qafiyah API Reference
 
@@ -41,7 +41,7 @@ Themes:
 - GET /themes/:slug/page/:page
 
 Repository:
-https://github.com/alwalxed/qafiyah`,
+https://github.com/alwalxed/qafiyah`
   );
 });
 

@@ -1,12 +1,12 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 export function useInputValidation() {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  const validateInput = (input: string): string | null => {
+  const validateInput = useCallback((input: string): string | null => {
     const arabicRegex = /^[\u0600-\u06FF\s]+$/;
 
     if (!arabicRegex.test(input)) {
@@ -31,12 +31,12 @@ export function useInputValidation() {
     }
 
     return null;
-  };
+  }, []);
 
-  const resetValidation = () => {
+  const resetValidation = useCallback(() => {
     setValidationError(null);
     setHasSubmitted(false);
-  };
+  }, []);
 
   return useMemo(
     () => ({
@@ -47,6 +47,6 @@ export function useInputValidation() {
       setHasSubmitted,
       resetValidation,
     }),
-    [hasSubmitted, validationError]
+    [hasSubmitted, validationError, validateInput, resetValidation]
   );
 }

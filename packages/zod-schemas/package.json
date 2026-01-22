@@ -2,7 +2,6 @@
   "name": "@qaf/zod-schemas",
   "version": "1.0.0",
   "dependencies": {
-    "@qaf/eslint-config": "workspace:*",
     "@qaf/typescript-config": "workspace:*",
     "zod": "^3.24.1"
   },
@@ -36,12 +35,12 @@
     "clean": "rm -rf dist .tsbuildinfo",
     "dev": "tsup --watch",
     "dev:verbose": "tsup --watch",
-    "lint": "eslint src/**/*.ts --cache",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
     "test": "jest",
     "typecheck": "tsc --noEmit"
   },
   "types": "./dist/index.d.ts",
-  "files": [
-    "dist/**/*"
-  ]
+  "files": ["dist/**/*"]
 }

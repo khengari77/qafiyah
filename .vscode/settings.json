@@ -13,11 +13,7 @@
   "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
   "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
   "[markdown]": { "editor.defaultFormatter": "biomejs.biome" },
-  "cSpell.words": [
-    "alwalxed",
-    "Qafiyah",
-    "tashkeel"
-  ],
+  "cSpell.words": ["alwalxed", "Qafiyah", "tashkeel"],
   "typescript.tsdk": "node_modules/typescript/lib",
 
   "files.exclude": {

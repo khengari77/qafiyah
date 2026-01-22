@@ -1,9 +1,9 @@
-import { type SelectOption } from '@/components/ui/select';
+import type { SelectOption } from '@/components/ui/select';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import { BinaryToggleButton } from '@/components/ui/toggle-button';
 import { cn } from '@/utils/conversions/cn';
-import { type ArabicNounForms } from 'arabic-count-format';
+import type { ArabicNounForms } from 'arabic-count-format';
 import { Loader2, SearchIcon } from 'lucide-react';
 
 type Props = {
@@ -104,7 +104,7 @@ export function Filters({
     <div className="px-8 py-10 lg:px-10 lg:py-10 gap-14 bg-white rounded-xl border border-zinc-300/40 relative flex flex-between flex-col">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10 w-full h-full flex-1">
         <div className={containerClassname}>
-          <label className={labelClassname}>{searchTypeLabelText}</label>
+          <p className={labelClassname}>{searchTypeLabelText}</p>
           <BinaryToggleButton
             currentValue={searchParamsSearchType}
             onToggle={handleCustomSearchTypeChange}
@@ -113,7 +113,7 @@ export function Filters({
         </div>
 
         <div className={containerClassname}>
-          <label className={labelClassname}>{matchTypeLabelText}</label>
+          <p className={labelClassname}>{matchTypeLabelText}</p>
           <SelectSingle
             options={matchTypeOptions}
             value={searchParamsMatchType}
@@ -123,7 +123,7 @@ export function Filters({
         </div>
 
         <div className={containerClassname}>
-          <label className={labelClassname}>{erasLabelText}</label>
+          <p className={labelClassname}>{erasLabelText}</p>
           <SelectMulti
             options={erasOptions}
             value={selectedEras}
@@ -137,7 +137,7 @@ export function Filters({
         {searchType === 'poems' && (
           <>
             <div className={containerClassname}>
-              <label className={labelClassname}>{metersLabelText}</label>
+              <p className={labelClassname}>{metersLabelText}</p>
               <SelectMulti
                 options={metersOptions}
                 value={selectedMeters}
@@ -149,7 +149,7 @@ export function Filters({
             </div>
 
             <div className={containerClassname}>
-              <label className={labelClassname}>{themesLabelText}</label>
+              <p className={labelClassname}>{themesLabelText}</p>
               <SelectMulti
                 options={themesOptions}
                 value={selectedThemes}
@@ -161,7 +161,7 @@ export function Filters({
             </div>
 
             <div className={containerClassname}>
-              <label className={labelClassname}>{rhymesLabelText}</label>
+              <p className={labelClassname}>{rhymesLabelText}</p>
               <SelectMulti
                 options={rhymesOptions}
                 value={selectedRhymes}

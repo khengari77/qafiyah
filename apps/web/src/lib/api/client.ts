@@ -46,7 +46,7 @@ const apiClient = (baseUrl: string) => {
       data: PoemsSearchResponseData | PoetsSearchResponseData;
       pagination?: PaginationMeta;
     }> {
-      let validParams;
+      let validParams: ReturnType<typeof validateParams<'search'>>;
 
       switch (searchType) {
         case 'poems': {
@@ -130,14 +130,13 @@ const apiClient = (baseUrl: string) => {
       try {
         const response = await fetch(`${API_URL}/poems/random?option=lines`);
         if (!response.ok) {
-          return `إن الذي سمك السماء بنى لنا`;
+          return 'إن الذي سمك السماء بنى لنا';
         }
         const content = await response.text();
 
         return removeTashkeel(content.trim().split('\n')[0]);
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
-        return `إن الذي سمك السماء بنى لنا`;
+      } catch {
+        return 'إن الذي سمك السماء بنى لنا';
       }
     },
 
@@ -145,14 +144,13 @@ const apiClient = (baseUrl: string) => {
       try {
         const response = await fetch(`${API_URL}/poems/random?option=slug`);
         if (!response.ok) {
-          return `eabca780-811f-4ea4-949e-21df6efba15d`;
+          return 'eabca780-811f-4ea4-949e-21df6efba15d';
         }
         const slug = await response.text();
 
         return slug;
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      } catch (error) {
-        return `eabca780-811f-4ea4-949e-21df6efba15d`;
+      } catch {
+        return 'eabca780-811f-4ea4-949e-21df6efba15d';
       }
     },
 

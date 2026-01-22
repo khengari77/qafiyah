@@ -1,9 +1,5 @@
-import { z } from "zod";
-import {
-  apiResponseSchema,
-  paginatedResponseSchema,
-  paginatedSlugSchema,
-} from "./common.schema";
+import { z } from 'zod';
+import { apiResponseSchema, paginatedResponseSchema, paginatedSlugSchema } from './common.schema';
 
 // Schema for a single theme in the list
 export const themeSchema = z.object({
@@ -37,7 +33,7 @@ export const themePoemsResponseSchema = paginatedResponseSchema(
   z.object({
     themeDetails: themeDetailsSchema,
     poems: z.array(themePoemSchema),
-  }),
+  })
 );
 
 // Request schemas

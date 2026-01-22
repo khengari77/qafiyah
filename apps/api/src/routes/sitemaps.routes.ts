@@ -1,8 +1,8 @@
-import { zValidator } from "@hono/zod-validator";
-import { paginationSchema } from "@qaf/zod-schemas";
-import { sql } from "drizzle-orm";
-import { Hono } from "hono";
-import { API_URL, MAX_URLS_PER_SITEMAP, SITE_URL } from "../constants";
+import { zValidator } from '@hono/zod-validator';
+import { paginationSchema } from '@qaf/zod-schemas';
+import { sql } from 'drizzle-orm';
+import { Hono } from 'hono';
+import { API_URL, MAX_URLS_PER_SITEMAP, SITE_URL } from '../constants';
 import {
   eraStats,
   meterStats,
@@ -10,15 +10,15 @@ import {
   poetStats,
   rhymeStats,
   themeStats,
-} from "../schemas/db";
-import type { AppContext } from "../types";
+} from '../schemas/db';
+import type { AppContext } from '../types';
 import {
+  type UrlEntry,
   createPagedEntries,
   generateSitemapIndexXml,
   generateUrlEntriesXml,
   toPriority,
-  type UrlEntry,
-} from "../utils/xml-sitemaps";
+} from '../utils/xml-sitemaps';
 
 const app = new Hono<AppContext>()
 
@@ -31,8 +31,8 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/", async (c) => {
-    const db = c.get("db");
+  .get('/', async (c) => {
+    const db = c.get('db');
 
     const [{ count } = { count: 0 }] = await db
       .select({ count: sql`count(*)` })
@@ -40,29 +40,21 @@ const app = new Hono<AppContext>()
 
     const totalPoemSitemaps = Math.ceil(Number(count) / MAX_URLS_PER_SITEMAP);
 
-    const staticSitemaps: UrlEntry[] = [
-      "main",
-      "poets",
-      "eras",
-      "meters",
-      "rhymes",
-      "themes",
-    ].map((name) => ({
-      url: `${API_URL}/sitemaps/${name}`,
+    const staticSitemaps: UrlEntry[] = ['main', 'poets', 'eras', 'meters', 'rhymes', 'themes'].map(
+      (name) => ({
+        url: `${API_URL}/sitemaps/${name}`,
+        lastmod: new Date().toISOString(),
+      })
+    );
+
+    const poemSitemaps: UrlEntry[] = Array.from({ length: totalPoemSitemaps }, (_, i) => ({
+      url: `${API_URL}/sitemaps/poems/${i + 1}`,
       lastmod: new Date().toISOString(),
     }));
 
-    const poemSitemaps: UrlEntry[] = Array.from(
-      { length: totalPoemSitemaps },
-      (_, i) => ({
-        url: `${API_URL}/sitemaps/poems/${i + 1}`,
-        lastmod: new Date().toISOString(),
-      }),
-    );
-
     const xml = generateSitemapIndexXml([...staticSitemaps, ...poemSitemaps]);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -75,17 +67,17 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/main", async (c) => {
+  .get('/main', async (c) => {
     const xml = generateUrlEntriesXml([
       {
         url: SITE_URL,
         lastmod: new Date().toISOString(),
-        changefreq: "hourly",
+        changefreq: 'hourly',
         priority: toPriority(1.0),
       },
     ]);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -98,27 +90,23 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/poems/:page", zValidator("param", paginationSchema), async (c) => {
-    const db = c.get("db");
-    const { page } = c.req.valid("param");
+  .get('/poems/:page', zValidator('param', paginationSchema), async (c) => {
+    const db = c.get('db');
+    const { page } = c.req.valid('param');
 
     const offset = (page - 1) * MAX_URLS_PER_SITEMAP;
-    const poems = await db
-      .select()
-      .from(poemsFullData)
-      .limit(MAX_URLS_PER_SITEMAP)
-      .offset(offset);
+    const poems = await db.select().from(poemsFullData).limit(MAX_URLS_PER_SITEMAP).offset(offset);
 
     const entries: UrlEntry[] = poems.map((poem) => ({
       url: `${SITE_URL}/poems/${poem.slug}`,
       lastmod: new Date().toISOString(),
-      changefreq: "weekly",
+      changefreq: 'weekly',
       priority: toPriority(0.9),
     }));
 
     const xml = generateUrlEntriesXml(entries);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -131,19 +119,17 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/poets", async (c) => {
-    const db = c.get("db");
+  .get('/poets', async (c) => {
+    const db = c.get('db');
 
-    const [{ count } = { count: 0 }] = await db
-      .select({ count: sql`count(*)` })
-      .from(poetStats);
+    const [{ count } = { count: 0 }] = await db.select({ count: sql`count(*)` }).from(poetStats);
 
     const poetListEntries: UrlEntry[] = createPagedEntries({
       baseUrl: `${SITE_URL}/poets`,
       count: Number(count),
-      firstPageChangefreq: "weekly",
+      firstPageChangefreq: 'weekly',
       firstPagePriority: toPriority(0.7),
-      baseChangefreq: "monthly",
+      baseChangefreq: 'monthly',
       basePriority: toPriority(0.6),
     });
 
@@ -153,16 +139,16 @@ const app = new Hono<AppContext>()
       createPagedEntries({
         baseUrl: `${SITE_URL}/poets/${poet.slug}`,
         count: poet.poemsCount,
-        firstPageChangefreq: "weekly",
+        firstPageChangefreq: 'weekly',
         firstPagePriority: toPriority(0.8),
-        baseChangefreq: "monthly",
+        baseChangefreq: 'monthly',
         basePriority: toPriority(0.6),
-      }),
+      })
     );
 
     const xml = generateUrlEntriesXml([...poetListEntries, ...poetEntries]);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -175,15 +161,15 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/eras", async (c) => {
-    const db = c.get("db");
+  .get('/eras', async (c) => {
+    const db = c.get('db');
     const eras = await db.select().from(eraStats);
 
     const listEntries: UrlEntry[] = [
       {
         url: `${SITE_URL}/eras`,
         lastmod: new Date().toISOString(),
-        changefreq: "monthly",
+        changefreq: 'monthly',
         priority: toPriority(0.7),
       },
     ];
@@ -192,16 +178,16 @@ const app = new Hono<AppContext>()
       createPagedEntries({
         baseUrl: `${SITE_URL}/eras/${era.slug}`,
         count: era.poemsCount,
-        firstPageChangefreq: "weekly",
+        firstPageChangefreq: 'weekly',
         firstPagePriority: toPriority(0.8),
-        baseChangefreq: "monthly",
+        baseChangefreq: 'monthly',
         basePriority: toPriority(0.6),
-      }),
+      })
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -214,15 +200,15 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/meters", async (c) => {
-    const db = c.get("db");
+  .get('/meters', async (c) => {
+    const db = c.get('db');
     const meters = await db.select().from(meterStats);
 
     const listEntries: UrlEntry[] = [
       {
         url: `${SITE_URL}/meters`,
         lastmod: new Date().toISOString(),
-        changefreq: "monthly",
+        changefreq: 'monthly',
         priority: toPriority(0.7),
       },
     ];
@@ -231,16 +217,16 @@ const app = new Hono<AppContext>()
       createPagedEntries({
         baseUrl: `${SITE_URL}/meters/${meter.slug}`,
         count: meter.poemsCount,
-        firstPageChangefreq: "weekly",
+        firstPageChangefreq: 'weekly',
         firstPagePriority: toPriority(0.8),
-        baseChangefreq: "monthly",
+        baseChangefreq: 'monthly',
         basePriority: toPriority(0.6),
-      }),
+      })
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -253,15 +239,15 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/rhymes", async (c) => {
-    const db = c.get("db");
+  .get('/rhymes', async (c) => {
+    const db = c.get('db');
     const rhymes = await db.select().from(rhymeStats);
 
     const listEntries: UrlEntry[] = [
       {
         url: `${SITE_URL}/rhymes`,
         lastmod: new Date().toISOString(),
-        changefreq: "monthly",
+        changefreq: 'monthly',
         priority: toPriority(0.7),
       },
     ];
@@ -270,16 +256,16 @@ const app = new Hono<AppContext>()
       createPagedEntries({
         baseUrl: `${SITE_URL}/rhymes/${rhyme.slug}`,
         count: rhyme.poemsCount,
-        firstPageChangefreq: "weekly",
+        firstPageChangefreq: 'weekly',
         firstPagePriority: toPriority(0.8),
-        baseChangefreq: "monthly",
+        baseChangefreq: 'monthly',
         basePriority: toPriority(0.6),
-      }),
+      })
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -292,15 +278,15 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get("/themes", async (c) => {
-    const db = c.get("db");
+  .get('/themes', async (c) => {
+    const db = c.get('db');
     const themes = await db.select().from(themeStats);
 
     const listEntries: UrlEntry[] = [
       {
         url: `${SITE_URL}/themes`,
         lastmod: new Date().toISOString(),
-        changefreq: "monthly",
+        changefreq: 'monthly',
         priority: toPriority(0.7),
       },
     ];
@@ -309,16 +295,16 @@ const app = new Hono<AppContext>()
       createPagedEntries({
         baseUrl: `${SITE_URL}/themes/${theme.slug}`,
         count: theme.poemsCount,
-        firstPageChangefreq: "weekly",
+        firstPageChangefreq: 'weekly',
         firstPagePriority: toPriority(0.8),
-        baseChangefreq: "monthly",
+        baseChangefreq: 'monthly',
         basePriority: toPriority(0.6),
-      }),
+      })
     );
 
     const xml = generateUrlEntriesXml([...listEntries, ...itemEntries]);
 
-    c.header("Content-Type", "application/xml");
+    c.header('Content-Type', 'application/xml');
     return c.body(xml);
   })
 
@@ -336,10 +322,10 @@ const app = new Hono<AppContext>()
     return c.json(
       {
         success: false,
-        error: "Internal Server Error. SITEMAPS Route",
+        error: 'Internal Server Error. SITEMAPS Route',
         status: 500,
       },
-      500,
+      500
     );
   });
 

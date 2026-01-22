@@ -4,5 +4,5 @@
  * @returns The normalized rhyme pattern
  */
 export function normalizeRhymePattern(pattern: string): string {
-  return pattern.replace(/[()]/g, "").replace(/^ال/, "").trim();
+  return pattern.replace(/[()]/g, '').replace(/^ال/, '').trim();
 }

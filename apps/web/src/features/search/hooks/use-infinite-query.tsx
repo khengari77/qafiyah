@@ -5,6 +5,8 @@ import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { useInfiniteQuery as useTanstackInfiniteQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
 import {
+  type MatchType,
+  type SearchType,
   useEraIds,
   useMatchType,
   useMeterIds,
@@ -12,8 +14,6 @@ import {
   useSearchQuery,
   useSearchType,
   useThemeIds,
-  type MatchType,
-  type SearchType,
 } from './use-search-params';
 
 interface UseInfiniteQueryOptions {

@@ -241,7 +241,7 @@ export function useSearch() {
   const rawInput = searchParams.q || '';
   const cleanedInput = rawInput.replace(/[^\u0600-\u06FF\s]/g, '');
   const shortenedInputText =
-    cleanedInput.length > 10 ? cleanedInput.slice(0, 10) + '...' : cleanedInput;
+    cleanedInput.length > 10 ? `${cleanedInput.slice(0, 10)}...` : cleanedInput;
 
   const resultsText = formatArabicCount({
     count: normalizedCount,

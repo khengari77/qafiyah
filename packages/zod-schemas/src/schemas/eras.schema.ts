@@ -1,9 +1,5 @@
-import { z } from "zod";
-import {
-  apiResponseSchema,
-  paginatedResponseSchema,
-  paginatedSlugSchema,
-} from "./common.schema";
+import { z } from 'zod';
+import { apiResponseSchema, paginatedResponseSchema, paginatedSlugSchema } from './common.schema';
 
 // Schema for a single era in the list
 export const eraSchema = z.object({
@@ -37,7 +33,7 @@ export const eraPoemsResponseSchema = paginatedResponseSchema(
   z.object({
     eraDetails: eraDetailsSchema,
     poems: z.array(eraPoemSchema),
-  }),
+  })
 );
 
 // Request schemas

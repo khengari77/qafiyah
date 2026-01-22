@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { z } from "zod";
-import type { ApiEndpoint, ApiResponseType } from "./validation";
+import type { z } from 'zod';
+import type { ApiEndpoint, ApiResponseType } from './validation';
 import {
   getValidatedResponse,
-  validateRequest,
+  type requestSchemas,
   type responseSchemas,
-} from "./validation";
+  validateRequest,
+} from './validation';
 
 /**
  * Helper function to fetch data from an API with validation
@@ -17,11 +17,9 @@ import {
 export async function fetchWithValidation<T extends ApiResponseType>(
   endpoint: T,
   url: string,
-  params?: Record<string, string>,
+  params?: Record<string, string>
 ): Promise<z.infer<(typeof responseSchemas)[T]>> {
-  const queryString = params
-    ? `?${new URLSearchParams(params).toString()}`
-    : "";
+  const queryString = params ? `?${new URLSearchParams(params).toString()}` : '';
   const response = await fetch(`${url}${queryString}`);
 
   if (!response.ok) {
@@ -40,7 +38,7 @@ export async function fetchWithValidation<T extends ApiResponseType>(
  */
 export function validateParams<T extends ApiEndpoint>(
   endpoint: T,
-  params: unknown,
-): z.infer<any> {
+  params: unknown
+): z.infer<(typeof requestSchemas)[T]> {
   return validateRequest(endpoint, params);
 }

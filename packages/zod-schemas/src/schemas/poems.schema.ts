@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { apiResponseSchema, uuidSlugStringSchema } from "./common.schema";
+import { z } from 'zod';
+import { apiResponseSchema, uuidSlugStringSchema } from './common.schema';
 
 // Schema for a poem's metadata
 export const poemMetadataSchema = z.object({
@@ -37,7 +37,7 @@ export const poemDetailResponseSchema = apiResponseSchema(
     clearTitle: z.string(),
     processedContent: processedPoemContentSchema,
     relatedPoems: z.array(relatedPoemSchema).optional(),
-  }),
+  })
 );
 
 // Schema for random poem excerpt response
@@ -46,5 +46,5 @@ export const randomPoemExcerptSchema = z.string();
 // Request schemas
 export const getPoemBySlugRequestSchema = uuidSlugStringSchema;
 export const getRandomPoemRequestSchema = z.object({
-  option: z.enum(["lines", "slug"]).default("lines"),
+  option: z.enum(['lines', 'slug']).default('lines'),
 });

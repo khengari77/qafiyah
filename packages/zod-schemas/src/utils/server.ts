@@ -1,7 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { z } from "zod";
-import type { ApiEndpoint, ApiResponseType } from "./validation";
-import { requestSchemas, responseSchemas } from "./validation";
+import type { z } from 'zod';
+import type { ApiEndpoint, ApiResponseType } from './validation';
+import { requestSchemas, responseSchemas } from './validation';
+
+// Helper type to extract the data type from a success response
+// Works with both union types (success | error) and direct success responses
+type ExtractSuccessData<T extends z.ZodTypeAny> = z.infer<T> extends infer U
+  ? U extends { success: true; data: infer D }
+    ? D
+    : U extends { data: infer D }
+      ? D
+      : never
+  : never;
 
 /**
  * Creates a validated API response
@@ -12,15 +21,15 @@ import { requestSchemas, responseSchemas } from "./validation";
  */
 export function createValidatedResponse<T extends ApiResponseType>(
   endpoint: T,
-  data: z.infer<any>,
-  meta?: Record<string, unknown>,
-): z.infer<any> {
+  data: ExtractSuccessData<(typeof responseSchemas)[T]>,
+  meta?: Record<string, unknown>
+): z.infer<(typeof responseSchemas)[T]> {
   // Get the schema for this endpoint
   const schema = responseSchemas[endpoint];
 
   // For success responses, we need to wrap the data
   const response = {
-    success: true,
+    success: true as const,
     data,
     ...(meta ? { meta } : {}),
   };
@@ -31,7 +40,7 @@ export function createValidatedResponse<T extends ApiResponseType>(
     throw new Error(`Invalid response structure for endpoint: ${endpoint}`);
   }
 
-  return response;
+  return result.data;
 }
 
 /**
@@ -42,21 +51,21 @@ export function createValidatedResponse<T extends ApiResponseType>(
  */
 export function validateServerRequest<T extends ApiEndpoint>(
   endpoint: T,
-  params: unknown,
-): z.infer<any> {
+  params: unknown
+): z.infer<(typeof requestSchemas)[T]> {
   const schema = requestSchemas[endpoint];
   const result = schema.safeParse(params);
 
   if (!result.success) {
     // Return a structured error that can be used in API responses
     const formattedErrors = result.error.errors.map((err) => ({
-      path: err.path.join("."),
+      path: err.path.join('.'),
       message: err.message,
     }));
 
     throw {
       status: 400,
-      message: "Validation failed",
+      message: 'Validation failed',
       errors: formattedErrors,
     };
   }

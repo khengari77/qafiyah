@@ -20,21 +20,21 @@ export function useSearchFilters(initialSearchParams: {
   const selectedMeters = splitCommaSeparated(initialSearchParams.meter_ids);
   const selectedThemes = splitCommaSeparated(initialSearchParams.theme_ids);
 
-  const handleErasChange = (value: string | string[]) => {
+  const handleErasChange = useCallback((value: string | string[]) => {
     return joinCommaSeparated(value);
-  };
+  }, []);
 
-  const handleRhymesChange = (value: string | string[]) => {
+  const handleRhymesChange = useCallback((value: string | string[]) => {
     return joinCommaSeparated(value);
-  };
+  }, []);
 
-  const handleMetersChange = (value: string | string[]) => {
+  const handleMetersChange = useCallback((value: string | string[]) => {
     return joinCommaSeparated(value);
-  };
+  }, []);
 
-  const handleThemesChange = (value: string | string[]) => {
+  const handleThemesChange = useCallback((value: string | string[]) => {
     return joinCommaSeparated(value);
-  };
+  }, []);
 
   const handleMatchTypeChange = useCallback(
     (value: string) => {
@@ -63,7 +63,11 @@ export function useSearchFilters(initialSearchParams: {
     }),
     [
       filtersVisible,
+      handleErasChange,
       handleMatchTypeChange,
+      handleMetersChange,
+      handleRhymesChange,
+      handleThemesChange,
       selectedEras,
       selectedMeters,
       selectedRhymes,

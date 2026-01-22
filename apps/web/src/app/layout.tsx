@@ -1,7 +1,7 @@
 import { Footer } from '@/components/footer';
 import { MobileMenu } from '@/components/nav/mobile-menu';
 import { Nav } from '@/components/nav/nav';
-import { isDev, SITE_NAME, SITE_URL, TWITTER_HANDLE, TWITTER_ID } from '@/constants/GLOBALS';
+import { SITE_NAME, SITE_URL, TWITTER_HANDLE, TWITTER_ID, isDev } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import { Providers } from '@/providers/react-query';
 import { cn } from '@/utils/conversions/cn';
@@ -131,6 +131,7 @@ export default function RootLayout({
           id="json-ld"
           type="application/ld+json"
           strategy="afterInteractive"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD requires dangerouslySetInnerHTML, and JSON.stringify is safe
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               '@context': 'https://schema.org',
@@ -152,7 +153,7 @@ export default function RootLayout({
                   width: '112',
                   height: '112',
                 },
-                sameAs: [`https://x.com/qafiyahdotcom`, `https://github.com/alwalxed/qafiyah`],
+                sameAs: ['https://x.com/qafiyahdotcom', 'https://github.com/alwalxed/qafiyah'],
               },
               inLanguage: 'ar',
             }),

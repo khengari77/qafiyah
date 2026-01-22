@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 const positiveIntSchema = z.number().int().positive();
 const nonNegativeIntSchema = z.number().int().nonnegative();
@@ -8,9 +8,9 @@ const uuidStringSchema = z.string().uuid();
 const POSITIVE_NUMBER_REGEX = /^\d+$/;
 
 export const pageStringNumberSchema = z.preprocess((val) => {
-  if (typeof val !== "string") return 1;
-  const num = parseInt(val, 10);
-  return isNaN(num) || num <= 0 ? 1 : num;
+  if (typeof val !== 'string') return 1;
+  const num = Number.parseInt(val, 10);
+  return Number.isNaN(num) || num <= 0 ? 1 : num;
 }, positiveIntSchema);
 
 export const paginationSchema = z.object({
@@ -28,10 +28,10 @@ export const uuidSlugStringSchema = z.object({
 export const paginatedSlugSchema = slugSchema.extend({
   page: z
     .string()
-    .regex(POSITIVE_NUMBER_REGEX, { message: "Page must be a positive number" })
-    .transform((val) => parseInt(val, 10))
-    .refine((val) => val > 0, { message: "Page must be a positive number" })
-    .default("1"),
+    .regex(POSITIVE_NUMBER_REGEX, { message: 'Page must be a positive number' })
+    .transform((val) => Number.parseInt(val, 10))
+    .refine((val) => val > 0, { message: 'Page must be a positive number' })
+    .default('1'),
 });
 
 export const paginationMetaSchema = z.object({
@@ -44,9 +44,7 @@ export const paginationMetaSchema = z.object({
   }),
 });
 
-export const createSuccessResponseSchema = <T extends z.ZodTypeAny>(
-  dataSchema: T,
-) =>
+export const createSuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   z.object({
     success: z.literal(true),
     data: dataSchema,
@@ -60,13 +58,10 @@ export const errorResponseSchema = z.object({
   status: nonNegativeIntSchema,
 });
 
-export const createApiResponseSchema = <T extends z.ZodTypeAny>(
-  dataSchema: T,
-) => z.union([createSuccessResponseSchema(dataSchema), errorResponseSchema]);
+export const createApiResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  z.union([createSuccessResponseSchema(dataSchema), errorResponseSchema]);
 
-export const createPaginatedResponseSchema = <T extends z.ZodTypeAny>(
-  dataSchema: T,
-) =>
+export const createPaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   createSuccessResponseSchema(dataSchema).extend({
     meta: paginationMetaSchema,
   });

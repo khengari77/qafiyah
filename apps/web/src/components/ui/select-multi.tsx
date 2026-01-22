@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { formatArabicCount, type ArabicNounForms } from 'arabic-count-format';
+import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import { Check, ChevronDown, X } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

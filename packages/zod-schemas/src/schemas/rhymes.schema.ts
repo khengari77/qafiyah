@@ -1,9 +1,5 @@
-import { z } from "zod";
-import {
-  apiResponseSchema,
-  paginatedResponseSchema,
-  paginatedSlugSchema,
-} from "./common.schema";
+import { z } from 'zod';
+import { apiResponseSchema, paginatedResponseSchema, paginatedSlugSchema } from './common.schema';
 
 // Schema for a single rhyme in the list
 export const rhymeSchema = z.object({
@@ -37,7 +33,7 @@ export const rhymePoemsResponseSchema = paginatedResponseSchema(
   z.object({
     rhymeDetails: rhymeDetailsSchema,
     poems: z.array(rhymePoemSchema),
-  }),
+  })
 );
 
 // Request schemas

@@ -1,9 +1,5 @@
-import { z } from "zod";
-import {
-  apiResponseSchema,
-  paginatedResponseSchema,
-  paginatedSlugSchema,
-} from "./common.schema";
+import { z } from 'zod';
+import { apiResponseSchema, paginatedResponseSchema, paginatedSlugSchema } from './common.schema';
 
 // Schema for a single meter in the list
 export const meterSchema = z.object({
@@ -36,7 +32,7 @@ export const meterPoemsResponseSchema = paginatedResponseSchema(
   z.object({
     meterDetails: meterDetailsSchema,
     poems: z.array(meterPoemSchema),
-  }),
+  })
 );
 
 // Request schemas

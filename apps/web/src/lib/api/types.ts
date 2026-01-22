@@ -28,7 +28,7 @@ import type {
   themeSchema,
   z,
 } from '@qaf/zod-schemas';
-import { poetsSearchResultSchema } from './../../../node_modules/@qaf/zod-schemas/src/schemas/search.schema';
+import type { poetsSearchResultSchema } from './../../../node_modules/@qaf/zod-schemas/src/schemas/search.schema';
 
 // Common types used across the application
 

@@ -8,7 +8,7 @@ import { SectionSkeleton } from '@/components/ui/skeleton-wrapper';
 import { SITE_URL } from '@/constants/GLOBALS';
 import { getEras } from '@/lib/api/queries';
 import { useQuery } from '@tanstack/react-query';
-import { ArabicNounForms, formatArabicCount } from 'arabic-count-format';
+import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import { toArabicDigits } from 'to-arabic-digits';
 
 export const runtime = 'edge';

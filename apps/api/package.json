@@ -4,7 +4,10 @@
     "dev": "pnpm run build:deps && wrangler dev",
     "build": "pnpm run build:deps && wrangler build",
     "build:deps": "cd ../../packages/zod-schemas && pnpm run build",
-    "deploy": "wrangler deploy --minify"
+    "deploy": "wrangler deploy --minify",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write ."
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.3",

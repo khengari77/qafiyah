@@ -1,17 +1,17 @@
-import { zValidator } from "@hono/zod-validator";
-import { getRhymesPoemsRequestSchema } from "@qaf/zod-schemas";
-import { createValidatedResponse } from "@qaf/zod-schemas/server";
-import { eq } from "drizzle-orm";
-import { Hono } from "hono";
-import { HTTPException } from "hono/http-exception";
-import { ARABIC_LETTERS_MAP, FETCH_PER_PAGE } from "../constants";
-import { rhymePoems, rhymeStats } from "../schemas/db";
-import type { AppContext } from "../types";
-import { normalizeRhymePattern } from "../utils/normalize-rhyme-pattern";
+import { zValidator } from '@hono/zod-validator';
+import { getRhymesPoemsRequestSchema } from '@qaf/zod-schemas';
+import { createValidatedResponse } from '@qaf/zod-schemas/server';
+import { eq } from 'drizzle-orm';
+import { Hono } from 'hono';
+import { HTTPException } from 'hono/http-exception';
+import { ARABIC_LETTERS_MAP, FETCH_PER_PAGE } from '../constants';
+import { rhymePoems, rhymeStats } from '../schemas/db';
+import type { AppContext } from '../types';
+import { normalizeRhymePattern } from '../utils/normalize-rhyme-pattern';
 
 const app = new Hono<AppContext>()
-  .get("/", async (c) => {
-    const db = c.get("db");
+  .get('/', async (c) => {
+    const db = c.get('db');
     const rhymeStatResults = await db.select().from(rhymeStats);
 
     const groupedRhymes = new Map<
@@ -28,15 +28,16 @@ const app = new Hono<AppContext>()
 
       for (const [letterName, variants] of ARABIC_LETTERS_MAP.entries()) {
         if (variants.includes(cleanPattern)) {
-          if (!groupedRhymes.has(letterName)) {
-            groupedRhymes.set(letterName, {
+          let group = groupedRhymes.get(letterName);
+          if (!group) {
+            group = {
               rhymes: [],
               totalPoemsCount: 0,
               totalPoetsCount: 0,
-            });
+            };
+            groupedRhymes.set(letterName, group);
           }
 
-          const group = groupedRhymes.get(letterName)!;
           group.rhymes.push(rhyme);
           group.totalPoemsCount += rhyme.poemsCount;
           group.totalPoetsCount += rhyme.poetsCount;
@@ -61,76 +62,68 @@ const app = new Hono<AppContext>()
           poemsCount: totalPoemsCount,
           totalUsage: totalPoetsCount + totalPoemsCount,
         };
-      },
-    );
-
-    const cleanup = enrichedGroups.sort((a, b) =>
-      a.name.localeCompare(b.name, "ar"),
-    );
-
-    return c.json(createValidatedResponse("rhymesList", cleanup));
-  })
-  .get(
-    "/:slug/page/:page",
-    zValidator("param", getRhymesPoemsRequestSchema),
-    async (c) => {
-      const { slug, page } = c.req.valid("param");
-      const db = c.get("db");
-
-      const limit = FETCH_PER_PAGE;
-      const offset = (page - 1) * limit;
-
-      const rhymeInfo = await db
-        .select({
-          rhymeId: rhymePoems.rhymeId,
-          rhymePattern: rhymePoems.rhymePattern,
-          totalPoems: rhymePoems.totalPoemsByRhyme,
-        })
-        .from(rhymePoems)
-        .where(eq(rhymePoems.rhymeSlug, slug))
-        .limit(1);
-
-      if (!rhymeInfo.length || !rhymeInfo[0]) {
-        throw new HTTPException(404, { message: "Rhyme not found" });
       }
+    );
 
-      const poems = await db
-        .select({
-          title: rhymePoems.poemTitle,
-          slug: rhymePoems.poemSlug,
-          meter: rhymePoems.meterName,
-        })
-        .from(rhymePoems)
-        .where(eq(rhymePoems.rhymeSlug, slug))
-        .limit(limit)
-        .offset(offset);
+    const cleanup = enrichedGroups.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 
-      // Calculate pagination metadata
-      const totalPages = Math.ceil(rhymeInfo[0].totalPoems / limit);
+    return c.json(createValidatedResponse('rhymesList', cleanup));
+  })
+  .get('/:slug/page/:page', zValidator('param', getRhymesPoemsRequestSchema), async (c) => {
+    const { slug, page } = c.req.valid('param');
+    const db = c.get('db');
 
-      const responseData = {
-        rhymeDetails: {
-          id: rhymeInfo[0].rhymeId,
-          pattern: rhymeInfo[0].rhymePattern,
-          poemsCount: rhymeInfo[0].totalPoems,
-        },
-        poems,
-      };
+    const limit = FETCH_PER_PAGE;
+    const offset = (page - 1) * limit;
 
-      const paginationMeta = {
-        pagination: {
-          currentPage: page,
-          totalPages,
-          hasNextPage: page < totalPages,
-          hasPrevPage: page > 1,
-        },
-      };
+    const rhymeInfo = await db
+      .select({
+        rhymeId: rhymePoems.rhymeId,
+        rhymePattern: rhymePoems.rhymePattern,
+        totalPoems: rhymePoems.totalPoemsByRhyme,
+      })
+      .from(rhymePoems)
+      .where(eq(rhymePoems.rhymeSlug, slug))
+      .limit(1);
 
-      return c.json(
-        createValidatedResponse("rhymesPoems", responseData, paginationMeta),
-      );
-    },
-  )
+    if (!rhymeInfo.length || !rhymeInfo[0]) {
+      throw new HTTPException(404, { message: 'Rhyme not found' });
+    }
+
+    const poems = await db
+      .select({
+        title: rhymePoems.poemTitle,
+        slug: rhymePoems.poemSlug,
+        meter: rhymePoems.meterName,
+      })
+      .from(rhymePoems)
+      .where(eq(rhymePoems.rhymeSlug, slug))
+      .limit(limit)
+      .offset(offset);
+
+    // Calculate pagination metadata
+    const totalPages = Math.ceil(rhymeInfo[0].totalPoems / limit);
+
+    const responseData = {
+      rhymeDetails: {
+        id: rhymeInfo[0].rhymeId,
+        pattern: rhymeInfo[0].rhymePattern,
+        poemsCount: rhymeInfo[0].totalPoems,
+      },
+      poems,
+    };
+
+    const paginationMeta = {
+      pagination: {
+        currentPage: page,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    };
+
+    return c.json(createValidatedResponse('rhymesPoems', responseData, paginationMeta));
+  })
   //! ERR HANDLING ------------------------------------------>
   .onError((error, c) => {
     console.error(error);
@@ -142,17 +135,17 @@ const app = new Hono<AppContext>()
           error: error.message,
           status: error.status,
         },
-        error.status,
+        error.status
       );
     }
 
     return c.json(
       {
         success: false,
-        error: "Internal Server Error. RHYMES Route",
+        error: 'Internal Server Error. RHYMES Route',
         status: 500,
       },
-      500,
+      500
     );
   });
 

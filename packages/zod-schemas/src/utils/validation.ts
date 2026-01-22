@@ -1,11 +1,11 @@
-import type { z } from "zod";
-import * as erasSchemas from "../schemas/eras.schema";
-import * as metersSchemas from "../schemas/meters.schema";
-import * as poemsSchemas from "../schemas/poems.schema";
-import * as poetsSchemas from "../schemas/poets.schema";
-import * as rhymesSchemas from "../schemas/rhymes.schema";
-import * as searchSchemas from "../schemas/search.schema";
-import * as themesSchemas from "../schemas/themes.schema";
+import type { z } from 'zod';
+import * as erasSchemas from '../schemas/eras.schema';
+import * as metersSchemas from '../schemas/meters.schema';
+import * as poemsSchemas from '../schemas/poems.schema';
+import * as poetsSchemas from '../schemas/poets.schema';
+import * as rhymesSchemas from '../schemas/rhymes.schema';
+import * as searchSchemas from '../schemas/search.schema';
+import * as themesSchemas from '../schemas/themes.schema';
 
 export const requestSchemas = {
   getErasPoems: erasSchemas.getErasPoemsRequestSchema,
@@ -45,7 +45,7 @@ const validationCache = new Map<string, boolean>();
 
 export function validateRequest<T extends ApiEndpoint>(
   endpoint: T,
-  params: unknown,
+  params: unknown
 ): z.infer<(typeof requestSchemas)[T]> {
   const schema = requestSchemas[endpoint];
   if (!schema) {
@@ -54,13 +54,11 @@ export function validateRequest<T extends ApiEndpoint>(
   return schema.parse(params);
 }
 
-export function validateResponse<T extends ApiResponseType>(
-  endpoint: T,
-  data: unknown,
-): boolean {
+export function validateResponse<T extends ApiResponseType>(endpoint: T, data: unknown): boolean {
   const cacheKey = `${endpoint}-${JSON.stringify(data)}`;
-  if (validationCache.has(cacheKey)) {
-    return validationCache.get(cacheKey)!;
+  const cached = validationCache.get(cacheKey);
+  if (cached !== undefined) {
+    return cached;
   }
 
   const schema = responseSchemas[endpoint];
@@ -79,7 +77,7 @@ export function validateResponse<T extends ApiResponseType>(
 
 export function getValidatedResponse<T extends ApiResponseType>(
   endpoint: T,
-  data: unknown,
+  data: unknown
 ): z.infer<(typeof responseSchemas)[T]> {
   const schema = responseSchemas[endpoint];
   if (!schema) {
