@@ -1,4 +1,4 @@
-name: Post Poem to X
+name: scheduled-tweet
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   tweet:
-    name: Post Poem to X
+    name: scheduled-tweet
     runs-on: ubuntu-latest
     timeout-minutes: 5
 
@@ -23,7 +23,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 8
+          version: 9
 
       - name: Get pnpm store directory
         id: pnpm-cache
@@ -43,29 +43,18 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build bot
-        working-directory: apps/bot
-        run: pnpm build
-
-      - name: Verify build output
-        working-directory: apps/bot
-        run: |
-          if [ ! -d "dist" ]; then
-            echo "Build failed - no dist directory found"
-            exit 1
-          fi
-          echo "Build successful"
+        run: pnpm --filter @qaf/bot build
 
       - name: Run bot
-        working-directory: apps/bot
         env:
           TWITTER_APP_KEY: ${{ secrets.TWITTER_APP_KEY }}
           TWITTER_APP_SECRET: ${{ secrets.TWITTER_APP_SECRET }}
           TWITTER_ACCESS_TOKEN: ${{ secrets.TWITTER_ACCESS_TOKEN }}
           TWITTER_ACCESS_SECRET: ${{ secrets.TWITTER_ACCESS_SECRET }}
-        run: pnpm start
+        run: pnpm --filter @qaf/bot start
 
       - name: Report failure
         if: failure()
         run: |
-          echo "Workflow failed at step: ${{ github.job }}"
+          echo "Workflow failed"
           echo "Check the logs above for details"
