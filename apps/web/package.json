@@ -71,6 +71,6 @@
     "tailwindcss-debug-screens": "2",
     "typescript": "^5",
     "vercel": "^41.5.0",
-    "wrangler": "^4.9.1"
+    "wrangler": "^4.59.1"
   }
 }
