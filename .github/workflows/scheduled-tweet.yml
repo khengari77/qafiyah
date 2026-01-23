@@ -2,8 +2,11 @@ name: Scheduled Tweet
 
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   tweet:
