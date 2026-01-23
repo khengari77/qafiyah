@@ -1,5 +1,8 @@
 name: Scheduled Tweet
 
+permissions:
+  contents: read
+
 on:
   schedule:
     - cron: "*/5 * * * *"
