@@ -1,0 +1,15 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "tags": ["-lintignore"],
+  "workspaces": {
+    ".": {},
+    "apps/web": {
+      "entry": ["src/app/**/*.{ts,tsx}", "next.config.*"],
+      "project": ["src/**/*.{ts,tsx}"]
+    },
+    "apps/api": {
+      "entry": "src/app.ts",
+      "project": "src/**/*.ts"
+    }
+  }
+}
