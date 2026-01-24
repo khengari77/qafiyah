@@ -5,10 +5,15 @@
     ".": {},
     "apps/web": {
       "entry": ["src/app/**/*.{ts,tsx}", "next.config.*"],
-      "project": ["src/**/*.{ts,tsx}"]
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignoreDependencies": ["@qaf/zod-schemas"]
     },
     "apps/api": {
       "entry": "src/app.ts",
+      "project": "src/**/*.ts"
+    },
+    "packages/zod-schemas": {
+      "entry": "src/**/*.ts",
       "project": "src/**/*.ts"
     }
   }
