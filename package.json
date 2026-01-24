@@ -8,12 +8,14 @@
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
     "check-types": "turbo run check-types",
-    "knip": "knip"
+    "knip": "knip",
+    "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
     "@types/node": "^25.0.10",
     "knip": "^5.82.1",
+    "madge": "8.0.0",
     "turbo": "^2.5.0",
     "typescript": "5.8.2"
   },
