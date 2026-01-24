@@ -1,0 +1,52 @@
+name: 🔧 Format and Lint
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  format-and-lint:
+    name: 🔧 Format and Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🔧 Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+
+      - name: 🔧 Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+          run_install: false
+
+      - name: 📥 Install dependencies
+        run: pnpm install
+
+      - name: 🎨 Format code
+        run: pnpm run format
+
+      - name: 🔍 Lint and fix
+        run: pnpm run lint:fix
+
+      - name: 📤 Check for changes
+        id: verify-changed-files
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "❌ Code formatting or linting issues were found and fixed."
+            echo "Please commit the changes and push again."
+            git diff
+            exit 1
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "✅ Code is properly formatted and linted."
+          fi
