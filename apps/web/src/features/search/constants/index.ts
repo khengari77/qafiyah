@@ -1,6 +1,6 @@
 import type { SelectOption } from '@/components/ui/select';
 
-export const ERAS = [
+const ERAS = [
   { id: 1, name: 'إسلامي' },
   { id: 2, name: 'عباسي' },
   { id: 3, name: 'متأخر' },
@@ -13,7 +13,7 @@ export const ERAS = [
   { id: 10, name: 'أيوبي' },
 ];
 
-export const METERS = [
+const METERS = [
   { id: 1, name: 'أحذ الكامل' },
   { id: 2, name: 'مشطور الرجز' },
   { id: 3, name: 'مخلع البسيط' },
@@ -57,7 +57,7 @@ export const METERS = [
   { id: 44, name: 'مجزوء الكامل' },
 ];
 
-export const THEMES = [
+const THEMES = [
   { id: 1, name: 'دينية' },
   { id: 2, name: 'عتاب' },
   { id: 3, name: 'عدل' },
@@ -86,7 +86,7 @@ export const THEMES = [
   { id: 27, name: 'وطن' },
 ];
 
-export const RHYMES = [
+const RHYMES = [
   { id: 1, name: 'الميم' },
   { id: 2, name: 'الهاء' },
   { id: 3, name: 'الظاء' },

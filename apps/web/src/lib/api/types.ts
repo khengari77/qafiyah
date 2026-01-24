@@ -33,7 +33,7 @@ import type { poetsSearchResultSchema } from './../../../node_modules/@qaf/zod-s
 // Common types used across the application
 
 // API response wrapper - use a generic type for flexibility
-export type ApiResponse<T> = {
+type ApiResponse<T> = {
   success: boolean;
   data: T;
   meta?: {
@@ -44,31 +44,31 @@ export type ApiResponse<T> = {
   status?: number;
 };
 
-export type SuccessResponse<T> = {
+type SuccessResponse<T> = {
   success: true;
   data: T;
   meta?: Record<string, unknown>;
 };
-export type ErrorResponse = z.infer<typeof errorResponseSchema>;
+type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>['pagination'];
 
 // Base types
 export type Era = z.infer<typeof eraSchema>;
 export type Meter = z.infer<typeof meterSchema>;
-export type Poet = z.infer<typeof poetSchema>;
+type Poet = z.infer<typeof poetSchema>;
 export type Rhyme = z.infer<typeof rhymeSchema>;
 export type Theme = z.infer<typeof themeSchema>;
 
 // Poem types
-export type EraPoem = z.infer<typeof eraPoemSchema>;
-export type MeterPoem = z.infer<typeof meterPoemSchema>;
-export type PoetPoem = z.infer<typeof poetPoemSchema>;
-export type RhymePoem = z.infer<typeof rhymePoemSchema>;
-export type ThemePoem = z.infer<typeof themePoemSchema>;
+type EraPoem = z.infer<typeof eraPoemSchema>;
+type MeterPoem = z.infer<typeof meterPoemSchema>;
+type PoetPoem = z.infer<typeof poetPoemSchema>;
+type RhymePoem = z.infer<typeof rhymePoemSchema>;
+type ThemePoem = z.infer<typeof themePoemSchema>;
 
 // Use a generic Poem type that covers all poem types
-export type Poem = {
+type Poem = {
   slug: string;
   title: string;
   poetName?: string;
@@ -76,11 +76,11 @@ export type Poem = {
 };
 
 // API response types
-export type EraDetails = z.infer<typeof eraDetailsSchema>;
-export type MeterDetails = z.infer<typeof meterDetailsSchema>;
-export type PoetDetails = z.infer<typeof poetDetailsSchema>;
-export type RhymeDetails = z.infer<typeof rhymeDetailsSchema>;
-export type ThemeDetails = z.infer<typeof themeDetailsSchema>;
+type EraDetails = z.infer<typeof eraDetailsSchema>;
+type MeterDetails = z.infer<typeof meterDetailsSchema>;
+type PoetDetails = z.infer<typeof poetDetailsSchema>;
+type RhymeDetails = z.infer<typeof rhymeDetailsSchema>;
+type ThemeDetails = z.infer<typeof themeDetailsSchema>;
 
 export type PoemMetadata = z.infer<typeof poemMetadataSchema>;
 export type ProcessedPoemContent = z.infer<typeof processedPoemContentSchema>;
@@ -107,7 +107,7 @@ export type PoetPoems = PoetResponseData;
 export type RhymePoems = RhymeResponseData;
 export type ThemePoems = ThemeResponseData;
 
-export type Poets = Poet[];
+type Poets = Poet[];
 
 export type PoemsSearchResult = z.infer<typeof poemsSearchResultSchema>;
 
@@ -134,5 +134,5 @@ export type PoetsSearchResponseData = {
 };
 
 // Full search response type
-export type PomesSearchResponse = ApiResponse<PoemsSearchResponseData>;
-export type PoetsSearchResponse = ApiResponse<PoetsSearchResponseData>;
+type PomesSearchResponse = ApiResponse<PoemsSearchResponseData>;
+type PoetsSearchResponse = ApiResponse<PoetsSearchResponseData>;

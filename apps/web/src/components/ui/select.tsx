@@ -19,7 +19,7 @@ interface SelectProps {
   className?: string;
 }
 
-export function Select({
+function Select({
   options,
   value,
   onChange,

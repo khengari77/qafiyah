@@ -18,7 +18,7 @@ export type RandomPoemLines = {
   content: string;
 };
 
-export type PoemData = {
+type PoemData = {
   slug: string;
   title: string;
   content: string;

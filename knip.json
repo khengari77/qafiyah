@@ -5,8 +5,7 @@
     ".": {},
     "apps/web": {
       "entry": ["src/app/**/*.{ts,tsx}", "next.config.*"],
-      "project": ["src/**/*.{ts,tsx}"],
-      "ignoreDependencies": ["@qaf/zod-schemas"]
+      "project": ["src/**/*.{ts,tsx}"]
     },
     "apps/api": {
       "entry": "src/app.ts",

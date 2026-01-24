@@ -65,13 +65,13 @@ export const FETCH_PER_PAGE = 30;
 export const MAX_URLS_PER_SITEMAP = 1000;
 export const MAX_EXCERPT_LENGTH = 280;
 
-export const DOMAIN = 'qafiyah.com';
-export const SITE_NAME = 'قافية';
+const DOMAIN = 'qafiyah.com';
+const SITE_NAME = 'قافية';
 export const SITE_URL = `https://${DOMAIN}`;
 export const API_URL = `https://api.${DOMAIN}`;
-export const TWITTER_HANDLE = '@qafiyahdotcom';
+const TWITTER_HANDLE = '@qafiyahdotcom';
 
-export const defaultMetadata = {
+const defaultMetadata = {
   title: 'قافية | موسوعة الشعر العربي',
   description: 'موقع يُعنى بجمع الشعر العربي وحفظه وتيسير الوصول إليه',
   keywords:
@@ -82,7 +82,7 @@ export const defaultMetadata = {
   articleSection: 'شعر',
 };
 
-export const NAV_LINKS = [
+const NAV_LINKS = [
   {
     name: 'التواصل',
     href: `https://x.com/${TWITTER_HANDLE}`,

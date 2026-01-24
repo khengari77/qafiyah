@@ -148,8 +148,4 @@ export const {
   getRhymePoems,
   getThemes,
   getThemePoems,
-  getSitemap,
 } = queries;
-
-// Default export for convenience
-export default queries;
