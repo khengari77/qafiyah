@@ -9,7 +9,8 @@
     "format": "biome format --write . && prettier --write \"**/*.{md,mdx}\"",
     "check-types": "turbo run check-types",
     "knip": "knip",
-    "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages"
+    "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.12",
