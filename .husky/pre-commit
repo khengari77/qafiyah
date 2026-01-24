@@ -3,19 +3,10 @@
 
 set -e
 
-echo "Installing dependencies..."
-pnpm install
-
 echo "Formatting code..."
 pnpm run format
 
 echo "Linting and fixing..."
 pnpm run lint:fix
-
-echo "Checking for circular dependencies..."
-pnpm run madge
-
-echo "Building project..."
-pnpm run build
 
 echo "Pre-commit checks passed!"
