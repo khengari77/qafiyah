@@ -1,5 +1,8 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
+import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
+import { toArabicDigits } from 'to-arabic-digits';
 import JsonLd from '@/components/json-ld';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { ListCard } from '@/components/ui/list-card';
@@ -7,9 +10,6 @@ import { SectionList } from '@/components/ui/section-list';
 import { SectionSkeleton } from '@/components/ui/skeleton-wrapper';
 import { SITE_URL } from '@/constants/GLOBALS';
 import { getEras } from '@/lib/api/queries';
-import { useQuery } from '@tanstack/react-query';
-import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
-import { toArabicDigits } from 'to-arabic-digits';
 
 export const runtime = 'edge';
 

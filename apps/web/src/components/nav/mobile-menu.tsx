@@ -1,10 +1,10 @@
 'use client';
 
+import { X } from 'lucide-react';
+import { useEffect } from 'react';
 import { responsiveIconSize } from '@/constants/GLOBALS';
 import { NAV_LINKS } from '@/constants/NAV_LINKS';
 import { useNavStore } from '@/stores/nav-store';
-import { X } from 'lucide-react';
-import { useEffect } from 'react';
 import { NavLinks } from './nav-links';
 
 export function MobileMenu() {

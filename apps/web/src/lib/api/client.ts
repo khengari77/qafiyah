@@ -1,6 +1,6 @@
+import { fetchWithValidation, validateParams } from '@qaf/zod-schemas/client';
 import { API_URL } from '@/constants/GLOBALS';
 import { removeTashkeel } from '@/utils/texts/remove-tashkeel';
-import { fetchWithValidation, validateParams } from '@qaf/zod-schemas/client';
 import type {
   Era,
   EraPoems,

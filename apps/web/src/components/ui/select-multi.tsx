@@ -1,10 +1,10 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import { Check, ChevronDown, X } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '@/lib/utils';
 
 export type Option = {
   value: string;
@@ -130,6 +130,7 @@ export function SelectMulti({
       aria-controls="checkbox-select-options"
     >
       <div
+        role="button"
         className={cn(
           'flex text-zinc-600 items-center justify-between w-full h-12 px-3 py-2 text-base border-0 ring-1 ring-zinc-300/40 rounded-lg shadow-none focus:outline-none focus:ring-1 focus:ring-zinc-300',
           disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',

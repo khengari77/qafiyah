@@ -1,10 +1,10 @@
+import type { ArabicNounForms } from 'arabic-count-format';
+import { Loader2, SearchIcon } from 'lucide-react';
 import type { SelectOption } from '@/components/ui/select';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import { BinaryToggleButton } from '@/components/ui/toggle-button';
 import { cn } from '@/utils/conversions/cn';
-import type { ArabicNounForms } from 'arabic-count-format';
-import { Loader2, SearchIcon } from 'lucide-react';
 
 type Props = {
   searchTypeLabelText: string;

@@ -1,5 +1,8 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
+import { useParams } from 'next/navigation';
+import { toArabicDigits } from 'to-arabic-digits';
 import JsonLd from '@/components/json-ld';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { ListCard } from '@/components/ui/list-card';
@@ -8,9 +11,6 @@ import { SectionWrapper } from '@/components/ui/section-wrapper';
 import { SectionSkeleton } from '@/components/ui/skeleton-wrapper';
 import { SITE_URL } from '@/constants/GLOBALS';
 import { getPoets } from '@/lib/api/queries';
-import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
-import { toArabicDigits } from 'to-arabic-digits';
 
 export const runtime = 'edge';
 

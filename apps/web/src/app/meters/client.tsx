@@ -1,5 +1,7 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
+import { toArabicDigits } from 'to-arabic-digits';
 import JsonLd from '@/components/json-ld';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { ListCard } from '@/components/ui/list-card';
@@ -8,8 +10,6 @@ import { SectionSkeleton } from '@/components/ui/skeleton-wrapper';
 import { SITE_URL } from '@/constants/GLOBALS';
 import { getMeters } from '@/lib/api/queries';
 import type { Meter } from '@/lib/api/types';
-import { useQuery } from '@tanstack/react-query';
-import { toArabicDigits } from 'to-arabic-digits';
 
 export default function MetersClientPage() {
   const {

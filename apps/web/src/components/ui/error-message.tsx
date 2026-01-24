@@ -1,8 +1,8 @@
 'use client';
 
-import { SITE_URL } from '@/constants/GLOBALS';
 import { AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { SITE_URL } from '@/constants/GLOBALS';
 
 type ErrorMessageProps = {
   message?: string;

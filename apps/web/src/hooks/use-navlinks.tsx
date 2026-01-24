@@ -1,7 +1,7 @@
 'use client';
 
-import { useNavStore } from '@/stores/nav-store';
 import { usePathname } from 'next/navigation';
+import { useNavStore } from '@/stores/nav-store';
 
 type Props = {
   isMobile?: boolean;

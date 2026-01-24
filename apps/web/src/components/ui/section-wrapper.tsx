@@ -1,5 +1,5 @@
-import { cn } from '@/utils/conversions/cn';
 import type { ReactNode } from 'react';
+import { cn } from '@/utils/conversions/cn';
 import { PaginationLink } from './pagination-link';
 
 type SectionWrapperProps = {

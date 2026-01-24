@@ -1,5 +1,5 @@
-import { NOT_FOUND_CODE, NOT_FOUND_MESSAGE, NOT_FOUND_TITLE } from '@/constants/GLOBALS';
 import type { Metadata } from 'next';
+import { NOT_FOUND_CODE, NOT_FOUND_MESSAGE, NOT_FOUND_TITLE } from '@/constants/GLOBALS';
 
 export const metadata: Metadata = {
   title: NOT_FOUND_TITLE,

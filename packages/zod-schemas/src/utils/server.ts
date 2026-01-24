@@ -4,13 +4,14 @@ import { requestSchemas, responseSchemas } from './validation';
 
 // Helper type to extract the data type from a success response
 // Works with both union types (success | error) and direct success responses
-type ExtractSuccessData<T extends z.ZodTypeAny> = z.infer<T> extends infer U
-  ? U extends { success: true; data: infer D }
-    ? D
-    : U extends { data: infer D }
+type ExtractSuccessData<T extends z.ZodTypeAny> =
+  z.infer<T> extends infer U
+    ? U extends { success: true; data: infer D }
       ? D
-      : never
-  : never;
+      : U extends { data: infer D }
+        ? D
+        : never
+    : never;
 
 /**
  * Creates a validated API response

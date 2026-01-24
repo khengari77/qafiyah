@@ -1,9 +1,9 @@
 'use client';
 
-import { useTypingEffect } from '@/hooks/use-typing-effect';
-import { getRandomLines } from '@/lib/api/queries';
 import { useQuery } from '@tanstack/react-query';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTypingEffect } from '@/hooks/use-typing-effect';
+import { getRandomLines } from '@/lib/api/queries';
 
 export function usePlaceholderTypewriter() {
   const { data: content = '' } = useQuery<string>({

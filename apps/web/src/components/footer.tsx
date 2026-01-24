@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import {
   DATABASE_DUMPS_URL,
   DEVELOPER_GITHUB_URL,
@@ -9,7 +10,6 @@ import {
   GITHUB_REPO_URL,
 } from '@/constants/GLOBALS';
 import { cn } from '@/utils/conversions/cn';
-import React from 'react';
 import { RandomPoemButton } from './random-poem-button';
 
 type Props = {

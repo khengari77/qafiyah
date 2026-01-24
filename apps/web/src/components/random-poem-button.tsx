@@ -1,7 +1,7 @@
 'use client';
 
-import { useRandomPoem } from '@/hooks/use-random-slug';
 import { Loader2 } from 'lucide-react';
+import { useRandomPoem } from '@/hooks/use-random-slug';
 
 export function RandomPoemButton() {
   const { handleClick, isLoading, isError } = useRandomPoem();

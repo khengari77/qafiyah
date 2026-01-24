@@ -1,6 +1,6 @@
-import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { Loader2 } from 'lucide-react';
 import type { Ref } from 'react';
+import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { PoemCard, PoetCard } from './result-cards';
 import { ErrorState } from './state-error';
 import { LoadingState } from './state-loading';

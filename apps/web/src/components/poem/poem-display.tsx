@@ -1,10 +1,10 @@
 'use client';
 
+import { Minus, Plus } from 'lucide-react';
 import { useFontSize } from '@/hooks/use-font-size';
 import { useTweetUrl } from '@/hooks/use-tweet-url';
 import type { PoemMetadata, RelatedPoems } from '@/lib/api/types';
 import { getFormattedVersesCount } from '@/utils/texts/get-verse-count';
-import { Minus, Plus } from 'lucide-react';
 import { ListCard } from '../ui/list-card';
 
 export type PoemProps = {

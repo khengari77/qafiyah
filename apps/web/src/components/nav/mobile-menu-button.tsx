@@ -1,9 +1,9 @@
 'use client';
 
+import { Menu } from 'lucide-react';
 import { responsiveIconSize } from '@/constants/GLOBALS';
 import { cn } from '@/lib/utils';
 import { useNavStore } from '@/stores/nav-store';
-import { Menu } from 'lucide-react';
 
 export function MobileMenuButton() {
   const { toggleMobileMenu } = useNavStore();

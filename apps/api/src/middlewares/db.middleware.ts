@@ -16,7 +16,7 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
     const url = new URL(databaseUrl);
     const options = {
       host: url.hostname,
-      port: Number.parseInt(url.port) || 5432,
+      port: Number.parseInt(url.port, 10) || 5432,
       database: url.pathname.slice(1),
       user: url.username,
       password: url.password,

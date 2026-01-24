@@ -1,7 +1,7 @@
-import { Button } from '@/components/shadcn/button';
-import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { MouseEventHandler } from 'react';
+import { Button } from '@/components/shadcn/button';
+import { cn } from '@/lib/utils';
 
 type Props = {
   toggleFilters: MouseEventHandler<HTMLButtonElement>;

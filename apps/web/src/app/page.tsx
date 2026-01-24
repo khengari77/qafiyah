@@ -1,8 +1,8 @@
+import dynamic from 'next/dynamic';
+import { Suspense } from 'react';
 import { SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import { SearchContainer } from '@/features/search/components/__search-container';
-import dynamic from 'next/dynamic';
-import { Suspense } from 'react';
 import Loading from './loading';
 
 const JsonLd = dynamic(() => import('@/components/json-ld'));

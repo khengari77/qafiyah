@@ -1,9 +1,9 @@
 'use client';
 
-import { search } from '@/lib/api/queries';
-import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { useInfiniteQuery as useTanstackInfiniteQuery } from '@tanstack/react-query';
 import { useMemo } from 'react';
+import { search } from '@/lib/api/queries';
+import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import {
   type MatchType,
   type SearchType,

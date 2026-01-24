@@ -1,14 +1,14 @@
-import { Footer } from '@/components/footer';
-import { MobileMenu } from '@/components/nav/mobile-menu';
-import { Nav } from '@/components/nav/nav';
-import { SITE_NAME, SITE_URL, TWITTER_HANDLE, TWITTER_ID, isDev } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
-import { Providers } from '@/providers/react-query';
-import { cn } from '@/utils/conversions/cn';
 import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import type React from 'react';
+import { Footer } from '@/components/footer';
+import { MobileMenu } from '@/components/nav/mobile-menu';
+import { Nav } from '@/components/nav/nav';
+import { isDev, SITE_NAME, SITE_URL, TWITTER_HANDLE, TWITTER_ID } from '@/constants/GLOBALS';
+import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
+import { Providers } from '@/providers/react-query';
+import { cn } from '@/utils/conversions/cn';
 import { ibmPlexSansArabic } from './fonts';
 import './globals.css';
 

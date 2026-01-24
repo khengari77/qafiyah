@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.12/schema.json",
   "vcs": {
     "enabled": true,
     "clientKind": "git",
@@ -7,18 +7,19 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "ignore": [
-      "**/node_modules/**",
-      "**/dist/**",
-      "**/.next/**",
-      "**/build/**",
-      "**/.turbo/**",
-      "**/coverage/**",
-      "**/*.min.js",
-      "**/pnpm-lock.yaml",
-      "**/.db_dumps/**",
-      "**/env.d.ts",
-      "**/worker-configuration.d.ts"
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/.next",
+      "!**/build",
+      "!**/.turbo",
+      "!**/coverage",
+      "!**/*.min.js",
+      "!**/pnpm-lock.yaml",
+      "!**/.db_dumps",
+      "!**/env.d.ts",
+      "!**/worker-configuration.d.ts"
     ]
   },
   "formatter": {
@@ -29,9 +30,6 @@
     "lineEnding": "lf",
     "lineWidth": 100,
     "attributePosition": "auto"
-  },
-  "organizeImports": {
-    "enabled": true
   },
   "linter": {
     "enabled": true,
@@ -79,7 +77,8 @@
         "noArrayIndexKey": "warn"
       },
       "nursery": {
-        "useSortedClasses": "off"
+        "useSortedClasses": "off",
+        "noImportCycles": "error"
       }
     }
   },
@@ -102,19 +101,34 @@
       "trailingCommas": "none"
     }
   },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
   "overrides": [
     {
-      "include": ["*.config.js", "*.config.mjs", "*.config.ts"],
+      "includes": ["*.config.js", "*.config.mjs", "*.config.ts"],
       "formatter": {
         "lineWidth": 120
       }
     },
     {
-      "include": ["**/loading-skeleton.tsx", "**/poems/**/client.tsx"],
+      "includes": ["**/loading-skeleton.tsx", "**/poems/**/client.tsx"],
       "linter": {
         "rules": {
           "suspicious": {
             "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.css"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noUnknownAtRules": "off"
           }
         }
       }

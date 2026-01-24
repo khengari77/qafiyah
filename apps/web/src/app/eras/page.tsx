@@ -1,6 +1,6 @@
+import type { Metadata } from 'next';
 import { SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
-import type { Metadata } from 'next';
 import ErasClientPage from './client';
 
 export const runtime = 'edge';

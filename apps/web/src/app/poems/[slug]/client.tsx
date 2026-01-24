@@ -1,15 +1,15 @@
 'use client';
 
+import { useQuery } from '@tanstack/react-query';
+import { Home, RefreshCcw } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { Suspense } from 'react';
 import Loading from '@/app/loading';
 import JsonLd from '@/components/json-ld';
 import { PoemDisplay } from '@/components/poem/poem-display';
 import { ErrorMessage } from '@/components/ui/error-message';
 import { SITE_URL } from '@/constants/GLOBALS';
 import { getPoem } from '@/lib/api/queries';
-import { useQuery } from '@tanstack/react-query';
-import { Home, RefreshCcw } from 'lucide-react';
-import { useParams, useRouter } from 'next/navigation';
-import { Suspense } from 'react';
 
 export const runtime = 'edge';
 
@@ -128,16 +128,14 @@ export default function PoemSlugClientPage() {
 
   return (
     <Suspense fallback={<Loading />}>
-      <>
-        <JsonLd data={jsonLd} />
-        <PoemDisplay
-          clearTitle={clearTitle}
-          metadata={metadata}
-          verses={verses}
-          verseCount={verseCount}
-          relatedPoems={relatedPoems}
-        />
-      </>
+      <JsonLd data={jsonLd} />
+      <PoemDisplay
+        clearTitle={clearTitle}
+        metadata={metadata}
+        verses={verses}
+        verseCount={verseCount}
+        relatedPoems={relatedPoems}
+      />
     </Suspense>
   );
 }

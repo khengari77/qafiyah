@@ -1,9 +1,9 @@
+import type { Metadata } from 'next';
+import { Suspense } from 'react';
 import Loading from '@/app/loading';
 import { API_URL, NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { PoemResponseData } from '@/lib/api/types';
-import type { Metadata } from 'next';
-import { Suspense } from 'react';
 import PoemSlugClientPage from './client';
 export const runtime = 'edge';
 

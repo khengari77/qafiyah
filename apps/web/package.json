@@ -17,7 +17,9 @@
     "cf-typegen": "pnpx wrangler types --env-interface CloudflareEnv env.d.ts"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,md,mdx,css}": ["biome check --write"]
+    "*.{js,jsx,ts,tsx,json,md,mdx,css}": [
+      "biome check --write"
+    ]
   },
   "simple-git-hooks": {
     "pre-commit": "npx --no -- pnpm lint-staged"

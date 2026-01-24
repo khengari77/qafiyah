@@ -13,11 +13,11 @@ import {
 } from '../schemas/db';
 import type { AppContext } from '../types';
 import {
-  type UrlEntry,
   createPagedEntries,
   generateSitemapIndexXml,
   generateUrlEntriesXml,
   toPriority,
+  type UrlEntry,
 } from '../utils/xml-sitemaps';
 
 const app = new Hono<AppContext>()

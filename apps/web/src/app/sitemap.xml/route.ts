@@ -1,5 +1,5 @@
-import { API_URL } from '@/constants/GLOBALS';
 import { NextResponse } from 'next/server';
+import { API_URL } from '@/constants/GLOBALS';
 
 export const runtime = 'edge';
 export const dynamic = 'force-dynamic';

@@ -1,7 +1,7 @@
+import { Frown } from 'lucide-react';
 import { Button } from '@/components/shadcn/button';
 import { Card } from '@/components/shadcn/card';
 import { SITE_URL } from '@/constants/GLOBALS';
-import { Frown } from 'lucide-react';
 
 type Props = {
   errorMessageText: string;

@@ -12,7 +12,7 @@
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages"
   },
   "devDependencies": {
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.3.12",
     "@types/node": "^25.0.10",
     "knip": "^5.82.1",
     "madge": "8.0.0",

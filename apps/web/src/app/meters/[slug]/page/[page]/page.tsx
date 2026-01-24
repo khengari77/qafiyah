@@ -1,7 +1,7 @@
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import type { Metadata } from 'next';
 import { toArabicDigits } from 'to-arabic-digits';
+import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
+import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 import MeterSlugClientPage from './client';
 export const runtime = 'edge';
 

@@ -1,9 +1,9 @@
 'use client';
 
-import { getRandomSlug } from '@/lib/api/queries';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { getRandomSlug } from '@/lib/api/queries';
 
 export function useRandomPoem() {
   const router = useRouter();
