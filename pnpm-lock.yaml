@@ -20,6 +20,9 @@ importers:
       madge:
         specifier: 8.0.0
         version: 8.0.0(typescript@5.8.2)
+      prettier:
+        specifier: ^3.4.2
+        version: 3.8.1
       turbo:
         specifier: ^2.5.0
         version: 2.5.0
@@ -3768,6 +3771,11 @@ packages:
   precinct@12.2.0:
     resolution: {integrity: sha512-NFBMuwIfaJ4SocE9YXPU/n4AcNSoFMVFjP72nvl3cx69j/ke61/hPOWFREVxLkFhhEGnA8ZuVfTqJBa+PK3b5w==}
     engines: {node: '>=18'}
+    hasBin: true
+
+  prettier@3.8.1:
+    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
+    engines: {node: '>=14'}
     hasBin: true
 
   pretty-format@29.7.0:
@@ -8081,6 +8089,8 @@ snapshots:
       typescript: 5.8.3
     transitivePeerDependencies:
       - supports-color
+
+  prettier@3.8.1: {}
 
   pretty-format@29.7.0:
     dependencies:

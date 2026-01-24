@@ -6,7 +6,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "biome check --write .",
-    "format": "biome format --write .",
+    "format": "biome format --write . && prettier --write \"**/*.{md,mdx}\"",
     "check-types": "turbo run check-types",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages"
@@ -16,6 +16,7 @@
     "@types/node": "^25.0.10",
     "knip": "^5.82.1",
     "madge": "8.0.0",
+    "prettier": "^3.4.2",
     "turbo": "^2.5.0",
     "typescript": "5.8.2"
   },
