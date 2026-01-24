@@ -79,7 +79,7 @@ const apiClient = (baseUrl: string) => {
       switch (searchType) {
         case 'poems': {
           searchParams.append('q', validParams.q);
-          searchParams.append('page', validParams.page);
+          searchParams.append('page', String(validParams.page));
           searchParams.append('search_type', validParams.search_type);
           searchParams.append('match_type', validParams.match_type);
 
@@ -101,7 +101,7 @@ const apiClient = (baseUrl: string) => {
         }
         case 'poets': {
           searchParams.append('q', validParams.q);
-          searchParams.append('page', validParams.page);
+          searchParams.append('page', String(validParams.page));
           searchParams.append('search_type', validParams.search_type);
           searchParams.append('match_type', validParams.match_type);
 

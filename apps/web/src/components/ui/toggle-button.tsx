@@ -1,7 +1,11 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import type { SelectOption } from './select';
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 type Props = {
   options: [SelectOption, SelectOption];

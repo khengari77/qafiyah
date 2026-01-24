@@ -11,8 +11,10 @@
   "[typescriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
   "[json]": { "editor.defaultFormatter": "biomejs.biome" },
   "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[css]": { "editor.defaultFormatter": "biomejs.biome" },
   "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
   "[markdown]": { "editor.defaultFormatter": "biomejs.biome" },
+  "biome.enabled": true,
   "cSpell.words": ["alwalxed", "healthcheck", "isready", "plpgsql", "Qafiyah", "tashkeel"],
   "typescript.tsdk": "node_modules/typescript/lib",
 

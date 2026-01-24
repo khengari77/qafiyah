@@ -1,4 +1,7 @@
-import type { SelectOption } from '@/components/ui/select';
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 const ERAS = [
   { id: 1, name: 'إسلامي' },
