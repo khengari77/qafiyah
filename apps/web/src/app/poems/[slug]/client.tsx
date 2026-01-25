@@ -101,7 +101,7 @@ export default function PoemSlugClientPage() {
     },
     inLanguage: 'ar',
     datePublished: new Date().toISOString(),
-    url: `${SITE_URL}/poems/${params.slug}`,
+    url: `${SITE_URL}/poems/${slug}`,
     isPartOf: [
       {
         '@type': 'Collection',

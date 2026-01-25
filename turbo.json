@@ -17,6 +17,11 @@
       "inputs": ["src/**/*.{ts,tsx}", "*.{ts,json}", "tsconfig.json"],
       "outputs": []
     },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.{ts,tsx}", "*.{ts,json}", "vitest.config.*"],
+      "outputs": []
+    },
     "dev": {
       "cache": false,
       "persistent": true
