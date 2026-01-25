@@ -10,7 +10,8 @@
     "check-types": "turbo run check-types",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
-    "prepare": "husky"
+    "prepare": "husky",
+    "ci": "pnpm run format && pnpm run lint:fix && pnpm run check-types"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.12",
