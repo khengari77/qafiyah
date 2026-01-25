@@ -77,7 +77,7 @@ const app = new Hono<AppContext>()
         name: poetInfo[0].poetName,
         poemsCount: poetInfo[0].totalPoems,
         era:
-          eraInfo.length && eraInfo[0]
+          eraInfo.length && eraInfo[0] && eraInfo[0].eraName && eraInfo[0].eraSlug
             ? {
                 name: eraInfo[0].eraName,
                 slug: eraInfo[0].eraSlug,

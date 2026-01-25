@@ -53,7 +53,7 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
 
     const db = drizzle(client);
     c.set('db', db);
-    await next();
+    return await next();
   } catch (error) {
     console.error('Database error:', error);
 

@@ -9,4 +9,7 @@ pnpm run format
 echo "Linting and fixing..."
 pnpm run lint:fix
 
+echo "Checking types..."
+pnpm run check-types
+
 echo "Pre-commit checks passed!"

@@ -14,8 +14,8 @@
     },
     "check-types": {
       "dependsOn": ["^check-types"],
-      "inputs": ["src/**/*.{ts,tsx}", "*.{ts,json}"],
-      "outputs": ["**/*.tsbuildinfo"]
+      "inputs": ["src/**/*.{ts,tsx}", "*.{ts,json}", "tsconfig.json"],
+      "outputs": []
     },
     "dev": {
       "cache": false,

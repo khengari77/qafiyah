@@ -143,59 +143,58 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
       hasPrevPage: page > 1,
     };
 
-    let formattedResults: Array<{
-      poet_name: unknown;
-      poet_era: unknown;
-      poet_slug: unknown;
-      poem_title?: unknown;
-      poem_snippet?: unknown;
-      poem_meter?: unknown;
-      poem_slug?: unknown;
-      poet_bio?: unknown;
-      relevance: unknown;
-      total_count: unknown;
-    }>;
-
-    switch (search_type) {
-      case 'poems': {
-        formattedResults = results.map((r) => ({
-          poet_name: r.poet_name,
-          poet_era: r.poet_era,
-          poet_slug: r.poet_slug,
-          poem_title: r.poem_title,
-          poem_snippet: r.poem_snippet,
-          poem_meter: r.poem_meter,
-          poem_slug: r.poem_slug,
-          relevance: r.relevance,
-          total_count: r.total_count,
-        }));
-        break;
-      }
-      case 'poets': {
-        formattedResults = results.map((r) => ({
-          poet_name: r.poet_name,
-          poet_era: r.poet_era,
-          poet_slug: r.poet_slug,
-          poet_bio: r.poet_bio,
-          relevance: r.relevance,
-          total_count: r.total_count,
-        }));
-        break;
-      }
-      default: {
-        throw new HTTPException(ERROR_TYPES.INVALID_SEARCH_TYPE.code, {
-          message: 'نوع البحث غير صالح',
-        });
-      }
+    if (search_type === 'poems') {
+      const responseData = {
+        results: results.map((r) => {
+          const totalCount =
+            typeof r.total_count === 'number'
+              ? r.total_count
+              : typeof r.total_count === 'string'
+                ? Number.parseInt(r.total_count, 10) || 0
+                : 0;
+          return {
+            poet_name: String(r.poet_name ?? ''),
+            poet_era: String(r.poet_era ?? ''),
+            poet_slug: String(r.poet_slug ?? ''),
+            poem_title: String(r.poem_title ?? ''),
+            poem_snippet: String(r.poem_snippet ?? ''),
+            poem_meter: String(r.poem_meter ?? ''),
+            poem_slug: String(r.poem_slug ?? ''),
+            relevance: Number(r.relevance ?? 0),
+            total_count: totalCount,
+          };
+        }),
+        pagination,
+      };
+      return c.json(createValidatedResponse('poemsSearch', responseData));
     }
 
-    const responseData = {
-      results: formattedResults,
-      pagination,
-    };
+    if (search_type === 'poets') {
+      const responseData = {
+        results: results.map((r) => {
+          const totalCount =
+            typeof r.total_count === 'number'
+              ? r.total_count
+              : typeof r.total_count === 'string'
+                ? Number.parseInt(r.total_count, 10) || 0
+                : 0;
+          return {
+            poet_name: String(r.poet_name ?? ''),
+            poet_era: String(r.poet_era ?? ''),
+            poet_slug: String(r.poet_slug ?? ''),
+            poet_bio: String(r.poet_bio ?? ''),
+            relevance: Number(r.relevance ?? 0),
+            total_count: totalCount,
+          };
+        }),
+        pagination,
+      };
+      return c.json(createValidatedResponse('poetsSearch', responseData));
+    }
 
-    const resSchema = search_type === 'poems' ? 'poemsSearch' : 'poetsSearch';
-    return c.json(createValidatedResponse(resSchema, responseData));
+    throw new HTTPException(ERROR_TYPES.INVALID_SEARCH_TYPE.code, {
+      message: 'نوع البحث غير صالح',
+    });
   } catch (error) {
     if (!(error instanceof HTTPException)) {
       console.error(error);
