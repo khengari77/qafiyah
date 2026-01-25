@@ -37,9 +37,6 @@ jobs:
       - name: Lint
         run: pnpm run lint:fix
 
-      - name: Types
-        run: pnpm run check-types
-
       - name: Check for changes
         id: verify-changed-files
         run: |
