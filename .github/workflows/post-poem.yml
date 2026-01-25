@@ -1,13 +1,13 @@
-name: XBot
+name: Post Poem
 
 on:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:
 
 jobs:
   post:
-    name: XBot
+    name: Post Poem
     runs-on: ubuntu-latest
     timeout-minutes: 4
 
