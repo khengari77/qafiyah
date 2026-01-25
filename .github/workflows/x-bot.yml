@@ -1,4 +1,4 @@
-name: X Bot
+name: XBot
 
 on:
   schedule:
@@ -7,7 +7,7 @@ on:
 
 jobs:
   post:
-    name: X Bot
+    name: XBot
     runs-on: ubuntu-latest
     timeout-minutes: 4
 
