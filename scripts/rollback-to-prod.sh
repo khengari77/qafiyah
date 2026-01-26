@@ -7,7 +7,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-DEV_VARS_FILE="apps/api/.dev.vars"
+DEV_VARS_FILE="apps/serverless-api/.dev.vars"
 
 print_info() {
     echo -e "${GREEN}ℹ${NC} $1"

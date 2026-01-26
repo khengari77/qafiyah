@@ -3,15 +3,15 @@
   "tags": ["-lintignore"],
   "workspaces": {
     ".": {},
-    "apps/web": {
+    "apps/static-web": {
       "entry": ["src/app/**/*.{ts,tsx}", "next.config.*"],
       "project": ["src/**/*.{ts,tsx}"]
     },
-    "apps/api": {
+    "apps/serverless-api": {
       "entry": "src/app.ts",
       "project": "src/**/*.ts"
     },
-    "packages/zod-schemas": {
+    "packages/schemas": {
       "entry": "src/**/*.ts",
       "project": "src/**/*.ts"
     }

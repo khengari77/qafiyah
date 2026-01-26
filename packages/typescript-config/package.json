@@ -1,9 +1,0 @@
-{
-  "name": "@qaf/typescript-config",
-  "version": "0.0.0",
-  "license": "MIT",
-  "private": true,
-  "publishConfig": {
-    "access": "public"
-  }
-}

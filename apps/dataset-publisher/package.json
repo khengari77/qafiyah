@@ -1,5 +1,5 @@
 {
-  "name": "@qaf/dataset-publisher",
+  "name": "@qafiyah/dataset-publisher",
   "version": "1.0.0",
   "private": true,
   "description": "Publishes Qafiyah dataset to Hugging Face Hub",

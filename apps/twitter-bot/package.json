@@ -1,0 +1,25 @@
+{
+  "name": "@qafiyah/twitter-bot",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc --project tsconfig.json",
+    "start": "node dist/index.js",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check-types": "tsc --noEmit --pretty"
+  },
+  "dependencies": {
+    "dotenv": "^16.5.0",
+    "node-fetch": "^2.6.12",
+    "twitter-api-v2": "^1.22.0"
+  },
+  "devDependencies": {
+    "@qafiyah/tsconfig": "workspace:*",
+    "@types/node": "^22.14.1",
+    "@types/node-fetch": "^2.6.12",
+    "typescript": "^5.8.3"
+  }
+}
