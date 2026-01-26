@@ -1,0 +1,11 @@
+{
+  "name": "@qaf/dataset-publisher",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Publishes Qafiyah dataset to Hugging Face Hub",
+  "scripts": {
+    "publish:dataset": "python publish.py",
+    "publish:dry-run": "python publish.py --dry-run",
+    "setup": "python -m venv venv && ./venv/bin/pip install -r requirements.txt"
+  }
+}

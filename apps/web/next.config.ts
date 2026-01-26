@@ -1,12 +1,10 @@
-import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
-
-setupDevPlatform().catch(console.error);
-
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  output: 'export',
   reactStrictMode: true,
   devIndicators: false,
+  trailingSlash: true,
   compiler: {
     removeConsole: process.env.NODE_ENV === 'production',
   },

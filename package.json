@@ -3,6 +3,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "build:static": "pnpm --filter @qaf/web build:static",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "lint:fix": "biome check --write .",

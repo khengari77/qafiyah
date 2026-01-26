@@ -33,7 +33,7 @@ export type PoemResponseData = {
   metadata: PoemMetadata;
   clearTitle: string;
   processedContent: ProcessedPoemContent;
-  relatedPoems: RelatedPoems;
+  relatedPoems: RelatedPoems[];
 };
 
 export type EraResponseData = z.infer<typeof eraPoemsResponseSchema>['data'];

@@ -8,13 +8,44 @@ import {
   FALLBACK_RANDOM_POEM_LINES,
   FALLBACK_RANDOM_POEM_SLUG,
   MAX_EXCERPT_LENGTH,
+  MAX_URLS_PER_SITEMAP,
 } from '../constants';
+import { poemsFullData } from '../schemas/db';
 import type { AppContext, PoemWithRelatedResponse, RandomPoemLines } from '../types';
 import { extractPoemExcerpt } from '../utils/extract-poem-excerpt';
 import { processPoemContent } from '../utils/process-poem-content';
 
 const app = new Hono<AppContext>();
 app
+  // Endpoint for fetching poem slugs for static generation
+  .get('/slugs', async (c) => {
+    const db = c.get('db');
+    const page = Number(c.req.query('page') || '1');
+    const limit = Number(c.req.query('limit') || MAX_URLS_PER_SITEMAP);
+
+    const offset = (page - 1) * limit;
+    const poems = await db
+      .select({ slug: poemsFullData.slug })
+      .from(poemsFullData)
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count for pagination info
+    const [{ count } = { count: 0 }] = await db
+      .select({ count: sql`count(*)` })
+      .from(poemsFullData);
+
+    return c.json({
+      success: true,
+      data: poems,
+      meta: {
+        page,
+        limit,
+        total: Number(count),
+        totalPages: Math.ceil(Number(count) / limit),
+      },
+    });
+  })
   .get('/random', zValidator('query', getRandomPoemRequestSchema), async (c) => {
     const { option } = c.req.valid('query');
     const db = c.get('db');

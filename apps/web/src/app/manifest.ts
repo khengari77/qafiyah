@@ -2,6 +2,9 @@ import type { MetadataRoute } from 'next';
 import { SITE_NAME } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
 
+// Required for static export
+export const dynamic = 'force-static';
+
 export default function manifest(): MetadataRoute.Manifest {
   return {
     name: SITE_NAME,

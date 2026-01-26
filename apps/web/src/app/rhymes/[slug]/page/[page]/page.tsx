@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import type { Key } from 'react';
 import { toArabicDigits } from 'to-arabic-digits';
+import { JsonLdServer } from '@/components/json-ld-server';
+import { ListCard } from '@/components/ui/list-card';
+import { SectionPaginationControllers, SectionWrapper } from '@/components/ui/section-wrapper';
 import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
 import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
-import RhymePoemsSlugClientPage from './client';
-export const runtime = 'edge';
+import { fetchAllRhymesWithStats, fetchRhymePoems, generatePageNumbers } from '@/lib/api/static';
 
-export const RHYMES = new Map([
+const RHYMES = new Map([
   ['3316b009-7212-4d5f-831f-f5f2d6febaa6', 'القاف'],
   ['464b68f4-d67b-40b2-9d85-21452b121b9a', 'الميم'],
   ['024d7ef1-98bd-4350-ba7f-fb1a7a4b0a65', 'الهاء'],
@@ -56,46 +60,146 @@ export const RHYMES = new Map([
 ]);
 
 type Props = {
-  params: Promise<{ slug: string; page?: string }>;
+  params: Promise<{ slug: string; page: string }>;
 };
+
+export async function generateStaticParams() {
+  const rhymes = await fetchAllRhymesWithStats();
+  const params: Array<{ slug: string; page: string }> = [];
+
+  for (const rhyme of rhymes) {
+    const pages = generatePageNumbers(rhyme.poemsCount);
+    for (const page of pages) {
+      params.push({ slug: rhyme.slug, page: page.toString() });
+    }
+  }
+
+  return params;
+}
+
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, page } = await params;
 
-  if (RHYMES.has(slug)) {
-    const rhymePattern = RHYMES.get(slug);
+  if (!RHYMES.has(slug)) {
     return {
-      title: `قافية | قصائد على قافية ${rhymePattern} | صفحة (${toArabicDigits(page)})`,
-      openGraph: {
-        type: 'website',
-        siteName: SITE_NAME,
-        locale: 'ar_AR',
-        url: `${SITE_URL}/rhymes/${slug}/page/${page || 1}`,
-        title: `قافية | قصائد على قافية ${rhymePattern}`,
-        images: [
-          {
-            url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
-            width: 1200,
-            height: 630,
-            type: 'image/png',
-          },
-        ],
-      },
-      twitter: {
-        title: `قافية | قصائد على قافية ${rhymePattern}`,
-        images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
-      },
+      title: NOT_FOUND_TITLE,
+      robots: { index: false, follow: false },
     };
   }
+
+  const rhymePattern = RHYMES.get(slug);
+  const title = `قافية | قصائد على قافية ${rhymePattern} | صفحة (${toArabicDigits(page)})`;
+
   return {
-    title: NOT_FOUND_TITLE,
-    robots: {
-      index: false,
-      follow: false,
+    title,
+    openGraph: {
+      type: 'website',
+      siteName: SITE_NAME,
+      locale: 'ar_AR',
+      url: `${SITE_URL}/rhymes/${slug}/page/${page}`,
+      title: `قافية | قصائد على قافية ${rhymePattern}`,
+      images: [
+        {
+          url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
+          width: 1200,
+          height: 630,
+          type: 'image/png',
+        },
+      ],
+    },
+    twitter: {
+      title: `قافية | قصائد على قافية ${rhymePattern}`,
+      images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
     },
   };
 }
 
-export default function Page() {
-  return <RhymePoemsSlugClientPage />;
+export default async function RhymePage({ params }: Props) {
+  const { slug, page } = await params;
+  const pageNumber = Number.parseInt(page, 10);
+
+  if (!slug || !Number.isFinite(pageNumber) || pageNumber < 1) {
+    notFound();
+  }
+
+  const { data: rhymeData, pagination } = await fetchRhymePoems(slug, page);
+
+  if (!rhymeData) {
+    notFound();
+  }
+
+  const { rhymeDetails, poems } = rhymeData;
+
+  const totalPages = pagination?.totalPages || Math.ceil(rhymeDetails.poemsCount / 30);
+  const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
+  const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
+
+  const nextPageUrl = `/rhymes/${slug}/page/${pageNumber + 1}`;
+  const prevPageUrl = `/rhymes/${slug}/page/${pageNumber - 1}`;
+
+  const content = {
+    header: `${rhymeDetails.pattern} (${toArabicDigits(rhymeDetails.poemsCount)} قصيدة)`,
+    headerTip: `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+  };
+
+  const itemListElements = poems.map((poem, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: {
+      '@type': 'CreativeWork',
+      name: poem.title,
+      url: `${SITE_URL}/poems/${poem.slug}`,
+    },
+  }));
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Collection',
+    name: `قصائد على قافية ${rhymeDetails.pattern}`,
+    url: `${SITE_URL}/rhymes/${slug}/page/${pageNumber}`,
+    description: `مجموعة قصائد على قافية ${rhymeDetails.pattern} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+    mainEntityOfPage: {
+      '@type': 'CollectionPage',
+      name: `قصائد على قافية ${rhymeDetails.pattern}`,
+      url: `${SITE_URL}/rhymes/${slug}/page/1`,
+    },
+    numberOfItems: rhymeDetails.poemsCount,
+    itemListElement: itemListElements,
+  };
+
+  return (
+    <>
+      <JsonLdServer data={jsonLd} />
+      <SectionWrapper
+        dynamicTitle={content.header}
+        pagination={{
+          totalPages,
+          component: (
+            <SectionPaginationControllers
+              headerTip={content.headerTip}
+              nextPageUrl={nextPageUrl}
+              prevPageUrl={prevPageUrl}
+              hasNextPage={hasNextPage}
+              hasPrevPage={hasPrevPage}
+            />
+          ),
+        }}
+      >
+        {poems.length > 0 ? (
+          poems.map((poem: { slug: Key | null | undefined; title: string; meter: string }) => (
+            <ListCard
+              key={poem.slug}
+              href={`/poems/${poem.slug}`}
+              name={poem.title}
+              title={poem.meter}
+            />
+          ))
+        ) : (
+          <p className="text-center text-zinc-500">لا توجد قصائد لهذه القافية.</p>
+        )}
+      </SectionWrapper>
+    </>
+  );
 }

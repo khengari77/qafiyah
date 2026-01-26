@@ -3,7 +3,9 @@ import { toArabicDigits } from 'to-arabic-digits';
 export const isDev = process.env.NODE_ENV === 'development';
 export const SITE_NAME = 'قافية';
 const DOMAIN = 'qafiyah.com';
-export const API_URL = isDev ? 'http://localhost:8787' : `https://api.${DOMAIN}`;
+// Build-time API URL takes precedence for static generation
+export const API_URL =
+  process.env.BUILD_API_URL || (isDev ? 'http://localhost:8787' : `https://api.${DOMAIN}`);
 export const SITE_URL = isDev ? 'http://localhost:3000' : `https://${DOMAIN}`;
 export const TWITTER_HANDLE = '@qafiyahdotcom';
 export const TWITTER_ID = '1570116567538475010';

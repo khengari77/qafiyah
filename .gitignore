@@ -48,3 +48,10 @@ packages/zod-schemas/tsup.config.bundled_jjm3lh3p4d.mjs
 
 # Docker volumes
 docker-compose.override.yml
+
+# Python (for dataset-publisher)
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
