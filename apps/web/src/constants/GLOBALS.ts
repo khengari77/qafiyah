@@ -3,7 +3,6 @@ import { toArabicDigits } from 'to-arabic-digits';
 export const isDev = process.env.NODE_ENV === 'development';
 export const SITE_NAME = 'قافية';
 const DOMAIN = 'qafiyah.com';
-// Build-time API URL takes precedence for static generation
 export const API_URL =
   process.env.BUILD_API_URL || (isDev ? 'http://localhost:8787' : `https://api.${DOMAIN}`);
 export const SITE_URL = isDev ? 'http://localhost:3000' : `https://${DOMAIN}`;
@@ -12,9 +11,6 @@ export const TWITTER_ID = '1570116567538475010';
 export const GITHUB_REPO_URL = 'https://github.com/alwalxed/qafiyah';
 export const DATABASE_DUMPS_URL = 'https://github.com/alwalxed/qafiyah/tree/main/public/datasets';
 export const DEVELOPER_SITE_URL = 'https://alwalxed.com';
-export const DEVELOPER_TWITTER_URL = 'https://x.com/alwalxed';
-export const DEVELOPER_INSTAGRAM_URL = 'https://instagram.com/alwalexd';
-export const DEVELOPER_GITHUB_URL = 'https://github.com/alwalxed';
 export const responsiveIconSize = 'w-4 h-4 xxs:w-5 xxs:h-5 md:w-8 md:h-8';
 export const NOT_FOUND_CODE = toArabicDigits(404);
 export const NOT_FOUND_MESSAGE = 'الصفحة غير موجودة';

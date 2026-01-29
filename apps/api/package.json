@@ -1,5 +1,5 @@
 {
-  "name": "@qafiyah/serverless-api",
+  "name": "@qafiyah/api",
   "scripts": {
     "dev": "pnpm run build:deps && wrangler dev",
     "build": "pnpm run build:deps && wrangler build",

@@ -8,7 +8,7 @@ DB_PASSWORD="postgres"
 DB_HOST="127.0.0.1"
 DB_PORT="5433"
 DUMP_DIR="public/datasets"
-DEV_VARS_FILE="apps/serverless-api/.dev.vars"
+DEV_VARS_FILE="apps/api/.dev.vars"
 DOCKER_COMPOSE_FILE="docker-compose.yml"
 
 print_info() {

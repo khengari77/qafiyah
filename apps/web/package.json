@@ -1,11 +1,11 @@
 {
-  "name": "@qafiyah/static-web",
+  "name": "@qafiyah/web",
   "version": "0.0.0",
   "private": false,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
-    "build:static": "BUILD_API_URL=http://localhost:8787 next build",
+    "build": "STATIC_EXPORT=true next build",
+    "build:static": "STATIC_EXPORT=true BUILD_API_URL=http://localhost:8787 next build",
     "start": "next start",
     "serve": "npx serve out",
     "lint": "biome check .",

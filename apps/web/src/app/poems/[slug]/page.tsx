@@ -16,8 +16,8 @@ export async function generateStaticParams() {
   return slugs.map((slug) => ({ slug }));
 }
 
-// Disable dynamic params - only pre-rendered pages will be served
-export const dynamicParams = false;
+// In dev, allow any slug (fetched on demand). In production build, only slugs from generateStaticParams.
+export const dynamicParams = process.env.NODE_ENV === 'development';
 
 function flattenVerses(verses: [string, string][]): string {
   if (!verses || !verses.length) return '';

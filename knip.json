@@ -3,11 +3,11 @@
   "tags": ["-lintignore"],
   "workspaces": {
     ".": {},
-    "apps/static-web": {
+    "apps/web": {
       "entry": ["src/app/**/*.{ts,tsx}", "next.config.*"],
       "project": ["src/**/*.{ts,tsx}"]
     },
-    "apps/serverless-api": {
+    "apps/api": {
       "entry": "src/app.ts",
       "project": "src/**/*.ts"
     },
