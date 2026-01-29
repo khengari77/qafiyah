@@ -1,5 +1,4 @@
 import { API_URL } from '@/constants/GLOBALS';
-import { removeTashkeel } from '@/utils/texts/remove-tashkeel';
 import {
   fetchWithValidation,
   validateParams,
@@ -128,21 +127,6 @@ const apiClient = (baseUrl: string) => {
       };
     },
 
-    // Random Line
-    async getRandomLines(): Promise<string> {
-      try {
-        const response = await fetch(`${API_URL}/poems/random?option=lines`);
-        if (!response.ok) {
-          return 'إن الذي سمك السماء بنى لنا';
-        }
-        const content = await response.text();
-
-        return removeTashkeel(content.trim().split('\n')[0]);
-      } catch {
-        return 'إن الذي سمك السماء بنى لنا';
-      }
-    },
-
     async getRandomSlug(): Promise<string> {
       try {
         const response = await fetch(`${API_URL}/poems/random?option=slug`);
@@ -151,7 +135,8 @@ const apiClient = (baseUrl: string) => {
         }
         const slug = await response.text();
 
-        return slug;
+        // Trim any whitespace/newlines from the response
+        return slug.trim();
       } catch {
         return 'eabca780-811f-4ea4-949e-21df6efba15d';
       }

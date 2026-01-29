@@ -1,16 +1,19 @@
-## Database Dump Creation
+# Database Dump
 
-**Note:** This file is for dump creation only. For restoration instructions, please see the [restore documentation](https://github.com/alwalxed/qafiyah/blob/main/.db_dumps/README.md).
+Creates a clean dump of the `public` schema only.
 
 ```bash
-PGSSLMODE=require pg_dump \
-  -h aws-0-us-east-2.pooler.supabase.com \
+pg_dump \
+  -h 1.1.1.1 \
   -p 5432 \
-  -U postgres.<project_id> \
-  -d postgres \
+  -U qafiyah \
+  -d qafiyah \
   --schema=public \
   --no-owner \
-  --no-acl \
-  -F c \
-  -f qafiyah_public_$(date +%Y%m%d_%H%M).dump
-```
+  --no-privileges \
+  --no-tablespaces \
+  -Fc \
+  -f qafiyah_public_$(date +%Y%m%d_%H%M%S).dump
+````
+
+See [Restore Documentation](./README.md) for restore instructions.

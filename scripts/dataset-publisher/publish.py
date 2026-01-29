@@ -12,12 +12,8 @@ from pathlib import Path
 
 import pandas as pd
 from datasets import Dataset
-from dotenv import load_dotenv
 from huggingface_hub import HfApi
 from sqlalchemy import create_engine
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Default configuration
 DEFAULT_REPO = "qafiyah/classical-arabic-poetry"
@@ -133,7 +129,7 @@ def get_dataset_card_path() -> Path | None:
 def publish_dataset(
     df: pd.DataFrame,
     repo_id: str,
-    token: str,
+    token: str | None,
     dry_run: bool = False,
 ) -> None:
     """
@@ -142,7 +138,7 @@ def publish_dataset(
     Args:
         df: DataFrame containing the dataset
         repo_id: Target Hugging Face repository (e.g., "qafiyah/classical-arabic-poetry")
-        token: Hugging Face API token with write access
+        token: Hugging Face API token with write access (None to use cached token)
         dry_run: If True, skip the actual upload
     """
     print(f"\nPreparing dataset for upload...")
@@ -204,13 +200,24 @@ def main():
     )
     args = parser.parse_args()
     
-    # Get Hugging Face token
-    hf_token = os.getenv("HF_TOKEN")
-    if not hf_token and not args.dry_run:
-        print("Error: HF_TOKEN environment variable is required.")
-        print("Set it in .env file or export it in your shell.")
-        print("\nTo get a token, visit: https://huggingface.co/settings/tokens")
-        sys.exit(1)
+    # Get Hugging Face token from CLI auth (hf auth login)
+    # Try multiple methods to get the token
+    hf_token = os.getenv("HF_TOKEN")  # Check environment variable first
+    if not hf_token:
+        api = HfApi()
+        hf_token = api.token  # Try to get from cached login
+        # If still None, verify authentication by checking whoami
+        if not hf_token:
+            try:
+                api.whoami()  # This will raise an exception if not authenticated
+                # If whoami succeeds, we're authenticated but token might be None
+                # In this case, pass None to let the library use cached token
+                hf_token = None
+            except Exception:
+                if not args.dry_run:
+                    print("Error: Not logged in to Hugging Face.")
+                    print("Run: hf auth login")
+                    sys.exit(1)
     
     try:
         # Fetch and process data

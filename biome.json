@@ -17,7 +17,7 @@
       "!**/coverage",
       "!**/*.min.js",
       "!**/pnpm-lock.yaml",
-      "!**/.db_dumps",
+      "!**/public/datasets",
       "!**/env.d.ts",
       "!**/worker-configuration.d.ts"
     ]

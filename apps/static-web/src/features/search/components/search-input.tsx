@@ -17,8 +17,7 @@ type Props = {
   resetAllStates: () => void;
   hasActiveFiltersOrInput: boolean;
 
-  effectText: string;
-  handleTypingEffect: (show: boolean) => void;
+  placeholder: string;
 };
 
 export function SearchInput({
@@ -32,8 +31,7 @@ export function SearchInput({
   handleCustomInputChange,
   resetAllStates,
 
-  effectText,
-  handleTypingEffect,
+  placeholder,
   hasActiveFiltersOrInput,
 }: Props) {
   return (
@@ -42,9 +40,7 @@ export function SearchInput({
       <div tabIndex={-1} className="relative">
         <Input
           tabIndex={0}
-          placeholder={effectText}
-          onFocus={() => handleTypingEffect(false)}
-          onBlur={() => handleTypingEffect(true)}
+          placeholder={placeholder}
           maxLength={50}
           value={inputValue}
           autoComplete="off"

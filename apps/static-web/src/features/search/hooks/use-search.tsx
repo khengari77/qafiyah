@@ -3,9 +3,10 @@ import { useCallback, useMemo } from 'react';
 import { useInfiniteQuery } from './use-infinite-query';
 import { useInfiniteScroll } from './use-infinite-scroll';
 import { useInputValidation } from './use-input-validation';
-import { usePlaceholderTypewriter } from './use-placeholder-typewriter';
 import { useSearchFilters } from './use-search-filters';
 import { useSearchInput } from './use-search-input';
+
+const STATIC_PLACEHOLDER = 'تقول ابنتي لما رأت طول رحلتي';
 
 export function useSearch() {
   const {
@@ -71,8 +72,6 @@ export function useSearch() {
     search_type: searchType,
     match_type: searchParams.match_type,
   });
-
-  const { effectText, handleTypingEffect } = usePlaceholderTypewriter();
 
   // Custom handlers that integrate the extracted hooks
   const handleCustomInputChange = useCallback(
@@ -258,7 +257,7 @@ export function useSearch() {
       refreshThePage: 'حدث الصفحة',
 
       currentHeaderTitle: searchType === 'poems' ? 'ابحث في مليون بيت' : 'ابحث عن ديوان شاعر',
-      currentInputPlaceholder: searchType === 'poems' ? effectText : 'المتنبي',
+      currentInputPlaceholder: searchType === 'poems' ? STATIC_PLACEHOLDER : 'المتنبي',
       currentFiltersButton: filtersVisible ? 'إخفاء الفلاتر' : 'عرض الفلاتر',
 
       search: 'ابحث',
@@ -343,7 +342,6 @@ export function useSearch() {
       matchTypeText,
     }),
     [
-      effectText,
       filtersVisible,
       matchTypeText,
       resultText,
@@ -394,9 +392,6 @@ export function useSearch() {
       handleErasChange: handleErasChangeWithState,
       handleMetersChange: handleMetersChangeWithState,
       handleThemesChange: handleThemesChangeWithState,
-
-      // type-effects
-      handleTypingEffect,
     }),
     [
       data,
@@ -411,7 +406,6 @@ export function useSearch() {
       handleMetersChangeWithState,
       handleRhymesChangeWithState,
       handleThemesChangeWithState,
-      handleTypingEffect,
       hasSubmitted,
       inputValue,
       isError,

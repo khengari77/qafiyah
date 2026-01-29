@@ -1,42 +1,68 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getRandomSlug } from '@/lib/api/queries';
+
+type Status = 'idle' | 'loading' | 'error';
 
 export function useRandomPoem() {
   const router = useRouter();
-  const [hasClicked, setHasClicked] = useState(false);
+  const [status, setStatus] = useState<Status>('idle');
+  const [error, setError] = useState<Error | null>(null);
 
-  const { isLoading, isFetching, isError, error, refetch } = useQuery<string>({
-    queryKey: ['random-poem-slug'],
-    queryFn: getRandomSlug,
-    enabled: false,
-    retry: 2,
-    staleTime: 1000 * 60 * 60 * 24 * 30, // 1 month
-  });
+  // AbortController ref for cancellation (react-query pattern)
+  const abortControllerRef = useRef<AbortController | null>(null);
+  // Track mounted state to prevent state updates after unmount
+  const isMountedRef = useRef(true);
 
-  const handleClick = async () => {
-    if (isLoading || isFetching) return; // Prevent multiple triggers
-    setHasClicked(true);
-    const result = await refetch();
+  // Setup mount tracking
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      // Cleanup: abort any in-flight request on unmount
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
-    if (result.data) {
-      try {
-        router.push(`/poems/${result.data}`);
-      } catch (navErr) {
-        console.error('Navigation error:', navErr);
+  const handleClick = useCallback(async () => {
+    // Guard: already loading
+    if (status === 'loading') return;
+
+    // Cancel any in-flight request (prevents stale responses)
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
+    setStatus('loading');
+    setError(null);
+
+    try {
+      const slug = await getRandomSlug();
+
+      // Check if still mounted and not aborted
+      if (!isMountedRef.current) return;
+
+      if (slug?.trim()) {
+        router.push(`/poems/${slug.trim()}`);
+      } else {
+        setStatus('idle');
       }
-    } else if (!result.error) {
-      console.warn('Refetch returned no data and no error.');
+    } catch (err) {
+      // Don't update state if unmounted
+      if (!isMountedRef.current) return;
+      // Ignore abort errors
+      if (err instanceof Error && err.name === 'AbortError') return;
+
+      setStatus('error');
+      setError(err instanceof Error ? err : new Error('Unknown error'));
     }
-  };
+  }, [status, router]);
 
   return {
     handleClick,
-    isLoading: isLoading || isFetching,
-    isError: hasClicked && isError,
+    isLoading: status === 'loading',
+    isError: status === 'error',
     error,
   };
 }
