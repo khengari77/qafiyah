@@ -42,7 +42,7 @@ importers:
         specifier: 5.8.2
         version: 5.8.2
 
-  apps/serverless-api:
+  apps/api:
     dependencies:
       '@hono/zod-validator':
         specifier: ^0.4.3
@@ -85,7 +85,32 @@ importers:
         specifier: ^4.59.1
         version: 4.59.1(@cloudflare/workers-types@4.20250413.0)
 
-  apps/static-web:
+  apps/bot:
+    dependencies:
+      dotenv:
+        specifier: ^16.5.0
+        version: 16.5.0
+      node-fetch:
+        specifier: ^2.6.12
+        version: 2.7.0
+      twitter-api-v2:
+        specifier: ^1.22.0
+        version: 1.22.0
+    devDependencies:
+      '@qafiyah/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
+      '@types/node':
+        specifier: ^22.14.1
+        version: 22.14.1
+      '@types/node-fetch':
+        specifier: ^2.6.12
+        version: 2.6.12
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
+
+  apps/web:
     dependencies:
       '@qafiyah/schemas':
         specifier: workspace:*
@@ -159,31 +184,6 @@ importers:
         version: 2.2.1(tailwindcss@3.4.17(ts-node@10.9.2(@types/node@20.17.30)(typescript@5.8.3)))
       typescript:
         specifier: ^5
-        version: 5.8.3
-
-  apps/twitter-bot:
-    dependencies:
-      dotenv:
-        specifier: ^16.5.0
-        version: 16.5.0
-      node-fetch:
-        specifier: ^2.6.12
-        version: 2.7.0
-      twitter-api-v2:
-        specifier: ^1.22.0
-        version: 1.22.0
-    devDependencies:
-      '@qafiyah/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      '@types/node':
-        specifier: ^22.14.1
-        version: 22.14.1
-      '@types/node-fetch':
-        specifier: ^2.6.12
-        version: 2.6.12
-      typescript:
-        specifier: ^5.8.3
         version: 5.8.3
 
   packages/schemas:
