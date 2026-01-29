@@ -11,8 +11,6 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
     if (!databaseUrl) {
       throw new Error('Database configuration missing');
     }
-    const urlWithoutPassword = databaseUrl.replace(/:[^:@]+@/, ':****@');
-    console.log(`Connecting to database: ${urlWithoutPassword}`);
     const url = new URL(databaseUrl);
     const options = {
       host: url.hostname,
@@ -28,10 +26,6 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
       transform: { undefined: null },
       onnotice: () => {},
     };
-
-    console.log(
-      `Connection options: host=${options.host}, port=${options.port}, database=${options.database}, user=${options.user}`
-    );
 
     try {
       client = postgres(options);

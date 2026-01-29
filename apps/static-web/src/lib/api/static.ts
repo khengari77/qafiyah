@@ -22,8 +22,17 @@ import type {
 const FETCH_PER_PAGE = 30;
 const MAX_URLS_PER_SITEMAP = 1000;
 
+function isConnectionError(error: unknown): boolean {
+  const cause = error instanceof Error ? error.cause : undefined;
+  if (cause && typeof cause === 'object' && 'code' in cause) {
+    return (cause as { code?: string }).code === 'ECONNREFUSED';
+  }
+  return false;
+}
+
 /**
- * Helper to fetch JSON from API with error handling
+ * Helper to fetch JSON from API with error handling.
+ * Throws on non-OK response; callers should catch connection errors when building static params.
  */
 async function fetchApi<T>(endpoint: string): Promise<T> {
   const url = `${API_URL}${endpoint}`;
@@ -74,9 +83,24 @@ export async function fetchAllPoemSlugs(): Promise<string[]> {
         page++;
       }
     } catch (error) {
-      // If slugs endpoint doesn't exist, fall back to fetching from poets
+      // If slugs endpoint doesn't exist or API is down, fall back or return []
+      if (isConnectionError(error)) {
+        console.warn('fetchAllPoemSlugs: API unreachable, returning no slugs', error);
+        return [];
+      }
       console.warn('fetchAllPoemSlugs: falling back to alternative method', error);
-      return fetchAllPoemSlugsFallback();
+      try {
+        return await fetchAllPoemSlugsFallback();
+      } catch (fallbackError) {
+        if (isConnectionError(fallbackError)) {
+          console.warn(
+            'fetchAllPoemSlugs: fallback failed (API unreachable), returning no slugs',
+            fallbackError
+          );
+          return [];
+        }
+        throw fallbackError;
+      }
     }
   }
 
@@ -84,10 +108,19 @@ export async function fetchAllPoemSlugs(): Promise<string[]> {
 }
 
 /**
- * Fallback method to get poem slugs by iterating through all poets and their poems
+ * Fallback method to get poem slugs by iterating through all poets and their poems.
+ * Returns [] if the API is unreachable.
  */
 async function fetchAllPoemSlugsFallback(): Promise<string[]> {
-  const poets = await fetchAllPoetsWithStats();
+  let poets: PoetStats[];
+  try {
+    poets = await fetchAllPoetsWithStats();
+  } catch (error) {
+    if (isConnectionError(error)) {
+      return [];
+    }
+    throw error;
+  }
   const allSlugs: string[] = [];
 
   for (const poet of poets) {
