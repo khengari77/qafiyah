@@ -75,12 +75,12 @@ rsync -avz --delete apps/web/out/ YOUR_VPS:/var/www/qafiyah/web/out/
 
 **rsync flags:**
 
-| Flag      | Meaning |
-|-----------|---------|
-| `-a`      | Archive (recursive, preserves permissions/timestamps) |
-| `-v`      | Verbose |
-| `-z`      | Compress during transfer |
-| `--delete`| Remove files on VPS that no longer exist locally |
+| Flag                   | Meaning                                                  |
+| ---------------------- | -------------------------------------------------------- |
+| `-a`                   | Archive (recursive, preserves permissions/timestamps)    |
+| `-v`                   | Verbose                                                  |
+| `-z`                   | Compress during transfer                                 |
+| `--delete`             | Remove files on VPS that no longer exist locally         |
 | `--exclude='web/out/'` | When syncing config, do not delete `web/out/` on the VPS |
 
 ### 4. On the VPS
@@ -150,10 +150,10 @@ docker compose down
 
 ## Contents of this folder
 
-| Path                    | Purpose |
-|-------------------------|---------|
-| `docker-compose.yml`    | nginx service for VPS (no Postgres). |
-| `nginx/nginx.conf`     | Site config: routing, caching, security headers. |
+| Path                 | Purpose                                          |
+| -------------------- | ------------------------------------------------ |
+| `docker-compose.yml` | nginx service for VPS (no Postgres).             |
+| `nginx/nginx.conf`   | Site config: routing, caching, security headers. |
 
 Root `docker-compose.yml` (repo root) is for **local** Postgres only; this `deploy/` setup is for the **VPS** only.
 
