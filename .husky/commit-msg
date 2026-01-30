@@ -1,0 +1,22 @@
+#!/usr/bin/env sh
+set -e
+
+commit_msg_file="$1"
+max_length=280
+
+# Exempt merge commits (and revert/fixup/squash - commitlint defaultIgnores handles those)
+if head -n1 "$commit_msg_file" | grep -qE '^Merge (branch|tag|pull request|remote-tracking)'; then
+  exit 0
+fi
+
+# Count only the message (exclude comment lines from e.g. git commit --verbose)
+message_content=$(awk '/^#/ { exit } 1' "$commit_msg_file")
+message_length=$(printf '%s' "$message_content" | wc -c)
+
+if [ "$message_length" -gt "$max_length" ]; then
+  echo "Commit message exceeds ${max_length} characters (header + body + footer)."
+  echo "Current length: ${message_length} characters."
+  exit 1
+fi
+
+pnpm exec commitlint --edit "$commit_msg_file"
