@@ -17,7 +17,7 @@ export async function generateStaticParams() {
 }
 
 // In dev, allow any slug (fetched on demand). In production build, only slugs from generateStaticParams.
-export const dynamicParams = process.env.NODE_ENV === 'development';
+export const dynamicParams = true;
 
 function flattenVerses(verses: [string, string][]): string {
   if (!verses || !verses.length) return '';
