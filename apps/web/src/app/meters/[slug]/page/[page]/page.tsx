@@ -121,7 +121,15 @@ export default async function MeterPage({ params }: Props) {
     notFound();
   }
 
-  const { data: meterData, pagination } = await fetchMeterPoems(slug, page);
+  let meterData: Awaited<ReturnType<typeof fetchMeterPoems>>['data'];
+  let pagination: Awaited<ReturnType<typeof fetchMeterPoems>>['pagination'];
+  try {
+    const result = await fetchMeterPoems(slug, page);
+    meterData = result.data;
+    pagination = result.pagination;
+  } catch {
+    notFound();
+  }
 
   if (!meterData) {
     notFound();

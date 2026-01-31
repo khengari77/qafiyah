@@ -468,12 +468,15 @@ export async function fetchThemePoems(
 // ============================================================================
 
 /**
- * Generate page numbers array from 1 to totalPages
+ * Generate page numbers array from 1 to totalPages.
+ * Returns [] when totalCount === 0 so no static params are generated for entities with zero poems.
  */
 export function generatePageNumbers(
   totalCount: number,
   perPage: number = FETCH_PER_PAGE
 ): number[] {
+  if (totalCount === 0) return [];
+
   const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
   return Array.from({ length: totalPages }, (_, i) => i + 1);
 }

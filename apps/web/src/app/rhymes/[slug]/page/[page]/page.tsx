@@ -124,7 +124,15 @@ export default async function RhymePage({ params }: Props) {
     notFound();
   }
 
-  const { data: rhymeData, pagination } = await fetchRhymePoems(slug, page);
+  let rhymeData: Awaited<ReturnType<typeof fetchRhymePoems>>['data'];
+  let pagination: Awaited<ReturnType<typeof fetchRhymePoems>>['pagination'];
+  try {
+    const result = await fetchRhymePoems(slug, page);
+    rhymeData = result.data;
+    pagination = result.pagination;
+  } catch {
+    notFound();
+  }
 
   if (!rhymeData) {
     notFound();

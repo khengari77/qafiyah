@@ -103,7 +103,15 @@ export default async function ThemePage({ params }: Props) {
     notFound();
   }
 
-  const { data: themeData, pagination } = await fetchThemePoems(slug, page);
+  let themeData: Awaited<ReturnType<typeof fetchThemePoems>>['data'];
+  let pagination: Awaited<ReturnType<typeof fetchThemePoems>>['pagination'];
+  try {
+    const result = await fetchThemePoems(slug, page);
+    themeData = result.data;
+    pagination = result.pagination;
+  } catch {
+    notFound();
+  }
 
   if (!themeData) {
     notFound();

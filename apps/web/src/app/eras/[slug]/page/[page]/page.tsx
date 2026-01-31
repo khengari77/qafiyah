@@ -86,7 +86,15 @@ export default async function EraPage({ params }: Props) {
     notFound();
   }
 
-  const { data: eraData, pagination } = await fetchEraPoems(slug, page);
+  let eraData: Awaited<ReturnType<typeof fetchEraPoems>>['data'];
+  let pagination: Awaited<ReturnType<typeof fetchEraPoems>>['pagination'];
+  try {
+    const result = await fetchEraPoems(slug, page);
+    eraData = result.data;
+    pagination = result.pagination;
+  } catch {
+    notFound();
+  }
 
   if (!eraData) {
     notFound();

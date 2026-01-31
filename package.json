@@ -5,6 +5,7 @@
     "build": "turbo run build",
     "build:static": "pnpm --filter @qafiyah/web build:static",
     "dev": "turbo run dev",
+    "dev:test": "pnpm --filter @qafiyah/api dev:test",
     "lint": "turbo run lint",
     "lint:fix": "biome check --write .",
     "format": "biome format --write . && prettier --write \"**/*.{md,mdx}\"",

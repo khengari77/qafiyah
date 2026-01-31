@@ -95,7 +95,6 @@ export function createTestClient<T extends Hono<AppContext>>(
   const db = options?.db ?? createMockDb();
   const bindings: Bindings = {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
-    DEV_DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
     ...options?.bindings,
   };
 

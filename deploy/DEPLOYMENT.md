@@ -29,6 +29,8 @@ ls -la /var/www/qafiyah
 
 ## Monthly deployment workflow
 
+The steps below use the **dev** local database (port 5433). The **test** database (port 5434, `pnpm dev:test`) is for local fast build validation only; production and this deployment flow are unchanged.
+
 ### 1. Start local services
 
 **Terminal 1 – Postgres:**

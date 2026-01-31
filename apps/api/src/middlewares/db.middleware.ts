@@ -7,7 +7,7 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
   let client: ReturnType<typeof postgres> | null = null;
 
   try {
-    const databaseUrl = c.env.DEV_DATABASE_URL || c.env.DATABASE_URL;
+    const databaseUrl = c.env.DATABASE_URL;
     if (!databaseUrl) {
       throw new Error('Database configuration missing');
     }
@@ -30,7 +30,8 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
     try {
       client = postgres(options);
       await client`SELECT 1 as test`;
-      console.log('Database connection successful');
+      const dbLabel = options.port === 5434 ? 'test' : options.port === 5433 ? 'dev' : 'prod';
+      console.log(`Database connection successful (${dbLabel} @ ${options.host}:${options.port})`);
     } catch (connError: unknown) {
       const error = connError instanceof Error ? connError : new Error(String(connError));
       console.error('Connection error details:', {

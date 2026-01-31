@@ -1,8 +1,7 @@
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 
 export type Bindings = {
-  DATABASE_URL: string;
-  DEV_DATABASE_URL?: string;
+  DATABASE_URL?: string;
 };
 
 export type AppContext = {
