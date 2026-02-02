@@ -6,8 +6,6 @@ import { useInputValidation } from './use-input-validation';
 import { useSearchFilters } from './use-search-filters';
 import { useSearchInput } from './use-search-input';
 
-const STATIC_PLACEHOLDER = 'تقول ابنتي لما رأت طول رحلتي';
-
 export function useSearch() {
   const {
     isError,
@@ -256,8 +254,8 @@ export function useSearch() {
     () => ({
       refreshThePage: 'حدث الصفحة',
 
-      currentHeaderTitle: searchType === 'poems' ? 'ابحث في مليون بيت' : 'ابحث عن ديوان شاعر',
-      currentInputPlaceholder: searchType === 'poems' ? STATIC_PLACEHOLDER : 'المتنبي',
+      currentHeaderTitle: 'مرجع الشعر العربي',
+      currentInputPlaceholder: searchType === 'poems' ? 'ابحث في مليون بيت' : 'ابحث عن ديوان شاعر',
       currentFiltersButton: filtersVisible ? 'إخفاء الفلاتر' : 'عرض الفلاتر',
 
       search: 'ابحث',
