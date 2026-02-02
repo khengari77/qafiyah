@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { cn } from '@/utils/conversions/cn';
+import { cn } from '@/lib/utils';
 
 type Props = {
   href: string;

@@ -1,5 +1,5 @@
 import { DATABASE_DUMPS_URL, DEVELOPER_SITE_URL, GITHUB_REPO_URL } from '@/constants/GLOBALS';
-import { cn } from '@/utils/conversions/cn';
+import { cn } from '@/lib/utils';
 import { RandomPoemButton } from './random-poem-button';
 
 export function Footer({ className }: { className?: string }) {

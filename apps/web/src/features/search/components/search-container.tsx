@@ -9,6 +9,16 @@ import {
   searchTypeOptions,
   themesOptions,
 } from '../constants';
+import {
+  ERAS_NOUN_FORMS,
+  getBadgeCount,
+  getNoResultsText,
+  getResultText,
+  METERS_NOUN_FORMS,
+  RHYMES_NOUN_FORMS,
+  SEARCH_TEXTS,
+  THEMES_NOUN_FORMS,
+} from '../constants/texts';
 import { useSearch } from '../hooks/use-search';
 import { Filters } from './filters';
 import { FilterBadges } from './filters-badges';
@@ -18,20 +28,20 @@ import { SearchInput } from './search-input';
 
 export function SearchContainer() {
   const {
-    text,
     isLoading,
     isError,
     isSuccess,
     isFetchingNextPage,
     hasSubmitted,
     filtersVisible,
-    hasActiveFiltersOrInput,
+    hasQuery,
     loadMoreRef,
     data,
     validationError,
     inputValue,
     searchParams,
     searchType,
+    matchType,
     selectedMeters,
     selectedThemes,
     selectedEras,
@@ -41,13 +51,15 @@ export function SearchContainer() {
     handleErasChange,
     handleMetersChange,
     handleThemesChange,
-    handleCustomInputChange,
-    handleCustomKeyDown,
-    handleCustomSearch,
+    handleInputChange,
+    handleKeyDown,
+    handleSearch,
     toggleFilters,
-    handleCustomSearchTypeChange,
+    handleSearchTypeChange,
     resetAllStates,
   } = useSearch();
+
+  const totalCount = data?.[0]?.total_count ?? 0;
 
   return (
     <section className="w-full mx-auto max-w-2xl flex flex-col h-full flex-1 justify-start items pb-24">
@@ -56,77 +68,77 @@ export function SearchContainer() {
 
       <div className="w-full flex flex-col gap-10 md:gap-16" dir="rtl">
         <h1 className="font-bold text-center justify-center items-center text-2xl xxs:text-3xl xs:text-4xl md:text-5xl text-zinc-800 flex py-2">
-          {text.currentHeaderTitle}
+          {SEARCH_TEXTS.currentHeaderTitle}
         </h1>
         <Card className="border-0 shadow-none bg-transparent">
           <div className="p-0 bg">
             <div className="flex flex-col gap-4">
               <SearchInput
-                placeholder={text.currentInputPlaceholder}
+                placeholder={searchType === 'poems' ? 'ابحث في مليون بيت' : 'ابحث عن ديوان شاعر'}
                 hasSubmitted={hasSubmitted}
-                searchLabel={text.search}
+                searchLabel={SEARCH_TEXTS.search}
                 inputValue={inputValue}
                 validationError={validationError}
-                handleCustomKeyDown={handleCustomKeyDown}
-                handleCustomInputChange={handleCustomInputChange}
+                handleKeyDown={handleKeyDown}
+                handleInputChange={handleInputChange}
                 resetAllStates={resetAllStates}
-                hasActiveFiltersOrInput={hasActiveFiltersOrInput}
+                hasQuery={hasQuery}
               />
               <div className="flex items-center justify-between">
                 <FiltersButton toggleFilters={toggleFilters} filtersVisible={filtersVisible} />
 
                 <FilterBadges
+                  erasCount={getBadgeCount(selectedEras.length || 0, ERAS_NOUN_FORMS)}
+                  metersCount={getBadgeCount(selectedMeters.length || 0, METERS_NOUN_FORMS)}
+                  themesCount={getBadgeCount(selectedThemes.length || 0, THEMES_NOUN_FORMS)}
+                  rhymesCount={getBadgeCount(selectedRhymes.length || 0, RHYMES_NOUN_FORMS)}
                   selectedErasLength={selectedEras.length}
                   selectedMetersLength={selectedMeters.length}
                   selectedRhymesLength={selectedRhymes.length}
                   selectedThemesLength={selectedThemes.length}
-                  badgeErasCountText={text.badgeErasCount}
-                  badgeMetersCountText={text.badgeMetersCount}
-                  badgeThemesCountText={text.badgeThemesCount}
-                  badgeRhymesCountText={text.badgeRhymesCount}
                 />
               </div>
 
               {filtersVisible && (
                 <Filters
-                  handleCustomSearch={handleCustomSearch}
+                  handleSearch={handleSearch}
                   inputValue={inputValue}
                   isLoading={isLoading}
-                  searchLabel={text.search}
+                  searchLabel={SEARCH_TEXTS.search}
                   searchType={searchType}
-                  searchTypeLabelText={text.searchTypeLabel}
+                  searchTypeLabel={SEARCH_TEXTS.searchTypeLabel}
                   searchTypeOptions={searchTypeOptions}
                   searchParamsSearchType={searchParams.search_type}
-                  handleCustomSearchTypeChange={handleCustomSearchTypeChange}
-                  searchTypePlaceholderText={text.searchTypePlaceholder}
-                  matchTypeLabelText={text.matchTypeLabel}
+                  handleSearchTypeChange={handleSearchTypeChange}
+                  searchTypePlaceholder={SEARCH_TEXTS.searchTypePlaceholder}
+                  matchTypeLabel={SEARCH_TEXTS.matchTypeLabel}
                   matchTypeOptions={matchTypeOptions}
                   searchParamsMatchType={searchParams.match_type}
                   handleMatchTypeChange={handleMatchTypeChange}
-                  erasLabelText={text.erasLabel}
+                  erasLabel={SEARCH_TEXTS.erasLabel}
                   erasOptions={erasOptions}
                   selectedEras={selectedEras}
-                  erasPlaceholderNounFormsText={text.erasPlaceholderNounForms}
+                  erasPlaceholderNounForms={ERAS_NOUN_FORMS}
                   handleErasChange={handleErasChange}
-                  erasPlaceholderText={text.erasPlaceholder}
-                  metersLabelText={text.metersLabel}
+                  erasPlaceholder={SEARCH_TEXTS.erasPlaceholder}
+                  metersLabel={SEARCH_TEXTS.metersLabel}
                   metersOptions={metersOptions}
                   selectedMeters={selectedMeters}
-                  metersPlaceholderNounFormsText={text.metersPlaceholderNounForms}
+                  metersPlaceholderNounForms={METERS_NOUN_FORMS}
                   handleMetersChange={handleMetersChange}
-                  metersPlaceholderText={text.metersPlaceholder}
-                  themesLabelText={text.themesLabel}
+                  metersPlaceholder={SEARCH_TEXTS.metersPlaceholder}
+                  themesLabel={SEARCH_TEXTS.themesLabel}
                   themesOptions={themesOptions}
                   selectedThemes={selectedThemes}
-                  themesPlaceholderNounFormsText={text.themesPlaceholderNounForms}
+                  themesPlaceholderNounForms={THEMES_NOUN_FORMS}
                   handleThemesChange={handleThemesChange}
-                  themesPlaceholderText={text.themesPlaceholder}
-                  rhymesLabelText={text.rhymesLabel}
+                  themesPlaceholder={SEARCH_TEXTS.themesPlaceholder}
+                  rhymesLabel={SEARCH_TEXTS.rhymesLabel}
                   rhymesOptions={rhymesOptions}
                   selectedRhymes={selectedRhymes}
-                  rhymesPlaceholderNounFormsText={text.rhymesPlaceholderNounForms}
+                  rhymesPlaceholderNounForms={RHYMES_NOUN_FORMS}
                   handleRhymesChange={handleRhymesChange}
-                  rhymesPlaceholderText={text.rhymesPlaceholder}
+                  rhymesPlaceholder={SEARCH_TEXTS.rhymesPlaceholder}
                 />
               )}
             </div>
@@ -142,10 +154,10 @@ export function SearchContainer() {
           isSuccess={isSuccess}
           inputValue={inputValue}
           searchType={searchType}
-          errorMessageText={text.errorMessage}
-          refreshThePageText={text.refreshThePage}
-          noResultsFoundText={text.noResultsFound}
-          resultTextText={text.resultText}
+          errorMessage={SEARCH_TEXTS.errorMessage}
+          refreshText={SEARCH_TEXTS.refreshThePage}
+          noResultsText={getNoResultsText(searchParams.q || '')}
+          resultText={getResultText(totalCount, searchParams.q || '', searchType, matchType)}
         />
       </div>
     </section>

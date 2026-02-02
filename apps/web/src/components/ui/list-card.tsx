@@ -1,4 +1,4 @@
-import { cn } from '@/utils/conversions/cn';
+import { cn } from '@/lib/utils';
 
 type ListCardProps = {
   name: string;

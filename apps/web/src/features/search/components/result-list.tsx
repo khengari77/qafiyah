@@ -9,44 +9,38 @@ import { NoResultsState } from './state-no-results';
 type Props = {
   data: (PoemsSearchResult | PoetsSearchResult)[];
   loadMoreRef: Ref<HTMLDivElement>;
-
   isError: boolean;
   isFetchingNextPage: boolean;
   isLoading: boolean;
   isSuccess: boolean;
-
   inputValue: string;
   searchType: string;
-  errorMessageText: string;
-  refreshThePageText: string;
-  noResultsFoundText: string;
-  resultTextText: string;
+  errorMessage: string;
+  refreshText: string;
+  noResultsText: string;
+  resultText: string;
 };
 
 export function ResultList({
   data,
   loadMoreRef,
-
   isError,
   isFetchingNextPage,
   isLoading,
   isSuccess,
-
   inputValue,
   searchType,
-  errorMessageText,
-  refreshThePageText,
-  noResultsFoundText,
-  resultTextText,
+  errorMessage,
+  refreshText,
+  noResultsText,
+  resultText,
 }: Props) {
   if (isError) {
-    return (
-      <ErrorState errorMessageText={errorMessageText} refreshThePageText={refreshThePageText} />
-    );
+    return <ErrorState errorMessage={errorMessage} refreshText={refreshText} />;
   }
 
   if (inputValue && !isLoading && data.length === 0 && isSuccess) {
-    return <NoResultsState noResultsFoundText={noResultsFoundText} />;
+    return <NoResultsState noResultsText={noResultsText} />;
   }
 
   if (isLoading && !isFetchingNextPage) {
@@ -58,7 +52,7 @@ export function ResultList({
       {data.length > 0 && (
         <div className="w-full flex justify-start items-start">
           <span className="">
-            <p className="text-sm md:text-base font-normal text-zinc-700">{resultTextText}</p>
+            <p className="text-sm md:text-base font-normal text-zinc-700">{resultText}</p>
           </span>
         </div>
       )}

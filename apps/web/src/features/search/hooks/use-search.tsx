@@ -1,10 +1,36 @@
-import { formatArabicCount } from 'arabic-count-format';
-import { useCallback, useMemo } from 'react';
+'use client';
+
+import type React from 'react';
+import { useEffect, useState } from 'react';
 import { useInfiniteQuery } from './use-infinite-query';
 import { useInfiniteScroll } from './use-infinite-scroll';
-import { useInputValidation } from './use-input-validation';
-import { useSearchFilters } from './use-search-filters';
-import { useSearchInput } from './use-search-input';
+
+function validateInput(input: string): string | null {
+  const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+
+  if (!arabicRegex.test(input)) {
+    return 'كلمات عربية فقط';
+  }
+
+  if (input.length > 50) {
+    return 'يجب ألا يتجاوز النص 50 حرفًا';
+  }
+
+  const words = input
+    .trim()
+    .split(/\s+/)
+    .filter((word) => word.length > 0);
+
+  if (words.length < 1) {
+    return 'يرجى إدخال كلمة واحدة على الأقل';
+  }
+
+  if (words[0].length < 2) {
+    return 'يجب أن تتكون الكلمة الأولى من حرفين على الأقل';
+  }
+
+  return null;
+}
 
 export function useSearch() {
   const {
@@ -32,192 +58,192 @@ export function useSearch() {
     queryKey: 'search',
   });
 
-  // Use our extracted hooks
   const { loadMoreRef } = useInfiniteScroll(fetchNextPage, hasNextPage, isFetchingNextPage);
 
-  const {
-    inputValue,
-    handleInputChange: baseHandleInputChange,
-    resetInput,
-  } = useSearchInput(searchParams.q);
+  // Input state (inlined from useSearchInput)
+  const [inputValue, setInputValue] = useState(searchParams.q);
 
-  const {
-    validationError,
-    hasSubmitted,
-    validateInput,
-    setValidationError,
-    setHasSubmitted,
-    resetValidation,
-  } = useInputValidation();
+  useEffect(() => {
+    if (searchParams.q) {
+      setInputValue(searchParams.q);
+    }
+  }, [searchParams.q]);
 
-  const {
-    filtersVisible,
-    toggleFilters,
-    selectedEras,
-    selectedRhymes,
-    selectedMeters,
-    selectedThemes,
-    handleErasChange,
-    handleRhymesChange,
-    handleMetersChange,
-    handleThemesChange,
-    handleMatchTypeChange: baseHandleMatchTypeChange,
-  } = useSearchFilters({
-    era_ids: searchParams.era_ids,
-    rhyme_ids: searchParams.rhyme_ids,
-    meter_ids: searchParams.meter_ids,
-    theme_ids: searchParams.theme_ids,
-    search_type: searchType,
-    match_type: searchParams.match_type,
-  });
+  // Validation state (inlined from useInputValidation)
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  // Custom handlers that integrate the extracted hooks
-  const handleCustomInputChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      baseHandleInputChange(e);
-      // Clear validation error when input changes after submission
-      if (hasSubmitted) {
-        setValidationError(null);
-      }
-    },
-    [baseHandleInputChange, hasSubmitted, setValidationError]
-  );
+  // Filters state (inlined from useSearchFilters)
+  const [filtersVisible, setFiltersVisible] = useState(false);
 
-  const handleCustomSearchTypeChange = useCallback(
-    (value: string) => {
-      const newSearchType = value as 'poems' | 'poets';
+  const selectedEras = Array.isArray(searchParams.era_ids)
+    ? searchParams.era_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
+    : typeof searchParams.era_ids === 'string'
+      ? searchParams.era_ids
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
 
-      // If search type is changing, reset everything
-      if (newSearchType !== searchParams.search_type) {
-        // Clear input value
-        resetInput();
+  const selectedRhymes = Array.isArray(searchParams.rhyme_ids)
+    ? searchParams.rhyme_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
+    : typeof searchParams.rhyme_ids === 'string'
+      ? searchParams.rhyme_ids
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
 
-        // Reset filters that don't apply to the new search type
-        if (newSearchType === 'poets') {
-          setSearchType(newSearchType);
-          setQuery('');
-          setMeterIds('');
-          setThemeIds('');
-          setRhymeIds('');
-        } else {
-          setQuery('');
-          setSearchType(newSearchType);
-        }
-      } else if (inputValue.trim()) {
-        // Just update the search type if we have a query
+  const selectedMeters = Array.isArray(searchParams.meter_ids)
+    ? searchParams.meter_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
+    : typeof searchParams.meter_ids === 'string'
+      ? searchParams.meter_ids
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
+
+  const selectedThemes = Array.isArray(searchParams.theme_ids)
+    ? searchParams.theme_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
+    : typeof searchParams.theme_ids === 'string'
+      ? searchParams.theme_ids
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+      : [];
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+    if (hasSubmitted) {
+      setValidationError(null);
+    }
+  };
+
+  const handleSearchTypeChange = (value: string) => {
+    const newSearchType = value as 'poems' | 'poets';
+
+    if (newSearchType !== searchParams.search_type) {
+      setInputValue('');
+      if (newSearchType === 'poets') {
+        setSearchType(newSearchType);
+        setQuery('');
+        setMeterIds('');
+        setThemeIds('');
+        setRhymeIds('');
+      } else {
+        setQuery('');
         setSearchType(newSearchType);
       }
+    } else if (inputValue.trim()) {
+      setSearchType(newSearchType);
+    }
 
-      // Clear validation errors when search type changes
-      resetValidation();
-    },
-    [
-      inputValue,
-      resetInput,
-      resetValidation,
-      searchParams.search_type,
-      setMeterIds,
-      setQuery,
-      setRhymeIds,
-      setSearchType,
-      setThemeIds,
-    ]
-  );
+    setValidationError(null);
+    setHasSubmitted(false);
+  };
 
-  const handleMatchTypeChange = useCallback(
-    (value: string) => {
-      const newMatchType = baseHandleMatchTypeChange(value);
-      setMatchType(newMatchType);
-    },
-    [baseHandleMatchTypeChange, setMatchType]
-  );
+  const handleMatchTypeChange = (value: string) => {
+    const validMatchTypes = ['all', 'any', 'exact'] as const;
+    if (typeof value === 'string' && validMatchTypes.includes(value as never)) {
+      setMatchType(value as (typeof validMatchTypes)[number]);
+    }
+  };
 
-  const handleCustomSearch = useCallback(() => {
+  const handleSearch = () => {
     if (inputValue.trim()) {
       setHasSubmitted(true);
 
-      // Validate input
       const error = validateInput(inputValue);
       if (error) {
         setValidationError(error);
         return;
       }
 
-      // 1- Clear any previous errors
       setValidationError(null);
-      // 1- Hide filters only if visible
       if (filtersVisible) {
-        toggleFilters();
+        setFiltersVisible(false);
       }
       setQuery(inputValue);
     }
-  }, [
-    filtersVisible,
-    inputValue,
-    setHasSubmitted,
-    setQuery,
-    setValidationError,
-    toggleFilters,
-    validateInput,
-  ]);
+  };
 
-  const handleCustomKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        // Validate before allowing the original handler to proceed
-        const error = validateInput(inputValue);
-        if (error) {
-          e.preventDefault();
-          setHasSubmitted(true);
-          setValidationError(error);
-          return;
-        }
-        handleCustomSearch();
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const error = validateInput(inputValue);
+      if (error) {
+        e.preventDefault();
+        setHasSubmitted(true);
+        setValidationError(error);
+        return;
       }
-    },
-    [handleCustomSearch, inputValue, setHasSubmitted, setValidationError, validateInput]
-  );
+      handleSearch();
+    }
+  };
 
-  // Handlers for filter changes that update the search state
-  const handleErasChangeWithState = useCallback(
-    (value: string | string[]) => {
-      const joinedEras = handleErasChange(value);
-      setEraIds(joinedEras);
-    },
-    [handleErasChange, setEraIds]
-  );
+  const handleErasChange = (value: string | string[]) => {
+    setEraIds(
+      Array.isArray(value)
+        ? value
+            .filter(Boolean)
+            .map((v) => (typeof v === 'string' ? v.trim() : ''))
+            .join(',')
+        : typeof value === 'string'
+          ? value.trim()
+          : ''
+    );
+  };
 
-  const handleRhymesChangeWithState = useCallback(
-    (value: string | string[]) => {
-      const joinedRhymes = handleRhymesChange(value);
-      setRhymeIds(joinedRhymes);
-    },
-    [handleRhymesChange, setRhymeIds]
-  );
+  const handleRhymesChange = (value: string | string[]) => {
+    setRhymeIds(
+      Array.isArray(value)
+        ? value
+            .filter(Boolean)
+            .map((v) => (typeof v === 'string' ? v.trim() : ''))
+            .join(',')
+        : typeof value === 'string'
+          ? value.trim()
+          : ''
+    );
+  };
 
-  const handleMetersChangeWithState = useCallback(
-    (value: string | string[]) => {
-      const joinedMeters = handleMetersChange(value);
-      setMeterIds(joinedMeters);
-    },
-    [handleMetersChange, setMeterIds]
-  );
+  const handleMetersChange = (value: string | string[]) => {
+    setMeterIds(
+      Array.isArray(value)
+        ? value
+            .filter(Boolean)
+            .map((v) => (typeof v === 'string' ? v.trim() : ''))
+            .join(',')
+        : typeof value === 'string'
+          ? value.trim()
+          : ''
+    );
+  };
 
-  const handleThemesChangeWithState = useCallback(
-    (value: string | string[]) => {
-      const joinedThemes = handleThemesChange(value);
-      setThemeIds(joinedThemes);
-    },
-    [handleThemesChange, setThemeIds]
-  );
+  const handleThemesChange = (value: string | string[]) => {
+    setThemeIds(
+      Array.isArray(value)
+        ? value
+            .filter(Boolean)
+            .map((v) => (typeof v === 'string' ? v.trim() : ''))
+            .join(',')
+        : typeof value === 'string'
+          ? value.trim()
+          : ''
+    );
+  };
 
-  const resetAllStates = useCallback(() => {
+  const toggleFilters = () => {
+    setFiltersVisible(!filtersVisible);
+  };
+
+  const resetAllStates = () => {
     resetAllParamStates();
-    resetInput();
-    resetValidation();
-  }, [resetAllParamStates, resetInput, resetValidation]);
+    setInputValue('');
+    setValidationError(null);
+    setHasSubmitted(false);
+  };
 
-  const hasActiveFiltersOrInput =
+  const hasQuery =
     !isLoading &&
     (Boolean(inputValue.trim()) ||
       selectedEras.length > 0 ||
@@ -225,202 +251,40 @@ export function useSearch() {
       selectedMeters.length > 0 ||
       selectedThemes.length > 0);
 
-  const searchTypeText = searchType === 'poems' ? 'بيت' : 'شاعر';
-  const matchTypeText =
-    matchType === 'any'
-      ? 'بعض الكلمات'
-      : matchType === 'all'
-        ? 'كل الكلمات'
-        : 'كل الكلمات (متتالية)';
-  //
-  const normalizedCount = data?.[0]?.total_count ?? 0;
+  return {
+    isLoading,
+    isError,
+    isSuccess,
+    isFetchingNextPage,
+    hasSubmitted,
+    filtersVisible,
+    hasQuery,
 
-  const rawInput = searchParams.q || '';
-  const cleanedInput = rawInput.replace(/[^\u0600-\u06FF\s]/g, '');
-  const shortenedInputText =
-    cleanedInput.length > 10 ? `${cleanedInput.slice(0, 10)}...` : cleanedInput;
+    loadMoreRef,
 
-  const resultsText = formatArabicCount({
-    count: normalizedCount,
-    nounForms: {
-      singular: 'نتيجة',
-      dual: 'نتيجتان',
-      plural: 'نتائج',
-    },
-  });
-  const resultText = `عثر على ${resultsText} لـ "${shortenedInputText}" بحثًا عن «${searchTypeText}» بحثَ (${matchTypeText})`;
+    data,
+    validationError,
+    inputValue,
+    searchParams,
+    searchType,
+    matchType,
+    selectedMeters,
+    selectedThemes,
+    selectedEras,
+    selectedRhymes,
 
-  const text = useMemo(
-    () => ({
-      refreshThePage: 'حدث الصفحة',
+    toggleFilters,
+    resetAllStates,
 
-      currentHeaderTitle: 'مرجع الشعر العربي',
-      currentInputPlaceholder: searchType === 'poems' ? 'ابحث في مليون بيت' : 'ابحث عن ديوان شاعر',
-      currentFiltersButton: filtersVisible ? 'إخفاء الفلاتر' : 'عرض الفلاتر',
+    handleMatchTypeChange,
+    handleInputChange,
+    handleKeyDown,
+    handleSearch,
+    handleSearchTypeChange,
 
-      search: 'ابحث',
-
-      erasLabel: 'العصور',
-      erasPlaceholder: 'عصر أو عدة عصور',
-      erasPlaceholderNounForms: {
-        singular: 'عصر',
-        dual: 'عصران',
-        plural: 'عصور',
-      },
-      metersLabel: 'البحور',
-      metersPlaceholder: 'بحر أو عدة بحور',
-      metersPlaceholderNounForms: {
-        singular: 'بحر',
-        dual: 'بحران',
-        plural: 'بحور',
-      },
-      themesLabel: 'الأغراض',
-      themesPlaceholder: 'غرض أو عدة أغراض',
-      themesPlaceholderNounForms: {
-        singular: 'غرض',
-        dual: 'غرضان',
-        plural: 'أغراض',
-      },
-      rhymesLabel: 'القوافي',
-      rhymesPlaceholder: 'قافية أو عدة قوافي',
-      rhymesPlaceholderNounForms: {
-        singular: 'قافية',
-        dual: 'قافيتان',
-        plural: 'قوافي',
-      },
-
-      badgeErasCount: formatArabicCount({
-        count: selectedEras.length || 0,
-        nounForms: {
-          singular: 'عصر',
-          dual: 'عصران',
-          plural: 'عصور',
-        },
-      }),
-      badgeMetersCount: formatArabicCount({
-        count: selectedMeters.length || 0,
-        nounForms: {
-          singular: 'بحر',
-          dual: 'بحران',
-          plural: 'بحور',
-        },
-      }),
-      badgeThemesCount: formatArabicCount({
-        count: selectedThemes.length || 0,
-        nounForms: {
-          singular: 'غرض',
-          dual: 'غرضان',
-          plural: 'أغراض',
-        },
-      }),
-      badgeRhymesCount: formatArabicCount({
-        count: selectedRhymes.length || 0,
-        nounForms: {
-          singular: 'قافية',
-          dual: 'قافيتان',
-          plural: 'قوافي',
-        },
-      }),
-
-      searchTypeLabel: 'المجال',
-      searchTypePlaceholder: 'اختر نوع البحث',
-
-      matchTypeLabel: 'الطريقة',
-      matchTypePlaceholder: 'اختر طريقة البحث',
-
-      errorMessage: 'عذرًا، وقع خلل غير متوقّع. إن استمر، فتواصل معنا تويتر',
-      noResultsFound: `لم يُعثر على نتيجة لـ "${
-        searchParams.q
-          .replace(/[^\u0600-\u06FF\s]/g, '') // Keep only Arabic letters and spaces
-          .slice(0, 20) + (searchParams.q.length > 20 ? '...' : '')
-      }"`,
-
-      resultText,
-      searchTypeText,
-      matchTypeText,
-    }),
-    [
-      filtersVisible,
-      matchTypeText,
-      resultText,
-      searchParams.q,
-      searchType,
-      searchTypeText,
-      selectedEras.length,
-      selectedMeters.length,
-      selectedRhymes.length,
-      selectedThemes.length,
-    ]
-  );
-  return useMemo(
-    () => ({
-      text,
-
-      isLoading,
-      isError,
-      isSuccess,
-      isFetchingNextPage,
-      hasSubmitted,
-      filtersVisible,
-      hasActiveFiltersOrInput,
-
-      loadMoreRef,
-
-      data,
-      validationError,
-      inputValue,
-      searchParams,
-      searchType,
-      selectedMeters,
-      selectedThemes,
-      selectedEras,
-      selectedRhymes,
-
-      toggleFilters,
-      resetAllStates,
-
-      handleMatchTypeChange,
-      handleCustomInputChange,
-
-      handleCustomKeyDown,
-      handleCustomSearch,
-      handleCustomSearchTypeChange,
-
-      handleRhymesChange: handleRhymesChangeWithState,
-      handleErasChange: handleErasChangeWithState,
-      handleMetersChange: handleMetersChangeWithState,
-      handleThemesChange: handleThemesChangeWithState,
-    }),
-    [
-      data,
-      filtersVisible,
-      hasActiveFiltersOrInput,
-      handleCustomInputChange,
-      handleCustomKeyDown,
-      handleCustomSearch,
-      handleCustomSearchTypeChange,
-      handleErasChangeWithState,
-      handleMatchTypeChange,
-      handleMetersChangeWithState,
-      handleRhymesChangeWithState,
-      handleThemesChangeWithState,
-      hasSubmitted,
-      inputValue,
-      isError,
-      isFetchingNextPage,
-      isLoading,
-      isSuccess,
-      loadMoreRef,
-      resetAllStates,
-      searchParams,
-      searchType,
-      selectedEras,
-      selectedMeters,
-      selectedRhymes,
-      selectedThemes,
-      text,
-      toggleFilters,
-      validationError,
-    ]
-  );
+    handleRhymesChange,
+    handleErasChange,
+    handleMetersChange,
+    handleThemesChange,
+  };
 }

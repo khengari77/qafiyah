@@ -5,11 +5,10 @@ type Props = {
   selectedMetersLength: number;
   selectedRhymesLength: number;
   selectedThemesLength: number;
-
-  badgeErasCountText: string;
-  badgeMetersCountText: string;
-  badgeThemesCountText: string;
-  badgeRhymesCountText: string;
+  erasCount: string;
+  metersCount: string;
+  themesCount: string;
+  rhymesCount: string;
 };
 
 export function FilterBadges({
@@ -17,33 +16,32 @@ export function FilterBadges({
   selectedMetersLength,
   selectedRhymesLength,
   selectedThemesLength,
-
-  badgeErasCountText,
-  badgeMetersCountText,
-  badgeThemesCountText,
-  badgeRhymesCountText,
+  erasCount,
+  metersCount,
+  themesCount,
+  rhymesCount,
 }: Props) {
   const badgeClassname = 'text-xs md:text-sm font-normal text-zinc-600 border-zinc-300/50 bg-white';
   return (
     <div tabIndex={-1} className="flex flex-wrap gap-1 justify-end">
       {selectedErasLength > 0 && (
         <Badge variant="outline" className={badgeClassname}>
-          {badgeErasCountText}
+          {erasCount}
         </Badge>
       )}
       {selectedMetersLength > 0 && (
         <Badge variant="outline" className={badgeClassname}>
-          {badgeMetersCountText}
+          {metersCount}
         </Badge>
       )}
       {selectedThemesLength > 0 && (
         <Badge variant="outline" className={badgeClassname}>
-          {badgeThemesCountText}
+          {themesCount}
         </Badge>
       )}
       {selectedRhymesLength > 0 && (
         <Badge variant="outline" className={badgeClassname}>
-          {badgeRhymesCountText}
+          {rhymesCount}
         </Badge>
       )}
     </div>

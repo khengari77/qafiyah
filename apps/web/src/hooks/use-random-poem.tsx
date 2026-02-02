@@ -10,27 +10,20 @@ export function useRandomPoem() {
   const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<Error | null>(null);
-
-  // AbortController ref for cancellation (react-query pattern)
   const abortControllerRef = useRef<AbortController | null>(null);
-  // Track mounted state to prevent state updates after unmount
   const isMountedRef = useRef(true);
 
-  // Setup mount tracking
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
-      // Cleanup: abort any in-flight request on unmount
       abortControllerRef.current?.abort();
     };
   }, []);
 
   const handleClick = useCallback(async () => {
-    // Guard: already loading
     if (status === 'loading') return;
 
-    // Cancel any in-flight request (prevents stale responses)
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
@@ -40,18 +33,20 @@ export function useRandomPoem() {
     try {
       const slug = await getRandomSlug();
 
-      // Check if still mounted and not aborted
       if (!isMountedRef.current) return;
 
-      if (slug?.trim()) {
-        router.push(`/poems/${slug.trim()}`);
+      let trimmedSlug = '';
+      if (slug) {
+        trimmedSlug = slug.trim();
+      }
+
+      if (trimmedSlug.length > 0) {
+        router.push(`/poems/${trimmedSlug}`);
       } else {
         setStatus('idle');
       }
     } catch (err) {
-      // Don't update state if unmounted
       if (!isMountedRef.current) return;
-      // Ignore abort errors
       if (err instanceof Error && err.name === 'AbortError') return;
 
       setStatus('error');

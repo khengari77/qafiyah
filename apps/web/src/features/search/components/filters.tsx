@@ -3,7 +3,7 @@ import { Loader2, SearchIcon } from 'lucide-react';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import { BinaryToggleButton } from '@/components/ui/toggle-button';
-import { cn } from '@/utils/conversions/cn';
+import { cn } from '@/lib/utils';
 
 interface SelectOption {
   value: string;
@@ -11,167 +11,154 @@ interface SelectOption {
 }
 
 type Props = {
-  searchTypeLabelText: string;
+  searchTypeLabel: string;
   searchTypeOptions: [SelectOption, SelectOption];
   searchParamsSearchType: string;
-  handleCustomSearchTypeChange: (value: string) => void;
-  searchTypePlaceholderText: string;
-
-  matchTypeLabelText: string;
+  handleSearchTypeChange: (value: string) => void;
+  searchTypePlaceholder: string;
+  matchTypeLabel: string;
   matchTypeOptions: SelectOption[];
   searchParamsMatchType: string;
   handleMatchTypeChange: (value: string) => void;
-
-  erasLabelText: string;
+  erasLabel: string;
   erasOptions: SelectOption[];
   selectedEras: string[];
-  erasPlaceholderNounFormsText: ArabicNounForms;
+  erasPlaceholderNounForms: ArabicNounForms;
   handleErasChange: (value: string | string[]) => void;
-  erasPlaceholderText: string;
-
+  erasPlaceholder: string;
   searchType: string;
-  metersLabelText: string;
+  metersLabel: string;
   metersOptions: SelectOption[];
   selectedMeters: string[];
-  metersPlaceholderNounFormsText: ArabicNounForms;
+  metersPlaceholderNounForms: ArabicNounForms;
   handleMetersChange: (value: string | string[]) => void;
-  metersPlaceholderText: string;
-
-  themesLabelText: string;
+  metersPlaceholder: string;
+  themesLabel: string;
   themesOptions: SelectOption[];
   selectedThemes: string[];
-  themesPlaceholderNounFormsText: ArabicNounForms;
+  themesPlaceholderNounForms: ArabicNounForms;
   handleThemesChange: (value: string | string[]) => void;
-  themesPlaceholderText: string;
-
-  rhymesLabelText: string;
+  themesPlaceholder: string;
+  rhymesLabel: string;
   rhymesOptions: SelectOption[];
   selectedRhymes: string[];
-  rhymesPlaceholderNounFormsText: ArabicNounForms;
+  rhymesPlaceholderNounForms: ArabicNounForms;
   handleRhymesChange: (value: string | string[]) => void;
-  rhymesPlaceholderText: string;
-
-  handleCustomSearch: () => void;
+  rhymesPlaceholder: string;
+  handleSearch: () => void;
   inputValue: string;
   isLoading: boolean;
   searchLabel: string;
 };
 
 export function Filters({
-  searchTypeLabelText,
+  searchTypeLabel,
   searchTypeOptions,
   searchParamsSearchType,
-  handleCustomSearchTypeChange,
-  searchTypePlaceholderText,
-
-  matchTypeLabelText,
+  handleSearchTypeChange,
+  searchTypePlaceholder,
+  matchTypeLabel,
   matchTypeOptions,
   searchParamsMatchType,
   handleMatchTypeChange,
-
-  erasLabelText,
+  erasLabel,
   erasOptions,
   selectedEras,
-  erasPlaceholderNounFormsText,
+  erasPlaceholderNounForms,
   handleErasChange,
-  erasPlaceholderText,
-
+  erasPlaceholder,
   searchType,
-  metersLabelText,
+  metersLabel,
   metersOptions,
   selectedMeters,
-  metersPlaceholderNounFormsText,
+  metersPlaceholderNounForms,
   handleMetersChange,
-  metersPlaceholderText,
-
-  themesLabelText,
+  metersPlaceholder,
+  themesLabel,
   themesOptions,
   selectedThemes,
-  themesPlaceholderNounFormsText,
+  themesPlaceholderNounForms,
   handleThemesChange,
-  themesPlaceholderText,
-  rhymesLabelText,
+  themesPlaceholder,
+  rhymesLabel,
   rhymesOptions,
   selectedRhymes,
-  rhymesPlaceholderNounFormsText,
+  rhymesPlaceholderNounForms,
   handleRhymesChange,
-  rhymesPlaceholderText,
-
-  handleCustomSearch,
+  rhymesPlaceholder,
+  handleSearch,
   inputValue,
   isLoading,
   searchLabel,
 }: Props) {
-  const containerClassname = 'flex flex-col items-start justify-start gap-2';
-  const labelClassname = 'block text-base font-bold text-zinc-700';
   return (
     <div className="px-8 py-10 lg:px-10 lg:py-10 gap-14 bg-white rounded-xl border border-zinc-300/40 relative flex flex-between flex-col">
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10 w-full h-full flex-1">
-        <div className={containerClassname}>
-          <p className={labelClassname}>{searchTypeLabelText}</p>
+        <div className="flex flex-col items-start justify-start gap-2">
+          <p className="block text-base font-bold text-zinc-700">{searchTypeLabel}</p>
           <BinaryToggleButton
             currentValue={searchParamsSearchType}
-            onToggle={handleCustomSearchTypeChange}
+            onToggle={handleSearchTypeChange}
             options={searchTypeOptions}
           />
         </div>
 
-        <div className={containerClassname}>
-          <p className={labelClassname}>{matchTypeLabelText}</p>
+        <div className="flex flex-col items-start justify-start gap-2">
+          <p className="block text-base font-bold text-zinc-700">{matchTypeLabel}</p>
           <SelectSingle
             options={matchTypeOptions}
             value={searchParamsMatchType}
             onChange={handleMatchTypeChange}
-            placeholder={searchTypePlaceholderText}
+            placeholder={searchTypePlaceholder}
           />
         </div>
 
-        <div className={containerClassname}>
-          <p className={labelClassname}>{erasLabelText}</p>
+        <div className="flex flex-col items-start justify-start gap-2">
+          <p className="block text-base font-bold text-zinc-700">{erasLabel}</p>
           <SelectMulti
             options={erasOptions}
             value={selectedEras}
-            placeholderNounForms={erasPlaceholderNounFormsText}
+            placeholderNounForms={erasPlaceholderNounForms}
             onChange={handleErasChange}
-            placeholder={erasPlaceholderText}
+            placeholder={erasPlaceholder}
             multiple={true}
           />
         </div>
 
         {searchType === 'poems' && (
           <>
-            <div className={containerClassname}>
-              <p className={labelClassname}>{metersLabelText}</p>
+            <div className="flex flex-col items-start justify-start gap-2">
+              <p className="block text-base font-bold text-zinc-700">{metersLabel}</p>
               <SelectMulti
                 options={metersOptions}
                 value={selectedMeters}
-                placeholderNounForms={metersPlaceholderNounFormsText}
+                placeholderNounForms={metersPlaceholderNounForms}
                 onChange={handleMetersChange}
-                placeholder={metersPlaceholderText}
+                placeholder={metersPlaceholder}
                 multiple={true}
               />
             </div>
 
-            <div className={containerClassname}>
-              <p className={labelClassname}>{themesLabelText}</p>
+            <div className="flex flex-col items-start justify-start gap-2">
+              <p className="block text-base font-bold text-zinc-700">{themesLabel}</p>
               <SelectMulti
                 options={themesOptions}
                 value={selectedThemes}
-                placeholderNounForms={themesPlaceholderNounFormsText}
+                placeholderNounForms={themesPlaceholderNounForms}
                 onChange={handleThemesChange}
-                placeholder={themesPlaceholderText}
+                placeholder={themesPlaceholder}
                 multiple={true}
               />
             </div>
 
-            <div className={containerClassname}>
-              <p className={labelClassname}>{rhymesLabelText}</p>
+            <div className="flex flex-col items-start justify-start gap-2">
+              <p className="block text-base font-bold text-zinc-700">{rhymesLabel}</p>
               <SelectMulti
                 options={rhymesOptions}
                 value={selectedRhymes}
-                placeholderNounForms={rhymesPlaceholderNounFormsText}
+                placeholderNounForms={rhymesPlaceholderNounForms}
                 onChange={handleRhymesChange}
-                placeholder={rhymesPlaceholderText}
+                placeholder={rhymesPlaceholder}
                 multiple={true}
               />
             </div>
@@ -181,7 +168,7 @@ export function Filters({
       {/* --------------------------------------- */}
       <div className="pb-6">
         <button
-          onClick={handleCustomSearch}
+          onClick={handleSearch}
           disabled={isLoading || !inputValue.trim()}
           className={cn(
             'hover:text-white disabled:cursor-not-allowed disabled:pointer-events-none w-full justify-center items-center h-12 rounded-lg flex duration-300',
