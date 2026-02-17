@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { isDev } from '@/constants/GLOBALS';
+import { isDev } from '@/constants/globals';
 import { cn } from '@/lib/utils';
 import { ibmPlexSansArabic } from './fonts';
 

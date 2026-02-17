@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { SectionWrapper } from './section-wrapper';
+import { PageSectionWithHeader } from './section-wrapper';
 
 type SectionListProps = {
   noTitle?: boolean;
@@ -17,13 +17,13 @@ export function SectionList({
   customMargin,
 }: SectionListProps) {
   return (
-    <SectionWrapper
+    <PageSectionWithHeader
       title={title}
       dynamicTitle={dynamicTitle}
       noTitle={noTitle}
       customMargin={customMargin}
     >
       {children}
-    </SectionWrapper>
+    </PageSectionWithHeader>
   );
 }

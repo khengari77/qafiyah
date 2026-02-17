@@ -20,9 +20,24 @@ import type { poetsSearchResultSchema } from '../../../node_modules/@qafiyah/sch
 
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>['pagination'];
 
+/**
+ * Era (time period) entity with id, name, slug, and poem count
+ */
 export type Era = z.infer<typeof eraSchema>;
+
+/**
+ * Meter (poetic meter/bahr) entity with id, name, slug, and poem count
+ */
 export type Meter = z.infer<typeof meterSchema>;
+
+/**
+ * Rhyme (qafiyah) entity with id, name/pattern, slug, and poem count
+ */
 export type Rhyme = z.infer<typeof rhymeSchema>;
+
+/**
+ * Theme (gharad/purpose) entity with id, name, slug, and poem count
+ */
 export type Theme = z.infer<typeof themeSchema>;
 
 export type PoemMetadata = z.infer<typeof poemMetadataSchema>;
@@ -36,13 +51,37 @@ export type PoemResponseData = {
   relatedPoems: RelatedPoems[];
 };
 
+/**
+ * Response data for era poems page: contains era details and poems list
+ */
 export type EraResponseData = z.infer<typeof eraPoemsResponseSchema>['data'];
+
+/**
+ * Response data for meter poems page: contains meter details and poems list
+ */
 export type MeterResponseData = z.infer<typeof meterPoemsResponseSchema>['data'];
+
+/**
+ * Response data for poet poems page: contains poet details and poems list
+ */
 export type PoetResponseData = z.infer<typeof poetPoemsResponseSchema>['data'];
+
+/**
+ * Response data for rhyme poems page: contains rhyme details and poems list
+ */
 export type RhymeResponseData = z.infer<typeof rhymePoemsResponseSchema>['data'];
+
+/**
+ * Response data for theme poems page: contains theme details and poems list
+ */
 export type ThemeResponseData = z.infer<typeof themePoemsResponseSchema>['data'];
+
+/**
+ * Response data for poets list page: contains list of poets
+ */
 export type PoetsData = z.infer<typeof poetsListResponseSchema>['data'];
 
+// Type aliases for consistency
 export type EraPoems = EraResponseData;
 export type MeterPoems = MeterResponseData;
 export type PoetPoems = PoetResponseData;

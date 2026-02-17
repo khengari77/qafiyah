@@ -2,7 +2,7 @@
 
 import { AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { SITE_URL } from '@/constants/GLOBALS';
+import { SITE_URL } from '@/constants/globals';
 
 type ErrorMessageProps = {
   message?: string;

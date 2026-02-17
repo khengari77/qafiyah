@@ -4,7 +4,7 @@ import { Minus, Plus } from 'lucide-react';
 import { useFontSize } from '@/hooks/use-font-size';
 import { useTweetUrl } from '@/hooks/use-tweet-url';
 import type { PoemMetadata, RelatedPoems } from '@/lib/api/types';
-import { getFormattedVersesCount } from '@/utils/texts/get-verse-count';
+import { formatVerseCount } from '@/utils/texts/get-verse-count';
 import { ListCard } from '../ui/list-card';
 
 export type PoemProps = {
@@ -53,7 +53,7 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
           <div className="flex w-full md:w-8/12 border border-zinc-300/80 px-2.5 md:px-8 lg:px-16 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl justify-between items-center text-zinc-600 rounded-full">
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">{metadata.meter_name || ''}</p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">
-              {`${getFormattedVersesCount(verseCountNum)}` || ''}
+              {formatVerseCount(verseCountNum) || ''}
             </p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{metadata.theme_name || ''}</p>
           </div>

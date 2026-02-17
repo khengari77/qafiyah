@@ -1,6 +1,6 @@
 'use client';
 
-import type { NavLink } from '@/constants/NAV_LINKS';
+import type { NavLink } from '@/constants/nav-links';
 import { useNavLinks } from '@/hooks/use-navlinks';
 import { NavItem } from './nav-item';
 

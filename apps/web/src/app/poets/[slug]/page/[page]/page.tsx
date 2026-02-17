@@ -5,22 +5,23 @@ import type { Key } from 'react';
 import { toArabicDigits } from 'to-arabic-digits';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { ListCard } from '@/components/ui/list-card';
-import { SectionPaginationControllers, SectionWrapper } from '@/components/ui/section-wrapper';
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
+import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/section-wrapper';
+import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
 import {
-  fetchAllPoetsWithStats,
   fetchPoetInfo,
-  fetchPoetPoems,
+  fetchPoetPoemPage,
+  fetchPoetsWithPoemCount,
   generatePageNumbers,
 } from '@/lib/api/static';
+import { buildOpenGraphMetadata, buildTwitterMetadata } from '@/lib/metadata-helpers';
 
 type Props = {
   params: Promise<{ slug: string; page: string }>;
 };
 
 export async function generateStaticParams() {
-  const poets = await fetchAllPoetsWithStats();
+  const poets = await fetchPoetsWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
   for (const poet of poets) {
@@ -70,27 +71,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         'max-snippet': -1,
       },
     },
-    openGraph: {
-      type: 'website',
-      siteName: SITE_NAME,
-      locale: 'ar_AR',
+    openGraph: buildOpenGraphMetadata({
+      title: `قافية | ديوان ${poetName}`,
       url: `${SITE_URL}/poets/${slug}/page/${page}`,
+      description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
+    }),
+    twitter: buildTwitterMetadata({
       title: `قافية | ديوان ${poetName}`,
       description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
-      images: [
-        {
-          url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
-          width: 1200,
-          height: 630,
-          type: 'image/png',
-        },
-      ],
-    },
-    twitter: {
-      title: `قافية | ديوان ${poetName}`,
-      description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
-      images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
-    },
+    }),
   };
 }
 
@@ -102,14 +91,13 @@ export default async function PoetPoemsPage({ params }: Props) {
     notFound();
   }
 
-  const { data: poetData, pagination } = await fetchPoetPoems(slug, page);
-
-  if (!poetData) {
+  const result = await fetchPoetPoemPage(slug, page);
+  if (!result?.data) {
     notFound();
   }
-
-  const { poetDetails, poems } = poetData;
-  const totalPages = pagination?.totalPages || Math.ceil(poetDetails.poemsCount / 30);
+  const { data, pagination } = result;
+  const { poetDetails: poet, poems } = data;
+  const totalPages = pagination?.totalPages || Math.ceil(poet.poemsCount / POEMS_PER_PAGE);
   const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
   const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
 
@@ -117,17 +105,17 @@ export default async function PoetPoemsPage({ params }: Props) {
   const prevPageUrl = `/poets/${slug}/page/${pageNumber - 1}`;
 
   const content = {
-    header: `${poetDetails.name} (${toArabicDigits(poetDetails.poemsCount)} قصيدة)`,
+    header: `${poet.name} (${toArabicDigits(poet.poemsCount)} قصيدة)`,
     headerTip: `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   };
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Person',
-    name: poetDetails.name,
+    name: poet.name,
     url: `${SITE_URL}/poets/${slug}/page/${pageNumber}`,
-    description: `ديوان ${poetDetails.name} (${formatArabicCount({
-      count: poetDetails.poemsCount,
+    description: `ديوان ${poet.name} (${formatArabicCount({
+      count: poet.poemsCount,
       nounForms: {
         singular: 'قصيدة',
         dual: 'قصيدتان',
@@ -136,7 +124,7 @@ export default async function PoetPoemsPage({ params }: Props) {
     })})`,
     mainEntityOfPage: {
       '@type': 'CollectionPage',
-      name: `ديوان ${poetDetails.name}`,
+      name: `ديوان ${poet.name}`,
       url: `${SITE_URL}/poets/${slug}/page/1`,
     },
     workExample: poems.slice(0, 10).map((poem) => ({
@@ -150,12 +138,12 @@ export default async function PoetPoemsPage({ params }: Props) {
   return (
     <>
       <JsonLdServer data={jsonLd} />
-      <SectionWrapper
+      <PageSectionWithHeader
         dynamicTitle={content.header}
         pagination={{
           totalPages,
           component: (
-            <SectionPaginationControllers
+            <PageNavigationButtons
               headerTip={content.headerTip}
               nextPageUrl={nextPageUrl}
               prevPageUrl={prevPageUrl}
@@ -177,7 +165,7 @@ export default async function PoetPoemsPage({ params }: Props) {
         ) : (
           <p className="text-center text-zinc-500">لا توجد قصائد لهذا الشاعر.</p>
         )}
-      </SectionWrapper>
+      </PageSectionWithHeader>
     </>
   );
 }

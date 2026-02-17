@@ -3,10 +3,15 @@ import { notFound } from 'next/navigation';
 import { toArabicDigits } from 'to-arabic-digits';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { ListCard } from '@/components/ui/list-card';
-import { SectionPaginationControllers, SectionWrapper } from '@/components/ui/section-wrapper';
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
-import { fetchAllThemesWithStats, fetchThemePoems, generatePageNumbers } from '@/lib/api/static';
+import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/section-wrapper';
+import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
+import {
+  fetchThemePoemPage,
+  fetchThemesWithPoemCount,
+  generatePageNumbers,
+} from '@/lib/api/static';
+import { buildOpenGraphMetadata, buildTwitterMetadata } from '@/lib/metadata-helpers';
 
 const THEMES = new Map([
   ['f2668136-60ce-4e37-b1e7-9efb84b3eade', 'دينية'],
@@ -43,7 +48,7 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  const themes = await fetchAllThemesWithStats();
+  const themes = await fetchThemesWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
   for (const theme of themes) {
@@ -73,25 +78,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title,
-    openGraph: {
-      type: 'website',
-      siteName: SITE_NAME,
-      locale: 'ar_AR',
+    openGraph: buildOpenGraphMetadata({
+      title,
       url: `${SITE_URL}/themes/${slug}/page/${page}`,
-      title,
-      images: [
-        {
-          url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
-          width: 1200,
-          height: 630,
-          type: 'image/png',
-        },
-      ],
-    },
-    twitter: {
-      title,
-      images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
-    },
+    }),
+    twitter: buildTwitterMetadata({ title }),
   };
 }
 
@@ -103,23 +94,14 @@ export default async function ThemePage({ params }: Props) {
     notFound();
   }
 
-  let themeData: Awaited<ReturnType<typeof fetchThemePoems>>['data'];
-  let pagination: Awaited<ReturnType<typeof fetchThemePoems>>['pagination'];
-  try {
-    const result = await fetchThemePoems(slug, page);
-    themeData = result.data;
-    pagination = result.pagination;
-  } catch {
+  const result = await fetchThemePoemPage(slug, page);
+  if (!result?.data) {
     notFound();
   }
+  const { data, pagination } = result;
+  const { themeDetails: theme, poems } = data;
 
-  if (!themeData) {
-    notFound();
-  }
-
-  const { themeDetails, poems } = themeData;
-
-  const totalPages = pagination?.totalPages || Math.ceil(themeDetails.poemsCount / 30);
+  const totalPages = pagination?.totalPages || Math.ceil(theme.poemsCount / POEMS_PER_PAGE);
   const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
   const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
 
@@ -127,7 +109,7 @@ export default async function ThemePage({ params }: Props) {
   const prevPageUrl = `/themes/${slug}/page/${pageNumber - 1}`;
 
   const content = {
-    header: `قصائد ${themeDetails.name} (${toArabicDigits(themeDetails.poemsCount)} قصيدة)`,
+    header: `قصائد ${theme.name} (${toArabicDigits(theme.poemsCount)} قصيدة)`,
     headerTip: `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   };
 
@@ -144,27 +126,27 @@ export default async function ThemePage({ params }: Props) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Collection',
-    name: `قصائد ${themeDetails.name}`,
+    name: `قصائد ${theme.name}`,
     url: `${SITE_URL}/themes/${slug}/page/${pageNumber}`,
-    description: `مجموعة قصائد ${themeDetails.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+    description: `مجموعة قصائد ${theme.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
     mainEntityOfPage: {
       '@type': 'CollectionPage',
-      name: `قصائد ${themeDetails.name}`,
+      name: `قصائد ${theme.name}`,
       url: `${SITE_URL}/themes/${slug}/page/1`,
     },
-    numberOfItems: themeDetails.poemsCount,
+    numberOfItems: theme.poemsCount,
     itemListElement: itemListElements,
   };
 
   return (
     <>
       <JsonLdServer data={jsonLd} />
-      <SectionWrapper
+      <PageSectionWithHeader
         dynamicTitle={content.header}
         pagination={{
           totalPages,
           component: (
-            <SectionPaginationControllers
+            <PageNavigationButtons
               headerTip={content.headerTip}
               nextPageUrl={nextPageUrl}
               prevPageUrl={prevPageUrl}
@@ -186,7 +168,7 @@ export default async function ThemePage({ params }: Props) {
         ) : (
           <p className="text-center text-zinc-500">لا توجد قصائد لهذا الغرض.</p>
         )}
-      </SectionWrapper>
+      </PageSectionWithHeader>
     </>
   );
 }

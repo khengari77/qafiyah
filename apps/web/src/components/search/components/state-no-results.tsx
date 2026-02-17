@@ -1,5 +1,5 @@
 import { SearchIcon } from 'lucide-react';
-import { Card, CardContent } from '@/components/shadcn/card';
+import { Card, CardContent } from '@/components/base/card';
 
 type Props = {
   noResultsText: string;

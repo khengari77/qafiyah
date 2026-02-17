@@ -4,10 +4,15 @@ import type { Key } from 'react';
 import { toArabicDigits } from 'to-arabic-digits';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { ListCard } from '@/components/ui/list-card';
-import { SectionPaginationControllers, SectionWrapper } from '@/components/ui/section-wrapper';
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
-import { fetchAllMetersWithStats, fetchMeterPoems, generatePageNumbers } from '@/lib/api/static';
+import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/section-wrapper';
+import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
+import {
+  fetchMeterPoemPage,
+  fetchMetersWithPoemCount,
+  generatePageNumbers,
+} from '@/lib/api/static';
+import { buildOpenGraphMetadata, buildTwitterMetadata } from '@/lib/metadata-helpers';
 
 const METERS = new Map([
   ['ahd-alkamil', 'أحذ الكامل'],
@@ -61,7 +66,7 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  const meters = await fetchAllMetersWithStats();
+  const meters = await fetchMetersWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
   for (const meter of meters) {
@@ -91,25 +96,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title,
-    openGraph: {
-      type: 'website',
-      siteName: SITE_NAME,
-      locale: 'ar_AR',
+    openGraph: buildOpenGraphMetadata({
+      title,
       url: `${SITE_URL}/meters/${slug}/page/${page}`,
-      title,
-      images: [
-        {
-          url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
-          width: 1200,
-          height: 630,
-          type: 'image/png',
-        },
-      ],
-    },
-    twitter: {
-      title,
-      images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
-    },
+    }),
+    twitter: buildTwitterMetadata({ title }),
   };
 }
 
@@ -121,23 +112,14 @@ export default async function MeterPage({ params }: Props) {
     notFound();
   }
 
-  let meterData: Awaited<ReturnType<typeof fetchMeterPoems>>['data'];
-  let pagination: Awaited<ReturnType<typeof fetchMeterPoems>>['pagination'];
-  try {
-    const result = await fetchMeterPoems(slug, page);
-    meterData = result.data;
-    pagination = result.pagination;
-  } catch {
+  const result = await fetchMeterPoemPage(slug, page);
+  if (!result?.data) {
     notFound();
   }
+  const { data, pagination } = result;
+  const { meterDetails: meter, poems } = data;
 
-  if (!meterData) {
-    notFound();
-  }
-
-  const { meterDetails, poems } = meterData;
-
-  const totalPages = pagination?.totalPages || Math.ceil(meterDetails.poemsCount / 30);
+  const totalPages = pagination?.totalPages || Math.ceil(meter.poemsCount / POEMS_PER_PAGE);
   const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
   const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
 
@@ -145,7 +127,7 @@ export default async function MeterPage({ params }: Props) {
   const prevPageUrl = `/meters/${slug}/page/${pageNumber - 1}`;
 
   const content = {
-    header: `قصائد من بحر ${meterDetails.name} (${toArabicDigits(meterDetails.poemsCount)} قصيدة)`,
+    header: `قصائد من بحر ${meter.name} (${toArabicDigits(meter.poemsCount)} قصيدة)`,
     headerTip: `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   };
 
@@ -162,27 +144,27 @@ export default async function MeterPage({ params }: Props) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Collection',
-    name: `قصائد من بحر ${meterDetails.name}`,
+    name: `قصائد من بحر ${meter.name}`,
     url: `${SITE_URL}/meters/${slug}/page/${pageNumber}`,
-    description: `مجموعة قصائد من بحر ${meterDetails.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+    description: `مجموعة قصائد من بحر ${meter.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
     mainEntityOfPage: {
       '@type': 'CollectionPage',
-      name: `قصائد من بحر ${meterDetails.name}`,
+      name: `قصائد من بحر ${meter.name}`,
       url: `${SITE_URL}/meters/${slug}/page/1`,
     },
-    numberOfItems: meterDetails.poemsCount,
+    numberOfItems: meter.poemsCount,
     itemListElement: itemListElements,
   };
 
   return (
     <>
       <JsonLdServer data={jsonLd} />
-      <SectionWrapper
+      <PageSectionWithHeader
         dynamicTitle={content.header}
         pagination={{
           totalPages,
           component: (
-            <SectionPaginationControllers
+            <PageNavigationButtons
               headerTip={content.headerTip}
               nextPageUrl={nextPageUrl}
               prevPageUrl={prevPageUrl}
@@ -204,7 +186,7 @@ export default async function MeterPage({ params }: Props) {
         ) : (
           <p className="text-center text-zinc-500">لا توجد قصائد لهذا البحر.</p>
         )}
-      </SectionWrapper>
+      </PageSectionWithHeader>
     </>
   );
 }

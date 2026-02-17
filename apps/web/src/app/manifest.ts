@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
-import { SITE_NAME } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
+import { SITE_NAME } from '@/constants/globals';
+import { htmlHeadMetadata } from '@/constants/site-metadata';
 
 // Required for static export
 export const dynamic = 'force-static';

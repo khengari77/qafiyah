@@ -3,9 +3,10 @@ import { notFound } from 'next/navigation';
 import { toArabicDigits } from 'to-arabic-digits';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { ListCard } from '@/components/ui/list-card';
-import { SectionPaginationControllers, SectionWrapper } from '@/components/ui/section-wrapper';
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
+import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/section-wrapper';
+import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
+import { htmlHeadMetadata } from '@/constants/site-metadata';
 import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
 
 type Props = {
@@ -73,7 +74,7 @@ export default async function PoetsPage({ params }: Props) {
 
   const { poets } = poetsData;
   const totalPoets = pagination?.totalItems || 0;
-  const totalPages = pagination?.totalPages || Math.ceil(totalPoets / 30);
+  const totalPages = pagination?.totalPages || Math.ceil(totalPoets / POEMS_PER_PAGE);
   const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
   const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
 
@@ -118,12 +119,12 @@ export default async function PoetsPage({ params }: Props) {
   return (
     <>
       <JsonLdServer data={jsonLd} />
-      <SectionWrapper
+      <PageSectionWithHeader
         dynamicTitle={content.header}
         pagination={{
           totalPages,
           component: (
-            <SectionPaginationControllers
+            <PageNavigationButtons
               headerTip={content.headerTip}
               nextPageUrl={nextPageUrl}
               prevPageUrl={prevPageUrl}
@@ -147,7 +148,7 @@ export default async function PoetsPage({ params }: Props) {
         ) : (
           <p className="text-center text-zinc-500">لا يوجد المزيد من الشعراء</p>
         )}
-      </SectionWrapper>
+      </PageSectionWithHeader>
     </>
   );
 }

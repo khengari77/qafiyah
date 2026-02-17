@@ -4,8 +4,8 @@ import { toArabicDigits } from 'to-arabic-digits';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { ListCard } from '@/components/ui/list-card';
 import { SectionList } from '@/components/ui/section-list';
-import { SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
+import { SITE_NAME, SITE_URL } from '@/constants/globals';
+import { htmlHeadMetadata } from '@/constants/site-metadata';
 import { fetchEras } from '@/lib/api/static';
 
 export const metadata: Metadata = {

@@ -1,4 +1,4 @@
-import { Badge } from '@/components/shadcn/badge';
+import { Badge } from '@/components/base/badge';
 
 type Props = {
   selectedErasLength: number;

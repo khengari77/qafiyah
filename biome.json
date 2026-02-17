@@ -97,6 +97,13 @@
     },
     "globals": []
   },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "json": {
     "formatter": {
       "trailingCommas": "none"

@@ -1,6 +1,6 @@
 'use client';
 
-import { Card } from '@/components/shadcn/card';
+import { Card } from '@/components/base/card';
 import {
   erasOptions,
   matchTypeOptions,

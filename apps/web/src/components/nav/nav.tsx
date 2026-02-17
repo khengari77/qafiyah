@@ -1,6 +1,6 @@
 'use client';
 
-import { NAV_LINKS } from '@/constants/NAV_LINKS';
+import { NAV_LINKS } from '@/constants/nav-links';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { MobileMenuButton } from './mobile-menu-button';

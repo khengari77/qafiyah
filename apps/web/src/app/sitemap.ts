@@ -1,19 +1,18 @@
 import type { MetadataRoute } from 'next';
-import { SITE_URL } from '@/constants/GLOBALS';
+import { SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
 import {
-  fetchAllErasWithStats,
-  fetchAllMetersWithStats,
   fetchAllPoemSlugs,
-  fetchAllPoetsWithStats,
-  fetchAllRhymesWithStats,
-  fetchAllThemesWithStats,
+  fetchErasWithPoemCount,
+  fetchMetersWithPoemCount,
+  fetchPoetsWithPoemCount,
+  fetchRhymesWithPoemCount,
+  fetchThemesWithPoemCount,
   generatePageNumbers,
 } from '@/lib/api/static';
 
 // Required for static export
 export const dynamic = 'force-static';
-
-const FETCH_PER_PAGE = 30;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date().toISOString();
@@ -55,11 +54,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all data in parallel for efficiency
   const [poemSlugs, poets, eras, meters, rhymes, themes] = await Promise.all([
     fetchAllPoemSlugs(),
-    fetchAllPoetsWithStats(),
-    fetchAllErasWithStats(),
-    fetchAllMetersWithStats(),
-    fetchAllRhymesWithStats(),
-    fetchAllThemesWithStats(),
+    fetchPoetsWithPoemCount(),
+    fetchErasWithPoemCount(),
+    fetchMetersWithPoemCount(),
+    fetchRhymesWithPoemCount(),
+    fetchThemesWithPoemCount(),
   ]);
 
   // Poem pages
@@ -72,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Poet list pages
   const totalPoets = poets.length;
-  const poetListPages = generatePageNumbers(totalPoets, FETCH_PER_PAGE);
+  const poetListPages = generatePageNumbers(totalPoets, POEMS_PER_PAGE);
   const poetListEntries: MetadataRoute.Sitemap = poetListPages.map((page, index) => ({
     url: `${SITE_URL}/poets/page/${page}`,
     lastModified: now,
@@ -82,7 +81,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Poet detail pages (with pagination)
   const poetDetailEntries: MetadataRoute.Sitemap = poets.flatMap((poet) => {
-    const pages = generatePageNumbers(poet.poemsCount, FETCH_PER_PAGE);
+    const pages = generatePageNumbers(poet.poemsCount, POEMS_PER_PAGE);
     return pages.map((page, index) => ({
       url: `${SITE_URL}/poets/${poet.slug}/page/${page}`,
       lastModified: now,
@@ -93,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Era pages (with pagination)
   const eraEntries: MetadataRoute.Sitemap = eras.flatMap((era) => {
-    const pages = generatePageNumbers(era.poemsCount, FETCH_PER_PAGE);
+    const pages = generatePageNumbers(era.poemsCount, POEMS_PER_PAGE);
     return pages.map((page, index) => ({
       url: `${SITE_URL}/eras/${era.slug}/page/${page}`,
       lastModified: now,
@@ -104,7 +103,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Meter pages (with pagination)
   const meterEntries: MetadataRoute.Sitemap = meters.flatMap((meter) => {
-    const pages = generatePageNumbers(meter.poemsCount, FETCH_PER_PAGE);
+    const pages = generatePageNumbers(meter.poemsCount, POEMS_PER_PAGE);
     return pages.map((page, index) => ({
       url: `${SITE_URL}/meters/${meter.slug}/page/${page}`,
       lastModified: now,
@@ -115,7 +114,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Rhyme pages (with pagination)
   const rhymeEntries: MetadataRoute.Sitemap = rhymes.flatMap((rhyme) => {
-    const pages = generatePageNumbers(rhyme.poemsCount, FETCH_PER_PAGE);
+    const pages = generatePageNumbers(rhyme.poemsCount, POEMS_PER_PAGE);
     return pages.map((page, index) => ({
       url: `${SITE_URL}/rhymes/${rhyme.slug}/page/${page}`,
       lastModified: now,
@@ -126,7 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Theme pages (with pagination)
   const themeEntries: MetadataRoute.Sitemap = themes.flatMap((theme) => {
-    const pages = generatePageNumbers(theme.poemsCount, FETCH_PER_PAGE);
+    const pages = generatePageNumbers(theme.poemsCount, POEMS_PER_PAGE);
     return pages.map((page, index) => ({
       url: `${SITE_URL}/themes/${theme.slug}/page/${page}`,
       lastModified: now,

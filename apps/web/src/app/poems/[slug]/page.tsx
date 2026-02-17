@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { PoemDisplay } from '@/components/poem/poem-display';
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
+import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/globals';
+import { htmlHeadMetadata } from '@/constants/site-metadata';
 import { fetchAllPoemSlugs, fetchPoem } from '@/lib/api/static';
 import type { PoemResponseData } from '@/lib/api/types';
 

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { PaginationLink } from './pagination-link';
 
-type SectionWrapperProps = {
+type PageSectionWithHeaderProps = {
   children: ReactNode;
   title?: string;
   dynamicTitle?: string;
@@ -14,14 +14,14 @@ type SectionWrapperProps = {
   };
 };
 
-export function SectionWrapper({
+export function PageSectionWithHeader({
   title,
   dynamicTitle,
   children,
   pagination,
   noTitle,
   customMargin,
-}: SectionWrapperProps) {
+}: PageSectionWithHeaderProps) {
   const fullTitle = title ? `تصفح ${title}` : '';
 
   return (
@@ -50,7 +50,7 @@ export function SectionWrapper({
   );
 }
 
-type SectionPaginationControllersProps = {
+type PageNavigationButtonsProps = {
   headerTip: string;
   nextPageUrl: string;
   prevPageUrl: string;
@@ -58,13 +58,13 @@ type SectionPaginationControllersProps = {
   hasPrevPage: boolean;
 };
 
-export function SectionPaginationControllers({
+export function PageNavigationButtons({
   headerTip,
   nextPageUrl,
   prevPageUrl,
   hasNextPage,
   hasPrevPage,
-}: SectionPaginationControllersProps) {
+}: PageNavigationButtonsProps) {
   return (
     <nav className="flex flex-row-reverse w-full justify-between items-center gap-4 text-base md:text-lg mt-8">
       <PaginationLink href={nextPageUrl} isDisabled={!hasNextPage} prefetch={hasNextPage}>

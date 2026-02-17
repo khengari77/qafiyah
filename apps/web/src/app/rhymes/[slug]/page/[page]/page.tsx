@@ -4,10 +4,15 @@ import type { Key } from 'react';
 import { toArabicDigits } from 'to-arabic-digits';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { ListCard } from '@/components/ui/list-card';
-import { SectionPaginationControllers, SectionWrapper } from '@/components/ui/section-wrapper';
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
-import { fetchAllRhymesWithStats, fetchRhymePoems, generatePageNumbers } from '@/lib/api/static';
+import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/section-wrapper';
+import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
+import {
+  fetchRhymePoemPage,
+  fetchRhymesWithPoemCount,
+  generatePageNumbers,
+} from '@/lib/api/static';
+import { buildOpenGraphMetadata, buildTwitterMetadata } from '@/lib/metadata-helpers';
 
 const RHYMES = new Map([
   ['3316b009-7212-4d5f-831f-f5f2d6febaa6', 'القاف'],
@@ -64,7 +69,7 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  const rhymes = await fetchAllRhymesWithStats();
+  const rhymes = await fetchRhymesWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
   for (const rhyme of rhymes) {
@@ -92,27 +97,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const rhymePattern = RHYMES.get(slug);
   const title = `قافية | قصائد على قافية ${rhymePattern} | صفحة (${toArabicDigits(page)})`;
 
+  const ogTitle = `قافية | قصائد على قافية ${rhymePattern}`;
   return {
     title,
-    openGraph: {
-      type: 'website',
-      siteName: SITE_NAME,
-      locale: 'ar_AR',
+    openGraph: buildOpenGraphMetadata({
+      title: ogTitle,
       url: `${SITE_URL}/rhymes/${slug}/page/${page}`,
-      title: `قافية | قصائد على قافية ${rhymePattern}`,
-      images: [
-        {
-          url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
-          width: 1200,
-          height: 630,
-          type: 'image/png',
-        },
-      ],
-    },
-    twitter: {
-      title: `قافية | قصائد على قافية ${rhymePattern}`,
-      images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
-    },
+    }),
+    twitter: buildTwitterMetadata({ title: ogTitle }),
   };
 }
 
@@ -124,23 +116,14 @@ export default async function RhymePage({ params }: Props) {
     notFound();
   }
 
-  let rhymeData: Awaited<ReturnType<typeof fetchRhymePoems>>['data'];
-  let pagination: Awaited<ReturnType<typeof fetchRhymePoems>>['pagination'];
-  try {
-    const result = await fetchRhymePoems(slug, page);
-    rhymeData = result.data;
-    pagination = result.pagination;
-  } catch {
+  const result = await fetchRhymePoemPage(slug, page);
+  if (!result?.data) {
     notFound();
   }
+  const { data, pagination } = result;
+  const { rhymeDetails: rhyme, poems } = data;
 
-  if (!rhymeData) {
-    notFound();
-  }
-
-  const { rhymeDetails, poems } = rhymeData;
-
-  const totalPages = pagination?.totalPages || Math.ceil(rhymeDetails.poemsCount / 30);
+  const totalPages = pagination?.totalPages || Math.ceil(rhyme.poemsCount / POEMS_PER_PAGE);
   const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
   const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
 
@@ -148,7 +131,7 @@ export default async function RhymePage({ params }: Props) {
   const prevPageUrl = `/rhymes/${slug}/page/${pageNumber - 1}`;
 
   const content = {
-    header: `${rhymeDetails.pattern} (${toArabicDigits(rhymeDetails.poemsCount)} قصيدة)`,
+    header: `${rhyme.pattern} (${toArabicDigits(rhyme.poemsCount)} قصيدة)`,
     headerTip: `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   };
 
@@ -165,27 +148,27 @@ export default async function RhymePage({ params }: Props) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Collection',
-    name: `قصائد على قافية ${rhymeDetails.pattern}`,
+    name: `قصائد على قافية ${rhyme.pattern}`,
     url: `${SITE_URL}/rhymes/${slug}/page/${pageNumber}`,
-    description: `مجموعة قصائد على قافية ${rhymeDetails.pattern} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+    description: `مجموعة قصائد على قافية ${rhyme.pattern} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
     mainEntityOfPage: {
       '@type': 'CollectionPage',
-      name: `قصائد على قافية ${rhymeDetails.pattern}`,
+      name: `قصائد على قافية ${rhyme.pattern}`,
       url: `${SITE_URL}/rhymes/${slug}/page/1`,
     },
-    numberOfItems: rhymeDetails.poemsCount,
+    numberOfItems: rhyme.poemsCount,
     itemListElement: itemListElements,
   };
 
   return (
     <>
       <JsonLdServer data={jsonLd} />
-      <SectionWrapper
+      <PageSectionWithHeader
         dynamicTitle={content.header}
         pagination={{
           totalPages,
           component: (
-            <SectionPaginationControllers
+            <PageNavigationButtons
               headerTip={content.headerTip}
               nextPageUrl={nextPageUrl}
               prevPageUrl={prevPageUrl}
@@ -207,7 +190,7 @@ export default async function RhymePage({ params }: Props) {
         ) : (
           <p className="text-center text-zinc-500">لا توجد قصائد لهذه القافية.</p>
         )}
-      </SectionWrapper>
+      </PageSectionWithHeader>
     </>
   );
 }

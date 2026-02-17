@@ -3,7 +3,8 @@
  * These functions are used during Next.js static generation to fetch data from the local API.
  */
 
-import { API_URL } from '@/constants/GLOBALS';
+import { API_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
 import type {
   Era,
   EraPoems,
@@ -19,7 +20,6 @@ import type {
   ThemePoems,
 } from './types';
 
-const FETCH_PER_PAGE = 30;
 const MAX_URLS_PER_SITEMAP = 1000;
 
 function isConnectionError(error: unknown): boolean {
@@ -114,7 +114,7 @@ export async function fetchAllPoemSlugs(): Promise<string[]> {
 async function fetchAllPoemSlugsFallback(): Promise<string[]> {
   let poets: PoetStats[];
   try {
-    poets = await fetchAllPoetsWithStats();
+    poets = await fetchPoetsWithPoemCount();
   } catch (error) {
     if (isConnectionError(error)) {
       return [];
@@ -124,10 +124,10 @@ async function fetchAllPoemSlugsFallback(): Promise<string[]> {
   const allSlugs: string[] = [];
 
   for (const poet of poets) {
-    const totalPages = Math.ceil(poet.poemsCount / FETCH_PER_PAGE);
+    const totalPages = Math.ceil(poet.poemsCount / POEMS_PER_PAGE);
     for (let page = 1; page <= totalPages; page++) {
       try {
-        const response = await fetchPoetPoems(poet.slug, page.toString());
+        const response = await fetchPoetPoemPage(poet.slug, page.toString());
         if (response.data?.poems) {
           allSlugs.push(...response.data.poems.map((p) => p.slug));
         }
@@ -165,9 +165,9 @@ type PoetStats = {
 };
 
 /**
- * Fetch all poets with their stats (for generating static params)
+ * Fetch all poets with poem counts (for generating static params)
  */
-export async function fetchAllPoetsWithStats(): Promise<PoetStats[]> {
+export async function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
   const allPoets: PoetStats[] = [];
   let page = 1;
   let hasMore = true;
@@ -229,7 +229,7 @@ export async function fetchPoetsTotalPages(): Promise<number> {
 /**
  * Fetch poems for a specific poet and page
  */
-export async function fetchPoetPoems(
+export async function fetchPoetPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: PoetPoems; pagination?: PaginationMeta }> {
@@ -288,7 +288,7 @@ export async function fetchEras(): Promise<Era[]> {
 /**
  * Fetch all eras with poem counts for static params generation
  */
-export async function fetchAllErasWithStats(): Promise<EraStats[]> {
+export async function fetchErasWithPoemCount(): Promise<EraStats[]> {
   const eras = await fetchEras();
   return eras.map((era) => ({
     slug: era.slug,
@@ -300,7 +300,7 @@ export async function fetchAllErasWithStats(): Promise<EraStats[]> {
 /**
  * Fetch poems for a specific era and page
  */
-export async function fetchEraPoems(
+export async function fetchEraPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: EraPoems; pagination?: PaginationMeta }> {
@@ -337,7 +337,7 @@ export async function fetchMeters(): Promise<Meter[]> {
 /**
  * Fetch all meters with poem counts for static params generation
  */
-export async function fetchAllMetersWithStats(): Promise<MeterStats[]> {
+export async function fetchMetersWithPoemCount(): Promise<MeterStats[]> {
   const meters = await fetchMeters();
   return meters.map((meter) => ({
     slug: meter.slug,
@@ -349,7 +349,7 @@ export async function fetchAllMetersWithStats(): Promise<MeterStats[]> {
 /**
  * Fetch poems for a specific meter and page
  */
-export async function fetchMeterPoems(
+export async function fetchMeterPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: MeterPoems; pagination?: PaginationMeta }> {
@@ -386,7 +386,7 @@ export async function fetchRhymes(): Promise<Rhyme[]> {
 /**
  * Fetch all rhymes with poem counts for static params generation
  */
-export async function fetchAllRhymesWithStats(): Promise<RhymeStats[]> {
+export async function fetchRhymesWithPoemCount(): Promise<RhymeStats[]> {
   const rhymes = await fetchRhymes();
   return rhymes.map((rhyme) => ({
     slug: rhyme.slug,
@@ -398,7 +398,7 @@ export async function fetchAllRhymesWithStats(): Promise<RhymeStats[]> {
 /**
  * Fetch poems for a specific rhyme and page
  */
-export async function fetchRhymePoems(
+export async function fetchRhymePoemPage(
   slug: string,
   page: string
 ): Promise<{ data: RhymePoems; pagination?: PaginationMeta }> {
@@ -435,7 +435,7 @@ export async function fetchThemes(): Promise<Theme[]> {
 /**
  * Fetch all themes with poem counts for static params generation
  */
-export async function fetchAllThemesWithStats(): Promise<ThemeStats[]> {
+export async function fetchThemesWithPoemCount(): Promise<ThemeStats[]> {
   const themes = await fetchThemes();
   return themes.map((theme) => ({
     slug: theme.slug,
@@ -447,7 +447,7 @@ export async function fetchAllThemesWithStats(): Promise<ThemeStats[]> {
 /**
  * Fetch poems for a specific theme and page
  */
-export async function fetchThemePoems(
+export async function fetchThemePoemPage(
   slug: string,
   page: string
 ): Promise<{ data: ThemePoems; pagination?: PaginationMeta }> {
@@ -473,7 +473,7 @@ export async function fetchThemePoems(
  */
 export function generatePageNumbers(
   totalCount: number,
-  perPage: number = FETCH_PER_PAGE
+  perPage: number = POEMS_PER_PAGE
 ): number[] {
   if (totalCount === 0) return [];
 

@@ -1,6 +1,6 @@
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import type { MouseEventHandler } from 'react';
-import { Button } from '@/components/shadcn/button';
+import { Button } from '@/components/base/button';
 import { cn } from '@/lib/utils';
 
 type Props = {

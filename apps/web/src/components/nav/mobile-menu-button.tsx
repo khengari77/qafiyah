@@ -1,7 +1,7 @@
 'use client';
 
 import { Menu } from 'lucide-react';
-import { responsiveIconSize } from '@/constants/GLOBALS';
+import { responsiveIconSize } from '@/constants/globals';
 import { cn } from '@/lib/utils';
 import { useNavStore } from '@/stores/nav-store';
 

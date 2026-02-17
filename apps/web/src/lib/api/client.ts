@@ -1,8 +1,8 @@
-import { API_URL } from '@/constants/GLOBALS';
 import {
   fetchWithValidation,
   validateParams,
 } from '../../../../../packages/schemas/dist/utils/client';
+import { buildApiUrl } from './config';
 import type {
   Era,
   EraPoems,
@@ -129,7 +129,7 @@ const apiClient = (baseUrl: string) => {
 
     async getRandomSlug(): Promise<string> {
       try {
-        const response = await fetch(`${API_URL}/poems/random?option=slug`);
+        const response = await fetch(buildApiUrl('/poems/random?option=slug'));
         if (!response.ok) {
           return 'eabca780-811f-4ea4-949e-21df6efba15d';
         }

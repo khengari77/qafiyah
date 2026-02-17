@@ -1,19 +1,18 @@
 import { toArabicDigits } from 'to-arabic-digits';
 
-const formatVerseNumbersInArabic = (verses: number): string => {
-  const arabicDigits = toArabicDigits(verses);
-  if (verses === 1) {
+/**
+ * Format verse count in Arabic with proper pluralization
+ */
+export function formatVerseCount(count: number): string {
+  const arabic = toArabicDigits(count);
+  if (count === 1) {
     return 'بيت';
   }
-  if (verses === 2) {
+  if (count === 2) {
     return 'بيتان';
   }
-  if (verses >= 3 && verses <= 10) {
-    return `${arabicDigits} أبيات`;
+  if (count >= 3 && count <= 10) {
+    return `${arabic} أبيات`;
   }
-  return `${arabicDigits} بيت`;
-};
-
-export const getFormattedVersesCount = (verseCount: number): string => {
-  return formatVerseNumbersInArabic(verseCount);
-};
+  return `${arabic} بيت`;
+}

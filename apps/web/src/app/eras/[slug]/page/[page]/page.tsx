@@ -3,10 +3,11 @@ import { notFound } from 'next/navigation';
 import { toArabicDigits } from 'to-arabic-digits';
 import { JsonLdServer } from '@/components/json-ld-server';
 import { ListCard } from '@/components/ui/list-card';
-import { SectionPaginationControllers, SectionWrapper } from '@/components/ui/section-wrapper';
-import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/GLOBALS';
-import { htmlHeadMetadata } from '@/constants/SITE_METADATA';
-import { fetchAllErasWithStats, fetchEraPoems, generatePageNumbers } from '@/lib/api/static';
+import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/section-wrapper';
+import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
+import { fetchEraPoemPage, fetchErasWithPoemCount, generatePageNumbers } from '@/lib/api/static';
+import { buildOpenGraphMetadata, buildTwitterMetadata } from '@/lib/metadata-helpers';
 
 const ERAS = new Map([
   ['islamic', 'إسلامي'],
@@ -26,7 +27,7 @@ type Props = {
 };
 
 export async function generateStaticParams() {
-  const eras = await fetchAllErasWithStats();
+  const eras = await fetchErasWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
   for (const era of eras) {
@@ -56,25 +57,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title,
-    openGraph: {
-      type: 'website',
-      siteName: SITE_NAME,
-      locale: 'ar_AR',
+    openGraph: buildOpenGraphMetadata({
+      title,
       url: `${SITE_URL}/eras/${slug}/page/${page}`,
-      title,
-      images: [
-        {
-          url: `${SITE_URL}${htmlHeadMetadata.openGraphUrl}`,
-          width: 1200,
-          height: 630,
-          type: 'image/png',
-        },
-      ],
-    },
-    twitter: {
-      title,
-      images: [`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`],
-    },
+    }),
+    twitter: buildTwitterMetadata({ title }),
   };
 }
 
@@ -86,24 +73,15 @@ export default async function EraPage({ params }: Props) {
     notFound();
   }
 
-  let eraData: Awaited<ReturnType<typeof fetchEraPoems>>['data'];
-  let pagination: Awaited<ReturnType<typeof fetchEraPoems>>['pagination'];
-  try {
-    const result = await fetchEraPoems(slug, page);
-    eraData = result.data;
-    pagination = result.pagination;
-  } catch {
+  const result = await fetchEraPoemPage(slug, page);
+  if (!result?.data) {
     notFound();
   }
+  const { data, pagination } = result;
+  const { eraDetails: era, poems } = data;
+  const title = `${era.name}ين`;
 
-  if (!eraData) {
-    notFound();
-  }
-
-  const { eraDetails, poems } = eraData;
-  const title = `${eraDetails.name}ين`;
-
-  const totalPages = pagination?.totalPages || Math.ceil(eraDetails.poemsCount / 30);
+  const totalPages = pagination?.totalPages || Math.ceil(era.poemsCount / POEMS_PER_PAGE);
   const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
   const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
 
@@ -111,7 +89,7 @@ export default async function EraPage({ params }: Props) {
   const prevPageUrl = `/eras/${slug}/page/${pageNumber - 1}`;
 
   const content = {
-    header: `قصائد ${title} (${toArabicDigits(eraDetails.poemsCount)} قصيدة)`,
+    header: `قصائد ${title} (${toArabicDigits(era.poemsCount)} قصيدة)`,
     headerTip: `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   };
 
@@ -128,27 +106,27 @@ export default async function EraPage({ params }: Props) {
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Collection',
-    name: `قصائد العصر ال${eraDetails.name}`,
+    name: `قصائد العصر ال${era.name}`,
     url: `${SITE_URL}/eras/${slug}/page/${pageNumber}`,
-    description: `مجموعة قصائد من العصر ال${eraDetails.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+    description: `مجموعة قصائد من العصر ال${era.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
     mainEntityOfPage: {
       '@type': 'CollectionPage',
-      name: `قصائد العصر ال${eraDetails.name}`,
+      name: `قصائد العصر ال${era.name}`,
       url: `${SITE_URL}/eras/${slug}/page/1`,
     },
-    numberOfItems: eraDetails.poemsCount,
+    numberOfItems: era.poemsCount,
     itemListElement: itemListElements,
   };
 
   return (
     <>
       <JsonLdServer data={jsonLd} />
-      <SectionWrapper
+      <PageSectionWithHeader
         dynamicTitle={content.header}
         pagination={{
           totalPages,
           component: (
-            <SectionPaginationControllers
+            <PageNavigationButtons
               headerTip={content.headerTip}
               nextPageUrl={nextPageUrl}
               prevPageUrl={prevPageUrl}
@@ -170,7 +148,7 @@ export default async function EraPage({ params }: Props) {
         ) : (
           <p className="text-center text-zinc-500">لا توجد قصائد لهذا العصر.</p>
         )}
-      </SectionWrapper>
+      </PageSectionWithHeader>
     </>
   );
 }

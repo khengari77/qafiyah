@@ -1,5 +1,5 @@
-import { Badge } from '@/components/shadcn/badge';
-import { SITE_URL } from '@/constants/GLOBALS';
+import { Badge } from '@/components/base/badge';
+import { SITE_URL } from '@/constants/globals';
 import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { HighlightedText } from './highlighted-text';
 

@@ -1,5 +1,5 @@
 import { Loader2 } from 'lucide-react';
-import { responsiveIconSize } from '@/constants/GLOBALS';
+import { responsiveIconSize } from '@/constants/globals';
 
 export default function Loading() {
   return (

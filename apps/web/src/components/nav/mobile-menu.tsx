@@ -2,8 +2,8 @@
 
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
-import { responsiveIconSize } from '@/constants/GLOBALS';
-import { NAV_LINKS } from '@/constants/NAV_LINKS';
+import { responsiveIconSize } from '@/constants/globals';
+import { NAV_LINKS } from '@/constants/nav-links';
 import { useNavStore } from '@/stores/nav-store';
 import { NavLinks } from './nav-links';
 
