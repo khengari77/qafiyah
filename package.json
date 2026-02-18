@@ -4,7 +4,7 @@
   "scripts": {
     "build": "turbo run build",
     "build:static": "pnpm --filter @qafiyah/web build:static",
-    "dev": "turbo run dev",
+    "dev": "./scripts/check-database.sh && turbo run dev",
     "dev:test": "pnpm --filter @qafiyah/api dev:test",
     "lint": "turbo run lint",
     "lint:fix": "biome check --write .",
@@ -14,24 +14,25 @@
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
     "prepare": "husky",
-    "ci": "pnpm run format && pnpm run lint:fix && pnpm run check-types"
+    "ci": "pnpm run format && pnpm run lint:fix && pnpm run check-types",
+    "db:setup": "./scripts/setup-database.sh"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.12",
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
-    "@biomejs/biome": "^2.3.12",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^25.0.10",
+    "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
     "knip": "^5.82.1",
     "madge": "8.0.0",
     "postgres": "^3.4.5",
     "prettier": "^3.4.2",
     "turbo": "^2.5.0",
-    "typescript": "5.8.2",
-    "husky": "^9.1.7"
+    "typescript": "5.8.2"
   },
-  "packageManager": "pnpm@9.0.0",
+  "packageManager": "pnpm@10.30.0",
   "engines": {
     "node": ">=18"
   }
