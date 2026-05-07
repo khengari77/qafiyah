@@ -3,7 +3,7 @@
  * These functions are used during Next.js static generation to fetch data from the local API.
  */
 
-import { API_URL } from '@/constants/globals';
+import { API_URL, isDev } from '@/constants/globals';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
 import type {
   Era,
@@ -482,11 +482,14 @@ export function generatePageNumbers(
 }
 
 /**
- * Generate static params for paginated category routes
+ * Generate static params for paginated category routes.
+ * Skips expensive API calls in development mode — pages render on-demand instead.
  */
 export async function generateCategoryStaticParams(
   fetchStats: () => Promise<Array<{ slug: string; poemsCount: number }>>
 ): Promise<Array<{ slug: string; page: string }>> {
+  if (isDev) return [];
+
   const items = await fetchStats();
   const params: Array<{ slug: string; page: string }> = [];
 
@@ -498,4 +501,11 @@ export async function generateCategoryStaticParams(
   }
 
   return params;
+}
+
+export function devStaticParams<T extends Record<string, string>>(
+  fn: () => Promise<T[]>
+): () => Promise<T[]> {
+  if (isDev) return async () => [];
+  return fn;
 }

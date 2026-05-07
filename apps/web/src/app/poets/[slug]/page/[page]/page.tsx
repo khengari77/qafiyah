@@ -9,7 +9,7 @@ import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/se
 import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
 import {
-  fetchPoetInfo,
+  devStaticParams,
   fetchPoetPoemPage,
   fetchPoetsWithPoemCount,
   generatePageNumbers,
@@ -20,7 +20,7 @@ type Props = {
   params: Promise<{ slug: string; page: string }>;
 };
 
-export async function generateStaticParams() {
+export const generateStaticParams = devStaticParams(async () => {
   const poets = await fetchPoetsWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
@@ -32,55 +32,61 @@ export async function generateStaticParams() {
   }
 
   return params;
-}
+});
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, page } = await params;
 
-  const poetInfo = await fetchPoetInfo(slug);
+  try {
+    const result = await fetchPoetPoemPage(slug, page);
 
-  if (!poetInfo) {
+    if (!result?.data) {
+      return {
+        title: NOT_FOUND_TITLE,
+        robots: { index: false, follow: false },
+      };
+    }
+
+    const { poetDetails: poet } = result.data;
+    const poetName = poet?.name || 'شاعر غير معروف';
+    const poemsCount = poet?.poemsCount || 0;
+
+    const title = `قافية: ديوان «${poetName}» - صفحة (${toArabicDigits(page)})`;
+
+    return {
+      title,
+      description: `قصائد الشاعر ${poetName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
+      keywords: `${poetName}, شعر, قصائد, شاعر`,
+      authors: [{ name: poetName }],
+      robots: {
+        index: true,
+        follow: true,
+        googleBot: {
+          index: true,
+          follow: true,
+          notranslate: false,
+          'max-image-preview': 'large',
+          'max-snippet': -1,
+        },
+      },
+      openGraph: buildOpenGraphMetadata({
+        title: `قافية | ديوان ${poetName}`,
+        url: `${SITE_URL}/poets/${slug}/page/${page}`,
+        description: `قصائد الشاعر ${poetName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
+      }),
+      twitter: buildTwitterMetadata({
+        title: `قافية | ديوان ${poetName}`,
+        description: `قصائد الشاعر ${poetName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
+      }),
+    };
+  } catch {
     return {
       title: NOT_FOUND_TITLE,
       robots: { index: false, follow: false },
     };
   }
-
-  const poetData = poetInfo.poet;
-  const poetName = poetData?.name || 'شاعر غير معروف';
-  const poemsCount = poetData?.poemsCount || 0;
-  const eraName = poetData?.era?.name || 'غير محدد';
-
-  const title = `قافية: ديوان «${poetName}» - صفحة (${toArabicDigits(page)})`;
-
-  return {
-    title,
-    description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
-    keywords: `${poetName}, شعر, قصائد, العصر ال${eraName}, شاعر`,
-    authors: [{ name: poetName }],
-    robots: {
-      index: true,
-      follow: true,
-      googleBot: {
-        index: true,
-        follow: true,
-        notranslate: false,
-        'max-image-preview': 'large',
-        'max-snippet': -1,
-      },
-    },
-    openGraph: buildOpenGraphMetadata({
-      title: `قافية | ديوان ${poetName}`,
-      url: `${SITE_URL}/poets/${slug}/page/${page}`,
-      description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
-    }),
-    twitter: buildTwitterMetadata({
-      title: `قافية | ديوان ${poetName}`,
-      description: `قصائد الشاعر ${poetName} من العصر ال${eraName}، عدد القصائد: ${toArabicDigits(poemsCount)}`,
-    }),
-  };
 }
 
 export default async function PoetPoemsPage({ params }: Props) {

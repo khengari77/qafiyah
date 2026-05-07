@@ -8,6 +8,7 @@ import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/se
 import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
 import {
+  devStaticParams,
   fetchRhymePoemPage,
   fetchRhymesWithPoemCount,
   generatePageNumbers,
@@ -68,7 +69,7 @@ type Props = {
   params: Promise<{ slug: string; page: string }>;
 };
 
-export async function generateStaticParams() {
+export const generateStaticParams = devStaticParams(async () => {
   const rhymes = await fetchRhymesWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
@@ -80,9 +81,9 @@ export async function generateStaticParams() {
   }
 
   return params;
-}
+});
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, page } = await params;

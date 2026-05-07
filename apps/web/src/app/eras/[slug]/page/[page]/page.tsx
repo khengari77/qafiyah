@@ -6,7 +6,12 @@ import { ListCard } from '@/components/ui/list-card';
 import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/section-wrapper';
 import { NOT_FOUND_TITLE, SITE_URL } from '@/constants/globals';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
-import { fetchEraPoemPage, fetchErasWithPoemCount, generatePageNumbers } from '@/lib/api/static';
+import {
+  devStaticParams,
+  fetchEraPoemPage,
+  fetchErasWithPoemCount,
+  generatePageNumbers,
+} from '@/lib/api/static';
 import { buildOpenGraphMetadata, buildTwitterMetadata } from '@/lib/metadata-helpers';
 
 const ERAS = new Map([
@@ -26,7 +31,7 @@ type Props = {
   params: Promise<{ slug: string; page: string }>;
 };
 
-export async function generateStaticParams() {
+export const generateStaticParams = devStaticParams(async () => {
   const eras = await fetchErasWithPoemCount();
   const params: Array<{ slug: string; page: string }> = [];
 
@@ -38,9 +43,9 @@ export async function generateStaticParams() {
   }
 
   return params;
-}
+});
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug, page } = await params;

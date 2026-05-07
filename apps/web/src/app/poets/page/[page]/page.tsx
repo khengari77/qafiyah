@@ -7,20 +7,20 @@ import { PageNavigationButtons, PageSectionWithHeader } from '@/components/ui/se
 import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/globals';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
 import { htmlHeadMetadata } from '@/constants/site-metadata';
-import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
+import { devStaticParams, fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
 
 type Props = {
   params: Promise<{ page: string }>;
 };
 
-export async function generateStaticParams() {
+export const generateStaticParams = devStaticParams(async () => {
   const totalPages = await fetchPoetsTotalPages();
   return Array.from({ length: totalPages }, (_, i) => ({
     page: (i + 1).toString(),
   }));
-}
+});
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { page } = await params;

@@ -4,19 +4,19 @@ import { JsonLdServer } from '@/components/json-ld-server';
 import { PoemDisplay } from '@/components/poem/poem-display';
 import { NOT_FOUND_TITLE, SITE_NAME, SITE_URL } from '@/constants/globals';
 import { htmlHeadMetadata } from '@/constants/site-metadata';
-import { fetchAllPoemSlugs, fetchPoem } from '@/lib/api/static';
+import { devStaticParams, fetchAllPoemSlugs, fetchPoem } from '@/lib/api/static';
 import type { PoemResponseData } from '@/lib/api/types';
 
 type Props = {
   params: Promise<{ slug: string }>;
 };
 
-export async function generateStaticParams() {
+export const generateStaticParams = devStaticParams(async () => {
   const slugs = await fetchAllPoemSlugs();
   return slugs.map((slug) => ({ slug }));
-}
+});
 
-export const dynamicParams = false;
+export const dynamicParams = true;
 
 function flattenVerses(verses: [string, string][]): string {
   if (!verses || !verses.length) return '';
