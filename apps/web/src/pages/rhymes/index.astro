@@ -1,0 +1,70 @@
+---
+import { toArabicDigits } from 'to-arabic-digits';
+import { SITE_URL } from '@/constants/globals';
+import Layout from '@/layouts/Layout.astro';
+import { fetchRhymes } from '@/lib/api/static';
+
+let rhymes: Awaited<ReturnType<typeof fetchRhymes>> = [];
+try {
+  rhymes = await fetchRhymes();
+} catch {
+  rhymes = [];
+}
+const stripQuotes = (s: string) => s.replace(/"/g, '');
+
+const title = 'قافية | تصفح حسب القوافي';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'القوافي الشعرية',
+  url: `${SITE_URL}/rhymes/`,
+  description: `قائمة بجميع القوافي الشعرية في موقع قافية - ${toArabicDigits(rhymes.length)} قافية`,
+  isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
+  numberOfItems: rhymes.length,
+  itemListElement: rhymes.map((rhyme, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: {
+      '@type': 'Collection',
+      name: rhyme.name,
+      url: `${SITE_URL}/rhymes/${rhyme.slug}/page/1/`,
+      description: `قصائد على قافية ${rhyme.name} - ${toArabicDigits(rhyme.poemsCount)} قصيدة`,
+    },
+  })),
+};
+---
+
+<Layout
+  title={title}
+  canonical="/rhymes/"
+  ogTitle={title}
+  ogUrl={`${SITE_URL}/rhymes/`}
+  jsonLd={jsonLd}
+>
+  <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
+    <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
+      <h3 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
+        {`جميع القوافي (${toArabicDigits(rhymes.length)} حرف)`}
+      </h3>
+      <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
+        {rhymes.length > 0 ? rhymes.map(({ name, poemsCount, poetsCount, slug }) => (
+          <a
+            href={`/rhymes/${slug}/page/1/`}
+            class="hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80"
+          >
+            <p class="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">
+              {stripQuotes(name)}
+            </p>
+            <p class="text-xs xs:text-lg sm:text-xl lg:text-lg text-zinc-600/80 group-hover:text-zinc-500 duration-300 text-wrap">
+              {`${toArabicDigits(poetsCount)} شاعر و${toArabicDigits(poemsCount)} قصيدة`}
+            </p>
+          </a>
+        )) : (
+          <div class="text-red-500 text-center py-8">
+            حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.
+          </div>
+        )}
+      </div>
+    </div>
+  </section>
+</Layout>

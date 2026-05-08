@@ -19,7 +19,8 @@
       "!**/pnpm-lock.yaml",
       "!**/public/datasets",
       "!**/env.d.ts",
-      "!**/worker-configuration.d.ts"
+      "!**/worker-configuration.d.ts",
+      "!apps/web/.astro"
     ]
   },
   "formatter": {
@@ -113,5 +114,18 @@
     "parser": {
       "tailwindDirectives": true
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["apps/web/**/*.astro"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUnusedVariables": "off",
+            "noUnusedImports": "off"
+          }
+        }
+      }
+    }
+  ]
 }

@@ -1,13 +1,11 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { getRandomSlug } from '@/lib/api/queries';
 
 type Status = 'idle' | 'loading' | 'error';
 
 export function useRandomPoem() {
-  const router = useRouter();
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<Error | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -35,13 +33,10 @@ export function useRandomPoem() {
 
       if (!isMountedRef.current) return;
 
-      let trimmedSlug = '';
-      if (slug) {
-        trimmedSlug = slug.trim();
-      }
+      const trimmedSlug = slug ? slug.trim() : '';
 
       if (trimmedSlug.length > 0) {
-        router.push(`/poems/${trimmedSlug}`);
+        window.location.href = `/poems/${trimmedSlug}/`;
       } else {
         setStatus('idle');
       }
@@ -52,7 +47,7 @@ export function useRandomPoem() {
       setStatus('error');
       setError(err instanceof Error ? err : new Error('Unknown error'));
     }
-  }, [status, router]);
+  }, [status]);
 
   return {
     handleClick,

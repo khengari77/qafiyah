@@ -1,0 +1,5 @@
+{
+  "permissions": {
+    "allow": ["Bash(pnpm tsc --noEmit *)", "Bash(pnpm astro check *)"]
+  }
+}

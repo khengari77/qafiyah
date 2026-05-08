@@ -1,10 +1,9 @@
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 export function Logo() {
   return (
     <a href="/" className="flex items-center">
-      <Image
+      <img
         src="/logo-48x48.svg"
         height="48"
         width="48"

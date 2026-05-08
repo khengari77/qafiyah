@@ -1,0 +1,48 @@
+---
+import { SearchWithProviders } from '@/components/search/search-with-providers';
+import { SITE_URL } from '@/constants/globals';
+import { htmlHeadMetadata } from '@/constants/site-metadata';
+import Layout from '@/layouts/Layout.astro';
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: htmlHeadMetadata.title,
+  url: SITE_URL,
+  description: htmlHeadMetadata.description,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
+  publisher: {
+    '@type': 'Organization',
+    name: 'قافية',
+    logo: {
+      '@type': 'ImageObject',
+      url: `${SITE_URL}/logo.png`,
+      width: '112',
+      height: '112',
+    },
+    sameAs: ['https://x.com/qafiyahdotcom', 'https://github.com/alwalxed/qafiyah'],
+  },
+  inLanguage: 'ar',
+};
+---
+
+<Layout
+  title={htmlHeadMetadata.title}
+  description={htmlHeadMetadata.description}
+  keywords={htmlHeadMetadata.keywords}
+  canonical="/"
+  jsonLd={jsonLd}
+>
+  <p
+    class="sr-only pointer-events-none text-opacity-0 opacity-0"
+    aria-hidden="true"
+    tabindex="-1"
+  >
+    {htmlHeadMetadata.description}
+  </p>
+  <SearchWithProviders client:load />
+</Layout>

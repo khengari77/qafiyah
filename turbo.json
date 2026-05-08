@@ -12,8 +12,18 @@
       "inputs": ["src/**/*.{ts,tsx,js,jsx}", "*.{js,ts,json}"],
       "outputs": []
     },
-    "check-types": {
-      "dependsOn": ["^check-types"],
+    "health": {
+      "dependsOn": ["^health"],
+      "inputs": [
+        "src/**/*.{ts,tsx,js,jsx,astro}",
+        "*.{js,ts,json,mjs}",
+        "tsconfig.json",
+        "astro.config.*"
+      ],
+      "outputs": []
+    },
+    "types": {
+      "dependsOn": ["^types"],
       "inputs": ["src/**/*.{ts,tsx}", "*.{ts,json}", "tsconfig.json"],
       "outputs": []
     },

@@ -18,6 +18,13 @@ function err<T>(error: Error): Result<T> {
   return { ok: false, error };
 }
 
+class TerminalError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'TerminalError';
+  }
+}
+
 function getEnvVar(name: string): Result<string> {
   const value = process.env[name];
   if (!value) {
@@ -65,8 +72,13 @@ async function withRetry<T>(
       return ok(result);
     } catch (error) {
       const errorObj = error instanceof Error ? error : new Error(String(error));
-      const message = errorObj.message.toLowerCase();
 
+      if (errorObj instanceof TerminalError) {
+        console.log(`${operationName}: Terminal error — ${errorObj.message}`);
+        return err(errorObj);
+      }
+
+      const message = errorObj.message.toLowerCase();
       if (message.includes('429') || message.includes('too many requests')) {
         console.log(`${operationName}: Rate limited`);
         return err(new Error('Rate limit hit. Aborting.'));
@@ -96,12 +108,14 @@ async function fetchFormattedPoem(): Promise<Result<string>> {
 
     const text = await res.text();
     if (!text || text.trim().length === 0) {
-      throw new Error('Empty poem returned from API');
+      throw new TerminalError('Empty poem returned from API');
     }
 
     const trimmedText = text.trim();
     if (trimmedText.length > MAX_TWEET_LENGTH) {
-      throw new Error(`Poem too long for Twitter (${trimmedText.length}/${MAX_TWEET_LENGTH})`);
+      throw new TerminalError(
+        `Poem too long for Twitter (${trimmedText.length}/${MAX_TWEET_LENGTH})`
+      );
     }
 
     return trimmedText;

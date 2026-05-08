@@ -1,0 +1,110 @@
+---
+import { toArabicDigits } from 'to-arabic-digits';
+import { SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
+import Layout from '@/layouts/Layout.astro';
+import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
+
+const stripQuotes = (s: string) => s.replace(/"/g, '');
+
+export async function getStaticPaths() {
+  const totalPages = await fetchPoetsTotalPages();
+  return Array.from({ length: totalPages }, (_, i) => ({
+    params: { page: (i + 1).toString() },
+  }));
+}
+
+const { page } = Astro.params;
+const pageNumber = Number.parseInt(page as string, 10);
+
+if (!Number.isFinite(pageNumber) || pageNumber < 1) {
+  return Astro.redirect('/404/');
+}
+
+const { data: poetsData, pagination } = await fetchPoets(page as string);
+
+if (!poetsData?.poets) {
+  return Astro.redirect('/404/');
+}
+
+const { poets } = poetsData;
+const totalPoets = pagination?.totalItems || 0;
+const totalPages = pagination?.totalPages || Math.ceil(totalPoets / POEMS_PER_PAGE);
+const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
+const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
+const nextPageUrl = `/poets/page/${pageNumber + 1}/`;
+const prevPageUrl = `/poets/page/${pageNumber - 1}/`;
+const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
+
+const title = `قافية | تصفح حسب الدواوين | صفحة (${toArabicDigits(page as string)})`;
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'قائمة الشعراء',
+  url: `${SITE_URL}/poets/page/${pageNumber}/`,
+  description: `قائمة بجميع الشعراء في موقع قافية - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+  isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
+  numberOfItems: totalPoets,
+  itemListElement: poets.map((poet, index) => {
+    const poetSlug = String(poet.slug ?? '')
+      .toLowerCase()
+      .replace(/^cat-poet-/, '');
+    return {
+      '@type': 'ListItem',
+      position: index + 1,
+      item: { '@type': 'Person', name: poet.name, url: `${SITE_URL}/poets/${poetSlug}/page/1/` },
+    };
+  }),
+};
+---
+
+<Layout
+  title={title}
+  canonical={`/poets/page/${pageNumber}/`}
+  ogTitle={title}
+  ogUrl={`${SITE_URL}/poets/page/${pageNumber}/`}
+  jsonLd={jsonLd}
+>
+  <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
+    <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
+      <h3 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
+        {`جميع الشعراء (${toArabicDigits(totalPoets)} شاعر)`}
+      </h3>
+      <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
+        {poets.length > 0 ? poets.map((poet) => {
+          const poetSlug = String(poet.slug ?? '').toLowerCase().replace(/^cat-poet-/, '');
+          return (
+            <a
+              href={`/poets/${poetSlug}/page/1/`}
+              class="hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80"
+            >
+              <p class="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">
+                {stripQuotes(poet.name)}
+              </p>
+              <p class="text-xs xs:text-lg sm:text-xl lg:text-lg text-zinc-600/80 group-hover:text-zinc-500 duration-300 text-wrap">
+                {`${toArabicDigits(poet.poemsCount)} قصيدة`}
+              </p>
+            </a>
+          );
+        }) : (
+          <p class="text-center text-zinc-500">لا يوجد المزيد من الشعراء</p>
+        )}
+      </div>
+      {totalPages > 1 && (
+        <nav class="flex flex-row-reverse w-full justify-between items-center gap-4 text-base md:text-lg mt-8">
+          {hasNextPage ? (
+            <a href={nextPageUrl} class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">التالي</a>
+          ) : (
+            <span class="border py-0.5 px-3 rounded-md border-zinc-200 cursor-not-allowed text-zinc-500" aria-disabled="true">التالي</span>
+          )}
+          <p class="text-zinc-500 text-base">{headerTip}</p>
+          {hasPrevPage ? (
+            <a href={prevPageUrl} class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">السابق</a>
+          ) : (
+            <span class="border py-0.5 px-3 rounded-md border-zinc-200 cursor-not-allowed text-zinc-500" aria-disabled="true">السابق</span>
+          )}
+        </nav>
+      )}
+    </div>
+  </section>
+</Layout>

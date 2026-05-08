@@ -54,6 +54,51 @@ type PoemsFullDataItem = {
 };
 
 /**
+ * Fetch one page of poem slugs for dev-mode getStaticPaths.
+ * Returns up to `limit` slugs in a single API call (no pagination).
+ */
+export async function fetchPoemSlugsPage(
+  page = 1,
+  limit = MAX_URLS_PER_SITEMAP
+): Promise<string[]> {
+  try {
+    const response = await fetchApi<{
+      success: boolean;
+      data: PoemsFullDataItem[];
+    }>(`/poems/slugs?page=${page}&limit=${limit}`);
+    if (!response.success || !response.data) return [];
+    return response.data.map((p) => p.slug);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Fetch all poem slugs in parallel — fast (~100ms) vs sequential fetchAllPoemSlugs (~6s).
+ */
+export async function fetchAllPoemSlugsFast(): Promise<string[]> {
+  const first = await fetchApi<{
+    success: boolean;
+    data: PoemsFullDataItem[];
+    meta: { totalPages: number };
+  }>(`/poems/slugs?page=1&limit=${MAX_URLS_PER_SITEMAP}`);
+  if (!first.success || !first.data) return [];
+  const allSlugs = first.data.map((p) => p.slug);
+  const totalPages = first.meta.totalPages;
+  if (totalPages <= 1) return allSlugs;
+  const remaining = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, i) =>
+      fetchApi<{ success: boolean; data: PoemsFullDataItem[] }>(
+        `/poems/slugs?page=${i + 2}&limit=${MAX_URLS_PER_SITEMAP}`
+      )
+        .then((r) => (r.success && r.data ? r.data.map((p) => p.slug) : []))
+        .catch(() => [])
+    )
+  );
+  return [...allSlugs, ...remaining.flat()];
+}
+
+/**
  * Fetch all poem slugs for generateStaticParams.
  * Uses the /poems/slugs endpoint to paginate through all poems.
  */

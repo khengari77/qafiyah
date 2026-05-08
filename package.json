@@ -9,12 +9,13 @@
     "lint": "turbo run lint",
     "lint:fix": "biome check --write .",
     "format": "biome format --write . && prettier --write \"**/*.{md,mdx}\"",
-    "check-types": "turbo run check-types",
+    "types": "turbo run types",
     "test": "turbo run test",
+    "health": "turbo run health",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
     "prepare": "husky",
-    "ci": "pnpm run format && pnpm run lint:fix && pnpm run check-types",
+    "ci": "pnpm run format && pnpm run lint:fix && pnpm run types",
     "db:setup": "./scripts/setup-database.sh"
   },
   "devDependencies": {

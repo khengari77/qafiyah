@@ -1,0 +1,104 @@
+---
+import { Footer } from '@/components/footer';
+import { MobileMenu } from '@/components/nav/mobile-menu';
+import { Nav } from '@/components/nav/nav';
+import { isDev, SITE_NAME, SITE_URL, TWITTER_HANDLE, TWITTER_ID } from '@/constants/globals';
+import { htmlHeadMetadata } from '@/constants/site-metadata';
+import '../styles/globals.css';
+
+interface Props {
+  title?: string;
+  description?: string;
+  keywords?: string | string[];
+  canonical?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogUrl?: string;
+  twitterTitle?: string;
+  twitterDescription?: string;
+  robotsIndex?: boolean;
+  jsonLd?: Record<string, unknown>;
+}
+
+const {
+  title = htmlHeadMetadata.title,
+  description = htmlHeadMetadata.description,
+  keywords = htmlHeadMetadata.keywords,
+  canonical = '/',
+  ogTitle,
+  ogDescription,
+  ogUrl = SITE_URL,
+  twitterTitle,
+  twitterDescription,
+  robotsIndex = true,
+  jsonLd,
+} = Astro.props;
+
+const resolvedOgTitle = ogTitle ?? title;
+const resolvedOgDescription = ogDescription ?? description;
+const resolvedTwitterTitle = twitterTitle ?? title;
+const resolvedTwitterDescription = twitterDescription ?? description;
+const keywordsStr = Array.isArray(keywords) ? keywords.join(', ') : keywords;
+const robotsContent = robotsIndex ? 'index, follow' : 'noindex, nofollow';
+const htmlClass = isDev ? 'debug-screens' : '';
+---
+
+<html lang="ar" dir="rtl" class={`bg-zinc-50 text-zinc-950 font-sans overflow-x-hidden overflow-y-scroll ${htmlClass}`}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#fafafa" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {keywordsStr && <meta name="keywords" content={keywordsStr} />}
+    <meta name="author" content={htmlHeadMetadata.author} />
+    <meta name="robots" content={robotsContent} />
+    <meta name="googlebot" content={robotsContent} />
+    <meta name="google" content="notranslate" />
+    <link rel="canonical" href={`${SITE_URL}${canonical}`} />
+
+    <!-- OpenGraph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content="ar_AR" />
+    <meta property="og:url" content={ogUrl} />
+    <meta property="og:title" content={resolvedOgTitle} />
+    <meta property="og:description" content={resolvedOgDescription} />
+    <meta property="og:image" content={`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:type" content="image/png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:site" content={TWITTER_HANDLE} />
+    <meta name="twitter:creator" content={TWITTER_HANDLE} />
+    <meta name="twitter:creator:id" content={TWITTER_ID} />
+    <meta name="twitter:title" content={resolvedTwitterTitle} />
+    <meta name="twitter:description" content={resolvedTwitterDescription} />
+    <meta name="twitter:image" content={`${SITE_URL}${htmlHeadMetadata.twitterSummaryCardImageUrl}`} />
+
+    <!-- Favicons -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    {jsonLd && (
+      <script is:inline type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    )}
+  </head>
+  <body class="relative overflow-x-hidden min-h-svh w-full grid grid-rows-[auto_1fr_auto] bg-zinc-50 text-zinc-950 font-sans px-4 md:px-20 lg:px-40 xl:px-60 2xl:px-80">
+    <Nav client:load />
+    <MobileMenu client:load />
+    <main class="row-start-2 flex-1 w-full flex justify-start items-start">
+      <slot />
+    </main>
+    <Footer client:load />
+    <script
+      is:inline
+      src="https://static.cloudflareinsights.com/beacon.min.js"
+      data-cf-beacon='{"token": "a707ff647c644bf69a7661040471963d"}'
+      defer
+    ></script>
+  </body>
+</html>

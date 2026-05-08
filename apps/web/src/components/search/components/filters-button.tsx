@@ -1,16 +1,16 @@
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
-import type { MouseEventHandler } from 'react';
 import { Button } from '@/components/base/button';
 import { cn } from '@/lib/utils';
 
 type Props = {
-  toggleFilters: MouseEventHandler<HTMLButtonElement>;
+  toggleFilters: () => void;
   filtersVisible: boolean;
 };
 
 export function FiltersButton({ toggleFilters, filtersVisible }: Props) {
   return (
     <Button
+      type="button"
       tabIndex={0}
       variant="default"
       onClick={toggleFilters}

@@ -1,0 +1,125 @@
+---
+import { toArabicDigits } from 'to-arabic-digits';
+import { SITE_URL } from '@/constants/globals';
+import { POEMS_PER_PAGE } from '@/constants/pagination';
+import Layout from '@/layouts/Layout.astro';
+import { fetchEraPoemPage, fetchErasWithPoemCount, generatePageNumbers } from '@/lib/api/static';
+
+const stripQuotes = (s: string) => s.replace(/"/g, '');
+
+export async function getStaticPaths() {
+  const eras = await fetchErasWithPoemCount();
+  const params: Array<{ params: { slug: string; page: string } }> = [];
+  for (const era of eras) {
+    for (const page of generatePageNumbers(era.poemsCount)) {
+      params.push({ params: { slug: era.slug, page: page.toString() } });
+    }
+  }
+  return params;
+}
+
+const ERA_NAMES = new Map([
+  ['islamic', 'إسلامي'],
+  ['abbasid', 'عباسي'],
+  ['umayyad', 'أموي'],
+  ['jahili', 'جاهلي'],
+  ['mukhadram', 'مخضرم'],
+  ['andalusian', 'أندلسي'],
+  ['mamluki', 'مملوكي'],
+  ['ottoman', 'عثماني'],
+  ['ayyubi', 'أيوبي'],
+  ['late', 'متأخر'],
+]);
+
+const { slug, page } = Astro.params;
+const pageNumber = Number.parseInt(page as string, 10);
+
+if (!slug || !Number.isFinite(pageNumber) || pageNumber < 1) {
+  return Astro.redirect('/404/');
+}
+
+const result = await fetchEraPoemPage(slug as string, page as string);
+if (!result?.data) {
+  return Astro.redirect('/404/');
+}
+
+const { data, pagination } = result;
+const { eraDetails: era, poems } = data;
+const totalPages = pagination?.totalPages || Math.ceil(era.poemsCount / POEMS_PER_PAGE);
+const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
+const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
+const nextPageUrl = `/eras/${slug}/page/${pageNumber + 1}/`;
+const prevPageUrl = `/eras/${slug}/page/${pageNumber - 1}/`;
+const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
+const eraTitle = `${era.name}ين`;
+
+const eraNameAr = ERA_NAMES.get(slug as string) ?? era.name;
+const title = `قافية | قصائد ال${eraNameAr}ين | صفحة (${toArabicDigits(page as string)})`;
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Collection',
+  name: `قصائد العصر ال${era.name}`,
+  url: `${SITE_URL}/eras/${slug}/page/${pageNumber}/`,
+  description: `مجموعة قصائد من العصر ال${era.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+  mainEntityOfPage: {
+    '@type': 'CollectionPage',
+    name: `قصائد العصر ال${era.name}`,
+    url: `${SITE_URL}/eras/${slug}/page/1/`,
+  },
+  numberOfItems: era.poemsCount,
+  itemListElement: poems.map((poem, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    item: { '@type': 'CreativeWork', name: poem.title, url: `${SITE_URL}/poems/${poem.slug}/` },
+  })),
+};
+---
+
+<Layout
+  title={title}
+  canonical={`/eras/${slug}/page/${pageNumber}/`}
+  ogTitle={title}
+  ogUrl={`${SITE_URL}/eras/${slug}/page/${pageNumber}/`}
+  jsonLd={jsonLd}
+>
+  <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
+    <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
+      <h3 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
+        {`قصائد ${eraTitle} (${toArabicDigits(era.poemsCount)} قصيدة)`}
+      </h3>
+      <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
+        {poems.length > 0 ? poems.map((poem) => (
+          <a
+            href={`/poems/${poem.slug}/`}
+            class="hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80"
+          >
+            <p class="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">
+              {stripQuotes(poem.title)}
+            </p>
+            <p class="text-xs xs:text-lg sm:text-xl lg:text-lg text-zinc-600/80 group-hover:text-zinc-500 duration-300 text-wrap">
+              {`${poem.poetName} • ${poem.meter}`}
+            </p>
+          </a>
+        )) : (
+          <p class="text-center text-zinc-500">لا توجد قصائد لهذا العصر.</p>
+        )}
+      </div>
+      {totalPages > 1 && (
+        <nav class="flex flex-row-reverse w-full justify-between items-center gap-4 text-base md:text-lg mt-8">
+          {hasNextPage ? (
+            <a href={nextPageUrl} class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">التالي</a>
+          ) : (
+            <span class="border py-0.5 px-3 rounded-md border-zinc-200 cursor-not-allowed text-zinc-500" aria-disabled="true">التالي</span>
+          )}
+          <p class="text-zinc-500 text-base">{headerTip}</p>
+          {hasPrevPage ? (
+            <a href={prevPageUrl} class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">السابق</a>
+          ) : (
+            <span class="border py-0.5 px-3 rounded-md border-zinc-200 cursor-not-allowed text-zinc-500" aria-disabled="true">السابق</span>
+          )}
+        </nav>
+      )}
+    </div>
+  </section>
+</Layout>

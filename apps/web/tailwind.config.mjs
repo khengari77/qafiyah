@@ -4,7 +4,7 @@ import debugScreens from 'tailwindcss-debug-screens';
 /** @type {import('tailwindcss').Config} */
 const config = {
   darkMode: ['class'],
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx,astro}'],
   theme: {
     screens: {
       xxs: '20rem',

@@ -1,6 +1,6 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { useNavStore } from '@/stores/nav-store';
 
 type Props = {
@@ -9,8 +9,12 @@ type Props = {
 };
 
 export function useNavLinks({ isMobile = false, onLinkClick }: Props = {}) {
-  const pathname = usePathname();
+  const [pathname, setPathname] = useState('');
   const { toggleMobileMenu } = useNavStore();
+
+  useEffect(() => {
+    setPathname(window.location.pathname);
+  }, []);
 
   const isActive = (href: string) => pathname === href || pathname?.startsWith(`${href}/`);
 
