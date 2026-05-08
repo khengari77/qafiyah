@@ -2,7 +2,6 @@
 
 import { Minus, Plus } from 'lucide-react';
 import { useFontSize } from '@/hooks/use-font-size';
-import { useTweetUrl } from '@/hooks/use-tweet-url';
 import type { PoemMetadata, RelatedPoems } from '@/lib/api/types';
 import { formatVerseCount } from '@/utils/texts/get-verse-count';
 import { ListCard } from '../ui/list-card';
@@ -17,7 +16,12 @@ export type PoemProps = {
 
 export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedPoems }: PoemProps) {
   const { decreaseFontSize, increaseFontSize, getVerseFontSize, getVerseGap } = useFontSize();
-  const { handleTwitterShare } = useTweetUrl();
+  const handleTwitterShare = () =>
+    window.open(
+      `https://x.com/intent/tweet?url=${encodeURIComponent(window.location.href)}`,
+      '_blank',
+      'noopener,noreferrer'
+    );
   const verseCountNum = Number.parseInt(String(verseCount), 10) || 0;
 
   return (

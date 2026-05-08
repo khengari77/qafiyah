@@ -1,8 +1,8 @@
 ---
 import { PoemDisplay } from '@/components/poem/poem-display';
-import { SITE_NAME, SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
-import { fetchAllPoemSlugsFast, fetchPoem } from '@/lib/api/static';
+import { fetchAllPoemSlugsFast } from '@/lib/api/static';
+import { loadPoemPage } from '@/lib/poem-page';
 
 export async function getStaticPaths() {
   const slugs = await fetchAllPoemSlugsFast();
@@ -10,71 +10,26 @@ export async function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
-const poem = await fetchPoem(slug as string);
+const pageData = await loadPoemPage(slug as string);
 
-if (!poem) {
+if (!pageData) {
   return Astro.redirect('/404/');
 }
 
-function flattenVerses(verses: [string, string][]): string {
-  if (!verses?.length) return '';
-  const OPTIMAL_LENGTH = 300;
-  let result = '';
-  for (let i = 0; i < verses.length; i++) {
-    const nextLen = (verses[i][0]?.length || 0) + (verses[i][1]?.length || 0) + 2;
-    if (result.length + nextLen > OPTIMAL_LENGTH) break;
-    if (i > 0) result += ' * ';
-    if (verses[i][0]) result += verses[i][0];
-    result += ' * ';
-    if (verses[i][1]) result += verses[i][1];
-  }
-  return result.length > OPTIMAL_LENGTH ? result.substring(0, OPTIMAL_LENGTH) : result;
-}
-
-const clearTitle = poem.clearTitle || 'قصيدة';
-const poetName = poem.metadata.poet_name || 'شاعر غير معروف';
-const description = flattenVerses(poem.processedContent.verses as [string, string][]);
-const pageTitle = `${clearTitle} - ${poetName} - ${SITE_NAME}`;
-const pageUrl = `${SITE_URL}/poems/${slug}`;
-
-const jsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'CreativeWork',
-  name: poem.clearTitle,
-  headline: `${poem.clearTitle} | ${poem.metadata.poet_name}`,
-  author: {
-    '@type': 'Person',
-    name: poem.metadata.poet_name,
-    url: poem.metadata.poet_slug,
-  },
-  inLanguage: 'ar',
-  datePublished: new Date().toISOString(),
-  url: pageUrl,
-  isPartOf: [
-    { '@type': 'Collection', name: poem.metadata.poet_name, url: poem.metadata.poet_slug },
-    { '@type': 'Collection', name: poem.metadata.era_name, url: poem.metadata.era_slug },
-  ],
-  description: poem.processedContent.verses.flat().join(' - '),
-  keywords: poem.processedContent.keywords,
-  publisher: {
-    '@type': 'Organization',
-    name: 'قافية',
-    logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.png` },
-  },
-};
+const { poem, layout: seo } = pageData;
 ---
 
 <Layout
-  title={pageTitle}
-  description={description}
-  keywords={poem.processedContent.keywords}
-  canonical={`/poems/${slug}/`}
-  ogTitle={pageTitle}
-  ogDescription={description}
-  ogUrl={pageUrl}
-  twitterTitle={pageTitle}
-  twitterDescription={`ديوان «${poetName}» على موقع قافية`}
-  jsonLd={jsonLd}
+  title={seo.title}
+  description={seo.description}
+  keywords={seo.keywords}
+  canonical={seo.canonical}
+  ogTitle={seo.ogTitle}
+  ogDescription={seo.ogDescription}
+  ogUrl={seo.ogUrl}
+  twitterTitle={seo.twitterTitle}
+  twitterDescription={seo.twitterDescription}
+  jsonLd={seo.jsonLd}
 >
   <PoemDisplay
     client:idle

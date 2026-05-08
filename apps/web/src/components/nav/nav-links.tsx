@@ -1,7 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import type { NavLink } from '@/constants/nav-links';
-import { useNavLinks } from '@/hooks/use-navlinks';
 import { NavItem } from './nav-item';
 
 type Props = {
@@ -12,10 +12,19 @@ type Props = {
 };
 
 export function NavLinks({ links, className = '', isMobile = false, onLinkClick }: Props) {
-  const { isActive, handleLinkClick } = useNavLinks({
-    isMobile,
-    onLinkClick,
-  });
+  const [pathname, setPathname] = useState('');
+
+  useEffect(() => {
+    setPathname(window.location.pathname);
+  }, []);
+
+  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+
+  const handleLinkClick = () => {
+    if (isMobile && onLinkClick) {
+      onLinkClick();
+    }
+  };
 
   return (
     <nav

@@ -101,44 +101,42 @@ export function SearchContainer() {
 
               {filtersVisible && (
                 <Filters
-                  handleSearch={handleSearch}
-                  inputValue={inputValue}
+                  filters={{
+                    searchType: {
+                      value: searchParams.search_type,
+                      options: searchTypeOptions,
+                      onChange: handleSearchTypeChange,
+                    },
+                    matchType: {
+                      value: searchParams.match_type,
+                      options: matchTypeOptions,
+                      onChange: handleMatchTypeChange,
+                    },
+                    eras: {
+                      selected: selectedEras,
+                      options: erasOptions,
+                      onChange: handleErasChange,
+                    },
+                    meters: {
+                      selected: selectedMeters,
+                      options: metersOptions,
+                      onChange: handleMetersChange,
+                    },
+                    themes: {
+                      selected: selectedThemes,
+                      options: themesOptions,
+                      onChange: handleThemesChange,
+                    },
+                    rhymes: {
+                      selected: selectedRhymes,
+                      options: rhymesOptions,
+                      onChange: handleRhymesChange,
+                    },
+                  }}
+                  isPoemsMode={searchType === 'poems'}
+                  onSearch={handleSearch}
+                  searchDisabled={!inputValue.trim()}
                   isLoading={isLoading}
-                  searchLabel={SEARCH_TEXTS.search}
-                  searchType={searchType}
-                  searchTypeLabel={SEARCH_TEXTS.searchTypeLabel}
-                  searchTypeOptions={searchTypeOptions}
-                  searchParamsSearchType={searchParams.search_type}
-                  handleSearchTypeChange={handleSearchTypeChange}
-                  searchTypePlaceholder={SEARCH_TEXTS.searchTypePlaceholder}
-                  matchTypeLabel={SEARCH_TEXTS.matchTypeLabel}
-                  matchTypeOptions={matchTypeOptions}
-                  searchParamsMatchType={searchParams.match_type}
-                  handleMatchTypeChange={handleMatchTypeChange}
-                  erasLabel={SEARCH_TEXTS.erasLabel}
-                  erasOptions={erasOptions}
-                  selectedEras={selectedEras}
-                  erasPlaceholderNounForms={ERAS_NOUN_FORMS}
-                  handleErasChange={handleErasChange}
-                  erasPlaceholder={SEARCH_TEXTS.erasPlaceholder}
-                  metersLabel={SEARCH_TEXTS.metersLabel}
-                  metersOptions={metersOptions}
-                  selectedMeters={selectedMeters}
-                  metersPlaceholderNounForms={METERS_NOUN_FORMS}
-                  handleMetersChange={handleMetersChange}
-                  metersPlaceholder={SEARCH_TEXTS.metersPlaceholder}
-                  themesLabel={SEARCH_TEXTS.themesLabel}
-                  themesOptions={themesOptions}
-                  selectedThemes={selectedThemes}
-                  themesPlaceholderNounForms={THEMES_NOUN_FORMS}
-                  handleThemesChange={handleThemesChange}
-                  themesPlaceholder={SEARCH_TEXTS.themesPlaceholder}
-                  rhymesLabel={SEARCH_TEXTS.rhymesLabel}
-                  rhymesOptions={rhymesOptions}
-                  selectedRhymes={selectedRhymes}
-                  rhymesPlaceholderNounForms={RHYMES_NOUN_FORMS}
-                  handleRhymesChange={handleRhymesChange}
-                  rhymesPlaceholder={SEARCH_TEXTS.rhymesPlaceholder}
                 />
               )}
             </div>

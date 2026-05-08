@@ -1,12 +1,18 @@
 'use client';
 
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { useInfiniteQuery } from './use-infinite-query';
+import { queries } from '@/lib/api/queries';
+import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { useInfiniteScroll } from './use-infinite-scroll';
 
+export type SearchType = 'poems' | 'poets';
+export type MatchType = 'all' | 'any' | 'exact';
+
 function validateInput(input: string): string | null {
-  const arabicRegex = /^[\u0600-\u06FF\s]+$/;
+  const arabicRegex = /^[؀-ۿ\s]+$/;
 
   if (!arabicRegex.test(input)) {
     return 'كلمات عربية فقط';
@@ -32,85 +38,116 @@ function validateInput(input: string): string | null {
   return null;
 }
 
+function parseIds(value: string | string[]): string[] {
+  if (Array.isArray(value)) return value.filter((v) => v.trim() !== '');
+  return value
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+}
+
+function makeFilterSetter(setter: (v: string | null) => void) {
+  return (value: string | string[]) => {
+    const joined = Array.isArray(value)
+      ? value
+          .map((v) => v.trim())
+          .filter(Boolean)
+          .join(',')
+      : value.trim();
+    setter(joined || null);
+  };
+}
+
 export function useSearch() {
-  const {
-    isError,
-    isLoading,
-    isFetchingNextPage,
-    isSuccess,
-    hasNextPage,
-    searchParams,
-    searchType,
-    matchType,
-    data,
-    fetchNextPage,
-    setQuery,
-    setSearchType,
-    setMatchType,
-    setEraIds,
-    setRhymeIds,
-    setMeterIds,
-    setThemeIds,
-    resetAllParamStates,
-  } = useInfiniteQuery({
-    initialMatchType: 'exact',
-    initialSearchType: 'poems',
-    queryKey: 'search',
-  });
+  const [query, setQuery] = useQueryState('q', { defaultValue: '' });
+  const [searchType, setSearchType] = useQueryState(
+    'search_type',
+    parseAsStringEnum<SearchType>(['poems', 'poets']).withDefault('poems')
+  );
+  const [matchType, setMatchType] = useQueryState(
+    'match_type',
+    parseAsStringEnum<MatchType>(['all', 'any', 'exact']).withDefault('exact')
+  );
+  const [eraIds, setEraIds] = useQueryState('era_ids', { defaultValue: '' });
+  const [meterIds, setMeterIds] = useQueryState('meter_ids', { defaultValue: '' });
+  const [rhymeIds, setRhymeIds] = useQueryState('rhyme_ids', { defaultValue: '' });
+  const [themeIds, setThemeIds] = useQueryState('theme_ids', { defaultValue: '' });
 
-  const { loadMoreRef } = useInfiniteScroll(fetchNextPage, hasNextPage, isFetchingNextPage);
-
-  // Input state (inlined from useSearchInput)
-  const [inputValue, setInputValue] = useState(searchParams.q);
-
-  useEffect(() => {
-    if (searchParams.q) {
-      setInputValue(searchParams.q);
-    }
-  }, [searchParams.q]);
-
-  // Validation state (inlined from useInputValidation)
+  const [inputValue, setInputValue] = useState(query);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
-
-  // Filters state (inlined from useSearchFilters)
   const [filtersVisible, setFiltersVisible] = useState(false);
 
-  const selectedEras = Array.isArray(searchParams.era_ids)
-    ? searchParams.era_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
-    : typeof searchParams.era_ids === 'string'
-      ? searchParams.era_ids
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean)
-      : [];
+  useEffect(() => {
+    if (query) setInputValue(query);
+  }, [query]);
 
-  const selectedRhymes = Array.isArray(searchParams.rhyme_ids)
-    ? searchParams.rhyme_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
-    : typeof searchParams.rhyme_ids === 'string'
-      ? searchParams.rhyme_ids
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean)
-      : [];
+  const selectedEras = parseIds(eraIds);
+  const selectedRhymes = parseIds(rhymeIds);
+  const selectedMeters = parseIds(meterIds);
+  const selectedThemes = parseIds(themeIds);
 
-  const selectedMeters = Array.isArray(searchParams.meter_ids)
-    ? searchParams.meter_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
-    : typeof searchParams.meter_ids === 'string'
-      ? searchParams.meter_ids
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean)
-      : [];
+  const searchParams = {
+    q: query,
+    search_type: searchType,
+    match_type: matchType,
+    meter_ids: meterIds,
+    era_ids: eraIds,
+    rhyme_ids: rhymeIds,
+    theme_ids: themeIds,
+  };
 
-  const selectedThemes = Array.isArray(searchParams.theme_ids)
-    ? searchParams.theme_ids.filter((v) => typeof v === 'string' && v.trim() !== '')
-    : typeof searchParams.theme_ids === 'string'
-      ? searchParams.theme_ids
-          .split(',')
-          .map((v) => v.trim())
-          .filter(Boolean)
-      : [];
+  const iq = useInfiniteQuery({
+    queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
+    queryFn: async ({ pageParam = 1 }) => {
+      if (!query) {
+        return {
+          data: { results: [] },
+          pagination: { currentPage: 1, totalPages: 0, totalItems: 0, itemsPerPage: 10 },
+        };
+      }
+      return queries.search({
+        q: query,
+        searchType,
+        page: String(pageParam),
+        matchType,
+        meterIds: meterIds && meterIds.length > 0 ? meterIds : undefined,
+        eraIds: eraIds && eraIds.length > 0 ? eraIds : undefined,
+        rhymeIds: rhymeIds && rhymeIds.length > 0 ? rhymeIds : undefined,
+        themeIds: themeIds && themeIds.length > 0 ? themeIds : undefined,
+      });
+    },
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const pagination = lastPage.pagination;
+      if (!pagination) return undefined;
+      return pagination.currentPage < pagination.totalPages
+        ? pagination.currentPage + 1
+        : undefined;
+    },
+    enabled: !!query,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+
+  const data =
+    (iq.data?.pages.flatMap((page) =>
+      (page.data.results || []).map((result) => ({
+        type: searchType === 'poems' ? 'poem' : 'poet',
+        ...result,
+      }))
+    ) as (PoemsSearchResult | PoetsSearchResult)[]) || [];
+
+  const { loadMoreRef } = useInfiniteScroll(
+    iq.fetchNextPage,
+    iq.hasNextPage,
+    iq.isFetchingNextPage
+  );
+
+  const handleErasChange = makeFilterSetter(setEraIds);
+  const handleMetersChange = makeFilterSetter(setMeterIds);
+  const handleRhymesChange = makeFilterSetter(setRhymeIds);
+  const handleThemesChange = makeFilterSetter(setThemeIds);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInputValue(e.target.value);
@@ -120,7 +157,7 @@ export function useSearch() {
   };
 
   const handleSearchTypeChange = (value: string) => {
-    const newSearchType = value as 'poems' | 'poets';
+    const newSearchType = value as SearchType;
 
     if (newSearchType !== searchParams.search_type) {
       setInputValue('');
@@ -145,7 +182,7 @@ export function useSearch() {
   const handleMatchTypeChange = (value: string) => {
     const validMatchTypes = ['all', 'any', 'exact'] as const;
     if (typeof value === 'string' && validMatchTypes.includes(value as never)) {
-      setMatchType(value as (typeof validMatchTypes)[number]);
+      setMatchType(value as MatchType);
     }
   };
 
@@ -180,71 +217,25 @@ export function useSearch() {
     }
   };
 
-  const handleErasChange = (value: string | string[]) => {
-    setEraIds(
-      Array.isArray(value)
-        ? value
-            .filter(Boolean)
-            .map((v) => (typeof v === 'string' ? v.trim() : ''))
-            .join(',')
-        : typeof value === 'string'
-          ? value.trim()
-          : ''
-    );
-  };
-
-  const handleRhymesChange = (value: string | string[]) => {
-    setRhymeIds(
-      Array.isArray(value)
-        ? value
-            .filter(Boolean)
-            .map((v) => (typeof v === 'string' ? v.trim() : ''))
-            .join(',')
-        : typeof value === 'string'
-          ? value.trim()
-          : ''
-    );
-  };
-
-  const handleMetersChange = (value: string | string[]) => {
-    setMeterIds(
-      Array.isArray(value)
-        ? value
-            .filter(Boolean)
-            .map((v) => (typeof v === 'string' ? v.trim() : ''))
-            .join(',')
-        : typeof value === 'string'
-          ? value.trim()
-          : ''
-    );
-  };
-
-  const handleThemesChange = (value: string | string[]) => {
-    setThemeIds(
-      Array.isArray(value)
-        ? value
-            .filter(Boolean)
-            .map((v) => (typeof v === 'string' ? v.trim() : ''))
-            .join(',')
-        : typeof value === 'string'
-          ? value.trim()
-          : ''
-    );
-  };
-
   const toggleFilters = () => {
     setFiltersVisible(!filtersVisible);
   };
 
   const resetAllStates = () => {
-    resetAllParamStates();
+    setSearchType('poems');
+    setMatchType('exact');
+    setQuery('');
+    setEraIds('');
+    setMeterIds('');
+    setRhymeIds('');
+    setThemeIds('');
     setInputValue('');
     setValidationError(null);
     setHasSubmitted(false);
   };
 
   const hasQuery =
-    !isLoading &&
+    !iq.isLoading &&
     (Boolean(inputValue.trim()) ||
       selectedEras.length > 0 ||
       selectedRhymes.length > 0 ||
@@ -252,10 +243,10 @@ export function useSearch() {
       selectedThemes.length > 0);
 
   return {
-    isLoading,
-    isError,
-    isSuccess,
-    isFetchingNextPage,
+    isLoading: iq.isLoading,
+    isError: iq.isError,
+    isSuccess: iq.isSuccess,
+    isFetchingNextPage: iq.isFetchingNextPage,
     hasSubmitted,
     filtersVisible,
     hasQuery,

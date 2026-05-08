@@ -1,58 +1,27 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { queries } from '@/lib/api/queries';
 
-type Status = 'idle' | 'loading' | 'error';
-
 export function useRandomPoem() {
-  const [status, setStatus] = useState<Status>('idle');
-  const [error, setError] = useState<Error | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const isMountedRef = useRef(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
 
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-      abortControllerRef.current?.abort();
-    };
-  }, []);
-
-  const handleClick = useCallback(async () => {
-    if (status === 'loading') return;
-
-    abortControllerRef.current?.abort();
-    abortControllerRef.current = new AbortController();
-
-    setStatus('loading');
-    setError(null);
-
+  const handleClick = async () => {
+    if (isLoading) return;
+    setIsLoading(true);
+    setIsError(false);
     try {
       const slug = await queries.getRandomSlug();
-
-      if (!isMountedRef.current) return;
-
-      const trimmedSlug = slug ? slug.trim() : '';
-
-      if (trimmedSlug.length > 0) {
-        window.location.href = `/poems/${trimmedSlug}/`;
-      } else {
-        setStatus('idle');
+      if (slug?.trim()) {
+        window.location.href = `/poems/${slug.trim()}/`;
+        return;
       }
-    } catch (err) {
-      if (!isMountedRef.current) return;
-      if (err instanceof Error && err.name === 'AbortError') return;
-
-      setStatus('error');
-      setError(err instanceof Error ? err : new Error('Unknown error'));
+    } catch {
+      setIsError(true);
     }
-  }, [status]);
-
-  return {
-    handleClick,
-    isLoading: status === 'loading',
-    isError: status === 'error',
-    error,
+    setIsLoading(false);
   };
+
+  return { handleClick, isLoading, isError };
 }

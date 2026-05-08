@@ -1,22 +1,31 @@
 'use client';
 
+import { Menu } from 'lucide-react';
+import { responsiveIconSize } from '@/constants/globals';
 import { NAV_LINKS } from '@/constants/nav-links';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
-import { MobileMenuButton } from './mobile-menu-button';
 import { NavLinks } from './nav-links';
 
 type Props = {
+  onMenuToggle: () => void;
   className?: string;
 };
 
-export function Nav({ className }: Props) {
+export function Nav({ onMenuToggle, className }: Props) {
   return (
     <nav className={cn('w-full z-10', className)}>
       <div className="w-full">
         <div className="flex justify-between items-center gap-8">
           <Logo />
-          <MobileMenuButton />
+          <button
+            id="menu-toggle"
+            className="md:hidden"
+            aria-label="فتح القائمة"
+            onClick={onMenuToggle}
+          >
+            <Menu className={cn(responsiveIconSize, 'opacity-70')} />
+          </button>
           <NavLinks links={NAV_LINKS} className="hidden md:block" />
         </div>
       </div>
