@@ -41,13 +41,13 @@ pnpm --filter @qafiyah/api test       # vitest (API only)
 
 Before marking any task complete, verify all five:
 
-| | Criterion | Gate |
-|---|---|---|
-| **T** | Tested | `pnpm test` passes; new logic has coverage |
-| **R** | Readable | 0 lint errors (`pnpm lint`); names are self-explanatory |
-| **U** | Unified | Matches repo style (Biome config, Conventional Commits) |
-| **S** | Secured | No secrets in code; inputs validated at boundaries |
-| **T** | Trackable | Commit message explains *why*, not just what |
+|       | Criterion | Gate                                                    |
+| ----- | --------- | ------------------------------------------------------- |
+| **T** | Tested    | `pnpm test` passes; new logic has coverage              |
+| **R** | Readable  | 0 lint errors (`pnpm lint`); names are self-explanatory |
+| **U** | Unified   | Matches repo style (Biome config, Conventional Commits) |
+| **S** | Secured   | No secrets in code; inputs validated at boundaries      |
+| **T** | Trackable | Commit message explains _why_, not just what            |
 
 ## Code Annotations
 
