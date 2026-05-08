@@ -60,3 +60,5 @@ __pycache__/
 public/docs/db-schema/*.json
 public/docs/db-schema/*.md
 public/docs/db-schema/*.yaml
+
+apps/web/.astro/

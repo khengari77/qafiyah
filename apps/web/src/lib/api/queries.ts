@@ -1,5 +1,6 @@
 import { API_URL } from '@/constants/globals';
 import apiClient from './client';
+import { buildApiUrl } from './config';
 
 const client = apiClient(API_URL);
 
@@ -123,7 +124,6 @@ export const queries = {
 
   // Sitemaps (assuming you need this based on your routes)
   async getSitemap(type: string): Promise<string> {
-    const { buildApiUrl } = await import('./config');
     const response = await fetch(buildApiUrl(`/sitemaps/${type}`));
     if (!response.ok) {
       throw new Error(`API error: ${response.status} ${response.statusText}`);
