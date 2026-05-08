@@ -131,20 +131,3 @@ export const queries = {
     return response.text();
   },
 };
-
-// For convenience, also export individual functions
-export const {
-  search,
-  getRandomSlug,
-  getEras,
-  getEraPoems,
-  getMeters,
-  getMeterPoems,
-  getPoets,
-  getPoetPoems,
-  getPoem,
-  getRhymes,
-  getRhymePoems,
-  getThemes,
-  getThemePoems,
-} = queries;

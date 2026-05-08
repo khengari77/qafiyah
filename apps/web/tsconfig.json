@@ -3,6 +3,7 @@
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"],
+      "to-arabic-digits": ["./src/utils/texts/arabic-digits.ts"],
       "*": ["./*"]
     },
     "jsx": "react-jsx",

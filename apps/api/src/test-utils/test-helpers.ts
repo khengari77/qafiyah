@@ -118,14 +118,6 @@ export function createTestClient<T extends Hono<AppContext>>(
 }
 
 /**
- * Helper to create a test app with mocked database
- */
-export function createTestApp() {
-  const db = createMockDb();
-  return { db };
-}
-
-/**
  * Type helper for API response JSON
  */
 export type ApiResponse<T = unknown> = {

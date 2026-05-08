@@ -4,7 +4,7 @@
   "scripts": {
     "build": "turbo run build",
     "build:static": "pnpm --filter @qafiyah/web build:static",
-    "dev": "./scripts/check-database.sh && turbo run dev",
+    "dev": "./scripts/check-database.sh && turbo run build --filter=@qafiyah/schemas && turbo run dev --filter=@qafiyah/web --filter=@qafiyah/api",
     "dev:test": "pnpm --filter @qafiyah/api dev:test",
     "lint": "turbo run lint",
     "lint:fix": "biome check --write .",
@@ -22,13 +22,11 @@
     "@biomejs/biome": "^2.3.12",
     "@commitlint/cli": "^19.6.0",
     "@commitlint/config-conventional": "^19.6.0",
-    "@types/js-yaml": "^4.0.9",
+    "@commitlint/types": "^19.6.0",
     "@types/node": "^25.0.10",
     "husky": "^9.1.7",
-    "js-yaml": "^4.1.0",
     "knip": "^5.82.1",
     "madge": "8.0.0",
-    "postgres": "^3.4.5",
     "prettier": "^3.4.2",
     "turbo": "^2.5.0",
     "typescript": "5.8.2"

@@ -8,6 +8,7 @@ import type {
   poemsSearchResultSchema,
   poetPoemsResponseSchema,
   poetsListResponseSchema,
+  poetsSearchResultSchema,
   processedPoemContentSchema,
   relatedPoemSchema,
   rhymePoemsResponseSchema,
@@ -15,8 +16,7 @@ import type {
   themePoemsResponseSchema,
   themeSchema,
   z,
-} from '../../../../../packages/schemas/dist';
-import type { poetsSearchResultSchema } from '../../../node_modules/@qafiyah/schemas/src/schemas/search.schema';
+} from '@qafiyah/schemas';
 
 export type PaginationMeta = z.infer<typeof paginationMetaSchema>['pagination'];
 

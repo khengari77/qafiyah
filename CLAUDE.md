@@ -7,7 +7,7 @@ Qafiyah is an Arabic poetry repository (pnpm + Turborepo monorepo): `apps/web` (
 ## Commands
 
 ```bash
-pnpm dev             # all apps (runs check-database.sh first)
+pnpm dev             # database check, build @qafiyah/schemas, then Astro + API (wrangler)
 pnpm build           # turbo build in dependency order
 pnpm build:static    # apps/web only
 pnpm lint / lint:fix # biome check [--write]
@@ -35,7 +35,7 @@ pnpm --filter @qafiyah/api test       # vitest (API only)
 
 **`apps/bot`** — Posts a random poem via `twitter-api-v2` on a GitHub Actions cron (8am/12pm/4pm/8pm UTC). Exponential backoff, 3 retries.
 
-**`packages/schemas`** — `tsup`-built Zod schemas with `main`/`client`/`server` entry points. Built before any app via turbo `dependsOn: ["^build"]`.
+**`packages/schemas`** — `tsup`-built Zod schemas with `main`/`client`/`server` entry points. `dist/` is built on `pnpm install` (`prepare`) and before `pnpm dev` at the repo root. While editing schemas, use `pnpm --filter @qafiyah/schemas dev:watch`. Apps also run `build:deps` (API) or depend on a prior `schemas` build for Wrangler/Astro.
 
 ## Known Bug
 

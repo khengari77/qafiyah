@@ -1,19 +1,16 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "tags": ["-lintignore"],
+  "ignoreWorkspaces": ["packages/tsconfig"],
+  "ignoreFiles": [
+    "apps/web/.astro/**",
+    "apps/web/worker-configuration.d.ts",
+    "packages/schemas/build-and-link.js"
+  ],
+  "ignoreIssues": {
+    "packages/schemas/src/schemas/common.schema.ts": ["duplicates"]
+  },
   "workspaces": {
-    ".": {},
-    "apps/web": {
-      "entry": ["src/app/**/*.{ts,tsx}", "next.config.*"],
-      "project": ["src/**/*.{ts,tsx}"]
-    },
-    "apps/api": {
-      "entry": "src/app.ts",
-      "project": "src/**/*.ts"
-    },
-    "packages/schemas": {
-      "entry": "src/**/*.ts",
-      "project": "src/**/*.ts"
-    }
+    ".": {}
   }
 }

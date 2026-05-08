@@ -1,9 +1,8 @@
 /**
- * Static API utilities for build-time data fetching.
- * These functions are used during Next.js static generation to fetch data from the local API.
+ * Static API utilities for build-time data fetching (Astro SSG).
  */
 
-import { API_URL, isDev } from '@/constants/globals';
+import { API_URL } from '@/constants/globals';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
 import type {
   Era,
@@ -21,14 +20,6 @@ import type {
 } from './types';
 
 const MAX_URLS_PER_SITEMAP = 1000;
-
-function isConnectionError(error: unknown): boolean {
-  const cause = error instanceof Error ? error.cause : undefined;
-  if (cause && typeof cause === 'object' && 'code' in cause) {
-    return (cause as { code?: string }).code === 'ECONNREFUSED';
-  }
-  return false;
-}
 
 /**
  * Helper to fetch JSON from API with error handling.
@@ -54,27 +45,7 @@ type PoemsFullDataItem = {
 };
 
 /**
- * Fetch one page of poem slugs for dev-mode getStaticPaths.
- * Returns up to `limit` slugs in a single API call (no pagination).
- */
-export async function fetchPoemSlugsPage(
-  page = 1,
-  limit = MAX_URLS_PER_SITEMAP
-): Promise<string[]> {
-  try {
-    const response = await fetchApi<{
-      success: boolean;
-      data: PoemsFullDataItem[];
-    }>(`/poems/slugs?page=${page}&limit=${limit}`);
-    if (!response.success || !response.data) return [];
-    return response.data.map((p) => p.slug);
-  } catch {
-    return [];
-  }
-}
-
-/**
- * Fetch all poem slugs in parallel — fast (~100ms) vs sequential fetchAllPoemSlugs (~6s).
+ * Fetch all poem slugs in parallel for static generation.
  */
 export async function fetchAllPoemSlugsFast(): Promise<string[]> {
   const first = await fetchApi<{
@@ -96,93 +67,6 @@ export async function fetchAllPoemSlugsFast(): Promise<string[]> {
     )
   );
   return [...allSlugs, ...remaining.flat()];
-}
-
-/**
- * Fetch all poem slugs for generateStaticParams.
- * Uses the /poems/slugs endpoint to paginate through all poems.
- */
-export async function fetchAllPoemSlugs(): Promise<string[]> {
-  const allSlugs: string[] = [];
-  let page = 1;
-  let hasMore = true;
-
-  while (hasMore) {
-    try {
-      const response = await fetchApi<{
-        success: boolean;
-        data: PoemsFullDataItem[];
-        meta: { page: number; limit: number; total: number; totalPages: number };
-      }>(`/poems/slugs?page=${page}&limit=${MAX_URLS_PER_SITEMAP}`);
-
-      if (!response.success || !response.data || response.data.length === 0) {
-        hasMore = false;
-        break;
-      }
-
-      allSlugs.push(...response.data.map((p) => p.slug));
-
-      if (page >= response.meta.totalPages) {
-        hasMore = false;
-      } else {
-        page++;
-      }
-    } catch (error) {
-      // If slugs endpoint doesn't exist or API is down, fall back or return []
-      if (isConnectionError(error)) {
-        console.warn('fetchAllPoemSlugs: API unreachable, returning no slugs', error);
-        return [];
-      }
-      console.warn('fetchAllPoemSlugs: falling back to alternative method', error);
-      try {
-        return await fetchAllPoemSlugsFallback();
-      } catch (fallbackError) {
-        if (isConnectionError(fallbackError)) {
-          console.warn(
-            'fetchAllPoemSlugs: fallback failed (API unreachable), returning no slugs',
-            fallbackError
-          );
-          return [];
-        }
-        throw fallbackError;
-      }
-    }
-  }
-
-  return allSlugs;
-}
-
-/**
- * Fallback method to get poem slugs by iterating through all poets and their poems.
- * Returns [] if the API is unreachable.
- */
-async function fetchAllPoemSlugsFallback(): Promise<string[]> {
-  let poets: PoetStats[];
-  try {
-    poets = await fetchPoetsWithPoemCount();
-  } catch (error) {
-    if (isConnectionError(error)) {
-      return [];
-    }
-    throw error;
-  }
-  const allSlugs: string[] = [];
-
-  for (const poet of poets) {
-    const totalPages = Math.ceil(poet.poemsCount / POEMS_PER_PAGE);
-    for (let page = 1; page <= totalPages; page++) {
-      try {
-        const response = await fetchPoetPoemPage(poet.slug, page.toString());
-        if (response.data?.poems) {
-          allSlugs.push(...response.data.poems.map((p) => p.slug));
-        }
-      } catch (error) {
-        console.error(`Error fetching poems for poet ${poet.slug} page ${page}:`, error);
-      }
-    }
-  }
-
-  return allSlugs;
 }
 
 /**
@@ -288,28 +172,6 @@ export async function fetchPoetPoemPage(
     data: response.data,
     pagination: response.meta?.pagination,
   };
-}
-
-type PoetBasicInfo = {
-  poet: {
-    name: string;
-    poemsCount: number;
-    era: { name: string; slug: string } | null;
-  };
-};
-
-/**
- * Fetch basic poet information (name, poems count, era)
- */
-export async function fetchPoetInfo(slug: string): Promise<PoetBasicInfo | null> {
-  try {
-    const response = await fetchApi<{ success: boolean; data: PoetBasicInfo }>(
-      `/poets/slug/${slug}`
-    );
-    return response.success ? response.data : null;
-  } catch {
-    return null;
-  }
 }
 
 // ============================================================================
@@ -524,33 +386,4 @@ export function generatePageNumbers(
 
   const totalPages = Math.max(1, Math.ceil(totalCount / perPage));
   return Array.from({ length: totalPages }, (_, i) => i + 1);
-}
-
-/**
- * Generate static params for paginated category routes.
- * Skips expensive API calls in development mode — pages render on-demand instead.
- */
-export async function generateCategoryStaticParams(
-  fetchStats: () => Promise<Array<{ slug: string; poemsCount: number }>>
-): Promise<Array<{ slug: string; page: string }>> {
-  if (isDev) return [];
-
-  const items = await fetchStats();
-  const params: Array<{ slug: string; page: string }> = [];
-
-  for (const item of items) {
-    const pages = generatePageNumbers(item.poemsCount);
-    for (const page of pages) {
-      params.push({ slug: item.slug, page: page.toString() });
-    }
-  }
-
-  return params;
-}
-
-export function devStaticParams<T extends Record<string, string>>(
-  fn: () => Promise<T[]>
-): () => Promise<T[]> {
-  if (isDev) return async () => [];
-  return fn;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getRandomSlug } from '@/lib/api/queries';
+import { queries } from '@/lib/api/queries';
 
 type Status = 'idle' | 'loading' | 'error';
 
@@ -29,7 +29,7 @@ export function useRandomPoem() {
     setError(null);
 
     try {
-      const slug = await getRandomSlug();
+      const slug = await queries.getRandomSlug();
 
       if (!isMountedRef.current) return;
 

@@ -44,7 +44,7 @@ export const RHYMES_NOUN_FORMS: ArabicNounForms = {
   plural: 'قوافي',
 };
 
-export const RESULTS_NOUN_FORMS: ArabicNounForms = {
+const RESULTS_NOUN_FORMS: ArabicNounForms = {
   singular: 'نتيجة',
   dual: 'نتيجتان',
   plural: 'نتائج',
