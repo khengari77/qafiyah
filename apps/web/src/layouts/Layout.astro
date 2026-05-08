@@ -93,7 +93,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
     <main class="row-start-2 flex-1 w-full flex justify-start items-start">
       <slot />
     </main>
-    <Footer client:load />
+    <Footer client:idle />
     <script
       is:inline
       src="https://static.cloudflareinsights.com/beacon.min.js"

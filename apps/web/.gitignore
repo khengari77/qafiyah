@@ -45,3 +45,4 @@ next-env.d.ts
 repomix-output.xml
 ./repomix-output.xml
 repomix-output.xml
+.astro
