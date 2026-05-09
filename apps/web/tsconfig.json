@@ -2,8 +2,7 @@
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"],
-      "to-arabic-digits": ["./src/utils/texts/arabic-digits.ts"]
+      "@/*": ["./src/*"]
     },
     "jsx": "react-jsx",
     "strictNullChecks": true

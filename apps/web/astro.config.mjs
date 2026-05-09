@@ -1,4 +1,3 @@
-import { resolve } from 'node:path';
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
@@ -11,10 +10,5 @@ export default defineConfig({
   vite: {
     optimizeDeps: { include: ['cookie'] },
     ssr: { optimizeDeps: { include: ['cookie'] } },
-    resolve: {
-      alias: {
-        'to-arabic-digits': resolve('./src/utils/texts/arabic-digits.ts'),
-      },
-    },
   },
 });

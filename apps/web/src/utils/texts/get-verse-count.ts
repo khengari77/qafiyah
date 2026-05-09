@@ -1,4 +1,4 @@
-import { toArabicDigits } from 'to-arabic-digits';
+import { toArabicDigits } from '@/utils/texts/arabic-digits';
 
 /**
  * Format verse count in Arabic with proper pluralization

@@ -1,8 +1,8 @@
 ---
-import { toArabicDigits } from 'to-arabic-digits';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import { fetchMeters } from '@/lib/api/static';
+import { toArabicDigits } from '@/utils/texts/arabic-digits';
 
 let meters: Awaited<ReturnType<typeof fetchMeters>> = [];
 try {

@@ -1,9 +1,9 @@
 ---
 import { formatArabicCount } from 'arabic-count-format';
-import { toArabicDigits } from 'to-arabic-digits';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import { fetchEras } from '@/lib/api/static';
+import { toArabicDigits } from '@/utils/texts/arabic-digits';
 
 let eras: Awaited<ReturnType<typeof fetchEras>> = [];
 try {
