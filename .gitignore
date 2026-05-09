@@ -40,6 +40,7 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+.mcp.json
 packages/schemas/tsup.config.bundled_jjm3lh3p4d.mjs
 *.tsbuildinfo
 
