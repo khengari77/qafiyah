@@ -1,16 +1,8 @@
 {
-  "extends": "@qafiyah/typescript/base.json",
+  "extends": "@qafiyah/typescript/cloudflare.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "skipLibCheck": true,
-    "lib": ["ESNext"],
-    "types": ["@cloudflare/workers-types/2023-07-01"],
-    "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "noEmit": true,
+    "types": ["@cloudflare/workers-types/2023-07-01"],
     "paths": {
       "@qafiyah/schemas": ["../../packages/schemas/dist"],
       "@qafiyah/schemas/server": ["../../packages/schemas/dist/utils/server"]
