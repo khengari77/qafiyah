@@ -52,7 +52,8 @@
       "complexity": {
         "recommended": true,
         "noBannedTypes": "warn",
-        "noUselessTypeConstraint": "error"
+        "noUselessTypeConstraint": "error",
+        "useLiteralKeys": "off"
       },
       "correctness": {
         "recommended": true,

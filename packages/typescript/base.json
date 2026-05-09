@@ -12,6 +12,7 @@
     "noUncheckedIndexedAccess": true,
     "noPropertyAccessFromIndexSignature": true,
     "forceConsistentCasingInFileNames": true,
+    "moduleDetection": "force",
     "isolatedModules": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
