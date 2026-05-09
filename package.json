@@ -2,22 +2,18 @@
   "name": "qafiyah",
   "private": true,
   "scripts": {
-    "dev": "./dev/check-database.sh && turbo run dev --filter=@qafiyah/web --filter=@qafiyah/api",
-    "dev:api": "turbo run dev --filter=@qafiyah/api",
-    "dev:test": "turbo run dev:test --filter=@qafiyah/api",
+    "prepare": "husky",
+    "db:setup": "./dev/setup-database.sh",
+    "preinstall": "npx --yes only-allow pnpm",
+    "dev": "turbo run dev",
     "build": "turbo run build",
-    "build:static": "turbo run build --filter=@qafiyah/web",
     "types": "turbo run types",
-    "health": "turbo run health",
-    "lint": "turbo run lint",
-    "lint:fix": "biome check --write .",
+    "lint": "biome check --write .",
     "format": "biome format --write . && prettier --write \"**/*.{md,mdx}\"",
     "test": "turbo run test",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
-    "db:setup": "./dev/setup-database.sh",
-    "ci": "pnpm run format && pnpm run lint:fix && pnpm run types",
-    "prepare": "husky"
+    "ci": "pnpm run format && pnpm run lint && pnpm run types && pnpm run test && pnpm run knip && pnpm run madge"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.12",

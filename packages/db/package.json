@@ -18,8 +18,7 @@
     "clean": "rm -rf dist .tsbuildinfo",
     "prepare": "pnpm run build",
     "types": "tsc --noEmit --pretty",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
+    "lint": "biome check --write .",
     "test": "vitest run"
   },
   "dependencies": {

@@ -1,16 +1,5 @@
 #!/usr/bin/env sh
 set -e
 
-echo "Formatting code..."
-pnpm run format
-
-echo "Linting and fixing..."
-pnpm run lint:fix
-
-echo "Checking types..."
-pnpm run types
-
-echo "Checking health..."
-pnpm run health
-
-echo "Pre-commit checks passed!"
+echo "Running all checks..."
+pnpm run ci

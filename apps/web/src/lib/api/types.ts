@@ -31,7 +31,6 @@ type GetPoemFound = Extract<
 >;
 export type PoemResponseData = GetPoemFound['data'];
 export type PoemMetadata = PoemResponseData['metadata'];
-export type ProcessedPoemContent = PoemResponseData['processedContent'];
 export type RelatedPoems = PoemResponseData['relatedPoems'][number];
 
 // Pagination meta used in static fetch functions

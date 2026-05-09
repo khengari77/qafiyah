@@ -173,18 +173,12 @@ importers:
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.23(postcss@8.5.6)
-      cookie:
-        specifier: 1.1.1
-        version: 1.1.1
       postcss:
         specifier: ^8.5.3
         version: 8.5.6
       serve:
         specifier: ^14.2.4
         version: 14.2.6
-      simple-git-hooks:
-        specifier: ^2.12.1
-        version: 2.13.1
       tailwindcss:
         specifier: ^3.4.17
         version: 3.4.19(yaml@2.8.4)
@@ -4203,10 +4197,6 @@ packages:
     resolution: {integrity: sha512-bzyZ1e88w9O1iNJbKnOlvYTrWPDl46O1bG0D3XInv+9tkPrxrN8jUUTiFlDkkmKWgn1M6CfIA13SuGqOa9Korw==}
     engines: {node: '>=14'}
 
-  simple-git-hooks@2.13.1:
-    resolution: {integrity: sha512-WszCLXwT4h2k1ufIXAgsbiTOazqqevFCIncOuUBZJ91DdvWcC5+OFkluWRQPrcuSYd8fjq+o2y1QfWqYMoAToQ==}
-    hasBin: true
-
   sirv@3.0.2:
     resolution: {integrity: sha512-2wcC/oGxHis/BoHkkPwldgiPSYcpZK3JU28WoMVv55yHJgcZ8rlXvuG9iZggz+sU1d4bRgIGASwyWqjxu3FM0g==}
     engines: {node: '>=18'}
@@ -6452,7 +6442,7 @@ snapshots:
       std-env: 3.10.0
       test-exclude: 7.0.2
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@22.19.7)(@vitest/ui@2.1.9)
+      vitest: 2.1.9(@types/node@25.1.0)(@vitest/ui@2.1.9)
     transitivePeerDependencies:
       - supports-color
 
@@ -6550,7 +6540,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 1.2.0
-      vitest: 2.1.9(@types/node@22.19.7)(@vitest/ui@2.1.9)
+      vitest: 2.1.9(@types/node@25.1.0)(@vitest/ui@2.1.9)
 
   '@vitest/utils@2.1.9':
     dependencies:
@@ -9119,8 +9109,6 @@ snapshots:
   signal-exit@3.0.7: {}
 
   signal-exit@4.1.0: {}
-
-  simple-git-hooks@2.13.1: {}
 
   sirv@3.0.2:
     dependencies:

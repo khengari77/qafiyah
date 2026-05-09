@@ -8,8 +8,7 @@
     "build:deps": "pnpm --filter @qafiyah/db build",
     "deploy": "wrangler deploy --minify",
     "types": "tsc --noEmit --pretty",
-    "lint": "biome check .",
-    "lint:fix": "biome check --write .",
+    "lint": "biome check --write .",
     "format": "biome format --write .",
     "test": "vitest run"
   },

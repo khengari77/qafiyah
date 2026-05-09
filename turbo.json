@@ -12,16 +12,6 @@
       "inputs": ["src/**/*.{ts,tsx,js,jsx}", "*.{js,ts,json}"],
       "outputs": []
     },
-    "health": {
-      "dependsOn": ["^health"],
-      "inputs": [
-        "src/**/*.{ts,tsx,js,jsx,astro}",
-        "*.{js,ts,json,mjs}",
-        "tsconfig.json",
-        "astro.config.*"
-      ],
-      "outputs": []
-    },
     "types": {
       "dependsOn": ["^types"],
       "inputs": ["src/**/*.{ts,tsx}", "*.{ts,json}", "tsconfig.json"],
@@ -36,16 +26,6 @@
       "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
-    },
-    "dev:test": {
-      "dependsOn": ["^build"],
-      "cache": false,
-      "persistent": true
-    },
-    "clean": {
-      "cache": false,
-      "inputs": [],
-      "outputs": []
     }
   },
   "globalDependencies": ["**/.env.*local", ".env", "turbo.json", "package.json"]
