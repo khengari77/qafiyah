@@ -1,5 +1,5 @@
 {
-  "extends": "@qafiyah/tsconfig/base.json",
+  "extends": "@qafiyah/typescript/base.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",

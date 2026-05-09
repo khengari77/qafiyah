@@ -47,9 +47,9 @@ importers:
       '@qafiyah/db':
         specifier: workspace:*
         version: link:../../packages/db
-      '@qafiyah/tsconfig':
+      '@qafiyah/typescript':
         specifier: workspace:*
-        version: link:../../packages/tsconfig
+        version: link:../../packages/typescript
       drizzle-orm:
         specifier: ^0.41.0
         version: 0.41.0(@cloudflare/workers-types@4.20260130.0)(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(postgres@3.4.8)
@@ -91,9 +91,9 @@ importers:
         specifier: ^1.22.0
         version: 1.29.0
     devDependencies:
-      '@qafiyah/tsconfig':
+      '@qafiyah/typescript':
         specifier: workspace:*
-        version: link:../../packages/tsconfig
+        version: link:../../packages/typescript
       '@types/node':
         specifier: ^22.14.1
         version: 22.19.7
@@ -191,9 +191,9 @@ importers:
 
   packages/db:
     dependencies:
-      '@qafiyah/tsconfig':
+      '@qafiyah/typescript':
         specifier: workspace:*
-        version: link:../tsconfig
+        version: link:../typescript
       drizzle-orm:
         specifier: ^0.41.0
         version: 0.41.0(@cloudflare/workers-types@4.20260130.0)(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(postgres@3.4.8)
@@ -214,7 +214,7 @@ importers:
         specifier: '*'
         version: 5.9.3
 
-  packages/tsconfig: {}
+  packages/typescript: {}
 
 packages:
 

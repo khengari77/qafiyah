@@ -23,7 +23,7 @@
     "types": "tsc --noEmit --pretty"
   },
   "dependencies": {
-    "@qafiyah/tsconfig": "workspace:*",
+    "@qafiyah/typescript": "workspace:*",
     "drizzle-orm": "^0.41.0",
     "postgres": "^3.4.5"
   },

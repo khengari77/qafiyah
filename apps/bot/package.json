@@ -17,7 +17,7 @@
     "twitter-api-v2": "^1.22.0"
   },
   "devDependencies": {
-    "@qafiyah/tsconfig": "workspace:*",
+    "@qafiyah/typescript": "workspace:*",
     "@types/node": "^22.14.1",
     "@types/node-fetch": "^2.6.12",
     "typescript": "^5.8.3"
