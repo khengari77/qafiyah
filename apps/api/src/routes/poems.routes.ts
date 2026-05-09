@@ -55,10 +55,10 @@ app
     return c.json({ success: true, data: result.data });
   })
   .onError((error, c) => {
-    console.error(error);
     if (error instanceof HTTPException) {
       return c.json({ success: false, error: error.message, status: error.status }, error.status);
     }
+    console.error(error);
     return c.json(
       { success: false, error: 'Internal Server Error. POEMS Route', status: 500 },
       500

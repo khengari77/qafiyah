@@ -34,10 +34,10 @@ const app = new Hono<AppContext>()
     });
   })
   .onError((error, c) => {
-    console.error(error);
     if (error instanceof HTTPException) {
       return c.json({ success: false, error: error.message, status: error.status }, error.status);
     }
+    console.error(error);
     return c.json({ success: false, error: 'Internal Server Error. ERAS Route', status: 500 }, 500);
   });
 
