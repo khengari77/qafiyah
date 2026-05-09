@@ -3,7 +3,7 @@
  */
 
 import { Hono } from 'hono';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppContext } from '../types';
 import { dbMiddleware } from './db.middleware';
 
@@ -43,11 +43,15 @@ describe('dbMiddleware', () => {
   });
 
   it('should handle missing DATABASE_URL', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
     const testApp = new Hono<AppContext>();
     testApp.use(dbMiddleware);
     testApp.get('/test', (c) => c.text('ok'));
 
     const res = await testApp.fetch(new Request('http://localhost/test'), {});
+
+    consoleSpy.mockRestore();
 
     // Should return 503 when database URL is missing
     expect(res.status).toBeGreaterThanOrEqual(400);
