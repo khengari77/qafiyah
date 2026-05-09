@@ -1,13 +1,14 @@
 {
-  "extends": "@qafiyah/typescript/base.json",
+  "extends": "@qafiyah/typescript/node.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "target": "ES2020",
-    "rootDir": "src",
-    "esModuleInterop": true
+    "outDir": "./dist",
+    "rootDir": "./src"
   },
-  "include": ["src"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "watchOptions": {
+    "excludeDirectories": ["node_modules", "dist"],
+    "excludeFiles": ["dist/**/*"],
+    "fallbackPolling": "dynamicPriority"
+  }
 }
