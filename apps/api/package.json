@@ -1,15 +1,16 @@
 {
   "name": "@qafiyah/api",
+  "private": true,
   "scripts": {
     "dev": "wrangler dev",
     "dev:test": "wrangler dev --env test",
     "build": "pnpm run build:deps && wrangler build",
     "build:deps": "pnpm --filter @qafiyah/db build",
     "deploy": "wrangler deploy --minify",
+    "types": "tsc --noEmit --pretty",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "types": "tsc --noEmit --pretty",
     "test": "vitest run"
   },
   "dependencies": {

@@ -6,11 +6,11 @@
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "start": "node dist/index.js",
-    "test": "vitest run",
+    "types": "tsc --noEmit --pretty",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "types": "tsc --noEmit --pretty"
+    "test": "vitest run"
   },
   "dependencies": {
     "dotenv": "^16.5.0",

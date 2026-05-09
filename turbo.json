@@ -5,10 +5,10 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**", "!dist/**/*.tsbuildinfo", "out/**"]
+      "outputs": ["dist/**", "!dist/**/*.tsbuildinfo", "out/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"],
+      "dependsOn": [],
       "inputs": ["src/**/*.{ts,tsx,js,jsx}", "*.{js,ts,json}"],
       "outputs": []
     },
@@ -41,11 +41,6 @@
       "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
-    },
-    "typecheck": {
-      "dependsOn": ["^build"],
-      "inputs": ["src/**/*.{ts,tsx}", "*.{ts,json}"],
-      "outputs": ["**/*.tsbuildinfo"]
     },
     "clean": {
       "cache": false,

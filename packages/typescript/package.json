@@ -2,8 +2,5 @@
   "name": "@qafiyah/typescript",
   "version": "0.0.0",
   "license": "MIT",
-  "private": true,
-  "publishConfig": {
-    "access": "public"
-  }
+  "private": true
 }

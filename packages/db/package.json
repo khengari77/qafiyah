@@ -13,15 +13,14 @@
     }
   },
   "scripts": {
+    "dev:watch": "tsup --watch",
     "build": "tsup",
     "clean": "rm -rf dist .tsbuildinfo",
     "prepare": "pnpm run build",
-    "dev:watch": "tsup --watch",
+    "types": "tsc --noEmit --pretty",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit",
-    "types": "tsc --noEmit --pretty"
+    "test": "vitest run"
   },
   "dependencies": {
     "@qafiyah/typescript": "workspace:*",

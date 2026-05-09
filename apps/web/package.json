@@ -1,29 +1,19 @@
 {
   "name": "@qafiyah/web",
   "version": "0.0.0",
-  "private": false,
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "build:web": "astro build",
     "start": "astro preview",
     "serve": "npx serve dist",
+    "types": "astro check && tsc --noEmit",
+    "health": "astro check",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "test": "vitest run",
-    "types": "astro check && tsc --noEmit",
-    "health": "astro check",
-    "check": "pnpm run type-check && pnpm run lint"
-  },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx,json,md,mdx,css,astro}": [
-      "biome check --write"
-    ]
-  },
-  "simple-git-hooks": {
-    "pre-commit": "npx --no -- pnpm lint-staged"
+    "test": "vitest run"
   },
   "dependencies": {
     "@astrojs/react": "^5.0.4",
@@ -52,9 +42,7 @@
     "cookie": "1.1.1",
     "postcss": "^8.5.3",
     "serve": "^14.2.4",
-    "simple-git-hooks": "^2.12.1",
     "tailwindcss": "^3.4.17",
-    "tailwindcss-animate": "^1.0.7",
     "tailwindcss-debug-screens": "2",
     "typescript": "^5",
     "vitest": "^4.1.5"
