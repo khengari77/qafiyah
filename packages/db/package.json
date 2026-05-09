@@ -19,6 +19,7 @@
     "dev:watch": "tsup --watch",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "types": "tsc --noEmit --pretty"
   },
@@ -30,8 +31,10 @@
   "devDependencies": {
     "@biomejs/biome": "*",
     "@types/node": "^22",
+    "@vitest/coverage-v8": "^2.1.9",
     "tsup": "^8.0.2",
-    "typescript": "*"
+    "typescript": "*",
+    "vitest": "^2.1.9"
   },
   "files": [
     "dist/**/*"
