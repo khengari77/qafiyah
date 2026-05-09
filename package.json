@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "build:static": "pnpm --filter @qafiyah/web build:static",
+    "build:web": "pnpm --filter @qafiyah/web build:web",
+    "dev:api": "pnpm --filter @qafiyah/api dev",
     "dev": "./scripts/check-database.sh && turbo run build --filter=@qafiyah/schemas && turbo run dev --filter=@qafiyah/web --filter=@qafiyah/api",
     "dev:test": "pnpm --filter @qafiyah/api dev:test",
     "lint": "turbo run lint",

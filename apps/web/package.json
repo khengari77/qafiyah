@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "build:static": "BUILD_API_URL=http://localhost:8787 astro build",
+    "build:web": "BUILD_API_URL=http://localhost:8787 astro build",
     "start": "astro preview",
     "serve": "npx serve dist",
     "lint": "biome check .",

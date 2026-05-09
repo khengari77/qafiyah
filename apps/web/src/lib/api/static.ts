@@ -19,6 +19,12 @@ import type {
   ThemePoems,
 } from './types';
 
+// @NOTE: globalThis survives Vite SSR module boundaries — readable by astro:build:done hook
+type BuildStats = { calls: number; timings: { label: string; ms: number }[] };
+const _g = globalThis as typeof globalThis & { _qBuildStats?: BuildStats };
+_g._qBuildStats ??= { calls: 0, timings: [] };
+const _stats = _g._qBuildStats;
+
 const MAX_URLS_PER_SITEMAP = 1000;
 
 /**
@@ -26,6 +32,7 @@ const MAX_URLS_PER_SITEMAP = 1000;
  * Throws on non-OK response; callers should catch connection errors when building static params.
  */
 async function fetchApi<T>(endpoint: string): Promise<T> {
+  _stats.calls++;
   const url = `${API_URL}${endpoint}`;
   const response = await fetch(url);
 
@@ -34,6 +41,23 @@ async function fetchApi<T>(endpoint: string): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+async function timed<T>(
+  label: string,
+  fn: () => Promise<T>,
+  suffix?: (r: T) => string
+): Promise<T> {
+  const callsBefore = _stats.calls;
+  const t = performance.now();
+  const result = await fn();
+  const ms = performance.now() - t;
+  _stats.timings.push({ label, ms });
+  const extra = suffix ? ` | ${suffix(result)}` : '';
+  console.log(
+    `[build] ${label}: ${ms.toFixed(0)}ms | ${_stats.calls - callsBefore} API calls${extra}`
+  );
+  return result;
 }
 
 // ============================================================================
@@ -47,26 +71,32 @@ type PoemsFullDataItem = {
 /**
  * Fetch all poem slugs in parallel for static generation.
  */
-export async function fetchAllPoemSlugsFast(): Promise<string[]> {
-  const first = await fetchApi<{
-    success: boolean;
-    data: PoemsFullDataItem[];
-    meta: { totalPages: number };
-  }>(`/poems/slugs?page=1&limit=${MAX_URLS_PER_SITEMAP}`);
-  if (!first.success || !first.data) return [];
-  const allSlugs = first.data.map((p) => p.slug);
-  const totalPages = first.meta.totalPages;
-  if (totalPages <= 1) return allSlugs;
-  const remaining = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, i) =>
-      fetchApi<{ success: boolean; data: PoemsFullDataItem[] }>(
-        `/poems/slugs?page=${i + 2}&limit=${MAX_URLS_PER_SITEMAP}`
-      )
-        .then((r) => (r.success && r.data ? r.data.map((p) => p.slug) : []))
-        .catch(() => [])
-    )
+export function fetchAllPoemSlugsFast(): Promise<string[]> {
+  return timed(
+    'fetchAllPoemSlugsFast',
+    async () => {
+      const first = await fetchApi<{
+        success: boolean;
+        data: PoemsFullDataItem[];
+        meta: { totalPages: number };
+      }>(`/poems/slugs?page=1&limit=${MAX_URLS_PER_SITEMAP}`);
+      if (!first.success || !first.data) return [];
+      const allSlugs = first.data.map((p) => p.slug);
+      const totalPages = first.meta.totalPages;
+      if (totalPages <= 1) return allSlugs;
+      const remaining = await Promise.all(
+        Array.from({ length: totalPages - 1 }, (_, i) =>
+          fetchApi<{ success: boolean; data: PoemsFullDataItem[] }>(
+            `/poems/slugs?page=${i + 2}&limit=${MAX_URLS_PER_SITEMAP}`
+          )
+            .then((r) => (r.success && r.data ? r.data.map((p) => p.slug) : []))
+            .catch(() => [])
+        )
+      );
+      return [...allSlugs, ...remaining.flat()];
+    },
+    (slugs) => `${slugs.length} slugs`
   );
-  return [...allSlugs, ...remaining.flat()];
 }
 
 /**
@@ -96,37 +126,46 @@ type PoetStats = {
 /**
  * Fetch all poets with poem counts (for generating static params)
  */
-export async function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
-  const allPoets: PoetStats[] = [];
-  let page = 1;
-  let hasMore = true;
+export function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
+  return timed(
+    'fetchPoetsWithPoemCount',
+    async () => {
+      const allPoets: PoetStats[] = [];
+      let page = 1;
+      let hasMore = true;
 
-  while (hasMore) {
-    const response = await fetchPoets(page.toString());
-    if (!response.data?.poets || response.data.poets.length === 0) {
-      hasMore = false;
-      break;
-    }
+      while (hasMore) {
+        const iterT = performance.now();
+        const response = await fetchPoets(page.toString());
+        console.log(`[build]   poets page ${page}: ${(performance.now() - iterT).toFixed(0)}ms`);
 
-    allPoets.push(
-      ...response.data.poets.map((p) => ({
-        slug: String(p.slug ?? '')
-          .toLowerCase()
-          .replace(/^cat-poet-/, ''),
-        name: p.name,
-        poemsCount: p.poemsCount,
-      }))
-    );
+        if (!response.data?.poets || response.data.poets.length === 0) {
+          hasMore = false;
+          break;
+        }
 
-    const totalPages = response.pagination?.totalPages ?? 1;
-    if (page >= totalPages) {
-      hasMore = false;
-    } else {
-      page++;
-    }
-  }
+        allPoets.push(
+          ...response.data.poets.map((p) => ({
+            slug: String(p.slug ?? '')
+              .toLowerCase()
+              .replace(/^cat-poet-/, ''),
+            name: p.name,
+            poemsCount: p.poemsCount,
+          }))
+        );
 
-  return allPoets;
+        const totalPages = response.pagination?.totalPages ?? 1;
+        if (page >= totalPages) {
+          hasMore = false;
+        } else {
+          page++;
+        }
+      }
+
+      return allPoets;
+    },
+    (poets) => `${poets.length} poets`
+  );
 }
 
 /**
@@ -195,13 +234,19 @@ export async function fetchEras(): Promise<Era[]> {
 /**
  * Fetch all eras with poem counts for static params generation
  */
-export async function fetchErasWithPoemCount(): Promise<EraStats[]> {
-  const eras = await fetchEras();
-  return eras.map((era) => ({
-    slug: era.slug,
-    name: era.name,
-    poemsCount: era.poemsCount,
-  }));
+export function fetchErasWithPoemCount(): Promise<EraStats[]> {
+  return timed(
+    'fetchErasWithPoemCount',
+    async () => {
+      const eras = await fetchEras();
+      return eras.map((era) => ({
+        slug: era.slug,
+        name: era.name,
+        poemsCount: era.poemsCount,
+      }));
+    },
+    (eras) => `${eras.length} eras`
+  );
 }
 
 /**
@@ -244,13 +289,19 @@ export async function fetchMeters(): Promise<Meter[]> {
 /**
  * Fetch all meters with poem counts for static params generation
  */
-export async function fetchMetersWithPoemCount(): Promise<MeterStats[]> {
-  const meters = await fetchMeters();
-  return meters.map((meter) => ({
-    slug: meter.slug,
-    name: meter.name,
-    poemsCount: meter.poemsCount,
-  }));
+export function fetchMetersWithPoemCount(): Promise<MeterStats[]> {
+  return timed(
+    'fetchMetersWithPoemCount',
+    async () => {
+      const meters = await fetchMeters();
+      return meters.map((meter) => ({
+        slug: meter.slug,
+        name: meter.name,
+        poemsCount: meter.poemsCount,
+      }));
+    },
+    (meters) => `${meters.length} meters`
+  );
 }
 
 /**
@@ -293,13 +344,19 @@ export async function fetchRhymes(): Promise<Rhyme[]> {
 /**
  * Fetch all rhymes with poem counts for static params generation
  */
-export async function fetchRhymesWithPoemCount(): Promise<RhymeStats[]> {
-  const rhymes = await fetchRhymes();
-  return rhymes.map((rhyme) => ({
-    slug: rhyme.slug,
-    name: rhyme.name,
-    poemsCount: rhyme.poemsCount,
-  }));
+export function fetchRhymesWithPoemCount(): Promise<RhymeStats[]> {
+  return timed(
+    'fetchRhymesWithPoemCount',
+    async () => {
+      const rhymes = await fetchRhymes();
+      return rhymes.map((rhyme) => ({
+        slug: rhyme.slug,
+        name: rhyme.name,
+        poemsCount: rhyme.poemsCount,
+      }));
+    },
+    (rhymes) => `${rhymes.length} rhymes`
+  );
 }
 
 /**
@@ -342,13 +399,19 @@ export async function fetchThemes(): Promise<Theme[]> {
 /**
  * Fetch all themes with poem counts for static params generation
  */
-export async function fetchThemesWithPoemCount(): Promise<ThemeStats[]> {
-  const themes = await fetchThemes();
-  return themes.map((theme) => ({
-    slug: theme.slug,
-    name: theme.name,
-    poemsCount: theme.poemsCount,
-  }));
+export function fetchThemesWithPoemCount(): Promise<ThemeStats[]> {
+  return timed(
+    'fetchThemesWithPoemCount',
+    async () => {
+      const themes = await fetchThemes();
+      return themes.map((theme) => ({
+        slug: theme.slug,
+        name: theme.name,
+        poemsCount: theme.poemsCount,
+      }));
+    },
+    (themes) => `${themes.length} themes`
+  );
 }
 
 /**
