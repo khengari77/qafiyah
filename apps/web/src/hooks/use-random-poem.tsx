@@ -11,14 +11,18 @@ export function useRandomPoem() {
     if (isLoading) return;
     setIsLoading(true);
     setIsError(false);
+    let slug: string;
     try {
-      const slug = await queries.getRandomSlug();
-      if (slug?.trim()) {
-        window.location.href = `/poems/${slug.trim()}/`;
-        return;
-      }
+      slug = await queries.getRandomSlug();
     } catch {
       setIsError(true);
+      setIsLoading(false);
+      return;
+    }
+    const trimmed = slug.trim();
+    if (trimmed.length > 0) {
+      window.location.href = `/poems/${trimmed}/`;
+      return;
     }
     setIsLoading(false);
   };
