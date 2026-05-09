@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "build:web": "BUILD_API_URL=http://localhost:8787 astro build",
+    "build:web": "astro build",
     "start": "astro preview",
     "serve": "npx serve dist",
     "lint": "biome check .",
@@ -27,6 +27,7 @@
   "dependencies": {
     "@astrojs/react": "^5.0.4",
     "@astrojs/sitemap": "3.7.2",
+    "@qafiyah/db": "workspace:*",
     "@qafiyah/schemas": "workspace:*",
     "@radix-ui/react-slot": "^1.2.0",
     "@tanstack/react-query": "^5.73.3",

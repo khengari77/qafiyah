@@ -50,6 +50,9 @@ importers:
       '@neondatabase/serverless':
         specifier: ^1.0.0
         version: 1.0.2
+      '@qafiyah/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@qafiyah/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
@@ -121,6 +124,9 @@ importers:
       '@astrojs/sitemap':
         specifier: 3.7.2
         version: 3.7.2
+      '@qafiyah/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@qafiyah/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
@@ -196,6 +202,31 @@ importers:
         version: 2.2.1(tailwindcss@3.4.19(yaml@2.8.4))
       typescript:
         specifier: ^5
+        version: 5.9.3
+
+  packages/db:
+    dependencies:
+      '@qafiyah/tsconfig':
+        specifier: workspace:*
+        version: link:../tsconfig
+      drizzle-orm:
+        specifier: ^0.41.0
+        version: 0.41.0(@cloudflare/workers-types@4.20260130.0)(@neondatabase/serverless@1.0.2)(@types/pg@8.16.0)(postgres@3.4.8)
+      postgres:
+        specifier: ^3.4.5
+        version: 3.4.8
+    devDependencies:
+      '@biomejs/biome':
+        specifier: '*'
+        version: 2.3.13
+      '@types/node':
+        specifier: ^22
+        version: 22.19.7
+      tsup:
+        specifier: ^8.0.2
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(typescript@5.9.3)(yaml@2.8.4)
+      typescript:
+        specifier: '*'
         version: 5.9.3
 
   packages/schemas:

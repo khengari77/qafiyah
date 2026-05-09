@@ -3,7 +3,7 @@
  */
 
 import { describe, expect, it, vi } from 'vitest';
-import { MAX_URLS_PER_SITEMAP } from '../constants';
+import { MAX_URLS_PER_SITEMAP } from '@qafiyah/db';
 import { createMockDb, createTestClient } from '../test-utils/test-helpers';
 import sitemaps from './sitemaps.routes';
 

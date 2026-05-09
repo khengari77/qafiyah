@@ -1,63 +1,19 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
+import { createDb } from '@qafiyah/db';
 import { createMiddleware } from 'hono/factory';
-import postgres from 'postgres';
 import type { AppContext } from '../types';
 
 export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
-  let client: ReturnType<typeof postgres> | null = null;
-
   try {
     const databaseUrl = c.env.DATABASE_URL;
     if (!databaseUrl) {
       throw new Error('Database configuration missing');
     }
-    const url = new URL(databaseUrl);
-    const options = {
-      host: url.hostname,
-      port: Number.parseInt(url.port, 10) || 5432,
-      database: url.pathname.slice(1),
-      user: url.username,
-      password: url.password,
-      ssl: false,
-      max: 2,
-      idle_timeout: 30,
-      connect_timeout: 10,
-      prepare: false,
-      transform: { undefined: null },
-      onnotice: () => {},
-    };
 
-    try {
-      client = postgres(options);
-      await client`SELECT 1 as test`;
-      const dbLabel = options.port === 5434 ? 'test' : options.port === 5433 ? 'dev' : 'prod';
-      console.log(`Database connection successful (${dbLabel} @ ${options.host}:${options.port})`);
-    } catch (connError: unknown) {
-      const error = connError instanceof Error ? connError : new Error(String(connError));
-      console.error('Connection error details:', {
-        message: error.message,
-        code: 'code' in error ? error.code : undefined,
-        severity: 'severity' in error ? error.severity : undefined,
-        host: options.host,
-        port: options.port,
-        user: options.user,
-        database: options.database,
-      });
-      throw connError;
-    }
-
-    const db = drizzle(client);
+    const db = createDb(databaseUrl);
     c.set('db', db);
     return await next();
   } catch (error) {
     console.error('Database error:', error);
-
-    if (client) {
-      try {
-        await client.end({ timeout: 2000 });
-      } catch {}
-    }
-
     return c.json(
       {
         success: false,

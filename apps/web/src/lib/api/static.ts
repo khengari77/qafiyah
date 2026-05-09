@@ -1,9 +1,18 @@
 /**
- * Static API utilities for build-time data fetching (Astro SSG).
+ * Static build-time data access (Astro SSG).
+ * Queries the database directly instead of going through the API HTTP layer.
  */
 
-import { API_URL } from '@/constants/globals';
+import {
+  erasQueries,
+  metersQueries,
+  poemsQueries,
+  poetsQueries,
+  rhymesQueries,
+  themesQueries,
+} from '@qafiyah/db';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
+import { db } from '../db';
 import type {
   Era,
   EraPoems,
@@ -25,24 +34,6 @@ const _g = globalThis as typeof globalThis & { _qBuildStats?: BuildStats };
 _g._qBuildStats ??= { calls: 0, timings: [] };
 const _stats = _g._qBuildStats;
 
-const MAX_URLS_PER_SITEMAP = 1000;
-
-/**
- * Helper to fetch JSON from API with error handling.
- * Throws on non-OK response; callers should catch connection errors when building static params.
- */
-async function fetchApi<T>(endpoint: string): Promise<T> {
-  _stats.calls++;
-  const url = `${API_URL}${endpoint}`;
-  const response = await fetch(url);
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText} for ${url}`);
-  }
-
-  return response.json() as Promise<T>;
-}
-
 async function timed<T>(
   label: string,
   fn: () => Promise<T>,
@@ -55,7 +46,7 @@ async function timed<T>(
   _stats.timings.push({ label, ms });
   const extra = suffix ? ` | ${suffix(result)}` : '';
   console.log(
-    `[build] ${label}: ${ms.toFixed(0)}ms | ${_stats.calls - callsBefore} API calls${extra}`
+    `[build] ${label}: ${ms.toFixed(0)}ms | ${_stats.calls - callsBefore} queries${extra}`
   );
   return result;
 }
@@ -64,34 +55,27 @@ async function timed<T>(
 // Poems
 // ============================================================================
 
-type PoemsFullDataItem = {
-  slug: string;
-};
-
 /**
- * Fetch all poem slugs in parallel for static generation.
+ * Fetch all poem slugs for static generation.
  */
 export function fetchAllPoemSlugsFast(): Promise<string[]> {
   return timed(
     'fetchAllPoemSlugsFast',
     async () => {
-      const first = await fetchApi<{
-        success: boolean;
-        data: PoemsFullDataItem[];
-        meta: { totalPages: number };
-      }>(`/poems/slugs?page=1&limit=${MAX_URLS_PER_SITEMAP}`);
-      if (!first.success || !first.data) return [];
-      const allSlugs = first.data.map((p) => p.slug);
-      const totalPages = first.meta.totalPages;
-      if (totalPages <= 1) return allSlugs;
+      const limit = 1000;
+      const first = await poemsQueries.listPoemSlugs(db, 1, limit);
+      _stats.calls++;
+      const allSlugs = first.slugs.map((p) => p.slug);
+      if (first.totalPages <= 1) return allSlugs;
+
       const remaining = await Promise.all(
-        Array.from({ length: totalPages - 1 }, (_, i) =>
-          fetchApi<{ success: boolean; data: PoemsFullDataItem[] }>(
-            `/poems/slugs?page=${i + 2}&limit=${MAX_URLS_PER_SITEMAP}`
-          )
-            .then((r) => (r.success && r.data ? r.data.map((p) => p.slug) : []))
-            .catch(() => [])
-        )
+        Array.from({ length: first.totalPages - 1 }, (_, i) => {
+          _stats.calls++;
+          return poemsQueries
+            .listPoemSlugs(db, i + 2, limit)
+            .then((r) => r.slugs.map((p) => p.slug))
+            .catch(() => []);
+        })
       );
       return [...allSlugs, ...remaining.flat()];
     },
@@ -100,14 +84,14 @@ export function fetchAllPoemSlugsFast(): Promise<string[]> {
 }
 
 /**
- * Fetch a single poem by slug
+ * Fetch a single poem by slug.
  */
 export async function fetchPoem(slug: string): Promise<PoemResponseData | null> {
   try {
-    const response = await fetchApi<{ success: boolean; data: PoemResponseData }>(
-      `/poems/slug/${slug}`
-    );
-    return response.success ? response.data : null;
+    _stats.calls++;
+    const result = await poemsQueries.getPoemBySlug(db, slug);
+    if (result.type !== 'found') return null;
+    return result.data as PoemResponseData;
   } catch {
     return null;
   }
@@ -124,7 +108,7 @@ type PoetStats = {
 };
 
 /**
- * Fetch all poets with poem counts (for generating static params)
+ * Fetch all poets with poem counts (for generating static params).
  */
 export function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
   return timed(
@@ -169,25 +153,28 @@ export function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
 }
 
 /**
- * Fetch poets for a specific page
+ * Fetch poets for a specific page.
  */
 export async function fetchPoets(
   page: string
 ): Promise<{ data: PoetsData; pagination?: PaginationMeta }> {
-  const response = await fetchApi<{
-    success: boolean;
-    data: PoetsData;
-    meta?: { pagination: PaginationMeta };
-  }>(`/poets/page/${page}`);
+  _stats.calls++;
+  const result = await poetsQueries.listPoets(db, Number(page));
 
   return {
-    data: response.data,
-    pagination: response.meta?.pagination,
+    data: { poets: result.poets } as PoetsData,
+    pagination: {
+      currentPage: Number(page),
+      totalPages: result.totalPages,
+      totalItems: result.totalPoets,
+      hasNextPage: Number(page) < result.totalPages,
+      hasPrevPage: Number(page) > 1,
+    },
   };
 }
 
 /**
- * Get total number of poet pages
+ * Get total number of poet pages.
  */
 export async function fetchPoetsTotalPages(): Promise<number> {
   const response = await fetchPoets('1');
@@ -195,21 +182,27 @@ export async function fetchPoetsTotalPages(): Promise<number> {
 }
 
 /**
- * Fetch poems for a specific poet and page
+ * Fetch poems for a specific poet and page.
  */
 export async function fetchPoetPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: PoetPoems; pagination?: PaginationMeta }> {
-  const response = await fetchApi<{
-    success: boolean;
-    data: PoetPoems;
-    meta?: { pagination: PaginationMeta };
-  }>(`/poets/${slug}/page/${page}`);
+  _stats.calls++;
+  const result = await poetsQueries.listPoetPoems(db, slug, Number(page));
+
+  if (!result) {
+    return { data: { poetDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as PoetPoems };
+  }
 
   return {
-    data: response.data,
-    pagination: response.meta?.pagination,
+    data: result as unknown as PoetPoems,
+    pagination: {
+      currentPage: Number(page),
+      totalPages: result.totalPages,
+      hasNextPage: Number(page) < result.totalPages,
+      hasPrevPage: Number(page) > 1,
+    },
   };
 }
 
@@ -224,15 +217,15 @@ type EraStats = {
 };
 
 /**
- * Fetch all eras
+ * Fetch all eras.
  */
 export async function fetchEras(): Promise<Era[]> {
-  const response = await fetchApi<{ success: boolean; data: Era[] }>('/eras');
-  return response.data;
+  _stats.calls++;
+  return erasQueries.listEras(db) as Promise<Era[]>;
 }
 
 /**
- * Fetch all eras with poem counts for static params generation
+ * Fetch all eras with poem counts for static params generation.
  */
 export function fetchErasWithPoemCount(): Promise<EraStats[]> {
   return timed(
@@ -250,21 +243,27 @@ export function fetchErasWithPoemCount(): Promise<EraStats[]> {
 }
 
 /**
- * Fetch poems for a specific era and page
+ * Fetch poems for a specific era and page.
  */
 export async function fetchEraPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: EraPoems; pagination?: PaginationMeta }> {
-  const response = await fetchApi<{
-    success: boolean;
-    data: EraPoems;
-    meta?: { pagination: PaginationMeta };
-  }>(`/eras/${slug}/page/${page}`);
+  _stats.calls++;
+  const result = await erasQueries.listEraPoems(db, slug, Number(page));
+
+  if (!result) {
+    return { data: { eraDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as EraPoems };
+  }
 
   return {
-    data: response.data,
-    pagination: response.meta?.pagination,
+    data: result as unknown as EraPoems,
+    pagination: {
+      currentPage: Number(page),
+      totalPages: result.totalPages,
+      hasNextPage: Number(page) < result.totalPages,
+      hasPrevPage: Number(page) > 1,
+    },
   };
 }
 
@@ -279,15 +278,15 @@ type MeterStats = {
 };
 
 /**
- * Fetch all meters
+ * Fetch all meters.
  */
 export async function fetchMeters(): Promise<Meter[]> {
-  const response = await fetchApi<{ success: boolean; data: Meter[] }>('/meters');
-  return response.data;
+  _stats.calls++;
+  return metersQueries.listMeters(db) as Promise<Meter[]>;
 }
 
 /**
- * Fetch all meters with poem counts for static params generation
+ * Fetch all meters with poem counts for static params generation.
  */
 export function fetchMetersWithPoemCount(): Promise<MeterStats[]> {
   return timed(
@@ -305,21 +304,29 @@ export function fetchMetersWithPoemCount(): Promise<MeterStats[]> {
 }
 
 /**
- * Fetch poems for a specific meter and page
+ * Fetch poems for a specific meter and page.
  */
 export async function fetchMeterPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: MeterPoems; pagination?: PaginationMeta }> {
-  const response = await fetchApi<{
-    success: boolean;
-    data: MeterPoems;
-    meta?: { pagination: PaginationMeta };
-  }>(`/meters/${slug}/page/${page}`);
+  _stats.calls++;
+  const result = await metersQueries.listMeterPoems(db, slug, Number(page));
+
+  if (!result) {
+    return {
+      data: { meterDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as MeterPoems,
+    };
+  }
 
   return {
-    data: response.data,
-    pagination: response.meta?.pagination,
+    data: result as unknown as MeterPoems,
+    pagination: {
+      currentPage: Number(page),
+      totalPages: result.totalPages,
+      hasNextPage: Number(page) < result.totalPages,
+      hasPrevPage: Number(page) > 1,
+    },
   };
 }
 
@@ -334,15 +341,15 @@ type RhymeStats = {
 };
 
 /**
- * Fetch all rhymes
+ * Fetch all rhymes.
  */
 export async function fetchRhymes(): Promise<Rhyme[]> {
-  const response = await fetchApi<{ success: boolean; data: Rhyme[] }>('/rhymes');
-  return response.data;
+  _stats.calls++;
+  return rhymesQueries.listRhymes(db) as Promise<Rhyme[]>;
 }
 
 /**
- * Fetch all rhymes with poem counts for static params generation
+ * Fetch all rhymes with poem counts for static params generation.
  */
 export function fetchRhymesWithPoemCount(): Promise<RhymeStats[]> {
   return timed(
@@ -360,21 +367,29 @@ export function fetchRhymesWithPoemCount(): Promise<RhymeStats[]> {
 }
 
 /**
- * Fetch poems for a specific rhyme and page
+ * Fetch poems for a specific rhyme and page.
  */
 export async function fetchRhymePoemPage(
   slug: string,
   page: string
 ): Promise<{ data: RhymePoems; pagination?: PaginationMeta }> {
-  const response = await fetchApi<{
-    success: boolean;
-    data: RhymePoems;
-    meta?: { pagination: PaginationMeta };
-  }>(`/rhymes/${slug}/page/${page}`);
+  _stats.calls++;
+  const result = await rhymesQueries.listRhymePoems(db, slug, Number(page));
+
+  if (!result) {
+    return {
+      data: { rhymeDetails: { id: 0, pattern: '', poemsCount: 0 }, poems: [] } as RhymePoems,
+    };
+  }
 
   return {
-    data: response.data,
-    pagination: response.meta?.pagination,
+    data: result as unknown as RhymePoems,
+    pagination: {
+      currentPage: Number(page),
+      totalPages: result.totalPages,
+      hasNextPage: Number(page) < result.totalPages,
+      hasPrevPage: Number(page) > 1,
+    },
   };
 }
 
@@ -389,15 +404,15 @@ type ThemeStats = {
 };
 
 /**
- * Fetch all themes
+ * Fetch all themes.
  */
 export async function fetchThemes(): Promise<Theme[]> {
-  const response = await fetchApi<{ success: boolean; data: Theme[] }>('/themes');
-  return response.data;
+  _stats.calls++;
+  return themesQueries.listThemes(db) as Promise<Theme[]>;
 }
 
 /**
- * Fetch all themes with poem counts for static params generation
+ * Fetch all themes with poem counts for static params generation.
  */
 export function fetchThemesWithPoemCount(): Promise<ThemeStats[]> {
   return timed(
@@ -415,21 +430,29 @@ export function fetchThemesWithPoemCount(): Promise<ThemeStats[]> {
 }
 
 /**
- * Fetch poems for a specific theme and page
+ * Fetch poems for a specific theme and page.
  */
 export async function fetchThemePoemPage(
   slug: string,
   page: string
 ): Promise<{ data: ThemePoems; pagination?: PaginationMeta }> {
-  const response = await fetchApi<{
-    success: boolean;
-    data: ThemePoems;
-    meta?: { pagination: PaginationMeta };
-  }>(`/themes/${slug}/page/${page}`);
+  _stats.calls++;
+  const result = await themesQueries.listThemePoems(db, slug, Number(page));
+
+  if (!result) {
+    return {
+      data: { themeDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as ThemePoems,
+    };
+  }
 
   return {
-    data: response.data,
-    pagination: response.meta?.pagination,
+    data: result as unknown as ThemePoems,
+    pagination: {
+      currentPage: Number(page),
+      totalPages: result.totalPages,
+      hasNextPage: Number(page) < result.totalPages,
+      hasPrevPage: Number(page) > 1,
+    },
   };
 }
 

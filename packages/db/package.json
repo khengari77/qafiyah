@@ -1,0 +1,39 @@
+{
+  "name": "@qafiyah/db",
+  "version": "0.0.1",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "scripts": {
+    "build": "tsup",
+    "clean": "rm -rf dist .tsbuildinfo",
+    "prepare": "pnpm run build",
+    "dev:watch": "tsup --watch",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit",
+    "types": "tsc --noEmit --pretty"
+  },
+  "dependencies": {
+    "@qafiyah/tsconfig": "workspace:*",
+    "drizzle-orm": "^0.41.0",
+    "postgres": "^3.4.5"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "*",
+    "@types/node": "^22",
+    "tsup": "^8.0.2",
+    "typescript": "*"
+  },
+  "files": [
+    "dist/**/*"
+  ]
+}

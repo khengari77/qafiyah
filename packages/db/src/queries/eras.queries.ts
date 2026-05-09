@@ -1,0 +1,52 @@
+import { eq } from 'drizzle-orm';
+import type { DbClient } from '../client';
+import { ERAS_SORT_ORDER, FETCH_PER_PAGE } from '../constants';
+import { eraPoems, eraStats } from '../schema';
+
+export async function listEras(db: DbClient) {
+  const results = await db.select().from(eraStats);
+  return results.sort(
+    (a, b) => ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name)
+  );
+}
+
+export async function listEraPoems(db: DbClient, slug: string, page: number) {
+  const limit = FETCH_PER_PAGE;
+  const offset = (page - 1) * limit;
+
+  const eraInfo = await db
+    .select({
+      eraId: eraPoems.eraId,
+      eraName: eraPoems.eraName,
+      totalPoems: eraPoems.totalPoemsInEra,
+    })
+    .from(eraPoems)
+    .where(eq(eraPoems.eraSlug, slug))
+    .limit(1);
+
+  if (!eraInfo.length || !eraInfo[0]) return null;
+
+  const poems = await db
+    .select({
+      title: eraPoems.poemTitle,
+      slug: eraPoems.poemSlug,
+      poetName: eraPoems.poetName,
+      meter: eraPoems.meterName,
+    })
+    .from(eraPoems)
+    .where(eq(eraPoems.eraSlug, slug))
+    .limit(limit)
+    .offset(offset);
+
+  const totalPages = Math.ceil(eraInfo[0].totalPoems / limit);
+
+  return {
+    eraDetails: {
+      id: eraInfo[0].eraId,
+      name: eraInfo[0].eraName,
+      poemsCount: eraInfo[0].totalPoems,
+    },
+    poems,
+    totalPages,
+  };
+}

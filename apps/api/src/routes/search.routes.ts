@@ -1,19 +1,13 @@
 import { zValidator } from '@hono/zod-validator';
+import { cleanArabicQuery, parseIds, searchQueries } from '@qafiyah/db';
 import { searchRequestSchema } from '@qafiyah/schemas';
 import { createValidatedResponse } from '@qafiyah/schemas/server';
-import { sql } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { AppContext } from '../types';
-import { cleanArabicQuery } from '../utils/clean-arabic-query';
-import { parseIds } from '../utils/parse-ids';
 
-type ErrorTypeDefinition = {
-  code: ContentfulStatusCode;
-  type: string;
-};
-
+type ErrorTypeDefinition = { code: ContentfulStatusCode; type: string };
 type ErrorTypeKey =
   | 'VALIDATION'
   | 'EMPTY_QUERY'
@@ -23,46 +17,18 @@ type ErrorTypeKey =
   | 'SERVER_ERROR';
 
 const ERROR_TYPES: Record<ErrorTypeKey, ErrorTypeDefinition> = {
-  VALIDATION: {
-    code: 400,
-    type: 'VALIDATION_ERROR',
-  },
-  EMPTY_QUERY: {
-    code: 400,
-    type: 'EMPTY_QUERY',
-  },
-  INVALID_SEARCH_TYPE: {
-    code: 400,
-    type: 'INVALID_SEARCH_TYPE',
-  },
-  INVALID_POEM_QUERY: {
-    code: 400,
-    type: 'INVALID_POEM_QUERY',
-  },
-  INVALID_POET_QUERY: {
-    code: 400,
-    type: 'INVALID_POET_QUERY',
-  },
-  SERVER_ERROR: {
-    code: 500,
-    type: 'SERVER_ERROR',
-  },
+  VALIDATION: { code: 400, type: 'VALIDATION_ERROR' },
+  EMPTY_QUERY: { code: 400, type: 'EMPTY_QUERY' },
+  INVALID_SEARCH_TYPE: { code: 400, type: 'INVALID_SEARCH_TYPE' },
+  INVALID_POEM_QUERY: { code: 400, type: 'INVALID_POEM_QUERY' },
+  INVALID_POET_QUERY: { code: 400, type: 'INVALID_POET_QUERY' },
+  SERVER_ERROR: { code: 500, type: 'SERVER_ERROR' },
 };
 
 const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSchema), async (c) => {
   try {
-    const {
-      // required
-      q,
-      search_type,
-      page,
-      match_type,
-      // optional
-      meter_ids,
-      era_ids,
-      rhyme_ids,
-      theme_ids,
-    } = c.req.valid('query');
+    const { q, search_type, page, match_type, meter_ids, era_ids, rhyme_ids, theme_ids } =
+      c.req.valid('query');
 
     const db = c.get('db');
     const sanitizedQuery = decodeURIComponent(cleanArabicQuery(q));
@@ -78,32 +44,24 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
     const rhymeIds = parseIds(rhyme_ids);
     const themeIds = parseIds(theme_ids);
 
-    let dbResult: Awaited<ReturnType<typeof db.execute>>;
+    let dbResult: Awaited<ReturnType<typeof searchQueries.searchPoems>>;
 
     switch (search_type) {
       case 'poems': {
-        dbResult = await db.execute(
-          sql`SELECT * FROM search_poems(
-              ${sanitizedQuery}::TEXT,
-              ${page}::INTEGER,
-              ${match_type}::TEXT,
-              ${meterIds ? sql`${meterIds}::INTEGER[]` : sql`NULL::INTEGER[]`},
-              ${eraIds ? sql`${eraIds}::INTEGER[]` : sql`NULL::INTEGER[]`},
-              ${themeIds ? sql`${themeIds}::INTEGER[]` : sql`NULL::INTEGER[]`},
-              ${rhymeIds ? sql`${rhymeIds}::INTEGER[]` : sql`NULL::INTEGER[]`}
-            )`
+        dbResult = await searchQueries.searchPoems(
+          db,
+          sanitizedQuery,
+          page,
+          match_type,
+          meterIds,
+          eraIds,
+          themeIds,
+          rhymeIds
         );
         break;
       }
       case 'poets': {
-        dbResult = await db.execute(
-          sql`SELECT * FROM search_poets(
-              ${sanitizedQuery}::TEXT,
-              ${page}::INTEGER,
-              ${match_type}::TEXT,
-              ${eraIds ? sql`${eraIds}::INTEGER[]` : sql`NULL::INTEGER[]`}
-            )`
-        );
+        dbResult = await searchQueries.searchPoets(db, sanitizedQuery, page, match_type, eraIds);
         break;
       }
       default: {
@@ -115,7 +73,7 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
 
     const results = dbResult || [];
 
-    if (results.length === 0 && results !== undefined) {
+    if (results.length === 0) {
       return c.json({
         success: true,
         data: {
@@ -198,7 +156,6 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
   } catch (error) {
     if (!(error instanceof HTTPException)) {
       console.error(error);
-
       throw new HTTPException(ERROR_TYPES.SERVER_ERROR.code, {
         message: 'حدث خطأ غير متوقع في الخادم',
       });

@@ -1,4 +1,4 @@
-import { FETCH_PER_PAGE } from '../constants';
+import { FETCH_PER_PAGE } from '@qafiyah/db';
 
 export type ChangeFreq = 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
 
