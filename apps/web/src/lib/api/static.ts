@@ -192,7 +192,9 @@ export async function fetchPoetPoemPage(
   const result = await poetsQueries.listPoetPoems(db, slug, Number(page));
 
   if (!result) {
-    return { data: { poetDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as PoetPoems };
+    return {
+      data: { poetDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as PoetPoems,
+    };
   }
 
   return {
@@ -253,7 +255,9 @@ export async function fetchEraPoemPage(
   const result = await erasQueries.listEraPoems(db, slug, Number(page));
 
   if (!result) {
-    return { data: { eraDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as EraPoems };
+    return {
+      data: { eraDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as EraPoems,
+    };
   }
 
   return {
@@ -315,7 +319,10 @@ export async function fetchMeterPoemPage(
 
   if (!result) {
     return {
-      data: { meterDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as MeterPoems,
+      data: {
+        meterDetails: { id: 0, name: '', poemsCount: 0 },
+        poems: [],
+      } as unknown as MeterPoems,
     };
   }
 
@@ -378,7 +385,10 @@ export async function fetchRhymePoemPage(
 
   if (!result) {
     return {
-      data: { rhymeDetails: { id: 0, pattern: '', poemsCount: 0 }, poems: [] } as unknown as RhymePoems,
+      data: {
+        rhymeDetails: { id: 0, pattern: '', poemsCount: 0 },
+        poems: [],
+      } as unknown as RhymePoems,
     };
   }
 
@@ -441,7 +451,10 @@ export async function fetchThemePoemPage(
 
   if (!result) {
     return {
-      data: { themeDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as ThemePoems,
+      data: {
+        themeDetails: { id: 0, name: '', poemsCount: 0 },
+        poems: [],
+      } as unknown as ThemePoems,
     };
   }
 

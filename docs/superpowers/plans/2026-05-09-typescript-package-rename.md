@@ -13,9 +13,11 @@
 ## File Map
 
 **Rename (git mv):**
+
 - `packages/tsconfig/` → `packages/typescript/`
 
 **Modify:**
+
 - `packages/typescript/package.json` — update name to `@qafiyah/typescript`
 - `packages/typescript/base.json` — rewrite: remove runtime settings, add two new strict flags
 - `apps/api/package.json` — rename dep `@qafiyah/tsconfig` → `@qafiyah/typescript` (in `dependencies`)
@@ -28,11 +30,13 @@
 - `packages/db/tsconfig.json` — update extends path to `@qafiyah/typescript/base.json`
 
 **Create:**
+
 - `packages/typescript/cloudflare.json`
 - `packages/typescript/node.json`
 - `packages/typescript/astro.json`
 
 **Delete:**
+
 - `packages/typescript/nextjs.json` (unused)
 - `packages/typescript/react-library.json` (unused)
 
@@ -41,6 +45,7 @@
 ## Task 1: Rename the package directory and update package metadata
 
 **Files:**
+
 - Rename: `packages/tsconfig/` → `packages/typescript/`
 - Modify: `packages/typescript/package.json`
 
@@ -59,6 +64,7 @@ ls packages/typescript/
 ```
 
 Expected output:
+
 ```
 base.json  nextjs.json  package.json  react-library.json
 ```
@@ -91,6 +97,7 @@ git commit -m "refactor(tsconfig): rename package to @qafiyah/typescript"
 ## Task 2: Rewrite base.json and create runtime presets
 
 **Files:**
+
 - Modify: `packages/typescript/base.json`
 - Delete: `packages/typescript/nextjs.json`, `packages/typescript/react-library.json`
 - Create: `packages/typescript/cloudflare.json`
@@ -196,6 +203,7 @@ ls packages/typescript/
 ```
 
 Expected — exactly five files:
+
 ```
 astro.json  base.json  cloudflare.json  node.json  package.json
 ```
@@ -214,6 +222,7 @@ git commit -m "refactor(tsconfig): rewrite base.json, add runtime presets, drop 
 All apps must rename `@qafiyah/tsconfig` → `@qafiyah/typescript` before running `pnpm install`. Do all four package.json updates in this task, then install once in Task 4.
 
 **Files:**
+
 - Modify: `apps/api/package.json`
 - Modify: `apps/bot/package.json`
 - Modify: `apps/web/package.json`
@@ -222,10 +231,13 @@ All apps must rename `@qafiyah/tsconfig` → `@qafiyah/typescript` before runnin
 - [ ] **Step 1: Update apps/api/package.json**
 
 In `apps/api/package.json`, in the `dependencies` section, replace:
+
 ```json
 "@qafiyah/tsconfig": "workspace:*",
 ```
+
 with:
+
 ```json
 "@qafiyah/typescript": "workspace:*",
 ```
@@ -233,10 +245,13 @@ with:
 - [ ] **Step 2: Update apps/bot/package.json**
 
 In `apps/bot/package.json`, in the `devDependencies` section, replace:
+
 ```json
 "@qafiyah/tsconfig": "workspace:*",
 ```
+
 with:
+
 ```json
 "@qafiyah/typescript": "workspace:*",
 ```
@@ -244,6 +259,7 @@ with:
 - [ ] **Step 3: Update apps/web/package.json**
 
 In `apps/web/package.json`, add to the `devDependencies` section:
+
 ```json
 "@qafiyah/typescript": "workspace:*",
 ```
@@ -253,10 +269,13 @@ In `apps/web/package.json`, add to the `devDependencies` section:
 - [ ] **Step 4: Update packages/db/package.json**
 
 In `packages/db/package.json`, in the `dependencies` section, replace:
+
 ```json
 "@qafiyah/tsconfig": "workspace:*",
 ```
+
 with:
+
 ```json
 "@qafiyah/typescript": "workspace:*",
 ```
@@ -283,6 +302,7 @@ git commit -m "chore: rename @qafiyah/tsconfig dep to @qafiyah/typescript across
 With all `package.json` files updated, pnpm can now resolve `@qafiyah/typescript` in the workspace.
 
 **Files:**
+
 - Auto-modified: `pnpm-lock.yaml`
 
 - [ ] **Step 1: Reinstall**
@@ -305,6 +325,7 @@ git commit -m "chore: update lockfile after tsconfig package rename"
 ## Task 5: Update apps/api tsconfig.json
 
 **Files:**
+
 - Modify: `apps/api/tsconfig.json`
 
 - [ ] **Step 1: Rewrite apps/api/tsconfig.json**
@@ -336,6 +357,7 @@ pnpm --filter @qafiyah/api types
 Expected: exits 0 with no errors.
 
 If TypeScript reports errors from the two new strict flags:
+
 - **`noImplicitOverride`**: Find any class method that overrides a base class method and add the `override` keyword. Example: `override greet() {}`.
 - **`noPropertyAccessFromIndexSignature`**: For any type with an explicit index signature (`[key: string]: T`), switch from dot notation (`obj.key`) to bracket notation (`obj['key']`).
 
@@ -353,6 +375,7 @@ git commit -m "refactor(api): extend @qafiyah/typescript/cloudflare preset"
 ## Task 6: Update apps/bot tsconfig.json
 
 **Files:**
+
 - Modify: `apps/bot/tsconfig.json`
 
 - [ ] **Step 1: Rewrite apps/bot/tsconfig.json**
@@ -396,6 +419,7 @@ git commit -m "refactor(bot): extend @qafiyah/typescript/node preset"
 ## Task 7: Update apps/web tsconfig.json
 
 **Files:**
+
 - Modify: `apps/web/tsconfig.json`
 
 `apps/web` previously extended `astro/tsconfigs/strict` directly. It now extends `@qafiyah/typescript/astro.json` which provides the same runtime settings (ESNext, Bundler, DOM lib, react-jsx) plus all strictness flags from `base.json`.
@@ -437,6 +461,7 @@ git commit -m "refactor(web): extend @qafiyah/typescript/astro preset"
 ## Task 8: Update packages/db tsconfig.json
 
 **Files:**
+
 - Modify: `packages/db/tsconfig.json`
 
 `packages/db` uses CommonJS format. No runtime preset covers CJS + `node` resolution, so it extends `base.json` directly and declares its own module settings.
@@ -520,6 +545,7 @@ ls packages/typescript/
 ```
 
 Expected — exactly five files:
+
 ```
 astro.json  base.json  cloudflare.json  node.json  package.json
 ```

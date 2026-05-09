@@ -49,7 +49,9 @@ const apiClient = (baseUrl: string) => {
       return {
         data: json.data,
         pagination:
-          'pagination' in json.data ? (json.data.pagination as unknown as PaginationMeta) : undefined,
+          'pagination' in json.data
+            ? (json.data.pagination as unknown as PaginationMeta)
+            : undefined,
       };
     },
 
