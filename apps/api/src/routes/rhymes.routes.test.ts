@@ -99,7 +99,7 @@ describe('rhymes routes', () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as ApiResponse;
     expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>).rhymeDetails).toBeDefined();
-    expect((json.data as Record<string, unknown>).poems).toBeDefined();
+    expect((json.data as Record<string, unknown>)['rhymeDetails']).toBeDefined();
+    expect((json.data as Record<string, unknown>)['poems']).toBeDefined();
   });
 });

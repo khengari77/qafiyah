@@ -119,9 +119,9 @@ describe('poems routes', () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as ApiResponse;
     expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>).metadata).toBeDefined();
-    expect((json.data as Record<string, unknown>).clearTitle).toBeDefined();
-    expect((json.data as Record<string, unknown>).processedContent).toBeDefined();
+    expect((json.data as Record<string, unknown>)['metadata']).toBeDefined();
+    expect((json.data as Record<string, unknown>)['clearTitle']).toBeDefined();
+    expect((json.data as Record<string, unknown>)['processedContent']).toBeDefined();
   });
 
   it('should return 404 when poem not found', async () => {

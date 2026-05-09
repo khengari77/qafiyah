@@ -95,7 +95,7 @@ const app = new Hono<AppContext>()
       }
 
       const totalResults =
-        results.length > 0 && results[0]?.total_count ? Number(results[0].total_count) : 0;
+        results.length > 0 && results[0]?.['total_count'] ? Number(results[0]['total_count']) : 0;
       const resultsPerPage = search_type === 'poems' ? 5 : 10;
       const totalPages = Math.ceil(totalResults / resultsPerPage);
       const pagination = {
@@ -109,30 +109,30 @@ const app = new Hono<AppContext>()
       const responseData = {
         results: results.map((r) => {
           const totalCount =
-            typeof r.total_count === 'number'
-              ? r.total_count
-              : typeof r.total_count === 'string'
-                ? Number.parseInt(r.total_count, 10) || 0
+            typeof r['total_count'] === 'number'
+              ? r['total_count']
+              : typeof r['total_count'] === 'string'
+                ? Number.parseInt(r['total_count'], 10) || 0
                 : 0;
           if (search_type === 'poems') {
             return {
-              poet_name: String(r.poet_name ?? ''),
-              poet_era: String(r.poet_era ?? ''),
-              poet_slug: String(r.poet_slug ?? ''),
-              poem_title: String(r.poem_title ?? ''),
-              poem_snippet: String(r.poem_snippet ?? ''),
-              poem_meter: String(r.poem_meter ?? ''),
-              poem_slug: String(r.poem_slug ?? ''),
-              relevance: Number(r.relevance ?? 0),
+              poet_name: String(r['poet_name'] ?? ''),
+              poet_era: String(r['poet_era'] ?? ''),
+              poet_slug: String(r['poet_slug'] ?? ''),
+              poem_title: String(r['poem_title'] ?? ''),
+              poem_snippet: String(r['poem_snippet'] ?? ''),
+              poem_meter: String(r['poem_meter'] ?? ''),
+              poem_slug: String(r['poem_slug'] ?? ''),
+              relevance: Number(r['relevance'] ?? 0),
               total_count: totalCount,
             };
           }
           return {
-            poet_name: String(r.poet_name ?? ''),
-            poet_era: String(r.poet_era ?? ''),
-            poet_slug: String(r.poet_slug ?? ''),
-            poet_bio: String(r.poet_bio ?? ''),
-            relevance: Number(r.relevance ?? 0),
+            poet_name: String(r['poet_name'] ?? ''),
+            poet_era: String(r['poet_era'] ?? ''),
+            poet_slug: String(r['poet_slug'] ?? ''),
+            poet_bio: String(r['poet_bio'] ?? ''),
+            relevance: Number(r['relevance'] ?? 0),
             total_count: totalCount,
           };
         }),

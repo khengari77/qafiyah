@@ -32,8 +32,8 @@ describe('search routes', () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as ApiResponse;
     expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>).results).toBeDefined();
-    expect((json.data as Record<string, unknown>).pagination).toBeDefined();
+    expect((json.data as Record<string, unknown>)['results']).toBeDefined();
+    expect((json.data as Record<string, unknown>)['pagination']).toBeDefined();
   });
 
   it('should return search results for poets', async () => {
@@ -58,7 +58,7 @@ describe('search routes', () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as ApiResponse;
     expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>).results).toBeDefined();
+    expect((json.data as Record<string, unknown>)['results']).toBeDefined();
   });
 
   it('should return empty results when no matches found', async () => {
@@ -72,9 +72,10 @@ describe('search routes', () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as ApiResponse;
     expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>).results).toEqual([]);
+    expect((json.data as Record<string, unknown>)['results']).toEqual([]);
     expect(
-      ((json.data as Record<string, unknown>).pagination as { totalResults: number }).totalResults
+      ((json.data as Record<string, unknown>)['pagination'] as { totalResults: number })
+        .totalResults
     ).toBe(0);
   });
 

@@ -33,11 +33,11 @@ export async function getRandomPoemLines(db: DbClient): Promise<string> {
   try {
     const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
 
-    if (!result?.length || !result[0]?.get_random_eligible_poem) {
+    if (!result?.length || !result[0]?.['get_random_eligible_poem']) {
       throw new Error('No poem found');
     }
 
-    const poemJson = result[0].get_random_eligible_poem;
+    const poemJson = result[0]['get_random_eligible_poem'];
     const poem: RandomPoemLines = typeof poemJson === 'string' ? JSON.parse(poemJson) : poemJson;
 
     if (!poem?.content) throw new Error('Invalid poem format');
@@ -57,14 +57,14 @@ export async function getRandomPoemSlug(db: DbClient): Promise<string> {
     const result = await db.execute(sql`SELECT get_random_eligible_poem_slug()`);
     const row = result?.[0];
 
-    if (!row || !row.get_random_eligible_poem_slug) throw new Error('No poem slug found');
+    if (!row || !row['get_random_eligible_poem_slug']) throw new Error('No poem slug found');
 
     const slug =
-      typeof row.get_random_eligible_poem_slug === 'object' &&
-      row.get_random_eligible_poem_slug !== null &&
-      'slug' in row.get_random_eligible_poem_slug &&
-      typeof row.get_random_eligible_poem_slug.slug === 'string'
-        ? row.get_random_eligible_poem_slug.slug
+      typeof row['get_random_eligible_poem_slug'] === 'object' &&
+      row['get_random_eligible_poem_slug'] !== null &&
+      'slug' in row['get_random_eligible_poem_slug'] &&
+      typeof row['get_random_eligible_poem_slug'].slug === 'string'
+        ? row['get_random_eligible_poem_slug'].slug
         : FALLBACK_RANDOM_POEM_SLUG;
 
     return slug;
@@ -101,11 +101,11 @@ export type GetPoemResult =
 export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoemResult> {
   const result = await db.execute(sql`SELECT get_poem_with_related(${slug})`);
 
-  if (!result?.length || !result[0] || !result[0].get_poem_with_related) {
+  if (!result?.length || !result[0] || !result[0]['get_poem_with_related']) {
     return { type: 'not_found' };
   }
 
-  const uncheckedData = result[0].get_poem_with_related as PoemWithRelatedResponse;
+  const uncheckedData = result[0]['get_poem_with_related'] as PoemWithRelatedResponse;
 
   if ('error' in uncheckedData) {
     return { type: 'error', message: uncheckedData.message || uncheckedData.error };

@@ -42,12 +42,12 @@ describe('poets routes', () => {
 
     expect(res.status).toBe(200);
     const json = (await res.json()) as Record<string, unknown>;
-    expect(json.success).toBe(true);
-    expect(json.data).toBeDefined();
-    expect((json.data as Record<string, unknown>).poets).toBeDefined();
+    expect(json['success']).toBe(true);
+    expect(json['data']).toBeDefined();
+    expect((json['data'] as Record<string, unknown>)['poets']).toBeDefined();
     // Pagination is in meta.pagination for paginated responses
-    expect(json.meta).toBeDefined();
-    expect((json.meta as Record<string, unknown>).pagination).toBeDefined();
+    expect(json['meta']).toBeDefined();
+    expect((json['meta'] as Record<string, unknown>)['pagination']).toBeDefined();
   });
 
   it('should return 404 when page has no poets', async () => {
@@ -107,7 +107,7 @@ describe('poets routes', () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as ApiResponse;
     expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>).poet).toBeDefined();
+    expect((json.data as Record<string, unknown>)['poet']).toBeDefined();
   });
 
   it('should return 404 when poet not found by slug', async () => {
@@ -175,7 +175,7 @@ describe('poets routes', () => {
     expect(res.status).toBe(200);
     const json = (await res.json()) as ApiResponse;
     expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>).poetDetails).toBeDefined();
-    expect((json.data as Record<string, unknown>).poems).toBeDefined();
+    expect((json.data as Record<string, unknown>)['poetDetails']).toBeDefined();
+    expect((json.data as Record<string, unknown>)['poems']).toBeDefined();
   });
 });
