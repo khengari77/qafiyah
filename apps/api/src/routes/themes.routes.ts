@@ -43,10 +43,7 @@ const app = new Hono<AppContext>()
     console.error(error);
 
     if (error instanceof HTTPException) {
-      return c.json(
-        { success: false, error: error.message, status: error.status },
-        error.status
-      );
+      return c.json({ success: false, error: error.message, status: error.status }, error.status);
     }
 
     return c.json(

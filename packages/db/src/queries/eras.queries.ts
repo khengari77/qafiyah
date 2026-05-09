@@ -5,9 +5,7 @@ import { eraPoems, eraStats } from '../schema';
 
 export async function listEras(db: DbClient) {
   const results = await db.select().from(eraStats);
-  return results.sort(
-    (a, b) => ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name)
-  );
+  return results.sort((a, b) => ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name));
 }
 
 export async function listEraPoems(db: DbClient, slug: string, page: number) {

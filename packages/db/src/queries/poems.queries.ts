@@ -17,7 +17,11 @@ export async function listPoemSlugs(
   limit: number = MAX_URLS_PER_SITEMAP
 ) {
   const offset = (page - 1) * limit;
-  const slugs = await db.select({ slug: poemsFullData.slug }).from(poemsFullData).limit(limit).offset(offset);
+  const slugs = await db
+    .select({ slug: poemsFullData.slug })
+    .from(poemsFullData)
+    .limit(limit)
+    .offset(offset);
 
   const [{ count } = { count: 0 }] = await db.select({ count: sql`count(*)` }).from(poemsFullData);
   const total = Number(count);
@@ -70,7 +74,27 @@ export async function getRandomPoemSlug(db: DbClient): Promise<string> {
 }
 
 export type GetPoemResult =
-  | { type: 'found'; data: { metadata: { poet_name: string; poet_slug: string; era_name: string; era_slug: string; meter_name: string; theme_name: string }; clearTitle: string; processedContent: ReturnType<typeof processPoemContent>; relatedPoems: { poem_slug: string; poet_name: string; meter_name: string; poem_title: string }[] } }
+  | {
+      type: 'found';
+      data: {
+        metadata: {
+          poet_name: string;
+          poet_slug: string;
+          era_name: string;
+          era_slug: string;
+          meter_name: string;
+          theme_name: string;
+        };
+        clearTitle: string;
+        processedContent: ReturnType<typeof processPoemContent>;
+        relatedPoems: {
+          poem_slug: string;
+          poet_name: string;
+          meter_name: string;
+          poem_title: string;
+        }[];
+      };
+    }
   | { type: 'not_found' }
   | { type: 'error'; message: string };
 
