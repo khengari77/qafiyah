@@ -9,6 +9,8 @@ export default defineConfig({
   integrations: [react(), sitemap()],
   trailingSlash: 'ignore',
   vite: {
+    optimizeDeps: { include: ['cookie'] },
+    ssr: { optimizeDeps: { include: ['cookie'] } },
     resolve: {
       alias: {
         'to-arabic-digits': resolve('./src/utils/texts/arabic-digits.ts'),

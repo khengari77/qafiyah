@@ -1,8 +1,8 @@
 {
   "name": "@qafiyah/api",
   "scripts": {
-    "dev": "pnpm run build:deps && wrangler dev",
-    "dev:test": "pnpm run build:deps && wrangler dev --env test",
+    "dev": "wrangler dev",
+    "dev:test": "wrangler dev --env test",
     "build": "pnpm run build:deps && wrangler build",
     "build:deps": "cd ../../packages/schemas && pnpm run build",
     "deploy": "wrangler deploy --minify",

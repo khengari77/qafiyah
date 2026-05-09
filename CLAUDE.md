@@ -7,7 +7,7 @@ Qafiyah is an Arabic poetry repository (pnpm + Turborepo monorepo): `apps/web` (
 ## Commands
 
 ```bash
-pnpm dev             # database check, build @qafiyah/schemas, then Astro + API (wrangler)
+pnpm dev             # database check, build @qafiyah/schemas, then Turbo dev (^build runs before web/API servers)
 pnpm build           # turbo build in dependency order
 pnpm build:static    # apps/web only
 pnpm lint / lint:fix # biome check [--write]
@@ -16,8 +16,9 @@ pnpm types           # tsc --noEmit all workspaces
 pnpm test            # vitest all workspaces
 pnpm db:setup        # first-time DB setup
 
-pnpm --filter @qafiyah/api dev        # wrangler dev
-pnpm --filter @qafiyah/api dev:test   # wrangler dev --env test
+pnpm turbo run dev --filter=@qafiyah/api              # (^build → schemas) then wrangler dev
+pnpm turbo run dev:test --filter=@qafiyah/api         # (^build → schemas) then wrangler dev --env test
+pnpm --filter @qafiyah/api build:deps && pnpm --filter @qafiyah/api dev   # standalone without Turbo's dev graph
 pnpm --filter @qafiyah/api test       # vitest (API only)
 ```
 
@@ -31,11 +32,11 @@ pnpm --filter @qafiyah/api test       # vitest (API only)
 
 **`apps/web`** — Astro static output; all content is fetched at build time from `https://api.qafiyah.com` via `src/lib/api/static.ts`. React is islands-only (search, nav, random poem). Path alias `@/*` → `src/*`. RTL Arabic layout in `src/layouts/Layout.astro`.
 
-**`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Neon Postgres (`@neondatabase/serverless`). Routes: eras, meters, poems, poets, rhymes, themes, search, sitemaps. `build:deps` must run before `wrangler dev` (builds `packages/schemas`).
+**`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Neon Postgres (`@neondatabase/serverless`). Routes: eras, meters, poems, poets, rhymes, themes, search, sitemaps. `pnpm --filter @qafiyah/api build` runs `build:deps` (builds `packages/schemas`) before `wrangler build`. For API dev servers, Turbo `dev`/`dev:test` runs `^build` first when invoked via `pnpm turbo`; otherwise run `build:deps` yourself (see Commands).
 
 **`apps/bot`** — Posts a random poem via `twitter-api-v2` on a GitHub Actions cron (8am/12pm/4pm/8pm UTC). Exponential backoff, 3 retries.
 
-**`packages/schemas`** — `tsup`-built Zod schemas with `main`/`client`/`server` entry points. `dist/` is built on `pnpm install` (`prepare`) and before `pnpm dev` at the repo root. While editing schemas, use `pnpm --filter @qafiyah/schemas dev:watch`. Apps also run `build:deps` (API) or depend on a prior `schemas` build for Wrangler/Astro.
+**`packages/schemas`** — `tsup`-built Zod schemas with `main`/`client`/`server` entry points. `dist/` is built on `pnpm install` (`prepare`) and before dev servers (`^build` in Turbo dev, plus the explicit `pnpm dev` preamble). While editing schemas, use `pnpm --filter @qafiyah/schemas dev:watch`. `@qafiyah/api` **`build`** still runs **`build:deps`**; the **`dev`** and **`dev:test`** scripts rely on Turbo or manual **`build:deps`** when invoked outside Turbo’s **`dev`** graph.
 
 ## Quality Checklist (TRUST 5)
 

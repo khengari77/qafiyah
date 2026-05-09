@@ -25,13 +25,13 @@
     "pre-commit": "npx --no -- pnpm lint-staged"
   },
   "dependencies": {
-    "@astrojs/react": "^4.0.0",
-    "@astrojs/sitemap": "^3.0.0",
+    "@astrojs/react": "^5.0.4",
+    "@astrojs/sitemap": "3.7.2",
     "@qafiyah/schemas": "workspace:*",
     "@radix-ui/react-slot": "^1.2.0",
     "@tanstack/react-query": "^5.73.3",
     "arabic-count-format": "^1.0.0",
-    "astro": "^5.0.0",
+    "astro": "^6.3.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.487.0",
@@ -43,6 +43,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "cookie": "1.1.1",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
