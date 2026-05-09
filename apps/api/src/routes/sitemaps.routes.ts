@@ -1,15 +1,4 @@
-import { zValidator } from '@hono/zod-validator';
-import {
-  eraStats,
-  MAX_URLS_PER_SITEMAP,
-  meterStats,
-  poemsFullData,
-  poetStats,
-  rhymeStats,
-  themeStats,
-} from '@qafiyah/db';
-import { paginationSchema } from '@qafiyah/schemas';
-import { sql } from 'drizzle-orm';
+import { MAX_URLS_PER_SITEMAP, sitemapQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { API_URL, SITE_URL } from '../constants';
 import type { AppContext } from '../types';
@@ -35,11 +24,8 @@ const app = new Hono<AppContext>()
   .get('/', async (c) => {
     const db = c.get('db');
 
-    const [{ count } = { count: 0 }] = await db
-      .select({ count: sql`count(*)` })
-      .from(poemsFullData);
-
-    const totalPoemSitemaps = Math.ceil(Number(count) / MAX_URLS_PER_SITEMAP);
+    const count = await sitemapQueries.getPoemCount(db);
+    const totalPoemSitemaps = Math.ceil(count / MAX_URLS_PER_SITEMAP);
 
     const staticSitemaps: UrlEntry[] = ['main', 'poets', 'eras', 'meters', 'rhymes', 'themes'].map(
       (name) => ({
@@ -91,12 +77,11 @@ const app = new Hono<AppContext>()
   //* -------------------------------------------------------->
   //* -------------------------------------------------------->
 
-  .get('/poems/:page', zValidator('param', paginationSchema), async (c) => {
+  .get('/poems/:page', async (c) => {
     const db = c.get('db');
-    const { page } = c.req.valid('param');
+    const page = Math.max(1, Number(c.req.param('page')) || 1);
 
-    const offset = (page - 1) * MAX_URLS_PER_SITEMAP;
-    const poems = await db.select().from(poemsFullData).limit(MAX_URLS_PER_SITEMAP).offset(offset);
+    const poems = await sitemapQueries.listSitemapPoems(db, page);
 
     const entries: UrlEntry[] = poems.map((poem) => ({
       url: `${SITE_URL}/poems/${poem.slug}`,
@@ -123,18 +108,16 @@ const app = new Hono<AppContext>()
   .get('/poets', async (c) => {
     const db = c.get('db');
 
-    const [{ count } = { count: 0 }] = await db.select({ count: sql`count(*)` }).from(poetStats);
+    const { count, poets } = await sitemapQueries.listPoetSitemapData(db);
 
     const poetListEntries: UrlEntry[] = createPagedEntries({
       baseUrl: `${SITE_URL}/poets`,
-      count: Number(count),
+      count,
       firstPageChangefreq: 'weekly',
       firstPagePriority: toPriority(0.7),
       baseChangefreq: 'monthly',
       basePriority: toPriority(0.6),
     });
-
-    const poets = await db.select().from(poetStats);
 
     const poetEntries: UrlEntry[] = poets.flatMap((poet) =>
       createPagedEntries({
@@ -164,7 +147,7 @@ const app = new Hono<AppContext>()
 
   .get('/eras', async (c) => {
     const db = c.get('db');
-    const eras = await db.select().from(eraStats);
+    const eras = await sitemapQueries.listEraStats(db);
 
     const listEntries: UrlEntry[] = [
       {
@@ -203,7 +186,7 @@ const app = new Hono<AppContext>()
 
   .get('/meters', async (c) => {
     const db = c.get('db');
-    const meters = await db.select().from(meterStats);
+    const meters = await sitemapQueries.listMeterStats(db);
 
     const listEntries: UrlEntry[] = [
       {
@@ -242,7 +225,7 @@ const app = new Hono<AppContext>()
 
   .get('/rhymes', async (c) => {
     const db = c.get('db');
-    const rhymes = await db.select().from(rhymeStats);
+    const rhymes = await sitemapQueries.listRhymeStats(db);
 
     const listEntries: UrlEntry[] = [
       {
@@ -281,7 +264,7 @@ const app = new Hono<AppContext>()
 
   .get('/themes', async (c) => {
     const db = c.get('db');
-    const themes = await db.select().from(themeStats);
+    const themes = await sitemapQueries.listThemeStats(db);
 
     const listEntries: UrlEntry[] = [
       {

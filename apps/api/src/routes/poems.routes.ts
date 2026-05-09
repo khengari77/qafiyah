@@ -1,7 +1,4 @@
-import { zValidator } from '@hono/zod-validator';
 import { poemsQueries } from '@qafiyah/db';
-import { getPoemBySlugRequestSchema, getRandomPoemRequestSchema } from '@qafiyah/schemas';
-import { createValidatedResponse } from '@qafiyah/schemas/server';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { AppContext } from '../types';
@@ -10,8 +7,8 @@ const app = new Hono<AppContext>();
 app
   .get('/slugs', async (c) => {
     const db = c.get('db');
-    const page = Number(c.req.query('page') || '1');
-    const limit = Number(c.req.query('limit') || '1000');
+    const page = Math.max(1, Number(c.req.query('page')) || 1);
+    const limit = Math.max(1, Number(c.req.query('limit')) || 1000);
 
     const result = await poemsQueries.listPoemSlugs(db, page, limit);
 
@@ -26,8 +23,8 @@ app
       },
     });
   })
-  .get('/random', zValidator('query', getRandomPoemRequestSchema), async (c) => {
-    const { option } = c.req.valid('query');
+  .get('/random', async (c) => {
+    const option = c.req.query('option') ?? 'slug';
     const db = c.get('db');
 
     c.header('Cache-Control', 'no-store');
@@ -41,8 +38,8 @@ app
     const slug = await poemsQueries.getRandomPoemSlug(db);
     return c.text(slug);
   })
-  .get('/slug/:slug', zValidator('param', getPoemBySlugRequestSchema), async (c) => {
-    const { slug } = c.req.valid('param');
+  .get('/slug/:slug', async (c) => {
+    const slug = c.req.param('slug');
     const db = c.get('db');
 
     const result = await poemsQueries.getPoemBySlug(db, slug);
@@ -55,15 +52,13 @@ app
       throw new HTTPException(400, { message: result.message });
     }
 
-    return c.json(createValidatedResponse('poemDetail', result.data));
+    return c.json({ success: true, data: result.data });
   })
   .onError((error, c) => {
     console.error(error);
-
     if (error instanceof HTTPException) {
       return c.json({ success: false, error: error.message, status: error.status }, error.status);
     }
-
     return c.json(
       { success: false, error: 'Internal Server Error. POEMS Route', status: 500 },
       500

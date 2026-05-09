@@ -1,7 +1,4 @@
-import { zValidator } from '@hono/zod-validator';
 import { cleanArabicQuery, parseIds, searchQueries } from '@qafiyah/db';
-import { searchRequestSchema } from '@qafiyah/schemas';
-import { createValidatedResponse } from '@qafiyah/schemas/server';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
@@ -25,10 +22,23 @@ const ERROR_TYPES: Record<ErrorTypeKey, ErrorTypeDefinition> = {
   SERVER_ERROR: { code: 500, type: 'SERVER_ERROR' },
 };
 
-const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSchema), async (c) => {
+const app = new Hono<AppContext>()
+  .get('/', async (c) => {
   try {
-    const { q, search_type, page, match_type, meter_ids, era_ids, rhyme_ids, theme_ids } =
-      c.req.valid('query');
+    const q = c.req.query('q') ?? '';
+    const rawSearchType = c.req.query('search_type');
+    if (rawSearchType !== 'poems' && rawSearchType !== 'poets') {
+      throw new HTTPException(ERROR_TYPES.INVALID_SEARCH_TYPE.code, {
+        message: 'نوع البحث غير صالح',
+      });
+    }
+    const search_type = rawSearchType;
+    const page = Math.max(1, Number(c.req.query('page')) || 1);
+    const match_type = c.req.query('match_type') ?? 'all';
+    const meter_ids = c.req.query('meter_ids');
+    const era_ids = c.req.query('era_ids');
+    const rhyme_ids = c.req.query('rhyme_ids');
+    const theme_ids = c.req.query('theme_ids');
 
     const db = c.get('db');
     const sanitizedQuery = decodeURIComponent(cleanArabicQuery(q));
@@ -64,11 +74,6 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
         dbResult = await searchQueries.searchPoets(db, sanitizedQuery, page, match_type, eraIds);
         break;
       }
-      default: {
-        throw new HTTPException(ERROR_TYPES.INVALID_SEARCH_TYPE.code, {
-          message: 'نوع البحث غير صالح',
-        });
-      }
     }
 
     const results = dbResult || [];
@@ -101,15 +106,15 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
       hasPrevPage: page > 1,
     };
 
-    if (search_type === 'poems') {
-      const responseData = {
-        results: results.map((r) => {
-          const totalCount =
-            typeof r.total_count === 'number'
-              ? r.total_count
-              : typeof r.total_count === 'string'
-                ? Number.parseInt(r.total_count, 10) || 0
-                : 0;
+    const responseData = {
+      results: results.map((r) => {
+        const totalCount =
+          typeof r.total_count === 'number'
+            ? r.total_count
+            : typeof r.total_count === 'string'
+              ? Number.parseInt(r.total_count, 10) || 0
+              : 0;
+        if (search_type === 'poems') {
           return {
             poet_name: String(r.poet_name ?? ''),
             poet_era: String(r.poet_era ?? ''),
@@ -121,38 +126,19 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
             relevance: Number(r.relevance ?? 0),
             total_count: totalCount,
           };
-        }),
-        pagination,
-      };
-      return c.json(createValidatedResponse('poemsSearch', responseData));
-    }
-
-    if (search_type === 'poets') {
-      const responseData = {
-        results: results.map((r) => {
-          const totalCount =
-            typeof r.total_count === 'number'
-              ? r.total_count
-              : typeof r.total_count === 'string'
-                ? Number.parseInt(r.total_count, 10) || 0
-                : 0;
-          return {
-            poet_name: String(r.poet_name ?? ''),
-            poet_era: String(r.poet_era ?? ''),
-            poet_slug: String(r.poet_slug ?? ''),
-            poet_bio: String(r.poet_bio ?? ''),
-            relevance: Number(r.relevance ?? 0),
-            total_count: totalCount,
-          };
-        }),
-        pagination,
-      };
-      return c.json(createValidatedResponse('poetsSearch', responseData));
-    }
-
-    throw new HTTPException(ERROR_TYPES.INVALID_SEARCH_TYPE.code, {
-      message: 'نوع البحث غير صالح',
-    });
+        }
+        return {
+          poet_name: String(r.poet_name ?? ''),
+          poet_era: String(r.poet_era ?? ''),
+          poet_slug: String(r.poet_slug ?? ''),
+          poet_bio: String(r.poet_bio ?? ''),
+          relevance: Number(r.relevance ?? 0),
+          total_count: totalCount,
+        };
+      }),
+      pagination,
+    };
+    return c.json({ success: true, data: responseData });
   } catch (error) {
     if (!(error instanceof HTTPException)) {
       console.error(error);
@@ -162,6 +148,13 @@ const app = new Hono<AppContext>().get('/', zValidator('query', searchRequestSch
     }
     throw error;
   }
-});
+})
+  .onError((error, c) => {
+    console.error(error);
+    if (error instanceof HTTPException) {
+      return c.json({ success: false, error: error.message, status: error.status }, error.status);
+    }
+    return c.json({ success: false, error: 'Internal Server Error. SEARCH Route', status: 500 }, 500);
+  });
 
 export default app;

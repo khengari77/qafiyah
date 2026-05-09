@@ -1,96 +1,69 @@
 import type {
-  eraPoemsResponseSchema,
-  eraSchema,
-  meterPoemsResponseSchema,
-  meterSchema,
-  paginationMetaSchema,
-  poemMetadataSchema,
-  poemsSearchResultSchema,
-  poetPoemsResponseSchema,
-  poetsListResponseSchema,
-  poetsSearchResultSchema,
-  processedPoemContentSchema,
-  relatedPoemSchema,
-  rhymePoemsResponseSchema,
-  rhymeSchema,
-  themePoemsResponseSchema,
-  themeSchema,
-  z,
-} from '@qafiyah/schemas';
+  erasQueries,
+  metersQueries,
+  poemsQueries,
+  poetsQueries,
+  rhymesQueries,
+  themesQueries,
+} from '@qafiyah/db';
 
-export type PaginationMeta = z.infer<typeof paginationMetaSchema>['pagination'];
+// Simple entity list types — derived from query function return types
+export type Era = Awaited<ReturnType<typeof erasQueries.listEras>>[number];
+export type Meter = Awaited<ReturnType<typeof metersQueries.listMeters>>[number];
+export type Rhyme = Awaited<ReturnType<typeof rhymesQueries.listRhymes>>[number];
+export type Theme = Awaited<ReturnType<typeof themesQueries.listThemes>>[number];
 
-/**
- * Era (time period) entity with id, name, slug, and poem count
- */
-export type Era = z.infer<typeof eraSchema>;
+// Compound entity types — query return shapes (include totalPages used for pagination)
+export type EraPoems = NonNullable<Awaited<ReturnType<typeof erasQueries.listEraPoems>>>;
+export type MeterPoems = NonNullable<Awaited<ReturnType<typeof metersQueries.listMeterPoems>>>;
+export type PoetPoems = NonNullable<Awaited<ReturnType<typeof poetsQueries.listPoetPoems>>>;
+export type RhymePoems = NonNullable<Awaited<ReturnType<typeof rhymesQueries.listRhymePoems>>>;
+export type ThemePoems = NonNullable<Awaited<ReturnType<typeof themesQueries.listThemePoems>>>;
 
-/**
- * Meter (poetic meter/bahr) entity with id, name, slug, and poem count
- */
-export type Meter = z.infer<typeof meterSchema>;
+// Poets list data
+type ListPoetsResult = Awaited<ReturnType<typeof poetsQueries.listPoets>>;
+export type PoetsData = Pick<ListPoetsResult, 'poets'>;
 
-/**
- * Rhyme (qafiyah) entity with id, name/pattern, slug, and poem count
- */
-export type Rhyme = z.infer<typeof rhymeSchema>;
+// Poem response types — derived from getPoemBySlug's found result
+type GetPoemFound = Extract<
+  Awaited<ReturnType<typeof poemsQueries.getPoemBySlug>>,
+  { type: 'found' }
+>;
+export type PoemResponseData = GetPoemFound['data'];
+export type PoemMetadata = PoemResponseData['metadata'];
+export type ProcessedPoemContent = PoemResponseData['processedContent'];
+export type RelatedPoems = PoemResponseData['relatedPoems'][number];
 
-/**
- * Theme (gharad/purpose) entity with id, name, slug, and poem count
- */
-export type Theme = z.infer<typeof themeSchema>;
-
-export type PoemMetadata = z.infer<typeof poemMetadataSchema>;
-export type ProcessedPoemContent = z.infer<typeof processedPoemContentSchema>;
-export type RelatedPoems = z.infer<typeof relatedPoemSchema>;
-
-export type PoemResponseData = {
-  metadata: PoemMetadata;
-  clearTitle: string;
-  processedContent: ProcessedPoemContent;
-  relatedPoems: RelatedPoems[];
+// Pagination meta used in static fetch functions
+export type PaginationMeta = {
+  currentPage: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  totalItems?: number;
 };
 
-/**
- * Response data for era poems page: contains era details and poems list
- */
-export type EraResponseData = z.infer<typeof eraPoemsResponseSchema>['data'];
+// Search result types — manually defined (come from raw SQL execution)
+export type PoemsSearchResult = {
+  poet_name: string;
+  poet_era: string;
+  poet_slug: string;
+  poem_title: string;
+  poem_snippet: string;
+  poem_meter: string;
+  poem_slug: string;
+  relevance: number;
+  total_count: number;
+};
 
-/**
- * Response data for meter poems page: contains meter details and poems list
- */
-export type MeterResponseData = z.infer<typeof meterPoemsResponseSchema>['data'];
-
-/**
- * Response data for poet poems page: contains poet details and poems list
- */
-export type PoetResponseData = z.infer<typeof poetPoemsResponseSchema>['data'];
-
-/**
- * Response data for rhyme poems page: contains rhyme details and poems list
- */
-export type RhymeResponseData = z.infer<typeof rhymePoemsResponseSchema>['data'];
-
-/**
- * Response data for theme poems page: contains theme details and poems list
- */
-export type ThemeResponseData = z.infer<typeof themePoemsResponseSchema>['data'];
-
-/**
- * Response data for poets list page: contains list of poets
- */
-export type PoetsData = z.infer<typeof poetsListResponseSchema>['data'];
-
-// Type aliases for consistency
-export type EraPoems = EraResponseData;
-export type MeterPoems = MeterResponseData;
-export type PoetPoems = PoetResponseData;
-export type RhymePoems = RhymeResponseData;
-export type ThemePoems = ThemeResponseData;
-
-export type PoemsSearchResult = z.infer<typeof poemsSearchResultSchema>;
-
-export type PoetsSearchResult = z.infer<typeof poetsSearchResultSchema>;
+export type PoetsSearchResult = {
+  poet_name: string;
+  poet_era: string;
+  poet_slug: string;
+  poet_bio: string;
+  relevance: number;
+  total_count: number;
+};
 
 export type SearchPagination = {
   currentPage: number;

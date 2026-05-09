@@ -4,7 +4,7 @@
     "dev": "wrangler dev",
     "dev:test": "wrangler dev --env test",
     "build": "pnpm run build:deps && wrangler build",
-    "build:deps": "pnpm --filter @qafiyah/schemas build && pnpm --filter @qafiyah/db build",
+    "build:deps": "pnpm --filter @qafiyah/db build",
     "deploy": "wrangler deploy --minify",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
@@ -13,15 +13,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@hono/zod-validator": "^0.4.3",
-    "@neondatabase/serverless": "^1.0.0",
-    "@qafiyah/tsconfig": "workspace:*",
     "@qafiyah/db": "workspace:*",
-    "@qafiyah/schemas": "workspace:*",
+    "@qafiyah/tsconfig": "workspace:*",
     "drizzle-orm": "^0.41.0",
     "hono": "^4.11.4",
-    "postgres": "^3.4.5",
-    "zod": "^3.24.2"
+    "postgres": "^3.4.5"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250214.0",

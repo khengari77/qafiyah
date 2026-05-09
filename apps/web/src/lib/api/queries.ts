@@ -1,32 +1,10 @@
 import { API_URL } from '@/constants/globals';
 import apiClient from './client';
-import { buildApiUrl } from './config';
+import type { PaginationMeta, PoemsSearchResponseData, PoetsSearchResponseData } from './types';
 
 const client = apiClient(API_URL);
 
-import type {
-  Era,
-  EraPoems,
-  Meter,
-  MeterPoems,
-  PaginationMeta,
-  PoemsSearchResponseData,
-  PoetPoems,
-  PoetsData,
-  PoetsSearchResponseData,
-  Rhyme,
-  RhymePoems,
-  Theme,
-  ThemePoems,
-} from './types';
-
-/**
- * API queries for fetching data from the Qafiyah API
- * using the validated client
- */
-
 export const queries = {
-  // Search
   async search({
     q,
     searchType,
@@ -52,82 +30,7 @@ export const queries = {
     return client.search({ q, searchType, page, matchType, meterIds, eraIds, rhymeIds, themeIds });
   },
 
-  // Random Slug
   async getRandomSlug(): Promise<string> {
     return client.getRandomSlug();
-  },
-
-  // Eras
-  async getEras(): Promise<Era[]> {
-    return client.getEras();
-  },
-
-  async getEraPoems(
-    slug: string,
-    page: string
-  ): Promise<{ data: EraPoems; pagination?: PaginationMeta }> {
-    return client.getEraPoems(slug, page);
-  },
-
-  // Meters
-  async getMeters(): Promise<Meter[]> {
-    return client.getMeters();
-  },
-
-  async getMeterPoems(
-    slug: string,
-    page: string
-  ): Promise<{ data: MeterPoems; pagination?: PaginationMeta }> {
-    return client.getMeterPoems(slug, page);
-  },
-
-  // Poets
-  async getPoets(page: string): Promise<{ data: PoetsData; pagination?: PaginationMeta }> {
-    return client.getPoets(page);
-  },
-
-  async getPoetPoems(
-    slug: string,
-    page: string
-  ): Promise<{ data: PoetPoems; pagination?: PaginationMeta }> {
-    return client.getPoetPoems(slug, page);
-  },
-
-  // Poems
-  async getPoem(slug: string) {
-    return client.getPoem(slug);
-  },
-
-  // Rhymes
-  async getRhymes(): Promise<Rhyme[]> {
-    return client.getRhymes();
-  },
-
-  async getRhymePoems(
-    slug: string,
-    page: string
-  ): Promise<{ data: RhymePoems; pagination?: PaginationMeta }> {
-    return client.getRhymePoems(slug, page);
-  },
-
-  // Themes
-  async getThemes(): Promise<Theme[]> {
-    return client.getThemes();
-  },
-
-  async getThemePoems(
-    slug: string,
-    page: string
-  ): Promise<{ data: ThemePoems; pagination?: PaginationMeta }> {
-    return client.getThemePoems(slug, page);
-  },
-
-  // Sitemaps (assuming you need this based on your routes)
-  async getSitemap(type: string): Promise<string> {
-    const response = await fetch(buildApiUrl(`/sitemaps/${type}`));
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status} ${response.statusText}`);
-    }
-    return response.text();
   },
 };
