@@ -57,9 +57,8 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-# Generated database schema docs (run: bun scripts/db-inspector/export.ts)
-public/docs/db-schema/*.json
-public/docs/db-schema/*.md
-public/docs/db-schema/*.yaml
+data/docs/db-schema/*.json
+data/docs/db-schema/*.md
+data/docs/db-schema/*.yaml
 
 apps/web/.astro/

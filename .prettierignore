@@ -16,7 +16,7 @@ package-lock.json
 yarn.lock
 
 # Database dumps
-public/datasets
+data/datasets
 
 # Type definitions
 env.d.ts

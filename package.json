@@ -5,7 +5,7 @@
     "build": "turbo run build",
     "build:web": "pnpm --filter @qafiyah/web build:web",
     "dev:api": "pnpm --filter @qafiyah/api dev",
-    "dev": "./scripts/check-database.sh && turbo run build --filter=@qafiyah/db && turbo run dev --filter=@qafiyah/web --filter=@qafiyah/api",
+    "dev": "./dev/check-database.sh && turbo run build --filter=@qafiyah/db && turbo run dev --filter=@qafiyah/web --filter=@qafiyah/api",
     "dev:test": "pnpm --filter @qafiyah/api dev:test",
     "lint": "turbo run lint",
     "lint:fix": "biome check --write .",
@@ -17,7 +17,7 @@
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
     "prepare": "husky",
     "ci": "pnpm run format && pnpm run lint:fix && pnpm run types",
-    "db:setup": "./scripts/setup-database.sh"
+    "db:setup": "./dev/setup-database.sh"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.12",

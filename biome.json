@@ -17,7 +17,7 @@
       "!**/coverage",
       "!**/*.min.js",
       "!**/pnpm-lock.yaml",
-      "!**/public/datasets",
+      "!**/data/datasets",
       "!**/env.d.ts",
       "!**/worker-configuration.d.ts",
       "!apps/web/.astro"

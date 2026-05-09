@@ -119,4 +119,4 @@ This dataset is released under the MIT license.
 - **Project website**: [qafiyah.com](https://qafiyah.com)
 - **API**: [api.qafiyah.com](https://api.qafiyah.com)
 - **Source repository**: [github.com/alwalxed/qafiyah](https://github.com/alwalxed/qafiyah)
-- **Database dumps**: Available in the repository under `public/datasets/`
+- **Database dumps**: Available in the repository under `data/datasets/`

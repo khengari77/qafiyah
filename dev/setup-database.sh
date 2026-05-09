@@ -19,7 +19,7 @@ readonly DB_HOST="127.0.0.1"
 readonly DEV_DB_PORT="5433"
 readonly TEST_DB_PORT="5434"
 
-readonly DUMP_DIR="public/datasets"
+readonly DUMP_DIR="data/datasets"
 readonly REDUCE_SCRIPT="scripts/sql/reduce-to-micro.sql"
 
 readonly DEV_ENV_FILE="apps/api/.dev.vars"
