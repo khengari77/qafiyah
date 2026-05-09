@@ -107,7 +107,7 @@ export function SelectMulti({
         case 'Enter':
         case ' ':
           e.preventDefault();
-          toggleOption(options[highlightedIndex]);
+          if (options[highlightedIndex] !== undefined) toggleOption(options[highlightedIndex]);
           break;
         case 'Escape':
           e.preventDefault();

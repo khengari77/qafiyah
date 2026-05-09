@@ -82,7 +82,7 @@ export function SelectSingle({
         case 'Enter':
         case ' ':
           e.preventDefault();
-          selectOption(options[highlightedIndex]);
+          if (options[highlightedIndex] !== undefined) selectOption(options[highlightedIndex]);
           break;
         case 'Escape':
           e.preventDefault();

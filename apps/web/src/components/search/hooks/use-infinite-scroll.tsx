@@ -14,7 +14,7 @@ export function useInfiniteScroll(
     if (loadMoreRef.current) {
       observer.current = new IntersectionObserver(
         (entries) => {
-          if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
             fetchNextPage();
           }
         },

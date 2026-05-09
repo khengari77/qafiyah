@@ -1,11 +1,9 @@
 {
-  "extends": "astro/tsconfigs/strict",
+  "extends": "@qafiyah/typescript/astro.json",
   "compilerOptions": {
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "jsx": "react-jsx",
-    "strictNullChecks": true
+    }
   },
   "include": ["src", ".astro/types.d.ts"],
   "exclude": ["node_modules", "dist", ".astro"]

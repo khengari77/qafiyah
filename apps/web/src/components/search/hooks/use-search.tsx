@@ -31,7 +31,7 @@ function validateInput(input: string): string | null {
     return 'يرجى إدخال كلمة واحدة على الأقل';
   }
 
-  if (words[0].length < 2) {
+  if ((words[0]?.length ?? 0) < 2) {
     return 'يجب أن تتكون الكلمة الأولى من حرفين على الأقل';
   }
 
