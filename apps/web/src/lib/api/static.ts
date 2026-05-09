@@ -45,6 +45,7 @@ async function timed<T>(
   const ms = performance.now() - t;
   _stats.timings.push({ label, ms });
   const extra = suffix ? ` | ${suffix(result)}` : '';
+  // biome-ignore lint/suspicious/noConsole: build-time timing log
   console.log(
     `[build] ${label}: ${ms.toFixed(0)}ms | ${_stats.calls - callsBefore} queries${extra}`
   );
@@ -121,6 +122,7 @@ export function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
       while (hasMore) {
         const iterT = performance.now();
         const response = await fetchPoets(page.toString());
+        // biome-ignore lint/suspicious/noConsole: build-time timing log
         console.log(`[build]   poets page ${page}: ${(performance.now() - iterT).toFixed(0)}ms`);
 
         if (!response.data?.poets || response.data.poets.length === 0) {

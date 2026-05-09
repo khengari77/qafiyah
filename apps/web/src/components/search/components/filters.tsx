@@ -122,6 +122,7 @@ export function Filters({ filters, isPoemsMode, onSearch, searchDisabled, isLoad
       {/* --------------------------------------- */}
       <div className="pb-6">
         <button
+          type="button"
           onClick={onSearch}
           disabled={isLoading || searchDisabled}
           className={cn(

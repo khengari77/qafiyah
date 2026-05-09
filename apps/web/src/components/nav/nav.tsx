@@ -19,6 +19,7 @@ export function Nav({ onMenuToggle, className }: Props) {
         <div className="flex justify-between items-center gap-8">
           <Logo />
           <button
+            type="button"
             id="menu-toggle"
             className="md:hidden"
             aria-label="فتح القائمة"

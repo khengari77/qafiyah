@@ -33,6 +33,7 @@ export function MobileMenu({ isOpen, onClose }: Props) {
 
       {/* CLOSE BUTTON */}
       <button
+        type="button"
         tabIndex={-1}
         id="close-menu"
         className="absolute top-4 left-4 p-2 text-zinc-500 hover:text-zinc-700"

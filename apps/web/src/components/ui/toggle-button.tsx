@@ -28,6 +28,7 @@ export function BinaryToggleButton({ options, currentValue, onToggle, className 
 
   return (
     <button
+      type="button"
       onClick={handleToggle}
       className={cn(
         'relative w-full flex justify-evenly items-center min-w-[180px] h-12 text-base rounded-md border-0 ring-1 ring-zinc-300/40 bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300/50 overflow-hidden',

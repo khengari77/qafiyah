@@ -8,6 +8,7 @@ export function RandomPoemButton() {
 
   return (
     <button
+      type="button"
       onClick={handleClick}
       disabled={isLoading}
       aria-busy={isLoading}

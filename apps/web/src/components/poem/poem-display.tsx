@@ -67,13 +67,23 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
         <div className="relative flex flex-col justify-between items-center bg-white gap-4 py-10 md:py-8 lg:py-16 px-4 rounded-2xl w-full md:w-10/12 xl:w-9/12 shadow-[inset_0px_0px_0px_1px_rgba(0,_0,_0,_0.09)]">
           {/* CONTROLLER FOR FONTS */}
           <div className="flex items-center gap-4 border rounded-md border-zinc-300/50 bg-zinc-50/30">
-            <button onClick={decreaseFontSize} className="p-1" aria-label="Decrease font size">
+            <button
+              type="button"
+              onClick={decreaseFontSize}
+              className="p-1"
+              aria-label="Decrease font size"
+            >
               <Minus className="w-3 h-3 md:w-5 md:h-5 xl:w-7 xl:h-7  text-zinc-500/60" />
             </button>
             <p className="text-zinc-500/90 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl">
               حجم الخط
             </p>
-            <button onClick={increaseFontSize} className="p-1" aria-label="Increase font size">
+            <button
+              type="button"
+              onClick={increaseFontSize}
+              className="p-1"
+              aria-label="Increase font size"
+            >
               <Plus className="w-3 h-3 md:w-5 md:h-5 xl:w-7 xl:h-7  text-zinc-500/60" />
             </button>
           </div>

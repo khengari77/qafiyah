@@ -41,24 +41,24 @@
         "useSemanticElements": "off",
         "useAriaActivedescendantWithTabindex": "off",
         "useFocusableInteractive": "off",
-        "useButtonType": "off",
+        "useButtonType": "error",
         "noNoninteractiveElementToInteractiveRole": "off",
         "noNoninteractiveTabindex": "off",
-        "useValidAriaProps": "off",
-        "useAriaPropsForRole": "off",
+        "useValidAriaProps": "warn",
+        "useAriaPropsForRole": "warn",
         "useKeyWithClickEvents": "off",
         "useKeyWithMouseEvents": "off"
       },
       "complexity": {
         "recommended": true,
-        "noBannedTypes": "warn",
+        "noBannedTypes": "error",
         "noUselessTypeConstraint": "error",
         "useLiteralKeys": "off"
       },
       "correctness": {
         "recommended": true,
         "noUnusedVariables": "error",
-        "useExhaustiveDependencies": "warn"
+        "useExhaustiveDependencies": "error"
       },
       "performance": {
         "recommended": true
@@ -75,8 +75,10 @@
       },
       "suspicious": {
         "recommended": true,
-        "noExplicitAny": "warn",
-        "noArrayIndexKey": "warn",
+        "noExplicitAny": "error",
+        "noArrayIndexKey": "error",
+        "noConsole": { "level": "warn", "options": { "allow": ["error", "warn"] } },
+        "noSkippedTests": "error",
         "noUnknownAtRules": "off"
       },
       "nursery": {
@@ -124,6 +126,16 @@
           "correctness": {
             "noUnusedVariables": "off",
             "noUnusedImports": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/bot/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
           }
         }
       }

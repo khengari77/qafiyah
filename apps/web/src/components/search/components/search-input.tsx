@@ -66,6 +66,7 @@ export function SearchInput({
         >
           {hasQuery && (
             <button
+              type="button"
               aria-hidden={hasQuery}
               tabIndex={hasQuery ? 0 : -1}
               onClick={resetAllStates}
