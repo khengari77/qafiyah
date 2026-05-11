@@ -37,7 +37,7 @@ vitest run path/to/file.test.ts                       # single test file (within
 
 **Web deployment** — Self-hosted on a VPS behind nginx. Build is produced locally (`pnpm --filter @qafiyah/web build`) and `apps/web/dist/` is rsynced to the server (default web root `/var/www/qafiyah`). Reference server block: `apps/web/nginx.conf` — handles www→apex, trailing-slash→canonical, `try_files $uri $uri/index.html`, and immutable caching for `/_astro/`. TLS is managed outside this file (certbot or a fronting reverse proxy).
 
-**`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Postgres (via `postgres` driver in `packages/db/src/client.ts`). Routes: `eras`, `meters`, `poems`, `poets`, `rhymes`, `themes`, `search`, `sitemaps`. Wrangler's esbuild bundles `@qafiyah/db` source directly — no pre-build step needed.
+**`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Postgres (via `postgres` driver in `packages/db/src/client.ts`). Routes: `eras`, `meters`, `poems`, `poets`, `rhymes`, `themes`, `search`. Wrangler's esbuild bundles `@qafiyah/db` source directly — no pre-build step needed.
 
 **`apps/bot`** — Posts a random poem via `twitter-api-v2` on a GitHub Actions cron at 08/12/16/20 UTC (see `.github/workflows/post-poem.yml`). Exponential backoff, 3 retries.
 

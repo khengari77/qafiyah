@@ -34,9 +34,6 @@ Search:
 - GET /search
   (params: q, search_type, page, match_type)
 
-Sitemaps:
-- GET /sitemaps
-
 Themes:
 - GET /themes
 - GET /themes/:slug/page/:page

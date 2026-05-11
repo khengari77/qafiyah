@@ -1,4 +1,4 @@
 User-Agent: *
 Allow: /
 
-Sitemap: https://qafiyah.com/sitemap.xml
+Sitemap: https://qafiyah.com/sitemap-index.xml

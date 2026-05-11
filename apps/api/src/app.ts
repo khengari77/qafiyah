@@ -18,7 +18,6 @@ import poems from './routes/poems.routes';
 import poets from './routes/poets.routes';
 import rhymes from './routes/rhymes.routes';
 import search from './routes/search.routes';
-import sitemaps from './routes/sitemaps.routes';
 import themes from './routes/themes.routes';
 import type { AppContext } from './types';
 
@@ -58,7 +57,6 @@ app.use(serveEmojiFavicon('📜'));
  * - poets: Poet information
  * - rhymes: Rhyme patterns
  * - search: Search functionality
- * - sitemaps: SEO sitemaps
  * - themes: Poetic themes
  */
 const routes = app
@@ -68,7 +66,6 @@ const routes = app
   .route('/poems', poems)
   .route('/poets', poets)
   .route('/rhymes', rhymes)
-  .route('/sitemaps', sitemaps)
   .route('/themes', themes)
   .route('/search', search)
   /**
