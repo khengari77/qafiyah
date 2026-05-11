@@ -8,6 +8,9 @@ on:
     - cron: "0 20 * * *" # 11:00 PM KSA
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   tweet:
     name: Post Poem
