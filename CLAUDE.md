@@ -7,7 +7,7 @@ Qafiyah is an Arabic poetry repository (pnpm + Turborepo monorepo): `apps/web` (
 ## Commands
 
 ```bash
-pnpm dev             # turbo dev (^build builds @qafiyah/db before web/API servers)
+pnpm dev             # turbo dev (web + API)
 pnpm build           # turbo build in dependency order
 pnpm lint            # biome check --write .
 pnpm format          # biome format + prettier (md/mdx only)
@@ -18,11 +18,9 @@ pnpm clean:dev       # kill orphan astro/wrangler/workerd processes scoped to th
 pnpm ci              # format + lint + types + test + knip + madge (circular-deps)
 
 # Per-workspace
-pnpm turbo run dev --filter=@qafiyah/api              # (^build → db) then wrangler dev
-pnpm turbo run dev:test --filter=@qafiyah/api         # (^build → db) then wrangler dev --env test
-pnpm --filter @qafiyah/api build:deps && pnpm --filter @qafiyah/api dev   # standalone (no Turbo dev graph)
+pnpm --filter @qafiyah/api dev                        # wrangler dev
+pnpm --filter @qafiyah/api dev:test                   # wrangler dev --env test
 pnpm --filter @qafiyah/api test                       # vitest (API only)
-pnpm --filter @qafiyah/db dev:watch                   # rebuild packages/db on change while editing
 vitest run path/to/file.test.ts                       # single test file (within a workspace)
 ```
 
@@ -39,11 +37,11 @@ vitest run path/to/file.test.ts                       # single test file (within
 
 **Web deployment** — Self-hosted on a VPS behind nginx. Build is produced locally (`pnpm --filter @qafiyah/web build`) and `apps/web/dist/` is rsynced to the server (default web root `/var/www/qafiyah`). Reference server block: `apps/web/nginx.conf` — handles www→apex, trailing-slash→canonical, `try_files $uri $uri/index.html`, and immutable caching for `/_astro/`. TLS is managed outside this file (certbot or a fronting reverse proxy).
 
-**`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Postgres (via `postgres` driver in `packages/db/src/client.ts`). Routes: `eras`, `meters`, `poems`, `poets`, `rhymes`, `themes`, `search`, `sitemaps`. `pnpm --filter @qafiyah/api build` runs `build:deps` (builds `packages/db`) before `wrangler build`. For dev servers, Turbo `dev`/`dev:test` runs `^build` first when invoked via `pnpm turbo`; otherwise run `build:deps` yourself.
+**`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Postgres (via `postgres` driver in `packages/db/src/client.ts`). Routes: `eras`, `meters`, `poems`, `poets`, `rhymes`, `themes`, `search`, `sitemaps`. Wrangler's esbuild bundles `@qafiyah/db` source directly — no pre-build step needed.
 
 **`apps/bot`** — Posts a random poem via `twitter-api-v2` on a GitHub Actions cron at 08/12/16/20 UTC (see `.github/workflows/post-poem.yml`). Exponential backoff, 3 retries.
 
-**`packages/db`** — `tsup`-built Drizzle ORM schema, queries, and Postgres client shared by `apps/api` and `apps/web`. `dist/` is built on `pnpm install` (`prepare`) and before dev servers (`^build` in Turbo). While editing, use `pnpm --filter @qafiyah/db dev:watch`. `@qafiyah/api`'s `build` runs `build:deps`; its `dev`/`dev:test` rely on Turbo or a manual `build:deps` when invoked outside Turbo's `dev` graph.
+**`packages/db`** — Source-only (no build step). Drizzle ORM schema, queries, and Postgres client shared by `apps/api` and `apps/web`; `exports["."]` points at `./src/index.ts` and consumers' bundlers (Astro/Vite, Wrangler/esbuild) compile it directly. Edit and reload — no watcher needed.
 
 **`packages/constants`** — Source-only (no build step). Exports brand strings, production URLs, dev ports (`DEV_WEB_PORT=4321`, `DEV_API_PORT=8787`), and external links. Consumed by `web`, `api`, and `bot`. When changing a URL or port, update here — not in app code.
 
