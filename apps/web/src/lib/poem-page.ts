@@ -11,7 +11,7 @@ function safeMetaText(value: string): string {
     .trim();
 }
 
-export type PoemLayoutProps = {
+type PoemLayoutProps = {
   title: string;
   description: string;
   keywords: PoemResponseData['processedContent']['keywords'];

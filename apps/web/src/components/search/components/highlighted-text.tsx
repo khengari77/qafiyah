@@ -17,9 +17,11 @@ export function HighlightedText({ text, className = '' }: Props) {
     const segments = part.split('*');
 
     return (
+      // biome-ignore lint/suspicious/noArrayIndexKey: parts come from a stable text split — order is fixed and content can repeat
       <Fragment key={`part-${index}-${part.slice(0, 10)}`}>
         {segments.map((segment, segIndex) => (
-          <Fragment key={`part-${index}-seg-${segIndex}-${segment.slice(0, 5)}`}>
+          // biome-ignore lint/suspicious/noArrayIndexKey: segment order within a part is fixed by the source string
+          <Fragment key={`seg-${index}-${segIndex}-${segment.slice(0, 5)}`}>
             {segIndex > 0 && <span className="inline-block mx-1 py-1 text-zinc-400">{'—'}</span>}
             {isHighlighted ? (
               <span className="text-red-400 font-medium py-1">{segment}</span>

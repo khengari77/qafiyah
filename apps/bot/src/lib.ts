@@ -9,7 +9,7 @@ const MAX_RETRY_ATTEMPTS = 3;
 const INITIAL_RETRY_DELAY_MS = 1000;
 const MAX_TWEET_LENGTH = 280;
 
-export type Result<T> = { ok: true; value: T } | { ok: false; error: Error };
+type Result<T> = { ok: true; value: T } | { ok: false; error: Error };
 
 export function ok<T>(value: T): Result<T> {
   return { ok: true, value };

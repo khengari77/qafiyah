@@ -58,19 +58,13 @@ export function ResultList({
       )}
 
       {searchType === 'poems' &&
-        (data as PoemsSearchResult[]).map((item, index) => (
-          <PoemCard
-            key={`slug-${item.poem_slug}-relevance-${item.relevance}-index-${index}`}
-            item={item}
-          />
+        (data as PoemsSearchResult[]).map((item) => (
+          <PoemCard key={`${item.poem_slug}-${item.relevance}`} item={item} />
         ))}
 
       {searchType === 'poets' &&
-        (data as PoetsSearchResult[]).map((item, index) => (
-          <PoetCard
-            key={`slug-${item.poet_slug}-relevance-${item.relevance}-index-${index}`}
-            item={item}
-          />
+        (data as PoetsSearchResult[]).map((item) => (
+          <PoetCard key={`${item.poet_slug}-${item.relevance}`} item={item} />
         ))}
 
       {data.length > 0 && (

@@ -16,8 +16,8 @@ const EMPTY_PAGINATION: SearchPagination = {
   hasPrevPage: false,
 };
 
-export type SearchType = 'poems' | 'poets';
-export type MatchType = 'all' | 'any' | 'exact';
+type SearchType = 'poems' | 'poets';
+type MatchType = 'all' | 'any' | 'exact';
 
 function validateInput(input: string): string | null {
   const arabicRegex = /^[؀-ۿ\s]+$/;

@@ -38,7 +38,7 @@ export async function getPoetBySlug(db: DbClient, slug: string) {
       name: poetInfo[0].poetName,
       poemsCount: poetInfo[0].totalPoems,
       era:
-        eraInfo.length && eraInfo[0] && eraInfo[0].eraName && eraInfo[0].eraSlug
+        eraInfo.length && eraInfo[0]?.eraName && eraInfo[0].eraSlug
           ? { name: eraInfo[0].eraName, slug: eraInfo[0].eraSlug }
           : null,
     },

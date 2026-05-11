@@ -6,7 +6,7 @@ import type { PoemMetadata, RelatedPoems } from '@/lib/api/types';
 import { formatVerseCount } from '@/utils/texts/get-verse-count';
 import { ListCard } from '../ui/list-card';
 
-export type PoemProps = {
+type PoemProps = {
   clearTitle: string;
   metadata: PoemMetadata;
   verses: string[][];
@@ -91,9 +91,9 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
           {/* POEM */}
           <article className="flex flex-col items-center w-full">
             <div className="w-full sm:w-11/12 md:w-10/12 xl:w-6/12">
-              {verses.map((verse, index) => (
+              {verses.map((verse) => (
                 <div
-                  key={`verse-${index}-${verse[0]?.slice(0, 10) || index}`}
+                  key={`${verse[0] ?? ''}|${verse[1] ?? ''}`}
                   className="py-6 md:py-8 border-b border-zinc-50 last:border-b-0 flex flex-col w-full justify-center items-center gap-4"
                   style={{ ...getVerseGap() }}
                 >

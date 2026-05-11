@@ -1,7 +1,7 @@
 import { API_URL } from '@/constants/globals';
 import type { PoemsSearchResponseData, PoetsSearchResponseData } from './types';
 
-export type SearchArgs = {
+type SearchArgs = {
   q: string;
   searchType: 'poems' | 'poets';
   page: string;
@@ -12,7 +12,7 @@ export type SearchArgs = {
   themeIds?: string;
 };
 
-export type SearchResult = PoemsSearchResponseData | PoetsSearchResponseData;
+type SearchResult = PoemsSearchResponseData | PoetsSearchResponseData;
 
 export async function search(args: SearchArgs): Promise<SearchResult> {
   const params = new URLSearchParams();

@@ -62,7 +62,7 @@ export async function getRandomPoemSlug(db: DbClient): Promise<string> {
     const result = await db.execute(sql`SELECT get_random_eligible_poem_slug()`);
     const row = result?.[0];
 
-    if (!row || !row['get_random_eligible_poem_slug']) throw new Error('No poem slug found');
+    if (!row?.['get_random_eligible_poem_slug']) throw new Error('No poem slug found');
 
     const slug =
       typeof row['get_random_eligible_poem_slug'] === 'object' &&
@@ -106,7 +106,7 @@ export type GetPoemResult =
 export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoemResult> {
   const result = await db.execute(sql`SELECT get_poem_with_related(${slug})`);
 
-  if (!result?.length || !result[0] || !result[0]['get_poem_with_related']) {
+  if (!result?.length || !result[0]?.['get_poem_with_related']) {
     return { type: 'not_found' };
   }
 
@@ -119,8 +119,7 @@ export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoem
   const { poem, related_poems } = uncheckedData;
 
   if (
-    !poem ||
-    !poem.title ||
+    !poem?.title ||
     !poem.content ||
     !poem.poet_name ||
     !poem.poet_slug ||

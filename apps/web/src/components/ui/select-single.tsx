@@ -5,7 +5,7 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
-export type Option = {
+type Option = {
   value: string;
   label: string;
 };
