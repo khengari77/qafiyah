@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "node ../../dev/check-port.mjs 4321 && astro dev",
     "build": "astro build",
     "start": "astro preview",
     "serve": "npx serve dist",

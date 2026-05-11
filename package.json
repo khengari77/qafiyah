@@ -4,6 +4,7 @@
   "scripts": {
     "prepare": "husky",
     "db:setup": "./dev/setup-database.sh",
+    "clean:dev": "pkill -f 'qafiyah/.*(astro|wrangler|workerd)' || true",
     "preinstall": "npx --yes only-allow pnpm",
     "dev": "turbo run dev",
     "build": "turbo run build",

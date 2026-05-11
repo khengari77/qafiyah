@@ -2,8 +2,8 @@
   "name": "@qafiyah/api",
   "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "dev:test": "wrangler dev --env test",
+    "dev": "node ../../dev/check-port.mjs 8787 && wrangler dev",
+    "dev:test": "node ../../dev/check-port.mjs 8787 && wrangler dev --env test",
     "build": "pnpm run build:deps && wrangler build",
     "build:deps": "pnpm --filter @qafiyah/db build",
     "deploy": "wrangler deploy --minify",

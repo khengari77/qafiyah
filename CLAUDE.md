@@ -69,6 +69,7 @@ Use sparingly. Most code needs none. Avoid tagging obvious code.
 - **If output goes wrong**, use ESC + ESC to return to the previous prompt, fix the instruction, and regenerate rather than patching on top of bad output.
 - **Auto-compact is disabled.** When context fills, use `/export` → `/clear` → paste history to start fresh with full context rather than a lossy summary.
 - **MCPs are on-demand.** Enable an MCP only for the task that needs it; disable when done to keep context lean.
+- **If a dev request hangs or `pnpm dev` complains about a port,** run `pnpm clean:dev` to kill orphan `astro dev` / `wrangler` / `workerd` processes scoped to this repo, then restart. `dev/check-port.mjs` guards both servers against silently binding a non-default port.
 
 ## Known Bug
 
