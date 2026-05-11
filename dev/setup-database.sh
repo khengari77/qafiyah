@@ -20,10 +20,11 @@ readonly DEV_DB_PORT="5433"
 readonly TEST_DB_PORT="5434"
 
 readonly DUMP_DIR="data/datasets"
-readonly REDUCE_SCRIPT="scripts/sql/reduce-to-micro.sql"
+readonly REDUCE_SCRIPT="dev/sql/reduce-to-micro.sql"
 
 readonly DEV_ENV_FILE="apps/api/.dev.vars"
 readonly TEST_ENV_FILE="apps/api/.dev.vars.test"
+readonly WEB_ENV_FILE="apps/web/.env"
 readonly COMPOSE_FILE="docker-compose.yml"
 
 readonly MAX_WAIT_SECONDS=30
@@ -251,6 +252,12 @@ EOF
     cat > "$TEST_ENV_FILE" <<EOF
 # Test - Micro database (port $TEST_DB_PORT)
 DATABASE_URL=$test_db_url
+EOF
+
+    # Web app (Astro reads from apps/web/.env, not Wrangler's .dev.vars)
+    cat > "$WEB_ENV_FILE" <<EOF
+# Local development DB (mirrors apps/api/.dev.vars)
+DATABASE_URL=$dev_db_url
 EOF
 
     log_success "Environment files updated"
