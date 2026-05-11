@@ -4,9 +4,17 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useState } from 'react';
-import { queries } from '@/lib/api/queries';
-import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
+import { search } from '@/lib/api/client';
+import type { PoemsSearchResult, PoetsSearchResult, SearchPagination } from '@/lib/api/types';
 import { useInfiniteScroll } from './use-infinite-scroll';
+
+const EMPTY_PAGINATION: SearchPagination = {
+  currentPage: 1,
+  totalPages: 0,
+  totalResults: 0,
+  hasNextPage: false,
+  hasPrevPage: false,
+};
 
 export type SearchType = 'poems' | 'poets';
 export type MatchType = 'all' | 'any' | 'exact';
@@ -100,13 +108,8 @@ export function useSearch() {
   const iq = useInfiniteQuery({
     queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
     queryFn: async ({ pageParam = 1 }) => {
-      if (!query) {
-        return {
-          data: { results: [] },
-          pagination: { currentPage: 1, totalPages: 0, totalItems: 0, itemsPerPage: 10 },
-        };
-      }
-      return queries.search({
+      if (!query) return { results: [], pagination: EMPTY_PAGINATION };
+      return search({
         q: query,
         searchType,
         page: String(pageParam),
@@ -118,13 +121,8 @@ export function useSearch() {
       });
     },
     initialPageParam: 1,
-    getNextPageParam: (lastPage) => {
-      const pagination = lastPage.pagination;
-      if (!pagination) return undefined;
-      return pagination.currentPage < pagination.totalPages
-        ? pagination.currentPage + 1
-        : undefined;
-    },
+    getNextPageParam: (lastPage) =>
+      lastPage.pagination.hasNextPage ? lastPage.pagination.currentPage + 1 : undefined,
     enabled: !!query,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -132,7 +130,7 @@ export function useSearch() {
 
   const data =
     (iq.data?.pages.flatMap((page) =>
-      (page.data.results || []).map((result) => ({
+      (page.results || []).map((result) => ({
         type: searchType === 'poems' ? 'poem' : 'poet',
         ...result,
       }))

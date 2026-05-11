@@ -1,73 +1,48 @@
-import { buildApiUrl } from './config';
-import type { PaginationMeta, PoemsSearchResponseData, PoetsSearchResponseData } from './types';
+import { API_URL } from '@/constants/globals';
+import type { PoemsSearchResponseData, PoetsSearchResponseData } from './types';
 
-type SearchResponse = { success: true; data: PoemsSearchResponseData | PoetsSearchResponseData };
-
-const apiClient = (baseUrl: string) => {
-  return {
-    async search({
-      q,
-      searchType,
-      page = '1',
-      matchType = 'all',
-      meterIds,
-      eraIds,
-      rhymeIds,
-      themeIds,
-    }: {
-      q: string;
-      searchType: 'poems' | 'poets';
-      page: string;
-      matchType: string;
-      meterIds?: string;
-      eraIds?: string;
-      rhymeIds?: string;
-      themeIds?: string;
-    }): Promise<{
-      data: PoemsSearchResponseData | PoetsSearchResponseData;
-      pagination?: PaginationMeta;
-    }> {
-      const searchParams = new URLSearchParams();
-      searchParams.append('q', q);
-      searchParams.append('page', page);
-      searchParams.append('search_type', searchType);
-      searchParams.append('match_type', matchType);
-
-      if (searchType === 'poems') {
-        if (meterIds) searchParams.append('meter_ids', meterIds);
-        if (rhymeIds) searchParams.append('rhyme_ids', rhymeIds);
-        if (themeIds) searchParams.append('theme_ids', themeIds);
-      }
-      if (eraIds) searchParams.append('era_ids', eraIds);
-
-      const response = await fetch(`${baseUrl}/search?${searchParams.toString()}`);
-      if (!response.ok) {
-        throw new Error(`Search failed: ${response.status}`);
-      }
-
-      const json = (await response.json()) as SearchResponse;
-      return {
-        data: json.data,
-        pagination:
-          'pagination' in json.data
-            ? (json.data.pagination as unknown as PaginationMeta)
-            : undefined,
-      };
-    },
-
-    async getRandomSlug(): Promise<string> {
-      try {
-        const response = await fetch(buildApiUrl('/poems/random?option=slug'));
-        if (!response.ok) {
-          return 'eabca780-811f-4ea4-949e-21df6efba15d';
-        }
-        const slug = await response.text();
-        return slug.trim();
-      } catch {
-        return 'eabca780-811f-4ea4-949e-21df6efba15d';
-      }
-    },
-  };
+export type SearchArgs = {
+  q: string;
+  searchType: 'poems' | 'poets';
+  page: string;
+  matchType: string;
+  meterIds?: string;
+  eraIds?: string;
+  rhymeIds?: string;
+  themeIds?: string;
 };
 
-export default apiClient;
+export type SearchResult = PoemsSearchResponseData | PoetsSearchResponseData;
+
+export async function search(args: SearchArgs): Promise<SearchResult> {
+  const params = new URLSearchParams();
+  params.set('q', args.q);
+  params.set('page', args.page);
+  params.set('search_type', args.searchType);
+  params.set('match_type', args.matchType);
+  if (args.searchType === 'poems') {
+    if (args.meterIds) params.set('meter_ids', args.meterIds);
+    if (args.rhymeIds) params.set('rhyme_ids', args.rhymeIds);
+    if (args.themeIds) params.set('theme_ids', args.themeIds);
+  }
+  if (args.eraIds) params.set('era_ids', args.eraIds);
+
+  const response = await fetch(`${API_URL}/search?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error(`Search failed: ${response.status}`);
+  }
+  const json = (await response.json()) as { success: boolean; data: SearchResult };
+  return json.data;
+}
+
+export async function getRandomPoemSlug(): Promise<string> {
+  const response = await fetch(`${API_URL}/poems/random?option=slug`);
+  if (!response.ok) {
+    throw new Error(`Random poem request failed: ${response.status}`);
+  }
+  const slug = (await response.text()).trim();
+  if (!slug) {
+    throw new Error('Random poem API returned empty slug');
+  }
+  return slug;
+}

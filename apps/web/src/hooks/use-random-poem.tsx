@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { queries } from '@/lib/api/queries';
+import { getRandomPoemSlug } from '@/lib/api/client';
 
 export function useRandomPoem() {
   const [isLoading, setIsLoading] = useState(false);
@@ -11,20 +11,13 @@ export function useRandomPoem() {
     if (isLoading) return;
     setIsLoading(true);
     setIsError(false);
-    let slug: string;
     try {
-      slug = await queries.getRandomSlug();
+      const slug = await getRandomPoemSlug();
+      window.location.href = `/poems/${slug}/`;
     } catch {
       setIsError(true);
       setIsLoading(false);
-      return;
     }
-    const trimmed = slug.trim();
-    if (trimmed.length > 0) {
-      window.location.href = `/poems/${trimmed}/`;
-      return;
-    }
-    setIsLoading(false);
   };
 
   return { handleClick, isLoading, isError };

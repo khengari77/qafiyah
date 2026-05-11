@@ -1,6 +1,6 @@
 import { toArabicDigits } from '@/utils/texts/arabic-digits';
 
-export const isDev = process.env['NODE_ENV'] === 'development';
+export const isDev = import.meta.env.DEV;
 export const SITE_NAME = 'قافية';
 const DOMAIN = 'qafiyah.com';
 export const API_URL = import.meta.env['PUBLIC_API_URL'] || 'https://api.qafiyah.com';
