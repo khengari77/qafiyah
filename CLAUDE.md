@@ -35,7 +35,9 @@ vitest run path/to/file.test.ts                       # single test file (within
 
 ## Architecture
 
-**`apps/web`** — Astro 6 static output; queries the database **directly at build time** via `@qafiyah/db` (see `src/lib/api/static.ts`). React is islands-only (search, nav, random poem). Path alias `@/*` → `src/*`. RTL Arabic layout in `src/layouts/Layout.astro`. No running API needed to build.
+**`apps/web`** — Astro 6 static output; queries the database **directly at build time** via `@qafiyah/db` (see `src/lib/api/static.ts`). React is islands-only (search, nav, random poem). Path alias `@/*` → `src/*`. RTL Arabic layout in `src/layouts/Layout.astro`. No running API needed to build. Canonical URLs are non-trailing-slash (`trailingSlash: 'never'` + `build.format: 'directory'`); both `/page` and `/page/` resolve at the host, with the host 301-ing the trailing form to canonical.
+
+**Web deployment** — Self-hosted on a VPS behind nginx. Build is produced locally (`pnpm --filter @qafiyah/web build`) and `apps/web/dist/` is rsynced to the server (default web root `/var/www/qafiyah`). Reference server block: `apps/web/nginx.conf` — handles www→apex, trailing-slash→canonical, `try_files $uri $uri/index.html`, and immutable caching for `/_astro/`. TLS is managed outside this file (certbot or a fronting reverse proxy).
 
 **`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Postgres (via `postgres` driver in `packages/db/src/client.ts`). Routes: `eras`, `meters`, `poems`, `poets`, `rhymes`, `themes`, `search`, `sitemaps`. `pnpm --filter @qafiyah/api build` runs `build:deps` (builds `packages/db`) before `wrangler build`. For dev servers, Turbo `dev`/`dev:test` runs `^build` first when invoked via `pnpm turbo`; otherwise run `build:deps` yourself.
 

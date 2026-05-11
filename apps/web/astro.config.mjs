@@ -7,5 +7,6 @@ export default defineConfig({
   output: 'static',
   site: PROD_SITE_URL,
   integrations: [react(), sitemap()],
-  trailingSlash: 'ignore',
+  trailingSlash: 'never',
+  build: { format: 'directory' },
 });
