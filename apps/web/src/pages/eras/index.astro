@@ -23,7 +23,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'العصور الشعرية',
-  url: `${SITE_URL}/eras/`,
+  url: `${SITE_URL}/eras`,
   description: `قائمة بجميع العصور الشعرية في موقع قافية - ${toArabicDigits(eras.length)} عصر`,
   isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
   numberOfItems: eras.length,
@@ -33,7 +33,7 @@ const jsonLd = {
     item: {
       '@type': 'Collection',
       name: era.name,
-      url: `${SITE_URL}/eras/${era.slug}/page/1/`,
+      url: `${SITE_URL}/eras/${era.slug}/page/1`,
       description: `قصائد العصر ال${era.name} - ${toArabicDigits(era.poemsCount)} قصيدة و ${toArabicDigits(era.poetsCount)} شاعر`,
     },
   })),
@@ -42,9 +42,9 @@ const jsonLd = {
 
 <Layout
   title={title}
-  canonical="/eras/"
+  canonical="/eras"
   ogTitle={title}
-  ogUrl={`${SITE_URL}/eras/`}
+  ogUrl={`${SITE_URL}/eras`}
   jsonLd={jsonLd}
 >
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
@@ -55,7 +55,7 @@ const jsonLd = {
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {eras.length > 0 ? eras.map(({ name, poemsCount, poetsCount, slug }) => (
           <a
-            href={`/eras/${slug}/page/1/`}
+            href={`/eras/${slug}/page/1`}
             class="hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80"
           >
             <p class="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">

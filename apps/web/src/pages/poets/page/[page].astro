@@ -18,13 +18,13 @@ const { page } = Astro.params;
 const pageNumber = Number.parseInt(page as string, 10);
 
 if (!Number.isFinite(pageNumber) || pageNumber < 1) {
-  return Astro.redirect('/404/');
+  return Astro.redirect('/404');
 }
 
 const { data: poetsData, pagination } = await fetchPoets(page as string);
 
 if (!poetsData?.poets) {
-  return Astro.redirect('/404/');
+  return Astro.redirect('/404');
 }
 
 const { poets } = poetsData;
@@ -32,8 +32,8 @@ const totalPoets = pagination?.totalItems || 0;
 const totalPages = pagination?.totalPages || Math.ceil(totalPoets / POEMS_PER_PAGE);
 const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
 const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
-const nextPageUrl = `/poets/page/${pageNumber + 1}/`;
-const prevPageUrl = `/poets/page/${pageNumber - 1}/`;
+const nextPageUrl = `/poets/page/${pageNumber + 1}`;
+const prevPageUrl = `/poets/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 
 const title = `قافية | تصفح حسب الدواوين | صفحة (${toArabicDigits(page as string)})`;
@@ -41,7 +41,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'قائمة الشعراء',
-  url: `${SITE_URL}/poets/page/${pageNumber}/`,
+  url: `${SITE_URL}/poets/page/${pageNumber}`,
   description: `قائمة بجميع الشعراء في موقع قافية - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
   numberOfItems: totalPoets,
@@ -52,7 +52,7 @@ const jsonLd = {
     return {
       '@type': 'ListItem',
       position: index + 1,
-      item: { '@type': 'Person', name: poet.name, url: `${SITE_URL}/poets/${poetSlug}/page/1/` },
+      item: { '@type': 'Person', name: poet.name, url: `${SITE_URL}/poets/${poetSlug}/page/1` },
     };
   }),
 };
@@ -60,9 +60,9 @@ const jsonLd = {
 
 <Layout
   title={title}
-  canonical={`/poets/page/${pageNumber}/`}
+  canonical={`/poets/page/${pageNumber}`}
   ogTitle={title}
-  ogUrl={`${SITE_URL}/poets/page/${pageNumber}/`}
+  ogUrl={`${SITE_URL}/poets/page/${pageNumber}`}
   jsonLd={jsonLd}
 >
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
@@ -75,7 +75,7 @@ const jsonLd = {
           const poetSlug = String(poet.slug ?? '').toLowerCase().replace(/^cat-poet-/, '');
           return (
             <a
-              href={`/poets/${poetSlug}/page/1/`}
+              href={`/poets/${poetSlug}/page/1`}
               class="hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80"
             >
               <p class="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">

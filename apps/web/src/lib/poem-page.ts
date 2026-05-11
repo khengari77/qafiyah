@@ -39,7 +39,7 @@ export async function loadPoemPage(slug: string): Promise<{
   const description = safeMetaText(rawDescription);
   const pageTitle = `${safeClearTitle} - ${safePoetName} - ${SITE_NAME}`;
   const pageUrl = `${SITE_URL}/poems/${slug}`;
-  const canonicalPath = `/poems/${slug}/`;
+  const canonicalPath = `/poems/${slug}`;
   const twitterDescription = safeMetaText(`ديوان «${poetName}» على موقع قافية`);
   const sanitizedKeywords = safeMetaText(poem.processedContent.keywords);
 

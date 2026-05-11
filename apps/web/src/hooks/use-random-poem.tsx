@@ -13,7 +13,7 @@ export function useRandomPoem() {
     setIsError(false);
     try {
       const slug = await getRandomPoemSlug();
-      window.location.href = `/poems/${slug}/`;
+      window.location.href = `/poems/${slug}`;
     } catch {
       setIsError(true);
       setIsLoading(false);

@@ -6,9 +6,9 @@ export type NavLink = {
 
 export const NAV_LINKS: NavLink[] = [
   { name: 'الرئيسة', href: '/', external: false },
-  { name: 'الشعراء', href: '/poets/page/1/', external: false },
-  { name: 'العصور', href: '/eras/', external: false },
-  { name: 'البحور', href: '/meters/', external: false },
-  { name: 'القوافي', href: '/rhymes/', external: false },
-  { name: 'الأغراض', href: '/themes/', external: false },
+  { name: 'الشعراء', href: '/poets/page/1', external: false },
+  { name: 'العصور', href: '/eras', external: false },
+  { name: 'البحور', href: '/meters', external: false },
+  { name: 'القوافي', href: '/rhymes', external: false },
+  { name: 'الأغراض', href: '/themes', external: false },
 ];

@@ -13,7 +13,7 @@ const { slug } = Astro.params;
 const pageData = await loadPoemPage(slug as string);
 
 if (!pageData) {
-  return Astro.redirect('/404/');
+  return Astro.redirect('/404');
 }
 
 const { poem, layout: seo } = pageData;

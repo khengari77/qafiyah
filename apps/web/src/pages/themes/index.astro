@@ -17,7 +17,7 @@ const jsonLd = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
   name: 'أغراض الشعر',
-  url: `${SITE_URL}/themes/`,
+  url: `${SITE_URL}/themes`,
   description: `قائمة بجميع أغراض الشعر في موقع قافية - ${toArabicDigits(themes.length)} غرض`,
   isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
   numberOfItems: themes.length,
@@ -27,7 +27,7 @@ const jsonLd = {
     item: {
       '@type': 'Collection',
       name: theme.name,
-      url: `${SITE_URL}/themes/${theme.slug}/page/1/`,
+      url: `${SITE_URL}/themes/${theme.slug}/page/1`,
     },
   })),
 };
@@ -35,9 +35,9 @@ const jsonLd = {
 
 <Layout
   title={title}
-  canonical="/themes/"
+  canonical="/themes"
   ogTitle={title}
-  ogUrl={`${SITE_URL}/themes/`}
+  ogUrl={`${SITE_URL}/themes`}
   jsonLd={jsonLd}
 >
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
@@ -48,7 +48,7 @@ const jsonLd = {
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {themes.length > 0 ? themes.map(({ name, poemsCount, slug }) => (
           <a
-            href={`/themes/${slug}/page/1/`}
+            href={`/themes/${slug}/page/1`}
             class="hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80"
           >
             <p class="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">
