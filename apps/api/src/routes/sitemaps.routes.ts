@@ -1,6 +1,6 @@
+import { PROD_API_URL as API_URL, PROD_SITE_URL as SITE_URL } from '@qafiyah/constants';
 import { MAX_URLS_PER_SITEMAP, sitemapQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
-import { API_URL, SITE_URL } from '../constants';
 import type { AppContext } from '../types';
 import {
   createPagedEntries,

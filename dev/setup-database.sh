@@ -258,6 +258,9 @@ EOF
     cat > "$WEB_ENV_FILE" <<EOF
 # Local development DB (mirrors apps/api/.dev.vars)
 DATABASE_URL=$dev_db_url
+
+# Point dev search/random at the local API (queries local DB, no CORS)
+PUBLIC_API_URL=http://localhost:8787
 EOF
 
     log_success "Environment files updated"

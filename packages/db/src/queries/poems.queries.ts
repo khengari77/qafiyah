@@ -29,6 +29,11 @@ export async function listPoemSlugs(
   return { slugs, total, totalPages: Math.ceil(total / limit) };
 }
 
+export async function listAllPoemSlugs(db: DbClient): Promise<string[]> {
+  const rows = await db.select({ slug: poemsFullData.slug }).from(poemsFullData);
+  return rows.map((r) => r.slug);
+}
+
 export async function getRandomPoemLines(db: DbClient): Promise<string> {
   try {
     const result = await db.execute(sql`SELECT get_random_eligible_poem()`);

@@ -32,11 +32,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build bot directly
-        run: |
-          cd apps/bot
-          pnpm build
-
       - name: Run bot
         env:
           TWITTER_APP_KEY: ${{ secrets.TWITTER_APP_KEY }}

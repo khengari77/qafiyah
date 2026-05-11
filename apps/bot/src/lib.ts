@@ -1,3 +1,4 @@
+import { PROD_API_URL } from '@qafiyah/constants';
 import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
@@ -101,7 +102,7 @@ export async function withRetry<T>(
 
 export async function fetchFormattedPoem(): Promise<Result<string>> {
   return await withRetry(async () => {
-    const res = await fetch('https://api.qafiyah.com/poems/random');
+    const res = await fetch(`${PROD_API_URL}/poems/random`);
     if (!res.ok) {
       throw new Error(`API returned status ${res.status}`);
     }

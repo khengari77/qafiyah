@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@qafiyah/constants": "workspace:*",
     "@qafiyah/db": "workspace:*",
     "@qafiyah/typescript": "workspace:*",
     "drizzle-orm": "^0.41.0",

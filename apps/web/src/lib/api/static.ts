@@ -32,22 +32,8 @@ import type {
 // Poems
 // ============================================================================
 
-export async function fetchAllPoemSlugsFast(): Promise<string[]> {
-  const db = getDb();
-  const limit = 1000;
-  const first = await poemsQueries.listPoemSlugs(db, 1, limit);
-  const allSlugs = first.slugs.map((p) => p.slug);
-  if (first.totalPages <= 1) return allSlugs;
-
-  const remaining = await Promise.all(
-    Array.from({ length: first.totalPages - 1 }, (_, i) =>
-      poemsQueries
-        .listPoemSlugs(db, i + 2, limit)
-        .then((r) => r.slugs.map((p) => p.slug))
-        .catch(() => [])
-    )
-  );
-  return [...allSlugs, ...remaining.flat()];
+export function fetchAllPoemSlugs(): Promise<string[]> {
+  return poemsQueries.listAllPoemSlugs(getDb());
 }
 
 export async function fetchPoem(slug: string): Promise<PoemResponseData | null> {

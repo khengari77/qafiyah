@@ -1,3 +1,5 @@
+import { SITE_NAME_AR } from '@qafiyah/constants';
+
 export const htmlHeadMetadata = {
   title: 'قافية: مرجع الشعر العربي',
   description:
@@ -18,8 +20,8 @@ export const htmlHeadMetadata = {
   ],
   openGraphUrl: '/open-graph-white.png',
   twitterSummaryCardImageUrl: '/twitter-summary-card-white.png',
-  poetName: 'قافية',
-  author: 'قافية',
+  poetName: SITE_NAME_AR,
+  author: SITE_NAME_AR,
   articleSection: 'شعر',
   themeColorHexCode: '#fafafa',
 };

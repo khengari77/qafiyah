@@ -5,6 +5,7 @@
  * and error handling for the Qafiyah API.
  */
 
+import { DEV_WEB_URL, PROD_SITE_URL } from '@qafiyah/constants';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
@@ -36,7 +37,7 @@ const app = new Hono<AppContext>();
  */
 app.use(
   cors({
-    origin: ['http://localhost:3000', 'https://qafiyah.com'],
+    origin: [DEV_WEB_URL, PROD_SITE_URL],
     allowMethods: ['GET', 'OPTIONS'],
     exposeHeaders: ['Content-Length', 'Content-Type'],
     maxAge: 600,

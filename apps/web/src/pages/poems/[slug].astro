@@ -1,11 +1,11 @@
 ---
 import { PoemDisplay } from '@/components/poem/poem-display';
 import Layout from '@/layouts/Layout.astro';
-import { fetchAllPoemSlugsFast } from '@/lib/api/static';
+import { fetchAllPoemSlugs } from '@/lib/api/static';
 import { loadPoemPage } from '@/lib/poem-page';
 
 export async function getStaticPaths() {
-  const slugs = await fetchAllPoemSlugsFast();
+  const slugs = await fetchAllPoemSlugs();
   return slugs.map((slug) => ({ params: { slug } }));
 }
 
