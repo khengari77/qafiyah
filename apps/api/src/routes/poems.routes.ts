@@ -1,6 +1,6 @@
+import { poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import { poemsQueries } from '../db';
 import type { AppContext } from '../types';
 
 const app = new Hono<AppContext>()

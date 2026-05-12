@@ -1,4 +1,4 @@
-import { cleanArabicQuery, parseIds, searchQueries } from '../db';
+import { cleanArabicQuery, parseIds, searchQueries } from '@qafiyah/db';
 import { pub } from './_base';
 
 const RESULTS_PER_POEMS_PAGE = 5;

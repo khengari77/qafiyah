@@ -1,4 +1,4 @@
-import { rhymesQueries } from '../db';
+import { rhymesQueries } from '@qafiyah/db';
 import { pub } from './_base';
 
 export const listRhymes = pub.rhymes.list.handler(({ context }) =>

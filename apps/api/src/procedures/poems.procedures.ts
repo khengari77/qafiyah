@@ -1,4 +1,4 @@
-import { poemsQueries } from '../db';
+import { poemsQueries } from '@qafiyah/db';
 import { pub } from './_base';
 
 export const listSlugs = pub.poems.listSlugs.handler(({ context, input }) =>

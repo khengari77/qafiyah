@@ -59,18 +59,15 @@ importers:
       '@qafiyah/contracts':
         specifier: workspace:*
         version: link:../../packages/contracts
+      '@qafiyah/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@qafiyah/typescript':
         specifier: workspace:*
         version: link:../../packages/typescript
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@cloudflare/workers-types@4.20260511.1)(postgres@3.4.9)
       hono:
         specifier: ^4.11.4
         version: 4.12.18
-      postgres:
-        specifier: ^3.4.5
-        version: 3.4.9
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20250214.0
@@ -246,6 +243,28 @@ importers:
       typescript:
         specifier: ^5
         version: 5.9.3
+
+  packages/db:
+    dependencies:
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@cloudflare/workers-types@4.20260511.1)(postgres@3.4.9)
+      postgres:
+        specifier: ^3.4.5
+        version: 3.4.9
+    devDependencies:
+      '@qafiyah/typescript':
+        specifier: workspace:*
+        version: link:../typescript
+      '@vitest/coverage-v8':
+        specifier: ^4.1.5
+        version: 4.1.5(vitest@4.1.5)
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.5
+        version: 4.1.5(@types/node@25.6.2)(@vitest/coverage-v8@4.1.5)(@vitest/ui@4.1.5)(vite@7.3.3(@types/node@25.6.2)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.8.4))
 
   packages/typescript: {}
 

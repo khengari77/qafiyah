@@ -1,4 +1,4 @@
-import { poetsQueries } from '../db';
+import { poetsQueries } from '@qafiyah/db';
 import { pub } from './_base';
 
 export const listPoets = pub.poets.list.handler(async ({ context, input, errors }) => {

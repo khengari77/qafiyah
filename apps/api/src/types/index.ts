@@ -1,4 +1,4 @@
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type { DbClient } from '@qafiyah/db';
 
 export type Bindings = {
   DATABASE_URL?: string;
@@ -7,6 +7,6 @@ export type Bindings = {
 export type AppContext = {
   Bindings: Bindings;
   Variables: {
-    db: PostgresJsDatabase<Record<string, never>>;
+    db: DbClient;
   };
 };

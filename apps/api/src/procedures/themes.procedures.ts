@@ -1,4 +1,4 @@
-import { themesQueries } from '../db';
+import { themesQueries } from '@qafiyah/db';
 import { pub } from './_base';
 
 export const listThemes = pub.themes.list.handler(({ context }) =>

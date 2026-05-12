@@ -1,4 +1,4 @@
-import { erasQueries } from '../db';
+import { erasQueries } from '@qafiyah/db';
 import { pub } from './_base';
 
 export const listEras = pub.eras.list.handler(({ context }) => erasQueries.listEras(context.db));

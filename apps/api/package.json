@@ -16,10 +16,9 @@
     "@orpc/server": "^1.14.2",
     "@qafiyah/constants": "workspace:*",
     "@qafiyah/contracts": "workspace:*",
+    "@qafiyah/db": "workspace:*",
     "@qafiyah/typescript": "workspace:*",
-    "drizzle-orm": "^0.45.2",
-    "hono": "^4.11.4",
-    "postgres": "^3.4.5"
+    "hono": "^4.11.4"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250214.0",

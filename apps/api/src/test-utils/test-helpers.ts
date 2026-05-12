@@ -3,7 +3,7 @@
  * Provides helpers for creating test contexts and mocking database
  */
 
-import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type { DbClient } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { vi } from 'vitest';
@@ -46,9 +46,7 @@ function createQueryBuilder(mockData: unknown[] = []) {
  * Creates a mock database instance
  * In a real scenario, you might want to use a test database or a more sophisticated mock
  */
-export function createMockDb(
-  defaultData: unknown[] = []
-): PostgresJsDatabase<Record<string, never>> {
+export function createMockDb(defaultData: unknown[] = []): DbClient {
   // This is a basic mock - in production tests, you might want to use
   // a real test database or a more sophisticated mocking library
   const defaultBuilder = createQueryBuilder(defaultData);
@@ -60,7 +58,7 @@ export function createMockDb(
     delete: vi.fn(),
     execute: vi.fn().mockResolvedValue([]),
     $count: vi.fn().mockResolvedValue(0),
-  } as unknown as PostgresJsDatabase<Record<string, never>>;
+  } as unknown as DbClient;
 }
 
 /**
@@ -74,7 +72,7 @@ type TestClientWithGet = {
 /**
  * Creates a test middleware that injects the database into context
  */
-function createDbTestMiddleware(db: PostgresJsDatabase<Record<string, never>>) {
+function createDbTestMiddleware(db: DbClient) {
   return createMiddleware<AppContext>(async (c, next) => {
     c.set('db', db);
     await next();
@@ -88,7 +86,7 @@ function createDbTestMiddleware(db: PostgresJsDatabase<Record<string, never>>) {
 export function createTestClient<T extends Hono<AppContext>>(
   app: T,
   options?: {
-    db?: PostgresJsDatabase<Record<string, never>>;
+    db?: DbClient;
     bindings?: Partial<Bindings>;
   }
 ): TestClientWithGet {

@@ -4,8 +4,8 @@
  * in apps/api/src/procedures/poems.procedures.ts.
  */
 
+import { FALLBACK_RANDOM_POEM_LINES, FALLBACK_RANDOM_POEM_SLUG } from '@qafiyah/db';
 import { describe, expect, it, vi } from 'vitest';
-import { FALLBACK_RANDOM_POEM_LINES, FALLBACK_RANDOM_POEM_SLUG } from '../db';
 import { createMockDb, createTestClient } from '../test-utils/test-helpers';
 import poems from './poems.routes';
 

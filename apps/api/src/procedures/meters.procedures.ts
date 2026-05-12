@@ -1,4 +1,4 @@
-import { metersQueries } from '../db';
+import { metersQueries } from '@qafiyah/db';
 import { pub } from './_base';
 
 export const listMeters = pub.meters.list.handler(({ context }) =>
