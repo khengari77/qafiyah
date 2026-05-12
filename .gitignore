@@ -63,3 +63,4 @@ data/docs/db-schema/*.yaml
 
 apps/web/.astro/
 .claude/
+TODO.md
