@@ -14,6 +14,7 @@
   "dependencies": {
     "@orpc/openapi": "^1.14.2",
     "@orpc/server": "^1.14.2",
+    "@orpc/valibot": "^1.10.4",
     "@qafiyah/constants": "workspace:*",
     "@qafiyah/contracts": "workspace:*",
     "@qafiyah/db": "workspace:*",

@@ -1,5 +1,7 @@
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
-import { DEV_WEB_URL, PROD_SITE_URL } from '@qafiyah/constants';
+import { OpenAPIReferencePlugin } from '@orpc/openapi/plugins';
+import { experimental_ValibotToJsonSchemaConverter as ValibotToJsonSchemaConverter } from '@orpc/valibot';
+import { DEV_WEB_URL, PROD_SITE_URL, SITE_NAME_EN } from '@qafiyah/constants';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
@@ -24,7 +26,18 @@ app.use(
 app.use(dbMiddleware);
 app.use(serveEmojiFavicon('📜'));
 
-const orpcHandler = new OpenAPIHandler(router);
+const orpcHandler = new OpenAPIHandler(router, {
+  plugins: [
+    new OpenAPIReferencePlugin({
+      schemaConverters: [new ValibotToJsonSchemaConverter()],
+      specPath: '/openapi.json',
+      docsPath: '/docs',
+      specGenerateOptions: {
+        info: { title: `${SITE_NAME_EN} API`, version: '1.0.0' },
+      },
+    }),
+  ],
+});
 
 app.use('*', async (c, next) => {
   const result = await orpcHandler.handle(c.req.raw, {

@@ -53,6 +53,9 @@ importers:
       '@orpc/server':
         specifier: ^1.14.2
         version: 1.14.2(crossws@0.3.5)
+      '@orpc/valibot':
+        specifier: ^1.10.4
+        version: 1.14.2(@orpc/contract@1.14.2)(@orpc/server@1.14.2(crossws@0.3.5))(crossws@0.3.5)(valibot@1.4.0(typescript@5.9.3))
       '@qafiyah/constants':
         specifier: workspace:*
         version: link:../../packages/constants
@@ -1195,6 +1198,13 @@ packages:
   '@orpc/standard-server@1.14.2':
     resolution: {integrity: sha512-XHySJICwDsJf211gcxtJBpzB1ldZrSHDW2mqbBQg+I2AewvTqWiqeGZV+SPvmq87q4IfBzncSuwMrRKplUJhsw==}
 
+  '@orpc/valibot@1.14.2':
+    resolution: {integrity: sha512-lpLzGBpNWGnWUP4E39k/f8mD6oCrxZvwTwUrZ+yRl3p+ueC5+7l8MiB9wW6bGUUxYWeyd2oaeHTGeHQESAv2Ng==}
+    peerDependencies:
+      '@orpc/contract': 1.14.2
+      '@orpc/server': 1.14.2
+      valibot: '>=1.0.0'
+
   '@oslojs/encoding@1.1.0':
     resolution: {integrity: sha512-70wQhgYmndg4GCPxPPxPGevRKqTIJ2Nh4OkiMWmDAVYsTQ+Ta7Sq+rPevXyXGdzr30/qZBnyOalCszoMxlyldQ==}
 
@@ -1686,6 +1696,11 @@ packages:
 
   '@ungap/structured-clone@1.3.1':
     resolution: {integrity: sha512-mUFwbeTqrVgDQxFveS+df2yfap6iuP20NAKAsBt5jDEoOTDew+zwLAOilHCeQJOVSvmgCX4ogqIrA0mnyr08yQ==}
+
+  '@valibot/to-json-schema@1.7.0':
+    resolution: {integrity: sha512-Y3pPVibbIOHzohrlxSINvO7w/bvXkoYS3BQHoImV9ynE+bXKf171bdMucPurV2zp7gdmt0L1HCcNAsbo7cFRQw==}
+    peerDependencies:
+      valibot: ^1.4.0
 
   '@vitejs/plugin-react@5.2.0':
     resolution: {integrity: sha512-YmKkfhOAi3wsB1PhJq5Scj3GXMn3WvtQ/JC0xoopuHoXSdmtdStOpFrYaT1kie2YgFBcIe64ROzMYRjCrYOdYw==}
@@ -5334,6 +5349,19 @@ snapshots:
     transitivePeerDependencies:
       - '@opentelemetry/api'
 
+  '@orpc/valibot@1.14.2(@orpc/contract@1.14.2)(@orpc/server@1.14.2(crossws@0.3.5))(crossws@0.3.5)(valibot@1.4.0(typescript@5.9.3))':
+    dependencies:
+      '@orpc/contract': 1.14.2
+      '@orpc/openapi': 1.14.2(crossws@0.3.5)
+      '@orpc/server': 1.14.2(crossws@0.3.5)
+      '@valibot/to-json-schema': 1.7.0(valibot@1.4.0(typescript@5.9.3))
+      valibot: 1.4.0(typescript@5.9.3)
+    transitivePeerDependencies:
+      - '@opentelemetry/api'
+      - crossws
+      - fastify
+      - ws
+
   '@oslojs/encoding@1.1.0': {}
 
   '@oxc-resolver/binding-android-arm-eabi@11.19.1':
@@ -5731,6 +5759,10 @@ snapshots:
       eslint-visitor-keys: 5.0.1
 
   '@ungap/structured-clone@1.3.1': {}
+
+  '@valibot/to-json-schema@1.7.0(valibot@1.4.0(typescript@5.9.3))':
+    dependencies:
+      valibot: 1.4.0(typescript@5.9.3)
 
   '@vitejs/plugin-react@5.2.0(vite@7.3.3(@types/node@20.19.40)(jiti@1.21.7)(tsx@4.21.0)(yaml@2.8.4))':
     dependencies:
