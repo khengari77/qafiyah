@@ -4,35 +4,6 @@ import { pub } from './_base';
 const RESULTS_PER_POEMS_PAGE = 5;
 const RESULTS_PER_POETS_PAGE = 10;
 
-type SearchPagination = {
-  currentPage: number;
-  totalPages: number;
-  totalResults: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-};
-
-type PoemsSearchResult = {
-  poet_name: string;
-  poet_era: string;
-  poet_slug: string;
-  poem_title: string;
-  poem_snippet: string;
-  poem_meter: string;
-  poem_slug: string;
-  relevance: number;
-  total_count: number;
-};
-
-type PoetsSearchResult = {
-  poet_name: string;
-  poet_era: string;
-  poet_slug: string;
-  poet_bio: string;
-  relevance: number;
-  total_count: number;
-};
-
 export const search = pub.search.search.handler(async ({ context, input, errors }) => {
   const sanitizedQuery = decodeURIComponent(cleanArabicQuery(input.q));
   if (!sanitizedQuery) throw errors.EMPTY_QUERY();
@@ -67,7 +38,7 @@ export const search = pub.search.search.handler(async ({ context, input, errors 
     input.search_type === 'poems' ? RESULTS_PER_POEMS_PAGE : RESULTS_PER_POETS_PAGE;
 
   if (results.length === 0) {
-    const pagination: SearchPagination = {
+    const pagination = {
       currentPage: input.page,
       totalPages: 0,
       totalResults: 0,
@@ -82,7 +53,7 @@ export const search = pub.search.search.handler(async ({ context, input, errors 
   const totalResults =
     results[0]?.['total_count'] !== undefined ? Number(results[0]['total_count']) : 0;
   const totalPages = Math.ceil(totalResults / resultsPerPage);
-  const pagination: SearchPagination = {
+  const pagination = {
     currentPage: input.page,
     totalPages,
     totalResults,
@@ -91,7 +62,7 @@ export const search = pub.search.search.handler(async ({ context, input, errors 
   };
 
   if (input.search_type === 'poems') {
-    const shaped: PoemsSearchResult[] = results.map((r) => ({
+    const shaped = results.map((r) => ({
       poet_name: String(r['poet_name'] ?? ''),
       poet_era: String(r['poet_era'] ?? ''),
       poet_slug: String(r['poet_slug'] ?? ''),
@@ -105,7 +76,7 @@ export const search = pub.search.search.handler(async ({ context, input, errors 
     return { search_type: 'poems', results: shaped, pagination };
   }
 
-  const shaped: PoetsSearchResult[] = results.map((r) => ({
+  const shaped = results.map((r) => ({
     poet_name: String(r['poet_name'] ?? ''),
     poet_era: String(r['poet_era'] ?? ''),
     poet_slug: String(r['poet_slug'] ?? ''),
