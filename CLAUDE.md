@@ -1,83 +1,76 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
-Qafiyah is an Arabic poetry repository (pnpm + Turborepo monorepo): `apps/web` (Astro 6 static site), `apps/api` (Hono + oRPC on Cloudflare Workers; thin HTTP layer over `@qafiyah/db`), `apps/bot` (X/Twitter bot), `packages/db` (Drizzle schema + queries + Postgres client, consumed only by `apps/api`), `packages/contracts` (oRPC contracts shared between API and web), `packages/constants` (shared brand/URLs/dev-ports), `packages/typescript` (shared tsconfigs).
+Qafiyah is an Arabic poetry monorepo (pnpm + Turborepo): `apps/web` (Astro 6 static), `apps/api` (Hono + oRPC on Cloudflare Workers), `apps/bot` (X/Twitter bot), `packages/db` (Drizzle + Postgres, API-only), `packages/contracts` (shared oRPC contracts), `packages/constants` (brand/URLs/ports), `packages/typescript` (shared tsconfigs).
 
 ## Commands
 
 ```bash
 pnpm dev             # turbo dev (web + API)
-pnpm build           # turbo build in dependency order
+pnpm build           # turbo build
 pnpm lint            # biome check --write .
-pnpm format          # biome format + prettier (md/mdx only)
-pnpm types           # tsc --noEmit across all workspaces
-pnpm test            # vitest across all workspaces
-pnpm db:setup        # first-time DB setup (Docker: dev on :5433, test on :5434)
-pnpm clean:dev       # kill orphan astro/wrangler/workerd processes scoped to this repo
-pnpm ci              # format + lint + types + test + knip + madge (circular-deps)
+pnpm format          # biome + prettier (md/mdx)
+pnpm types           # tsc --noEmit all workspaces
+pnpm test            # vitest all workspaces
+pnpm db:setup        # Docker Postgres: dev :5433, test :5434
+pnpm clean:dev       # kill orphan astro/wrangler/workerd processes
+pnpm ci              # format + lint + types + test + knip + madge
 
-# Per-workspace
-pnpm --filter @qafiyah/api dev                        # wrangler dev
-pnpm --filter @qafiyah/api dev:test                   # wrangler dev --env test
-pnpm --filter @qafiyah/api test                       # vitest (API only)
-vitest run path/to/file.test.ts                       # single test file (within a workspace)
+pnpm --filter @qafiyah/api dev          # wrangler dev
+pnpm --filter @qafiyah/api dev:test     # wrangler dev --env test
+pnpm --filter @qafiyah/api test         # vitest API only
+vitest run path/to/file.test.ts         # single file
 ```
 
 ## Tooling
 
-- **Biome** for all JS/TS lint + format (not ESLint/Prettier). Config in `biome.json`: 2-space indent, 100-char width, single quotes, es5 trailing commas.
-- **Prettier** for `.md`/`.mdx` only.
-- **Commitlint** enforces Conventional Commits (`feat`, `fix`, `refactor`, etc.).
-- **knip** and **madge** run in `pnpm ci` to catch unused exports and circular imports.
+- **Biome**: all JS/TS lint + format. `biome.json`: 2-space, 100-char, single quotes, es5 commas.
+- **Prettier**: `.md`/`.mdx` only.
+- **Commitlint**: Conventional Commits (`feat`, `fix`, `refactor`, …).
+- **knip** + **madge**: unused exports + circular imports (run in `pnpm ci`).
 
 ## Architecture
 
-**`apps/web`** — Astro 6 static output; queries the API over HTTP at build time (`src/lib/api/static.ts` → typed fetcher in `src/lib/api/rpc.ts`). `pnpm --filter @qafiyah/web build` runs `scripts/build-with-api.mjs`, which auto-starts a local Wrangler instance on :8787 if one isn't already up, sets `BUILD_API_URL=http://127.0.0.1:8787` (server-only env), runs `astro build`, then tears Wrangler down. `PUBLIC_API_URL` stays pointed at production so the browser bundle hits the prod API at runtime. React is islands-only (search, nav, random poem). Path alias `@/*` → `src/*`. RTL Arabic layout in `src/layouts/Layout.astro`. Canonical URLs are non-trailing-slash (`trailingSlash: 'never'` + `build.format: 'directory'`); both `/page` and `/page/` resolve at the host, with the host 301-ing the trailing form to canonical.
+**`apps/web`** — Astro 6 static. Queries API at build time via `src/lib/api/static.ts` → `rpc.ts`. Build script (`scripts/build-with-api.mjs`) auto-starts Wrangler on :8787, sets `BUILD_API_URL=http://127.0.0.1:8787`, runs `astro build`, tears Wrangler down. `PUBLIC_API_URL` always points to prod for the browser bundle. React is islands-only (search, nav, random poem). Path alias `@/*` → `src/*`. RTL layout in `src/layouts/Layout.astro`. Non-trailing-slash canonical URLs; host 301s `/page/` → `/page`.
 
-**Web deployment** — Self-hosted on a VPS behind nginx. Build is produced locally (`pnpm --filter @qafiyah/web build`) and `apps/web/dist/` is rsynced to the server (default web root `/var/www/qafiyah`). Reference server block: `apps/web/nginx.conf` — handles www→apex, trailing-slash→canonical, `try_files $uri $uri/index.html`, and immutable caching for `/_astro/`. TLS is managed outside this file (certbot or a fronting reverse proxy).
+**Web deployment** — VPS + nginx. Build locally, rsync `apps/web/dist/` → `/var/www/qafiyah`. `apps/web/nginx.conf`: www→apex, trailing-slash→canonical, `try_files`, immutable `/_astro/` cache. TLS managed externally.
 
-**`apps/api`** — Hono on Cloudflare Workers, a thin HTTP layer over `@qafiyah/db`. It imports `createDb`, `DbClient`, and the per-domain `*Queries` namespaces from the package; no Drizzle or `postgres` imports live in `apps/api/src`. Per-domain contracts (schemas + routes) live in `packages/contracts`; the API implements them as oRPC procedures in `src/procedures/*.procedures.ts`, composes them into `src/router.ts`, and mounts the router on Hono via `OpenAPIHandler` in `src/app.ts`. `/poems/random` (text response) and `/` (API index) stay as plain Hono routes. The web imports `type { AppRouter } from '@qafiyah/api/router'` for response-type inference, and `contract`/`type AppContract` from `@qafiyah/contracts` for its typed fetcher; no API source code is shipped to the browser. Wrangler's esbuild bundles everything from source.
+**`apps/api`** — Thin Hono layer over `@qafiyah/db`. No Drizzle/postgres imports in `apps/api/src`. Contracts in `packages/contracts`; implemented as oRPC procedures in `src/procedures/*.procedures.ts`, composed in `src/router.ts`, mounted via `OpenAPIHandler` in `src/app.ts`. `/poems/random` (plain text) and `/` stay as raw Hono routes. Web imports only types from the API; no API code ships to the browser.
 
-**`packages/db`** — `@qafiyah/db`: Drizzle view/materialized-view definitions, per-domain query namespaces (`erasQueries`, `metersQueries`, `poemsQueries`, `poetsQueries`, `rhymesQueries`, `searchQueries`, `themesQueries`), `createDb(databaseUrl)` factory, exported `DbClient` type, DB-layer constants (eras sort order, fetch limits, fallback poem), and Arabic text utilities (`cleanArabicQuery`, `parseIds`, `removeTashkeel`, `processPoemContent`, `extractPoemExcerpt`, `normalizeRhymePattern`). Source-only, bundled into the API worker by Wrangler's esbuild. Sole consumer is `apps/api`; if a second consumer ever appears, that's the signal to widen the package's API surface, not to copy code.
+**`packages/db`** — Drizzle views, query namespaces (`erasQueries`, `metersQueries`, `poemsQueries`, `poetsQueries`, `rhymesQueries`, `searchQueries`, `themesQueries`), `createDb(url)` factory, `DbClient` type, DB constants, and Arabic text utils (`cleanArabicQuery`, `parseIds`, `removeTashkeel`, `processPoemContent`, `extractPoemExcerpt`, `normalizeRhymePattern`). Source-only; bundled by Wrangler. Sole consumer is `apps/api`.
 
-**`apps/bot`** — Posts a random poem via `twitter-api-v2` on a GitHub Actions cron at 08/12/16/20 UTC (see `.github/workflows/post-poem.yml`). Calls `/poems/random` (plain-text endpoint, unchanged by the oRPC migration). Exponential backoff, 3 retries.
+**`apps/bot`** — GitHub Actions cron (08/12/16/20 UTC). Calls `/poems/random`, posts via `twitter-api-v2`. Exponential backoff, 3 retries.
 
-**`packages/constants`** — Source-only (no build step). Exports brand strings, production URLs, dev ports (`DEV_WEB_PORT=4321`, `DEV_API_PORT=8787`), and external links. Consumed by `web`, `api`, and `bot`. When changing a URL or port, update here — not in app code.
+**`packages/constants`** — Source-only. Brand strings, prod URLs, dev ports (`DEV_WEB_PORT=4321`, `DEV_API_PORT=8787`). Always update here, not in app code.
 
-**`packages/typescript`** — Shared tsconfigs (`base`, `astro`, `cloudflare`, `node`). Not published; referenced via workspace.
+**`packages/typescript`** — Shared tsconfigs (`base`, `astro`, `cloudflare`, `node`). Workspace-only.
 
 ## Quality Checklist (TRUST 5)
 
-Before marking any task complete, verify all five:
-
-|       | Criterion | Gate                                                    |
-| ----- | --------- | ------------------------------------------------------- |
-| **T** | Tested    | `pnpm test` passes; new logic has coverage              |
-| **R** | Readable  | 0 lint errors (`pnpm lint`); names are self-explanatory |
-| **U** | Unified   | Matches repo style (Biome config, Conventional Commits) |
-| **S** | Secured   | No secrets in code; inputs validated at boundaries      |
-| **T** | Trackable | Commit message explains _why_, not just what            |
+| | Criterion | Gate |
+|---|---|---|
+| **T** | Tested | `pnpm test` passes; new logic has coverage |
+| **R** | Readable | 0 lint errors; self-explanatory names |
+| **U** | Unified | Matches Biome config + Conventional Commits |
+| **S** | Secured | No secrets in code; inputs validated at boundaries |
+| **T** | Trackable | Commit message explains _why_ |
 
 ## Code Annotations
 
-Mark only code that will surprise a future reader. Three tags, inline only:
-
 ```ts
-// @ANCHOR: <why this is a choke point> — used when 3+ callers depend on this contract
-// @WARN: <danger> — goroutine-equivalent async, global mutation, non-obvious side-effect
-// @NOTE: <context> — magic constant, workaround, constraint not visible from the code
+// @ANCHOR: <why> — 3+ callers depend on this contract
+// @WARN: <danger> — async side-effect, global mutation
+// @NOTE: <context> — magic constant, workaround
 ```
 
 Use sparingly. Most code needs none.
 
 ## Session Discipline
 
-- **One mission per session.** Don't mix unrelated tasks in the same thread.
-- **If a dev request hangs or `pnpm dev` complains about a port,** run `pnpm clean:dev` to kill orphan `astro dev` / `wrangler` / `workerd` processes scoped to this repo, then restart. `dev/check-port.mjs` guards both servers against silently binding a non-default port.
-- **Database dumps live in `data/datasets/`** (newest folder is the latest). `pnpm db:setup` restores the latest into a Docker Postgres on port 5433 (dev) and 5434 (test).
-- **Web build is ~2 hours end-to-end.** When verifying a change (not producing a real `dist/`), run `pnpm --filter @qafiyah/web build` as a background process and kill it after ~20 seconds — that's enough for Wrangler to start, Astro to begin, and the first `getStaticPaths` calls to surface any contract/API/runtime errors. Only let it run to completion when the user explicitly asks for a deployable build. After killing, run `pnpm clean:dev` to reap the orphaned Wrangler.
+- **One mission per session.**
+- **Port conflicts:** `pnpm clean:dev`, then restart. `dev/check-port.mjs` guards against silent rebinding.
+- **DB dumps:** `data/datasets/` (newest = latest). `pnpm db:setup` restores to Docker on :5433/:5434.
+- **Web build is ~2 hours.** To verify without a full build: run `pnpm --filter @qafiyah/web build` in the background, kill after ~20s (enough for Wrangler + first `getStaticPaths` errors to surface), then `pnpm clean:dev`. Only run to completion for a deployable build.
 
 ## Known Bug
 
-`@astrojs/compiler@2.13.1` crashes on `"` inside `${}` in Astro templates. Use helper functions instead of inline quoted strings in template expressions.
+`@astrojs/compiler@2.13.1` crashes on `"` inside `${}` in Astro templates. Use helper functions instead of inline quoted strings.
