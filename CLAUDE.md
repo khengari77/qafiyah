@@ -46,13 +46,13 @@ vitest run path/to/file.test.ts         # single file
 
 ## Quality Checklist (TRUST 5)
 
-| | Criterion | Gate |
-|---|---|---|
-| **T** | Tested | `pnpm test` passes; new logic has coverage |
-| **R** | Readable | 0 lint errors; self-explanatory names |
-| **U** | Unified | Matches Biome config + Conventional Commits |
-| **S** | Secured | No secrets in code; inputs validated at boundaries |
-| **T** | Trackable | Commit message explains _why_ |
+|       | Criterion | Gate                                               |
+| ----- | --------- | -------------------------------------------------- |
+| **T** | Tested    | `pnpm test` passes; new logic has coverage         |
+| **R** | Readable  | 0 lint errors; self-explanatory names              |
+| **U** | Unified   | Matches Biome config + Conventional Commits        |
+| **S** | Secured   | No secrets in code; inputs validated at boundaries |
+| **T** | Trackable | Commit message explains _why_                      |
 
 ## Code Annotations
 
