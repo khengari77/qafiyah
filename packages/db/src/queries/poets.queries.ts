@@ -3,7 +3,29 @@ import type { DbClient } from '../client';
 import { FETCH_PER_PAGE } from '../constants';
 import { poemsFullData, poetPoems, poetStats } from '../schema';
 
-export async function listPoets(db: DbClient, page: number) {
+export type PoetStatsRow = typeof poetStats.$inferSelect;
+
+export type ListPoetsResult = {
+  poets: PoetStatsRow[];
+  totalPoets: number;
+  totalPages: number;
+};
+
+export type GetPoetBySlugResult = {
+  poet: {
+    name: string;
+    poemsCount: number;
+    era: { name: string; slug: string } | null;
+  };
+};
+
+export type ListPoetPoemsResult = {
+  poetDetails: { id: number; name: string; poemsCount: number };
+  poems: { title: string; slug: string; meter: string }[];
+  totalPages: number;
+};
+
+export async function listPoets(db: DbClient, page: number): Promise<ListPoetsResult> {
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 
@@ -14,7 +36,10 @@ export async function listPoets(db: DbClient, page: number) {
   return { poets, totalPoets, totalPages };
 }
 
-export async function getPoetBySlug(db: DbClient, slug: string) {
+export async function getPoetBySlug(
+  db: DbClient,
+  slug: string
+): Promise<GetPoetBySlugResult | null> {
   const poetInfo = await db
     .select({
       poetId: poetPoems.poetId,
@@ -45,7 +70,11 @@ export async function getPoetBySlug(db: DbClient, slug: string) {
   };
 }
 
-export async function listPoetPoems(db: DbClient, slug: string, page: number) {
+export async function listPoetPoems(
+  db: DbClient,
+  slug: string,
+  page: number
+): Promise<ListPoetPoemsResult | null> {
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 

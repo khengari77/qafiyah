@@ -3,12 +3,24 @@ import type { DbClient } from '../client';
 import { FETCH_PER_PAGE, FORMAL_METERS } from '../constants';
 import { meterPoems, meterStats } from '../schema';
 
-export async function listMeters(db: DbClient) {
+export type MeterStatsRow = typeof meterStats.$inferSelect;
+
+export type ListMeterPoemsResult = {
+  meterDetails: { id: number; name: string; poemsCount: number };
+  poems: { title: string; slug: string; poetName: string }[];
+  totalPages: number;
+};
+
+export async function listMeters(db: DbClient): Promise<MeterStatsRow[]> {
   const results = await db.select().from(meterStats).where(inArray(meterStats.name, FORMAL_METERS));
   return results.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 }
 
-export async function listMeterPoems(db: DbClient, slug: string, page: number) {
+export async function listMeterPoems(
+  db: DbClient,
+  slug: string,
+  page: number
+): Promise<ListMeterPoemsResult | null> {
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 

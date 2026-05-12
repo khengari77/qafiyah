@@ -11,11 +11,17 @@ import type { PoemWithRelatedResponse, RandomPoemLines } from '../types';
 import { extractPoemExcerpt } from '../utils/extract-poem-excerpt';
 import { processPoemContent } from '../utils/process-poem-content';
 
+export type ListPoemSlugsResult = {
+  slugs: { slug: string }[];
+  total: number;
+  totalPages: number;
+};
+
 export async function listPoemSlugs(
   db: DbClient,
   page: number,
   limit: number = MAX_URLS_PER_SITEMAP
-) {
+): Promise<ListPoemSlugsResult> {
   const offset = (page - 1) * limit;
   const slugs = await db
     .select({ slug: poemsFullData.slug })

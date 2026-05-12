@@ -1,6 +1,8 @@
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 
+export type SearchRow = Record<string, unknown>;
+
 export async function searchPoems(
   db: DbClient,
   query: string,
@@ -10,7 +12,7 @@ export async function searchPoems(
   eraIds: string | null,
   themeIds: string | null,
   rhymeIds: string | null
-) {
+): Promise<SearchRow[]> {
   const results = await db.execute(
     sql`SELECT * FROM search_poems(
       ${query}::TEXT,
@@ -32,7 +34,7 @@ export async function searchPoets(
   page: number,
   matchType: string,
   eraIds: string | null
-) {
+): Promise<SearchRow[]> {
   const results = await db.execute(
     sql`SELECT * FROM search_poets(
       ${query}::TEXT,

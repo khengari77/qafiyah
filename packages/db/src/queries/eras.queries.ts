@@ -3,12 +3,24 @@ import type { DbClient } from '../client';
 import { ERAS_SORT_ORDER, FETCH_PER_PAGE } from '../constants';
 import { eraPoems, eraStats } from '../schema';
 
-export async function listEras(db: DbClient) {
+export type EraStatsRow = typeof eraStats.$inferSelect;
+
+export type ListEraPoemsResult = {
+  eraDetails: { id: number; name: string; poemsCount: number };
+  poems: { title: string; slug: string; poetName: string; meter: string }[];
+  totalPages: number;
+};
+
+export async function listEras(db: DbClient): Promise<EraStatsRow[]> {
   const results = await db.select().from(eraStats);
   return results.sort((a, b) => ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name));
 }
 
-export async function listEraPoems(db: DbClient, slug: string, page: number) {
+export async function listEraPoems(
+  db: DbClient,
+  slug: string,
+  page: number
+): Promise<ListEraPoemsResult | null> {
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 

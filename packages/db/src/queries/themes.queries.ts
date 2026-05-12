@@ -3,12 +3,24 @@ import type { DbClient } from '../client';
 import { FETCH_PER_PAGE } from '../constants';
 import { themePoems, themeStats } from '../schema';
 
-export async function listThemes(db: DbClient) {
+export type ThemeStatsRow = typeof themeStats.$inferSelect;
+
+export type ListThemePoemsResult = {
+  themeDetails: { id: number; name: string; poemsCount: number };
+  poems: { title: string; slug: string; poetName: string; meter: string }[];
+  totalPages: number;
+};
+
+export async function listThemes(db: DbClient): Promise<ThemeStatsRow[]> {
   const results = await db.select().from(themeStats);
   return results.sort((a, b) => b.poemsCount - a.poemsCount);
 }
 
-export async function listThemePoems(db: DbClient, slug: string, page: number) {
+export async function listThemePoems(
+  db: DbClient,
+  slug: string,
+  page: number
+): Promise<ListThemePoemsResult | null> {
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 

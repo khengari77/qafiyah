@@ -4,7 +4,22 @@ import { ARABIC_LETTERS_MAP, FETCH_PER_PAGE } from '../constants';
 import { rhymePoems, rhymeStats } from '../schema';
 import { normalizeRhymePattern } from '../utils/normalize-rhyme-pattern';
 
-export async function listRhymes(db: DbClient) {
+export type RhymeLetterGroup = {
+  id: number;
+  name: string;
+  slug: string;
+  poetsCount: number;
+  poemsCount: number;
+  totalUsage: number;
+};
+
+export type ListRhymePoemsResult = {
+  rhymeDetails: { id: number; pattern: string; poemsCount: number };
+  poems: { title: string; slug: string; meter: string }[];
+  totalPages: number;
+};
+
+export async function listRhymes(db: DbClient): Promise<RhymeLetterGroup[]> {
   const results = await db.select().from(rhymeStats);
 
   const groupedRhymes = new Map<
@@ -48,7 +63,11 @@ export async function listRhymes(db: DbClient) {
   return enrichedGroups.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 }
 
-export async function listRhymePoems(db: DbClient, slug: string, page: number) {
+export async function listRhymePoems(
+  db: DbClient,
+  slug: string,
+  page: number
+): Promise<ListRhymePoemsResult | null> {
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 
