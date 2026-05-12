@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { removeTashkeel } from './remove-tashkeel';
 
 describe('removeTashkeel', () => {

@@ -1,10 +1,12 @@
 /**
- * Tests for poems routes
+ * Tests for the /poems/random plain-Hono route.
+ * All other poems endpoints (slugs, slug/:slug) are exposed via oRPC procedures
+ * in apps/api/src/contracts/poems.contract.ts.
  */
 
-import { FALLBACK_RANDOM_POEM_LINES, FALLBACK_RANDOM_POEM_SLUG } from '@qafiyah/db';
 import { describe, expect, it, vi } from 'vitest';
-import { type ApiResponse, createMockDb, createTestClient } from '../test-utils/test-helpers';
+import { FALLBACK_RANDOM_POEM_LINES, FALLBACK_RANDOM_POEM_SLUG } from '../db';
+import { createMockDb, createTestClient } from '../test-utils/test-helpers';
 import poems from './poems.routes';
 
 describe('poems routes', () => {
@@ -78,86 +80,5 @@ describe('poems routes', () => {
     expect(res.status).toBe(200);
     const text = await res.text();
     expect(text).toBe(FALLBACK_RANDOM_POEM_LINES);
-  });
-
-  it('should return poem by slug', async () => {
-    const mockPoemData = {
-      poem: {
-        slug: 'eabca780-811f-4ea4-949e-21df6efba15d',
-        title: 'Test Poem',
-        content: 'Poem content',
-        poet_name: 'Test Poet',
-        poet_slug: 'test-poet',
-        meter_name: 'Test Meter',
-        theme_name: 'Test Theme',
-        era_name: 'Test Era',
-        era_slug: 'test-era',
-      },
-      related_poems: [
-        {
-          poem_slug: 'related-1',
-          poet_name: 'Related Poet',
-          meter_name: 'Meter',
-          poem_title: 'Related Poem',
-        },
-      ],
-    };
-
-    const mockResult = [
-      {
-        get_poem_with_related: mockPoemData,
-      },
-    ];
-
-    const db = createMockDb();
-    db.execute = vi.fn().mockResolvedValue(mockResult);
-
-    const client = createTestClient(poems, { db });
-
-    const res = await client.$get('/slug/eabca780-811f-4ea4-949e-21df6efba15d');
-
-    expect(res.status).toBe(200);
-    const json = (await res.json()) as ApiResponse;
-    expect(json.success).toBe(true);
-    expect((json.data as Record<string, unknown>)['metadata']).toBeDefined();
-    expect((json.data as Record<string, unknown>)['clearTitle']).toBeDefined();
-    expect((json.data as Record<string, unknown>)['processedContent']).toBeDefined();
-  });
-
-  it('should return 404 when poem not found', async () => {
-    const db = createMockDb();
-    db.execute = vi.fn().mockResolvedValue([]);
-
-    const client = createTestClient(poems, { db });
-
-    const res = await client.$get('/slug/00000000-0000-0000-0000-000000000000');
-
-    expect(res.status).toBe(404);
-    const json = (await res.json()) as ApiResponse;
-    expect(json.success).toBe(false);
-  });
-
-  it('should return 400 when poem data has error', async () => {
-    const mockError = {
-      error: 'Invalid poem',
-      message: 'Poem data is invalid',
-    };
-
-    const mockResult = [
-      {
-        get_poem_with_related: mockError,
-      },
-    ];
-
-    const db = createMockDb();
-    db.execute = vi.fn().mockResolvedValue(mockResult);
-
-    const client = createTestClient(poems, { db });
-
-    const res = await client.$get('/slug/eabca780-811f-4ea4-949e-21df6efba15d');
-
-    expect(res.status).toBe(400);
-    const json = (await res.json()) as ApiResponse;
-    expect(json.success).toBe(false);
   });
 });

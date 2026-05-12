@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { cleanArabicQuery } from './clean-arabic-query';
 
 describe('cleanArabicQuery', () => {

@@ -1,39 +1,17 @@
-/**
- * Qafiyah API - Main Application Entry Point
- *
- * This file sets up the Hono application with all middleware, routes,
- * and error handling for the Qafiyah API.
- */
-
+import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { DEV_WEB_URL, PROD_SITE_URL } from '@qafiyah/constants';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import { dbMiddleware } from './middlewares/db.middleware';
 import serveEmojiFavicon from './middlewares/favicon.middleware';
-import eras from './routes/eras.routes';
+import { router } from './router';
 import index from './routes/index.routes';
-import meters from './routes/meters.routes';
 import poems from './routes/poems.routes';
-import poets from './routes/poets.routes';
-import rhymes from './routes/rhymes.routes';
-import search from './routes/search.routes';
-import themes from './routes/themes.routes';
 import type { AppContext } from './types';
 
-/**
- * Initialize the Hono application
- */
 const app = new Hono<AppContext>();
 
-/**
- * Register global middleware
- *
- * Order is important:
- * 1. CORS - Handle cross-origin requests
- * 2. Database - Connect to the database for data access
- * 3. Favicon - Serve custom emoji favicon
- */
 app.use(
   cors({
     origin: [DEV_WEB_URL, PROD_SITE_URL],
@@ -46,33 +24,19 @@ app.use(
 app.use(dbMiddleware);
 app.use(serveEmojiFavicon('📜'));
 
-/**
- * Register API routes
- *
- * Each route module handles a specific domain of the API:
- * - index: Simple API documentation
- * - eras: Historical eras of Arabic poetry
- * - meters: Poetic meters (buhur)
- * - poems: Individual poems
- * - poets: Poet information
- * - rhymes: Rhyme patterns
- * - search: Search functionality
- * - themes: Poetic themes
- */
-const routes = app
+const orpcHandler = new OpenAPIHandler(router);
+
+app.use('*', async (c, next) => {
+  const result = await orpcHandler.handle(c.req.raw, {
+    context: { db: c.get('db') },
+  });
+  if (result.matched) return result.response;
+  return next();
+});
+
+app
   .route('/', index)
-  .route('/eras', eras)
-  .route('/meters', meters)
   .route('/poems', poems)
-  .route('/poets', poets)
-  .route('/rhymes', rhymes)
-  .route('/themes', themes)
-  .route('/search', search)
-  /**
-   * Global error handler
-   *
-   * Catches all unhandled errors and provides a consistent error response format
-   */
   .onError((error, c) => {
     console.error({
       message: 'Global error handler caught an error',
@@ -81,28 +45,12 @@ const routes = app
       error: error instanceof Error ? error.message : String(error),
     });
 
-    // Return appropriate error response
     if (error instanceof HTTPException) {
-      return c.json(
-        {
-          success: false,
-          error: error.message,
-          status: error.status,
-        },
-        error.status
-      );
+      return c.json({ success: false, error: error.message, status: error.status }, error.status);
     }
 
-    // Default server error response
-    return c.json(
-      {
-        success: false,
-        error: 'Internal Server Error. Global',
-        status: 500,
-      },
-      500
-    );
+    return c.json({ success: false, error: 'Internal Server Error. Global', status: 500 }, 500);
   });
 
 export default app;
-export type AppType = typeof routes;
+export type { AppRouter } from './router';

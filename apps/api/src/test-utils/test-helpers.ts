@@ -116,21 +116,3 @@ export function createTestClient<T extends Hono<AppContext>>(
     },
   } as TestClientWithGet;
 }
-
-/**
- * Type helper for API response JSON
- */
-export type ApiResponse<T = unknown> = {
-  success: boolean;
-  data?: T | Record<string, unknown>;
-  error?: string;
-  status?: number;
-  pagination?: {
-    currentPage: number;
-    totalPages: number;
-    totalItems?: number;
-    totalResults?: number;
-    hasNextPage: boolean;
-    hasPrevPage: boolean;
-  };
-};

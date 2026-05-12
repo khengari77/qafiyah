@@ -78,7 +78,7 @@ export async function getRandomPoemSlug(db: DbClient): Promise<string> {
   }
 }
 
-export type GetPoemResult =
+type GetPoemResult =
   | {
       type: 'found';
       data: {

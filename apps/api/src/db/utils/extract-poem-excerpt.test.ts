@@ -1,4 +1,4 @@
-import { vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { RandomPoemLines } from '../types';
 import { extractPoemExcerpt } from './extract-poem-excerpt';
 

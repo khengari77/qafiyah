@@ -42,7 +42,7 @@
   "biome.enabled": true,
 
   // ==================== SPELLING ====================
-  "cSpell.words": ["alwalxed", "healthcheck", "isready", "plpgsql", "Qafiyah", "tashkeel"],
+  "cSpell.words": ["alwalxed", "healthcheck", "isready", "orpc", "plpgsql", "Qafiyah", "tashkeel"],
 
   // ==================== FILE EXCLUSIONS ====================
   "files.exclude": {

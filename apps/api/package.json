@@ -12,12 +12,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@orpc/openapi": "^1.14.2",
+    "@orpc/server": "^1.14.2",
     "@qafiyah/constants": "workspace:*",
-    "@qafiyah/db": "workspace:*",
     "@qafiyah/typescript": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "hono": "^4.11.4",
-    "postgres": "^3.4.5"
+    "postgres": "^3.4.5",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250214.0",
@@ -28,5 +30,13 @@
     "wrangler": "^4.59.1"
   },
   "type": "module",
-  "types": "./src/app.ts"
+  "types": "./src/app.ts",
+  "exports": {
+    ".": {
+      "types": "./src/app.ts"
+    },
+    "./router": {
+      "types": "./src/router.ts"
+    }
+  }
 }

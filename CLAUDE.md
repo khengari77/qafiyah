@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Qafiyah is an Arabic poetry repository (pnpm + Turborepo monorepo): `apps/web` (Astro 6 static site), `apps/api` (Hono on Cloudflare Workers + Postgres), `apps/bot` (X/Twitter bot), `packages/db` (shared Drizzle schema + queries + client), `packages/constants` (shared brand/URLs/dev-ports), `packages/typescript` (shared tsconfigs).
+Qafiyah is an Arabic poetry repository (pnpm + Turborepo monorepo): `apps/web` (Astro 6 static site), `apps/api` (Hono + oRPC on Cloudflare Workers + Postgres; owns the DB layer), `apps/bot` (X/Twitter bot), `packages/constants` (shared brand/URLs/dev-ports), `packages/typescript` (shared tsconfigs).
 
 ## Commands
 
@@ -33,15 +33,13 @@ vitest run path/to/file.test.ts                       # single test file (within
 
 ## Architecture
 
-**`apps/web`** — Astro 6 static output; queries the database **directly at build time** via `@qafiyah/db` (see `src/lib/api/static.ts`). React is islands-only (search, nav, random poem). Path alias `@/*` → `src/*`. RTL Arabic layout in `src/layouts/Layout.astro`. No running API needed to build. Canonical URLs are non-trailing-slash (`trailingSlash: 'never'` + `build.format: 'directory'`); both `/page` and `/page/` resolve at the host, with the host 301-ing the trailing form to canonical.
+**`apps/web`** — Astro 6 static output; queries the API over HTTP at build time (`src/lib/api/static.ts` → typed fetcher in `src/lib/api/rpc.ts`). `pnpm --filter @qafiyah/web build` runs `scripts/build-with-api.mjs`, which auto-starts a local Wrangler instance on :8787 if one isn't already up, sets `BUILD_API_URL=http://127.0.0.1:8787` (server-only env), runs `astro build`, then tears Wrangler down. `PUBLIC_API_URL` stays pointed at production so the browser bundle hits the prod API at runtime. React is islands-only (search, nav, random poem). Path alias `@/*` → `src/*`. RTL Arabic layout in `src/layouts/Layout.astro`. Canonical URLs are non-trailing-slash (`trailingSlash: 'never'` + `build.format: 'directory'`); both `/page` and `/page/` resolve at the host, with the host 301-ing the trailing form to canonical.
 
 **Web deployment** — Self-hosted on a VPS behind nginx. Build is produced locally (`pnpm --filter @qafiyah/web build`) and `apps/web/dist/` is rsynced to the server (default web root `/var/www/qafiyah`). Reference server block: `apps/web/nginx.conf` — handles www→apex, trailing-slash→canonical, `try_files $uri $uri/index.html`, and immutable caching for `/_astro/`. TLS is managed outside this file (certbot or a fronting reverse proxy).
 
-**`apps/api`** — Hono on Cloudflare Workers. Drizzle ORM against Postgres (via `postgres` driver in `packages/db/src/client.ts`). Routes: `eras`, `meters`, `poems`, `poets`, `rhymes`, `themes`, `search`. Wrangler's esbuild bundles `@qafiyah/db` source directly — no pre-build step needed.
+**`apps/api`** — Hono on Cloudflare Workers, with the query layer colocated under `src/db/` (Drizzle schema, queries, Postgres client, utilities). Every domain (`eras`, `meters`, `poems`, `poets`, `rhymes`, `themes`, `search`) is exposed via an oRPC procedure in `src/contracts/*.contract.ts`, composed into `src/router.ts`, and mounted on Hono via `OpenAPIHandler` in `src/app.ts`. `/poems/random` (text response) and `/` (API index) stay as plain Hono routes. The web imports `type { AppRouter } from '@qafiyah/api/router'` for response-type inference; no API source code is shipped to the browser. Wrangler's esbuild bundles everything from source.
 
-**`apps/bot`** — Posts a random poem via `twitter-api-v2` on a GitHub Actions cron at 08/12/16/20 UTC (see `.github/workflows/post-poem.yml`). Exponential backoff, 3 retries.
-
-**`packages/db`** — Source-only (no build step). Drizzle ORM schema, queries, and Postgres client shared by `apps/api` and `apps/web`; `exports["."]` points at `./src/index.ts` and consumers' bundlers (Astro/Vite, Wrangler/esbuild) compile it directly. Edit and reload — no watcher needed.
+**`apps/bot`** — Posts a random poem via `twitter-api-v2` on a GitHub Actions cron at 08/12/16/20 UTC (see `.github/workflows/post-poem.yml`). Calls `/poems/random` (plain-text endpoint, unchanged by the oRPC migration). Exponential backoff, 3 retries.
 
 **`packages/constants`** — Source-only (no build step). Exports brand strings, production URLs, dev ports (`DEV_WEB_PORT=4321`, `DEV_API_PORT=8787`), and external links. Consumed by `web`, `api`, and `bot`. When changing a URL or port, update here — not in app code.
 

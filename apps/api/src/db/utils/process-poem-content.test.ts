@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { processPoemContent } from './process-poem-content';
 
 describe('processPoemContent', () => {

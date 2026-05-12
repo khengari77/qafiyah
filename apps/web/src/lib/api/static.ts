@@ -1,18 +1,11 @@
 /**
  * Static build-time data access (Astro SSG).
- * Queries the database directly instead of going through the API HTTP layer.
+ * Calls the API over HTTP — at build time against a local Wrangler (started by
+ * apps/web/scripts/build-with-api.mjs), at runtime against PROD_API_URL.
  */
 
-import {
-  erasQueries,
-  metersQueries,
-  poemsQueries,
-  poetsQueries,
-  rhymesQueries,
-  themesQueries,
-} from '@qafiyah/db';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
-import { getDb } from '../db';
+import { ApiError, apiServer } from './rpc';
 import type {
   Era,
   EraPoems,
@@ -29,19 +22,39 @@ import type {
 } from './types';
 
 // ============================================================================
+// In-process memo for list endpoints. Many getStaticPaths calls fan out the
+// same `/eras`, `/meters`, `/rhymes`, `/themes` listing — dedupe within one build.
+// ============================================================================
+
+const memo = new Map<string, Promise<unknown>>();
+function dedup<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const hit = memo.get(key);
+  if (hit) return hit as Promise<T>;
+  const p = fn();
+  memo.set(key, p);
+  return p;
+}
+
+function isNotFound(err: unknown): boolean {
+  return err instanceof ApiError && err.status === 404;
+}
+
+// ============================================================================
 // Poems
 // ============================================================================
 
-export function fetchAllPoemSlugs(): Promise<string[]> {
-  return poemsQueries.listAllPoemSlugs(getDb());
+export async function fetchAllPoemSlugs(): Promise<string[]> {
+  const result = await apiServer.poems.listAllSlugs();
+  return result.map((row: unknown) =>
+    typeof row === 'string' ? row : ((row as { slug?: string })?.slug ?? String(row))
+  );
 }
 
 export async function fetchPoem(slug: string): Promise<PoemResponseData | null> {
   try {
-    const result = await poemsQueries.getPoemBySlug(getDb(), slug);
-    if (result.type !== 'found') return null;
-    return result.data as PoemResponseData;
-  } catch {
+    return await apiServer.poems.getBySlug({ slug });
+  } catch (err) {
+    if (isNotFound(err)) return null;
     return null;
   }
 }
@@ -93,18 +106,24 @@ export async function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
 export async function fetchPoets(
   page: string
 ): Promise<{ data: PoetsData; pagination?: PaginationMeta }> {
-  const result = await poetsQueries.listPoets(getDb(), Number(page));
-
-  return {
-    data: { poets: result.poets } as PoetsData,
-    pagination: {
-      currentPage: Number(page),
-      totalPages: result.totalPages,
-      totalItems: result.totalPoets,
-      hasNextPage: Number(page) < result.totalPages,
-      hasPrevPage: Number(page) > 1,
-    },
-  };
+  try {
+    const result = await apiServer.poets.list({ page: Number(page) });
+    return {
+      data: { poets: result.poets } as PoetsData,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: result.totalPages,
+        totalItems: result.totalPoets,
+        hasNextPage: Number(page) < result.totalPages,
+        hasPrevPage: Number(page) > 1,
+      },
+    };
+  } catch (err) {
+    if (isNotFound(err)) {
+      return { data: { poets: [] } as PoetsData };
+    }
+    throw err;
+  }
 }
 
 export async function fetchPoetsTotalPages(): Promise<number> {
@@ -116,23 +135,28 @@ export async function fetchPoetPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: PoetPoems; pagination?: PaginationMeta }> {
-  const result = await poetsQueries.listPoetPoems(getDb(), slug, Number(page));
-
-  if (!result) {
+  try {
+    const result = await apiServer.poets.listPoems({ slug, page: Number(page) });
     return {
-      data: { poetDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as PoetPoems,
+      data: result,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: result.totalPages,
+        hasNextPage: Number(page) < result.totalPages,
+        hasPrevPage: Number(page) > 1,
+      },
     };
+  } catch (err) {
+    if (isNotFound(err)) {
+      return {
+        data: {
+          poetDetails: { id: 0, name: '', poemsCount: 0 },
+          poems: [],
+        } as unknown as PoetPoems,
+      };
+    }
+    throw err;
   }
-
-  return {
-    data: result as unknown as PoetPoems,
-    pagination: {
-      currentPage: Number(page),
-      totalPages: result.totalPages,
-      hasNextPage: Number(page) < result.totalPages,
-      hasPrevPage: Number(page) > 1,
-    },
-  };
 }
 
 // ============================================================================
@@ -146,7 +170,7 @@ type EraStats = {
 };
 
 export async function fetchEras(): Promise<Era[]> {
-  return erasQueries.listEras(getDb()) as Promise<Era[]>;
+  return dedup('eras:list', () => apiServer.eras.list()) as Promise<Era[]>;
 }
 
 export async function fetchErasWithPoemCount(): Promise<EraStats[]> {
@@ -162,23 +186,25 @@ export async function fetchEraPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: EraPoems; pagination?: PaginationMeta }> {
-  const result = await erasQueries.listEraPoems(getDb(), slug, Number(page));
-
-  if (!result) {
+  try {
+    const result = await apiServer.eras.listPoems({ slug, page: Number(page) });
     return {
-      data: { eraDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as EraPoems,
+      data: result,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: result.totalPages,
+        hasNextPage: Number(page) < result.totalPages,
+        hasPrevPage: Number(page) > 1,
+      },
     };
+  } catch (err) {
+    if (isNotFound(err)) {
+      return {
+        data: { eraDetails: { id: 0, name: '', poemsCount: 0 }, poems: [] } as unknown as EraPoems,
+      };
+    }
+    throw err;
   }
-
-  return {
-    data: result as unknown as EraPoems,
-    pagination: {
-      currentPage: Number(page),
-      totalPages: result.totalPages,
-      hasNextPage: Number(page) < result.totalPages,
-      hasPrevPage: Number(page) > 1,
-    },
-  };
 }
 
 // ============================================================================
@@ -192,7 +218,7 @@ type MeterStats = {
 };
 
 export async function fetchMeters(): Promise<Meter[]> {
-  return metersQueries.listMeters(getDb()) as Promise<Meter[]>;
+  return dedup('meters:list', () => apiServer.meters.list()) as Promise<Meter[]>;
 }
 
 export async function fetchMetersWithPoemCount(): Promise<MeterStats[]> {
@@ -208,26 +234,28 @@ export async function fetchMeterPoemPage(
   slug: string,
   page: string
 ): Promise<{ data: MeterPoems; pagination?: PaginationMeta }> {
-  const result = await metersQueries.listMeterPoems(getDb(), slug, Number(page));
-
-  if (!result) {
+  try {
+    const result = await apiServer.meters.listPoems({ slug, page: Number(page) });
     return {
-      data: {
-        meterDetails: { id: 0, name: '', poemsCount: 0 },
-        poems: [],
-      } as unknown as MeterPoems,
+      data: result,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: result.totalPages,
+        hasNextPage: Number(page) < result.totalPages,
+        hasPrevPage: Number(page) > 1,
+      },
     };
+  } catch (err) {
+    if (isNotFound(err)) {
+      return {
+        data: {
+          meterDetails: { id: 0, name: '', poemsCount: 0 },
+          poems: [],
+        } as unknown as MeterPoems,
+      };
+    }
+    throw err;
   }
-
-  return {
-    data: result as unknown as MeterPoems,
-    pagination: {
-      currentPage: Number(page),
-      totalPages: result.totalPages,
-      hasNextPage: Number(page) < result.totalPages,
-      hasPrevPage: Number(page) > 1,
-    },
-  };
 }
 
 // ============================================================================
@@ -241,7 +269,7 @@ type RhymeStats = {
 };
 
 export async function fetchRhymes(): Promise<Rhyme[]> {
-  return rhymesQueries.listRhymes(getDb()) as Promise<Rhyme[]>;
+  return dedup('rhymes:list', () => apiServer.rhymes.list()) as Promise<Rhyme[]>;
 }
 
 export async function fetchRhymesWithPoemCount(): Promise<RhymeStats[]> {
@@ -257,26 +285,28 @@ export async function fetchRhymePoemPage(
   slug: string,
   page: string
 ): Promise<{ data: RhymePoems; pagination?: PaginationMeta }> {
-  const result = await rhymesQueries.listRhymePoems(getDb(), slug, Number(page));
-
-  if (!result) {
+  try {
+    const result = await apiServer.rhymes.listPoems({ slug, page: Number(page) });
     return {
-      data: {
-        rhymeDetails: { id: 0, pattern: '', poemsCount: 0 },
-        poems: [],
-      } as unknown as RhymePoems,
+      data: result,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: result.totalPages,
+        hasNextPage: Number(page) < result.totalPages,
+        hasPrevPage: Number(page) > 1,
+      },
     };
+  } catch (err) {
+    if (isNotFound(err)) {
+      return {
+        data: {
+          rhymeDetails: { id: 0, pattern: '', poemsCount: 0 },
+          poems: [],
+        } as unknown as RhymePoems,
+      };
+    }
+    throw err;
   }
-
-  return {
-    data: result as unknown as RhymePoems,
-    pagination: {
-      currentPage: Number(page),
-      totalPages: result.totalPages,
-      hasNextPage: Number(page) < result.totalPages,
-      hasPrevPage: Number(page) > 1,
-    },
-  };
 }
 
 // ============================================================================
@@ -290,7 +320,7 @@ type ThemeStats = {
 };
 
 export async function fetchThemes(): Promise<Theme[]> {
-  return themesQueries.listThemes(getDb()) as Promise<Theme[]>;
+  return dedup('themes:list', () => apiServer.themes.list()) as Promise<Theme[]>;
 }
 
 export async function fetchThemesWithPoemCount(): Promise<ThemeStats[]> {
@@ -306,26 +336,28 @@ export async function fetchThemePoemPage(
   slug: string,
   page: string
 ): Promise<{ data: ThemePoems; pagination?: PaginationMeta }> {
-  const result = await themesQueries.listThemePoems(getDb(), slug, Number(page));
-
-  if (!result) {
+  try {
+    const result = await apiServer.themes.listPoems({ slug, page: Number(page) });
     return {
-      data: {
-        themeDetails: { id: 0, name: '', poemsCount: 0 },
-        poems: [],
-      } as unknown as ThemePoems,
+      data: result,
+      pagination: {
+        currentPage: Number(page),
+        totalPages: result.totalPages,
+        hasNextPage: Number(page) < result.totalPages,
+        hasPrevPage: Number(page) > 1,
+      },
     };
+  } catch (err) {
+    if (isNotFound(err)) {
+      return {
+        data: {
+          themeDetails: { id: 0, name: '', poemsCount: 0 },
+          poems: [],
+        } as unknown as ThemePoems,
+      };
+    }
+    throw err;
   }
-
-  return {
-    data: result as unknown as ThemePoems,
-    pagination: {
-      currentPage: Number(page),
-      totalPages: result.totalPages,
-      hasNextPage: Number(page) < result.totalPages,
-      hasPrevPage: Number(page) > 1,
-    },
-  };
 }
 
 // ============================================================================

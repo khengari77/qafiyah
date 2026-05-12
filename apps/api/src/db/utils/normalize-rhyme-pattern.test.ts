@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { normalizeRhymePattern } from './normalize-rhyme-pattern';
 
 describe('normalizeRhymePattern', () => {

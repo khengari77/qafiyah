@@ -9,4 +9,8 @@ export default defineConfig({
   integrations: [react(), sitemap()],
   trailingSlash: 'never',
   build: { format: 'directory' },
+  vite: {
+    // AppRouter is type-only; keep Vite from trying to pre-bundle the API package.
+    optimizeDeps: { exclude: ['@qafiyah/api'] },
+  },
 });
