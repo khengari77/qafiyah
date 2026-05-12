@@ -2,11 +2,7 @@
   "extends": "@qafiyah/typescript/cloudflare.json",
   "compilerOptions": {
     "jsxImportSource": "hono/jsx",
-    "types": ["@cloudflare/workers-types/2023-07-01"],
-    "paths": {
-      "@qafiyah/schemas": ["../../packages/schemas/dist"],
-      "@qafiyah/schemas/server": ["../../packages/schemas/dist/utils/server"]
-    }
+    "types": ["@cloudflare/workers-types/2023-07-01"]
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["node_modules", "dist"]

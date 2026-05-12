@@ -53,4 +53,3 @@ app
   });
 
 export default app;
-export type { AppRouter } from './router';

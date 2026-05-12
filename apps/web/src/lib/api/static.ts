@@ -4,8 +4,9 @@
  * apps/web/scripts/build-with-api.mjs), at runtime against PROD_API_URL.
  */
 
+import { ORPCError } from '@orpc/client';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
-import { ApiError, apiServer } from './rpc';
+import { apiServer } from './rpc';
 import type {
   Era,
   EraPoems,
@@ -36,7 +37,7 @@ function dedup<T>(key: string, fn: () => Promise<T>): Promise<T> {
 }
 
 function isNotFound(err: unknown): boolean {
-  return err instanceof ApiError && err.status === 404;
+  return err instanceof ORPCError && err.code === 'NOT_FOUND';
 }
 
 // ============================================================================

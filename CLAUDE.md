@@ -74,6 +74,7 @@ Use sparingly. Most code needs none.
 - **One mission per session.** Don't mix unrelated tasks in the same thread.
 - **If a dev request hangs or `pnpm dev` complains about a port,** run `pnpm clean:dev` to kill orphan `astro dev` / `wrangler` / `workerd` processes scoped to this repo, then restart. `dev/check-port.mjs` guards both servers against silently binding a non-default port.
 - **Database dumps live in `data/datasets/`** (newest folder is the latest). `pnpm db:setup` restores the latest into a Docker Postgres on port 5433 (dev) and 5434 (test).
+- **Web build is ~2 hours end-to-end.** When verifying a change (not producing a real `dist/`), run `pnpm --filter @qafiyah/web build` as a background process and kill it after ~20 seconds — that's enough for Wrangler to start, Astro to begin, and the first `getStaticPaths` calls to surface any contract/API/runtime errors. Only let it run to completion when the user explicitly asks for a deployable build. After killing, run `pnpm clean:dev` to reap the orphaned Wrangler.
 
 ## Known Bug
 

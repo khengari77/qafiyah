@@ -3,14 +3,7 @@
   "tags": ["-lintignore"],
   "ignoreWorkspaces": ["packages/typescript"],
   "ignoreBinaries": ["pkill"],
-  "ignoreFiles": [
-    "apps/web/.astro/**",
-    "apps/web/worker-configuration.d.ts",
-    "packages/schemas/build-and-link.js"
-  ],
-  "ignoreIssues": {
-    "packages/schemas/src/schemas/common.schema.ts": ["duplicates"]
-  },
+  "ignoreFiles": ["apps/web/worker-configuration.d.ts"],
   "workspaces": {
     ".": {}
   }

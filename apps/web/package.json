@@ -17,7 +17,10 @@
   "dependencies": {
     "@astrojs/react": "^5.0.4",
     "@astrojs/sitemap": "3.7.2",
+    "@orpc/client": "^1.14.2",
+    "@orpc/openapi-client": "^1.14.2",
     "@qafiyah/constants": "workspace:*",
+    "@qafiyah/contracts": "workspace:*",
     "@radix-ui/react-slot": "^1.2.0",
     "@tanstack/react-query": "^5.73.3",
     "arabic-count-format": "^1.0.0",
@@ -33,8 +36,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
-    "@orpc/server": "^1.14.2",
-    "@qafiyah/api": "workspace:*",
+    "@orpc/contract": "^1.14.2",
     "@qafiyah/typescript": "workspace:*",
     "@types/node": "^20",
     "@types/react": "^19",

@@ -1,3 +1,4 @@
+import { pub } from './contracts/_base';
 import { listEraPoems, listEras } from './contracts/eras.contract';
 import { listMeterPoems, listMeters } from './contracts/meters.contract';
 import { getBySlug, listAllSlugs, listSlugs } from './contracts/poems.contract';
@@ -6,7 +7,7 @@ import { listRhymePoems, listRhymes } from './contracts/rhymes.contract';
 import { search } from './contracts/search.contract';
 import { listThemePoems, listThemes } from './contracts/themes.contract';
 
-export const router = {
+export const router = pub.router({
   eras: {
     list: listEras,
     listPoems: listEraPoems,
@@ -36,6 +37,4 @@ export const router = {
   search: {
     search,
   },
-};
-
-export type AppRouter = typeof router;
+});
