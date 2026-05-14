@@ -7,10 +7,10 @@ type SearchArgs = {
   searchType: 'poems' | 'poets';
   page: string;
   matchType: string;
-  meterIds?: string;
-  eraIds?: string;
-  rhymeIds?: string;
-  themeIds?: string;
+  meterIds: string | undefined;
+  eraIds: string | undefined;
+  rhymeIds: string | undefined;
+  themeIds: string | undefined;
 };
 
 type SearchResult = PoemsSearchResponseData | PoetsSearchResponseData;
