@@ -63,3 +63,6 @@ export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
 
 export const FETCH_PER_PAGE = 30;
 export const MAX_EXCERPT_LENGTH = 280;
+
+export const SEARCH_POEMS_PER_PAGE = 5;
+export const SEARCH_POETS_PER_PAGE = 10;

@@ -9,20 +9,39 @@ function paginate(currentPage: number, totalResults: number, perPage: number) {
   return { page: currentPage, totalPages, total: totalResults };
 }
 
+function nonEmpty<T>(arr: T[]): T[] | null {
+  return arr.length > 0 ? arr : null;
+}
+
 export const search = pub.search.search.handler(async ({ context, input }) => {
-  const sanitizedQuery = cleanArabicQuery(input.q);
+  const sanitizedQuery = cleanArabicQuery(input.q ?? '');
+  const hasText = sanitizedQuery.length > 0;
+
+  const meterSlugs = nonEmpty(input.meterSlugs);
+  const eraSlugs = nonEmpty(input.eraSlugs);
+  const themeSlugs = nonEmpty(input.themeSlugs);
+  const rhymeSlugs = nonEmpty(input.rhymeSlugs);
 
   if (input.searchType === 'poems') {
-    const { rows, totalCount } = await searchQueries.searchPoems(
-      context.db,
-      sanitizedQuery,
-      input.page,
-      input.matchType,
-      input.meterSlugs.length > 0 ? input.meterSlugs : null,
-      input.eraSlugs.length > 0 ? input.eraSlugs : null,
-      input.themeSlugs.length > 0 ? input.themeSlugs : null,
-      input.rhymeSlugs.length > 0 ? input.rhymeSlugs : null
-    );
+    const { rows, totalCount } = hasText
+      ? await searchQueries.searchPoems(
+          context.db,
+          sanitizedQuery,
+          input.page,
+          input.matchType,
+          meterSlugs,
+          eraSlugs,
+          themeSlugs,
+          rhymeSlugs
+        )
+      : await searchQueries.listPoemsByFilters(
+          context.db,
+          input.page,
+          meterSlugs,
+          eraSlugs,
+          themeSlugs,
+          rhymeSlugs
+        );
     return {
       searchType: 'poems' as const,
       results: rows,
@@ -30,13 +49,16 @@ export const search = pub.search.search.handler(async ({ context, input }) => {
     };
   }
 
-  const { rows, totalCount } = await searchQueries.searchPoets(
-    context.db,
-    sanitizedQuery,
-    input.page,
-    input.matchType,
-    input.eraSlugs.length > 0 ? input.eraSlugs : null
-  );
+  const { rows, totalCount } = hasText
+    ? await searchQueries.searchPoets(
+        context.db,
+        sanitizedQuery,
+        input.page,
+        input.matchType,
+        eraSlugs
+      )
+    : await searchQueries.listPoetsByFilters(context.db, input.page, eraSlugs);
+
   return {
     searchType: 'poets' as const,
     results: rows,

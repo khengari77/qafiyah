@@ -32,9 +32,11 @@ export function SearchContainer() {
     isError,
     isSuccess,
     isFetchingNextPage,
-    hasSubmitted,
     filtersVisible,
     hasQuery,
+    hasText,
+    hasInputText,
+    hasFilters,
     loadMoreRef,
     data,
     totalResults,
@@ -54,7 +56,6 @@ export function SearchContainer() {
     handleThemesChange,
     handleInputChange,
     handleKeyDown,
-    handleSearch,
     toggleFilters,
     handleSearchTypeChange,
     resetAllStates,
@@ -74,7 +75,6 @@ export function SearchContainer() {
             <div className="flex flex-col gap-4">
               <SearchInput
                 placeholder={searchType === 'poems' ? 'ابحث في مليون بيت' : 'ابحث عن ديوان شاعر'}
-                hasSubmitted={hasSubmitted}
                 searchLabel={SEARCH_TEXTS.search}
                 inputValue={inputValue}
                 validationError={validationError}
@@ -133,9 +133,8 @@ export function SearchContainer() {
                     },
                   }}
                   isPoemsMode={searchType === 'poems'}
-                  onSearch={handleSearch}
-                  searchDisabled={!inputValue.trim()}
-                  isLoading={isLoading}
+                  hasText={hasText}
+                  hasInputText={hasInputText}
                 />
               )}
             </div>
@@ -149,12 +148,19 @@ export function SearchContainer() {
           isFetchingNextPage={isFetchingNextPage}
           isLoading={isLoading}
           isSuccess={isSuccess}
-          inputValue={inputValue}
+          hasText={hasText}
+          hasFilters={hasFilters}
           searchType={searchType}
           errorMessage={SEARCH_TEXTS.errorMessage}
           refreshText={SEARCH_TEXTS.refreshThePage}
-          noResultsText={getNoResultsText(searchParams.q || '')}
-          resultText={getResultText(totalResults, searchParams.q || '', searchType, matchType)}
+          noResultsText={getNoResultsText({ hasText, query: searchParams.q || '' })}
+          resultText={getResultText({
+            count: totalResults,
+            query: searchParams.q || '',
+            searchType,
+            matchType,
+            hasText,
+          })}
         />
       </div>
     </section>

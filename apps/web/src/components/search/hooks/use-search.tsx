@@ -6,35 +6,21 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { search } from '@/lib/api/client';
 import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
+import { SEARCH_TEXTS } from '../constants/texts';
 import { useInfiniteScroll } from './use-infinite-scroll';
 
 type SearchType = 'poems' | 'poets';
 type MatchType = 'all' | 'any' | 'exact';
 
-function validateInput(input: string): string | null {
-  const arabicRegex = /^[؀-ۿ\s]+$/;
+const MAX_QUERY_LENGTH = 50;
+const ARABIC_AND_SPACE = /[^؀-ۿݐ-ݿࢠ-ࣿء-ي\s]/g;
 
-  if (!arabicRegex.test(input)) {
-    return 'كلمات عربية فقط';
-  }
+function sanitizeArabicInput(raw: string): string {
+  return raw.replace(ARABIC_AND_SPACE, '').replace(/\s+/g, ' ');
+}
 
-  if (input.length > 50) {
-    return 'يجب ألا يتجاوز النص 50 حرفًا';
-  }
-
-  const words = input
-    .trim()
-    .split(/\s+/)
-    .filter((word) => word.length > 0);
-
-  if (words.length < 1) {
-    return 'يرجى إدخال كلمة واحدة على الأقل';
-  }
-
-  if ((words[0]?.length ?? 0) < 2) {
-    return 'يجب أن تتكون الكلمة الأولى من حرفين على الأقل';
-  }
-
+function validateText(input: string): string | null {
+  if (input.length > MAX_QUERY_LENGTH) return `يجب ألا يتجاوز النص ${MAX_QUERY_LENGTH} حرفًا`;
   return null;
 }
 
@@ -66,7 +52,7 @@ export function useSearch() {
   );
   const [matchType, setMatchType] = useQueryState(
     'match_type',
-    parseAsStringEnum<MatchType>(['all', 'any', 'exact']).withDefault('exact')
+    parseAsStringEnum<MatchType>(['all', 'any', 'exact']).withDefault('all')
   );
   const [eraIds, setEraIds] = useQueryState('era_ids', { defaultValue: '' });
   const [meterIds, setMeterIds] = useQueryState('meter_ids', { defaultValue: '' });
@@ -75,7 +61,6 @@ export function useSearch() {
 
   const [inputValue, setInputValue] = useState(query);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [hasSubmitted, setHasSubmitted] = useState(false);
   const [filtersVisible, setFiltersVisible] = useState(false);
 
   useEffect(() => {
@@ -86,6 +71,15 @@ export function useSearch() {
   const selectedRhymes = splitCsvIds(rhymeIds);
   const selectedMeters = splitCsvIds(meterIds);
   const selectedThemes = splitCsvIds(themeIds);
+
+  const hasFilters =
+    selectedEras.length > 0 ||
+    selectedRhymes.length > 0 ||
+    selectedMeters.length > 0 ||
+    selectedThemes.length > 0;
+  const hasText = query.trim().length > 0;
+  const hasInputText = inputValue.trim().length > 0;
+  const canSearch = hasText || hasFilters;
 
   const searchParams = {
     q: query,
@@ -100,7 +94,6 @@ export function useSearch() {
   const iq = useInfiniteQuery({
     queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
     queryFn: async ({ pageParam = 1 }) => {
-      if (!query) return { results: [], page: 1, totalPages: 0, total: 0, searchType };
       return search({
         q: query,
         searchType,
@@ -115,7 +108,7 @@ export function useSearch() {
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
-    enabled: !!query,
+    enabled: canSearch,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
@@ -142,33 +135,28 @@ export function useSearch() {
   const handleThemesChange = makeFilterSetter(setThemeIds);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-    if (hasSubmitted) {
-      setValidationError(null);
+    const raw = e.target.value;
+    const sanitized = sanitizeArabicInput(raw);
+    setInputValue(sanitized);
+    if (raw.replace(/\s+/g, ' ') !== sanitized) {
+      setValidationError(SEARCH_TEXTS.arabicOnlyError);
+      return;
     }
+    setValidationError(validateText(sanitized));
   };
 
   const handleSearchTypeChange = (value: string) => {
     const newSearchType = value as SearchType;
 
-    if (newSearchType !== searchParams.search_type) {
-      setInputValue('');
-      if (newSearchType === 'poets') {
-        setSearchType(newSearchType);
-        setQuery('');
-        setMeterIds('');
-        setThemeIds('');
-        setRhymeIds('');
-      } else {
-        setQuery('');
-        setSearchType(newSearchType);
-      }
-    } else if (inputValue.trim()) {
-      setSearchType(newSearchType);
-    }
+    if (newSearchType === searchType) return;
 
+    setSearchType(newSearchType);
+    if (newSearchType === 'poets') {
+      setMeterIds('');
+      setThemeIds('');
+      setRhymeIds('');
+    }
     setValidationError(null);
-    setHasSubmitted(false);
   };
 
   const handleMatchTypeChange = (value: string) => {
@@ -178,34 +166,22 @@ export function useSearch() {
     }
   };
 
-  const handleSearch = () => {
-    if (inputValue.trim()) {
-      setHasSubmitted(true);
-
-      const error = validateInput(inputValue);
-      if (error) {
-        setValidationError(error);
-        return;
-      }
-
-      setValidationError(null);
-      if (filtersVisible) {
-        setFiltersVisible(false);
-      }
-      setQuery(inputValue);
+  const commitTextQuery = () => {
+    const trimmed = inputValue.trim();
+    const error = validateText(trimmed);
+    if (error) {
+      setValidationError(error);
+      return;
     }
+    setValidationError(null);
+    if (filtersVisible) setFiltersVisible(false);
+    setQuery(trimmed);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      const error = validateInput(inputValue);
-      if (error) {
-        e.preventDefault();
-        setHasSubmitted(true);
-        setValidationError(error);
-        return;
-      }
-      handleSearch();
+      e.preventDefault();
+      commitTextQuery();
     }
   };
 
@@ -215,7 +191,7 @@ export function useSearch() {
 
   const resetAllStates = () => {
     setSearchType('poems');
-    setMatchType('exact');
+    setMatchType('all');
     setQuery('');
     setEraIds('');
     setMeterIds('');
@@ -223,25 +199,20 @@ export function useSearch() {
     setThemeIds('');
     setInputValue('');
     setValidationError(null);
-    setHasSubmitted(false);
   };
 
-  const hasQuery =
-    !iq.isLoading &&
-    (Boolean(inputValue.trim()) ||
-      selectedEras.length > 0 ||
-      selectedRhymes.length > 0 ||
-      selectedMeters.length > 0 ||
-      selectedThemes.length > 0);
+  const hasQuery = !iq.isLoading && (Boolean(inputValue.trim()) || hasFilters);
 
   return {
     isLoading: iq.isLoading,
     isError: iq.isError,
     isSuccess: iq.isSuccess,
     isFetchingNextPage: iq.isFetchingNextPage,
-    hasSubmitted,
     filtersVisible,
     hasQuery,
+    hasText,
+    hasInputText,
+    hasFilters,
 
     loadMoreRef,
 
@@ -263,7 +234,7 @@ export function useSearch() {
     handleMatchTypeChange,
     handleInputChange,
     handleKeyDown,
-    handleSearch,
+    handleSearch: commitTextQuery,
     handleSearchTypeChange,
 
     handleRhymesChange,

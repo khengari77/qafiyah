@@ -13,7 +13,8 @@ type Props = {
   isFetchingNextPage: boolean;
   isLoading: boolean;
   isSuccess: boolean;
-  inputValue: string;
+  hasText: boolean;
+  hasFilters: boolean;
   searchType: string;
   errorMessage: string;
   refreshText: string;
@@ -28,7 +29,8 @@ export function ResultList({
   isFetchingNextPage,
   isLoading,
   isSuccess,
-  inputValue,
+  hasText,
+  hasFilters,
   searchType,
   errorMessage,
   refreshText,
@@ -39,7 +41,9 @@ export function ResultList({
     return <ErrorState errorMessage={errorMessage} refreshText={refreshText} />;
   }
 
-  if (inputValue && !isLoading && data.length === 0 && isSuccess) {
+  const isQuerying = hasText || hasFilters;
+
+  if (isQuerying && !isLoading && data.length === 0 && isSuccess) {
     return <NoResultsState noResultsText={noResultsText} />;
   }
 

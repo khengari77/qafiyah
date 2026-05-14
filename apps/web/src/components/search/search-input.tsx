@@ -6,7 +6,6 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 type Props = {
-  hasSubmitted: boolean;
   inputValue: string;
   validationError: string | null;
   searchLabel: string;
@@ -18,7 +17,6 @@ type Props = {
 };
 
 export function SearchInput({
-  hasSubmitted,
   inputValue,
   validationError,
   searchLabel,
@@ -31,7 +29,7 @@ export function SearchInput({
   return (
     <div tabIndex={-1} className="w-full">
       <div tabIndex={-1} className={cn('mb-2 h-4 flex justify-between items-center')}>
-        {validationError && hasSubmitted && (
+        {validationError && (
           <p tabIndex={-1} className={cn('text-red-500 text-xs md:text-base text-right')}>
             {validationError}
           </p>
@@ -55,7 +53,7 @@ export function SearchInput({
             'pl-10 text-right h-12 border-0 ring-1 ring-zinc-300/40 shadow-none focus:border-0 focus:ring-0 focus-visible:ring-zinc-800/40 focus-within:ring md:text-lg placeholder:text-zinc-800/50 bg-white rounded-xl',
             {
               'ring-red-300 ring-1 focus-within:ring-red-300 focus-within:ring-1 focus-visible:ring-red-300':
-                validationError && hasSubmitted,
+                validationError,
             }
           )}
           dir="rtl"
