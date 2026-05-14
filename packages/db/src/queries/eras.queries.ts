@@ -37,28 +37,29 @@ export async function listEraPoems(
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const eraInfo = await db
-    .select({
-      eraName: eraPoems.eraName,
-      totalPoems: eraPoems.totalPoemsInEra,
-    })
-    .from(eraPoems)
-    .where(eq(eraPoems.eraSlug, slug))
-    .limit(1);
+  const [eraInfo, poems] = await Promise.all([
+    db
+      .select({
+        eraName: eraPoems.eraName,
+        totalPoems: eraPoems.totalPoemsInEra,
+      })
+      .from(eraPoems)
+      .where(eq(eraPoems.eraSlug, slug))
+      .limit(1),
+    db
+      .select({
+        title: eraPoems.poemTitle,
+        slug: eraPoems.poemSlug,
+        poetName: eraPoems.poetName,
+        meter: eraPoems.meterName,
+      })
+      .from(eraPoems)
+      .where(eq(eraPoems.eraSlug, slug))
+      .limit(limit)
+      .offset(offset),
+  ]);
 
   if (!eraInfo.length || !eraInfo[0]) return null;
-
-  const poems = await db
-    .select({
-      title: eraPoems.poemTitle,
-      slug: eraPoems.poemSlug,
-      poetName: eraPoems.poetName,
-      meter: eraPoems.meterName,
-    })
-    .from(eraPoems)
-    .where(eq(eraPoems.eraSlug, slug))
-    .limit(limit)
-    .offset(offset);
 
   const total = eraInfo[0].totalPoems;
   const totalPages = Math.ceil(total / limit);

@@ -1,6 +1,5 @@
-import { inArray, type SQL, sql } from 'drizzle-orm';
+import { type SQL, sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { eraStats, meterStats, rhymeStats, themeStats } from '../schema';
 
 export type PoemsSearchRow = {
   poetName: string;
@@ -52,39 +51,73 @@ function intArrayParam(ids: number[] | null): SQL {
   return sql`${`{${ids.join(',')}}`}::INTEGER[]`;
 }
 
-async function lookupMeterIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
-  if (!slugs || slugs.length === 0) return null;
-  const rows = await db
-    .select({ id: meterStats.id })
-    .from(meterStats)
-    .where(inArray(meterStats.slug, slugs));
-  return rows.map((r) => r.id);
+function textArrayLiteral(values: string[]): string {
+  const escaped = values.map((v) => `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+  return `{${escaped.join(',')}}`;
 }
 
-async function lookupEraIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
-  if (!slugs || slugs.length === 0) return null;
-  const rows = await db
-    .select({ id: eraStats.id })
-    .from(eraStats)
-    .where(inArray(eraStats.slug, slugs));
-  return rows.map((r) => r.id);
+type FilterIds = {
+  meterIds: number[] | null;
+  eraIds: number[] | null;
+  themeIds: number[] | null;
+  rhymeIds: number[] | null;
+};
+
+async function lookupFilterIds(
+  db: DbClient,
+  meterSlugs: string[] | null,
+  eraSlugs: string[] | null,
+  themeSlugs: string[] | null,
+  rhymeSlugs: string[] | null
+): Promise<FilterIds> {
+  const m = meterSlugs && meterSlugs.length > 0 ? meterSlugs : null;
+  const e = eraSlugs && eraSlugs.length > 0 ? eraSlugs : null;
+  const t = themeSlugs && themeSlugs.length > 0 ? themeSlugs : null;
+  const r = rhymeSlugs && rhymeSlugs.length > 0 ? rhymeSlugs : null;
+
+  if (!m && !e && !t && !r) {
+    return { meterIds: null, eraIds: null, themeIds: null, rhymeIds: null };
+  }
+
+  const mLit = m ? textArrayLiteral(m) : null;
+  const eLit = e ? textArrayLiteral(e) : null;
+  const tLit = t ? textArrayLiteral(t) : null;
+  const rLit = r ? textArrayLiteral(r) : null;
+
+  const rows = (await db.execute(sql`
+    SELECT 'meter' AS kind, id FROM meter_stats WHERE ${mLit !== null ? sql`slug = ANY(${mLit}::TEXT[])` : sql`FALSE`}
+    UNION ALL
+    SELECT 'era' AS kind, id FROM era_stats WHERE ${eLit !== null ? sql`slug = ANY(${eLit}::TEXT[])` : sql`FALSE`}
+    UNION ALL
+    SELECT 'theme' AS kind, id FROM theme_stats WHERE ${tLit !== null ? sql`slug = ANY(${tLit}::TEXT[])` : sql`FALSE`}
+    UNION ALL
+    SELECT 'rhyme' AS kind, id FROM rhyme_stats WHERE ${rLit !== null ? sql`slug = ANY(${rLit}::TEXT[])` : sql`FALSE`}
+  `)) as unknown as { kind: string; id: number }[];
+
+  const meterBucket: number[] = [];
+  const eraBucket: number[] = [];
+  const themeBucket: number[] = [];
+  const rhymeBucket: number[] = [];
+  for (const row of rows) {
+    if (row.kind === 'meter') meterBucket.push(row.id);
+    else if (row.kind === 'era') eraBucket.push(row.id);
+    else if (row.kind === 'theme') themeBucket.push(row.id);
+    else if (row.kind === 'rhyme') rhymeBucket.push(row.id);
+  }
+  return {
+    meterIds: m ? meterBucket : null,
+    eraIds: e ? eraBucket : null,
+    themeIds: t ? themeBucket : null,
+    rhymeIds: r ? rhymeBucket : null,
+  };
 }
 
-async function lookupThemeIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
+async function lookupEraIdsOnly(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
   if (!slugs || slugs.length === 0) return null;
-  const rows = await db
-    .select({ id: themeStats.id })
-    .from(themeStats)
-    .where(inArray(themeStats.slug, slugs));
-  return rows.map((r) => r.id);
-}
-
-async function lookupRhymeIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
-  if (!slugs || slugs.length === 0) return null;
-  const rows = await db
-    .select({ id: rhymeStats.id })
-    .from(rhymeStats)
-    .where(inArray(rhymeStats.slug, slugs));
+  const lit = textArrayLiteral(slugs);
+  const rows = (await db.execute(
+    sql`SELECT id FROM era_stats WHERE slug = ANY(${lit}::TEXT[])`
+  )) as unknown as { id: number }[];
   return rows.map((r) => r.id);
 }
 
@@ -98,12 +131,13 @@ export async function searchPoems(
   themeSlugs: string[] | null,
   rhymeSlugs: string[] | null
 ): Promise<SearchPage<PoemsSearchRow>> {
-  const [meterIds, eraIds, themeIds, rhymeIds] = await Promise.all([
-    lookupMeterIds(db, meterSlugs),
-    lookupEraIds(db, eraSlugs),
-    lookupThemeIds(db, themeSlugs),
-    lookupRhymeIds(db, rhymeSlugs),
-  ]);
+  const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
+    db,
+    meterSlugs,
+    eraSlugs,
+    themeSlugs,
+    rhymeSlugs
+  );
 
   const raw = (await db.execute(
     sql`SELECT * FROM search_poems(
@@ -140,7 +174,7 @@ export async function searchPoets(
   matchType: string,
   eraSlugs: string[] | null
 ): Promise<SearchPage<PoetsSearchRow>> {
-  const eraIds = await lookupEraIds(db, eraSlugs);
+  const eraIds = await lookupEraIdsOnly(db, eraSlugs);
 
   const raw = (await db.execute(
     sql`SELECT * FROM search_poets(

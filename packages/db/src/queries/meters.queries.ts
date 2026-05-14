@@ -36,27 +36,28 @@ export async function listMeterPoems(
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const meterInfo = await db
-    .select({
-      meterName: meterPoems.meterName,
-      totalPoems: meterPoems.totalPoemsInMeter,
-    })
-    .from(meterPoems)
-    .where(eq(meterPoems.meterSlug, slug))
-    .limit(1);
+  const [meterInfo, poems] = await Promise.all([
+    db
+      .select({
+        meterName: meterPoems.meterName,
+        totalPoems: meterPoems.totalPoemsInMeter,
+      })
+      .from(meterPoems)
+      .where(eq(meterPoems.meterSlug, slug))
+      .limit(1),
+    db
+      .select({
+        title: meterPoems.poemTitle,
+        slug: meterPoems.poemSlug,
+        poetName: meterPoems.poetName,
+      })
+      .from(meterPoems)
+      .where(eq(meterPoems.meterSlug, slug))
+      .limit(limit)
+      .offset(offset),
+  ]);
 
   if (!meterInfo.length || !meterInfo[0]) return null;
-
-  const poems = await db
-    .select({
-      title: meterPoems.poemTitle,
-      slug: meterPoems.poemSlug,
-      poetName: meterPoems.poetName,
-    })
-    .from(meterPoems)
-    .where(eq(meterPoems.meterSlug, slug))
-    .limit(limit)
-    .offset(offset);
 
   const total = meterInfo[0].totalPoems;
   const totalPages = Math.ceil(total / limit);

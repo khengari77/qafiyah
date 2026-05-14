@@ -35,28 +35,29 @@ export async function listThemePoems(
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const themeInfo = await db
-    .select({
-      themeName: themePoems.themeName,
-      totalPoems: themePoems.totalPoemsByTheme,
-    })
-    .from(themePoems)
-    .where(eq(themePoems.themeSlug, slug))
-    .limit(1);
+  const [themeInfo, poems] = await Promise.all([
+    db
+      .select({
+        themeName: themePoems.themeName,
+        totalPoems: themePoems.totalPoemsByTheme,
+      })
+      .from(themePoems)
+      .where(eq(themePoems.themeSlug, slug))
+      .limit(1),
+    db
+      .select({
+        title: themePoems.poemTitle,
+        slug: themePoems.poemSlug,
+        poetName: themePoems.poetName,
+        meter: themePoems.meterName,
+      })
+      .from(themePoems)
+      .where(eq(themePoems.themeSlug, slug))
+      .limit(limit)
+      .offset(offset),
+  ]);
 
   if (!themeInfo.length || !themeInfo[0]) return null;
-
-  const poems = await db
-    .select({
-      title: themePoems.poemTitle,
-      slug: themePoems.poemSlug,
-      poetName: themePoems.poetName,
-      meter: themePoems.meterName,
-    })
-    .from(themePoems)
-    .where(eq(themePoems.themeSlug, slug))
-    .limit(limit)
-    .offset(offset);
 
   const total = themeInfo[0].totalPoems;
   const totalPages = Math.ceil(total / limit);

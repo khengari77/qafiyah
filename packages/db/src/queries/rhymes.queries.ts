@@ -62,27 +62,28 @@ export async function listRhymePoems(
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const rhymeInfo = await db
-    .select({
-      rhymePattern: rhymePoems.rhymePattern,
-      totalPoems: rhymePoems.totalPoemsByRhyme,
-    })
-    .from(rhymePoems)
-    .where(eq(rhymePoems.rhymeSlug, slug))
-    .limit(1);
+  const [rhymeInfo, poems] = await Promise.all([
+    db
+      .select({
+        rhymePattern: rhymePoems.rhymePattern,
+        totalPoems: rhymePoems.totalPoemsByRhyme,
+      })
+      .from(rhymePoems)
+      .where(eq(rhymePoems.rhymeSlug, slug))
+      .limit(1),
+    db
+      .select({
+        title: rhymePoems.poemTitle,
+        slug: rhymePoems.poemSlug,
+        meter: rhymePoems.meterName,
+      })
+      .from(rhymePoems)
+      .where(eq(rhymePoems.rhymeSlug, slug))
+      .limit(limit)
+      .offset(offset),
+  ]);
 
   if (!rhymeInfo.length || !rhymeInfo[0]) return null;
-
-  const poems = await db
-    .select({
-      title: rhymePoems.poemTitle,
-      slug: rhymePoems.poemSlug,
-      meter: rhymePoems.meterName,
-    })
-    .from(rhymePoems)
-    .where(eq(rhymePoems.rhymeSlug, slug))
-    .limit(limit)
-    .offset(offset);
 
   const total = rhymeInfo[0].totalPoems;
   const totalPages = Math.ceil(total / limit);

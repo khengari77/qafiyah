@@ -7,7 +7,7 @@ import { listRhymePoems, listRhymes } from './procedures/rhymes.procedures';
 import { search } from './procedures/search.procedures';
 import { listThemePoems, listThemes } from './procedures/themes.procedures';
 
-export const router = pub.router({
+const routes = {
   eras: {
     list: listEras,
     listPoems: listEraPoems,
@@ -35,4 +35,7 @@ export const router = pub.router({
   search: {
     search,
   },
-});
+};
+
+export const router = pub.router(routes);
+export const routerNamespaces = Object.keys(routes);

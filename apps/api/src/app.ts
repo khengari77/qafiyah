@@ -8,7 +8,7 @@ import { HTTPException } from 'hono/http-exception';
 import { makeProblem, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
 import serveEmojiFavicon from './middlewares/favicon.middleware';
-import { router } from './router';
+import { router, routerNamespaces } from './router';
 import index from './routes/index.routes';
 import poems from './routes/poems.routes';
 import type { AppContext } from './types';
@@ -24,8 +24,11 @@ app.use(
     credentials: false,
   })
 );
-app.use(dbMiddleware);
 app.use(serveEmojiFavicon('📜'));
+
+for (const ns of routerNamespaces) {
+  app.use(`/v1/${ns}/*`, dbMiddleware);
+}
 
 const orpcHandler = new OpenAPIHandler(router, {
   plugins: [
@@ -50,7 +53,10 @@ const orpcHandler = new OpenAPIHandler(router, {
   ],
 });
 
+const ORPC_BYPASS_PATHS = new Set(['/v1', '/v1/poems/random']);
+
 app.use('/v1/*', async (c, next) => {
+  if (ORPC_BYPASS_PATHS.has(c.req.path)) return next();
   const result = await orpcHandler.handle(c.req.raw, {
     context: { db: c.get('db') },
     prefix: '/v1',
@@ -63,6 +69,16 @@ app
   .route('/', index)
   .route('/v1', index)
   .route('/v1/poems', poems)
+  .notFound((c) =>
+    sendProblem(
+      c,
+      makeProblem({
+        code: 'NOT_FOUND',
+        status: 404,
+        detail: `No route matches ${c.req.method} ${c.req.path}`,
+      })
+    )
+  )
   .onError((error, c) => {
     console.error({
       message: 'Global error handler caught an error',
