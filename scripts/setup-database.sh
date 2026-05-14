@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Set up the local Postgres database from the newest dump in data/datasets/.
+# Set up the local Postgres database from the newest dump in dumps/.
 # Idempotent: re-running drops and recreates the database from scratch.
 #
 # The container (see docker-compose.yml) bootstraps the `qafiyah` user and
@@ -20,7 +20,7 @@ readonly DB_HOST="127.0.0.1"
 readonly DB_PORT="5433"
 
 readonly SERVICE="db"
-readonly DUMP_DIR="data/datasets"
+readonly DUMP_DIR="dumps"
 readonly COMPOSE_FILE="docker-compose.yml"
 
 readonly API_ENV_FILE="apps/api/.dev.vars"

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ../../dev/check-port.mjs 4321 && astro dev",
+    "dev": "node ../../scripts/check-port.mjs 4321 && astro dev",
     "build": "node ./scripts/build-with-api.mjs",
     "build:raw": "astro build",
     "start": "astro preview",

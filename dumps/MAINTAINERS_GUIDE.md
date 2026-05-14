@@ -14,6 +14,6 @@ pg_dump \
   --no-tablespaces \
   -Fc \
   -f qafiyah_public_$(date +%Y%m%d_%H%M%S).dump
-````
+```
 
 See [Restore Documentation](./README.md) for restore instructions.

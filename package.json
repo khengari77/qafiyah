@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "prepare": "husky",
-    "db:setup": "./dev/setup-database.sh",
+    "db:setup": "./scripts/setup-database.sh",
     "clean:dev": "pkill -f 'qafiyah/.*(astro|wrangler|workerd)' || true",
     "preinstall": "node -e \"if(!String(process.env.npm_config_user_agent||'').startsWith('pnpm/')){console.error('Use pnpm (npm/yarn not supported). Try: corepack pnpm install');process.exit(1)}\"",
     "dev": "turbo run dev",

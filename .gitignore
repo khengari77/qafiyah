@@ -57,10 +57,6 @@ __pycache__/
 *.py[cod]
 *.egg-info/
 
-data/docs/db-schema/*.json
-data/docs/db-schema/*.md
-data/docs/db-schema/*.yaml
-
 apps/web/.astro/
 .claude/
 TODO.md
