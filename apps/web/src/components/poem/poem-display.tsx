@@ -35,11 +35,11 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
             </h1>
 
             <h2 className="text-sm xxs:text-base md:text-2xl text-zinc-700">
-              <a href={`/poets/${metadata.poet_slug}/page/1`} className="hover:underline">
-                {metadata.poet_name}
+              <a href={`/poets/${metadata.poetSlug}/page/1`} className="hover:underline">
+                {metadata.poetName}
               </a>{' '}
-              <a href={`/eras/${metadata.era_slug}/page/1`} className="hover:underline">
-                {`(${metadata.era_name})`}
+              <a href={`/eras/${metadata.eraSlug}/page/1`} className="hover:underline">
+                {`(${metadata.eraName})`}
               </a>
             </h2>
 
@@ -55,11 +55,11 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
           </div>
 
           <div className="flex w-full md:w-8/12 border border-zinc-300/80 px-2.5 md:px-8 lg:px-16 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl justify-between items-center text-zinc-600 rounded-full">
-            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">{metadata.meter_name || ''}</p>
+            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">{metadata.meterName || ''}</p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">
               {formatVerseCount(verseCountNum) || ''}
             </p>
-            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{metadata.theme_name || ''}</p>
+            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{metadata.themeName || ''}</p>
           </div>
         </header>
 
@@ -134,10 +134,10 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
                 return (
                   <ListCard
                     className="rounded-2xl"
-                    key={`${item.poem_slug} ${metadata.poet_slug}`}
-                    title={item.poet_name}
-                    href={`/poems/${item.poem_slug}`}
-                    name={item.poem_title}
+                    key={`${item.poemSlug} ${metadata.poetSlug}`}
+                    title={item.poetName}
+                    href={`/poems/${item.poemSlug}`}
+                    name={item.poemTitle}
                   />
                 );
               })

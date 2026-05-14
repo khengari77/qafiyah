@@ -1,4 +1,8 @@
-import type { RandomPoemLines } from '../types';
+export type RandomPoemLines = {
+  poem_id: number;
+  poet_name: string;
+  content: string;
+};
 
 export function extractPoemExcerpt(poem: RandomPoemLines): string {
   const lines = poem.content.split('*');

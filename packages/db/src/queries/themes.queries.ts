@@ -3,7 +3,13 @@ import type { DbClient } from '../client';
 import { FETCH_PER_PAGE } from '../constants';
 import { themePoems, themeStats } from '../schema';
 
-export type ThemeStatsRow = typeof themeStats.$inferSelect;
+export type ThemeStatsRow = {
+  id: number;
+  name: string;
+  slug: string;
+  poemsCount: number;
+  poetsCount: number;
+};
 
 export type ListThemePoemsResult = {
   themeDetails: { id: number; name: string; poemsCount: number };

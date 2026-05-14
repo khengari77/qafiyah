@@ -3,7 +3,13 @@ import type { DbClient } from '../client';
 import { ERAS_SORT_ORDER, FETCH_PER_PAGE } from '../constants';
 import { eraPoems, eraStats } from '../schema';
 
-export type EraStatsRow = typeof eraStats.$inferSelect;
+export type EraStatsRow = {
+  id: number;
+  name: string;
+  slug: string;
+  poetsCount: number;
+  poemsCount: number;
+};
 
 export type ListEraPoemsResult = {
   eraDetails: { id: number; name: string; poemsCount: number };

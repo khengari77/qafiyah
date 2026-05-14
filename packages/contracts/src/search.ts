@@ -11,24 +11,22 @@ const searchPagination = v.object({
 });
 
 const poemsSearchResult = v.object({
-  poet_name: v.string(),
-  poet_era: v.string(),
-  poet_slug: v.string(),
-  poem_title: v.string(),
-  poem_snippet: v.string(),
-  poem_meter: v.string(),
-  poem_slug: v.string(),
+  poetName: v.string(),
+  poetEra: v.string(),
+  poetSlug: v.string(),
+  poemTitle: v.string(),
+  poemSnippet: v.string(),
+  poemMeter: v.string(),
+  poemSlug: v.string(),
   relevance: v.number(),
-  total_count: v.number(),
 });
 
 const poetsSearchResult = v.object({
-  poet_name: v.string(),
-  poet_era: v.string(),
-  poet_slug: v.string(),
-  poet_bio: v.string(),
+  poetName: v.string(),
+  poetEra: v.string(),
+  poetSlug: v.string(),
+  poetBio: v.string(),
   relevance: v.number(),
-  total_count: v.number(),
 });
 
 const searchContract = oc

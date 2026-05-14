@@ -3,7 +3,13 @@ import type { DbClient } from '../client';
 import { FETCH_PER_PAGE } from '../constants';
 import { poemsFullData, poetPoems, poetStats } from '../schema';
 
-export type PoetStatsRow = typeof poetStats.$inferSelect;
+export type PoetStatsRow = {
+  id: number;
+  name: string;
+  slug: string;
+  eraId: number;
+  poemsCount: number;
+};
 
 export type ListPoetsResult = {
   poets: PoetStatsRow[];

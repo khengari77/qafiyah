@@ -32,7 +32,7 @@ export async function loadPoemPage(slug: string): Promise<{
   if (!poem) return null;
 
   const clearTitle = poem.clearTitle || 'قصيدة';
-  const poetName = poem.metadata.poet_name || 'شاعر غير معروف';
+  const poetName = poem.metadata.poetName || 'شاعر غير معروف';
   const rawDescription = flattenVerses(poem.processedContent.verses as [string, string][]);
   const safeClearTitle = safeMetaText(clearTitle);
   const safePoetName = safeMetaText(poetName);
@@ -47,18 +47,18 @@ export async function loadPoemPage(slug: string): Promise<{
     '@context': 'https://schema.org',
     '@type': 'CreativeWork',
     name: safeMetaText(poem.clearTitle),
-    headline: safeMetaText(`${poem.clearTitle} | ${poem.metadata.poet_name}`),
+    headline: safeMetaText(`${poem.clearTitle} | ${poem.metadata.poetName}`),
     author: {
       '@type': 'Person',
-      name: poem.metadata.poet_name,
-      url: poem.metadata.poet_slug,
+      name: poem.metadata.poetName,
+      url: poem.metadata.poetSlug,
     },
     inLanguage: 'ar',
     datePublished: new Date().toISOString(),
     url: pageUrl,
     isPartOf: [
-      { '@type': 'Collection', name: poem.metadata.poet_name, url: poem.metadata.poet_slug },
-      { '@type': 'Collection', name: poem.metadata.era_name, url: poem.metadata.era_slug },
+      { '@type': 'Collection', name: poem.metadata.poetName, url: poem.metadata.poetSlug },
+      { '@type': 'Collection', name: poem.metadata.eraName, url: poem.metadata.eraSlug },
     ],
     description: safeMetaText(poem.processedContent.verses.flat().join(' - ')),
     keywords: sanitizedKeywords,

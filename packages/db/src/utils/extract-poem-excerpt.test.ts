@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { RandomPoemLines } from '../types';
-import { extractPoemExcerpt } from './extract-poem-excerpt';
+import { extractPoemExcerpt, type RandomPoemLines } from './extract-poem-excerpt';
 
 const poem = (content: string): RandomPoemLines => ({
   poem_id: 1,

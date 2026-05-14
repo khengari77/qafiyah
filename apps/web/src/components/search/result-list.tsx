@@ -59,12 +59,12 @@ export function ResultList({
 
       {searchType === 'poems' &&
         (data as PoemsSearchResult[]).map((item) => (
-          <PoemCard key={`${item.poem_slug}-${item.relevance}`} item={item} />
+          <PoemCard key={`${item.poemSlug}-${item.relevance}`} item={item} />
         ))}
 
       {searchType === 'poets' &&
         (data as PoetsSearchResult[]).map((item) => (
-          <PoetCard key={`${item.poet_slug}-${item.relevance}`} item={item} />
+          <PoetCard key={`${item.poetSlug}-${item.relevance}`} item={item} />
         ))}
 
       {data.length > 0 && (

@@ -37,6 +37,7 @@ export function SearchContainer() {
     hasQuery,
     loadMoreRef,
     data,
+    totalResults,
     validationError,
     inputValue,
     searchParams,
@@ -58,8 +59,6 @@ export function SearchContainer() {
     handleSearchTypeChange,
     resetAllStates,
   } = useSearch();
-
-  const totalCount = data?.[0]?.total_count ?? 0;
 
   return (
     <section className="w-full mx-auto max-w-2xl flex flex-col h-full flex-1 justify-start items pb-24">
@@ -155,7 +154,7 @@ export function SearchContainer() {
           errorMessage={SEARCH_TEXTS.errorMessage}
           refreshText={SEARCH_TEXTS.refreshThePage}
           noResultsText={getNoResultsText(searchParams.q || '')}
-          resultText={getResultText(totalCount, searchParams.q || '', searchType, matchType)}
+          resultText={getResultText(totalResults, searchParams.q || '', searchType, matchType)}
         />
       </div>
     </section>

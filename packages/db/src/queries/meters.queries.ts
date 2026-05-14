@@ -3,7 +3,13 @@ import type { DbClient } from '../client';
 import { FETCH_PER_PAGE, FORMAL_METERS } from '../constants';
 import { meterPoems, meterStats } from '../schema';
 
-export type MeterStatsRow = typeof meterStats.$inferSelect;
+export type MeterStatsRow = {
+  id: number;
+  name: string;
+  slug: string;
+  poemsCount: number;
+  poetsCount: number;
+};
 
 export type ListMeterPoemsResult = {
   meterDetails: { id: number; name: string; poemsCount: number };

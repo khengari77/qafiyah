@@ -39,12 +39,12 @@ const getBySlugContract = oc
   .output(
     v.object({
       metadata: v.object({
-        poet_name: v.string(),
-        poet_slug: v.string(),
-        era_name: v.string(),
-        era_slug: v.string(),
-        meter_name: v.string(),
-        theme_name: v.string(),
+        poetName: v.string(),
+        poetSlug: v.string(),
+        eraName: v.string(),
+        eraSlug: v.string(),
+        meterName: v.string(),
+        themeName: v.string(),
       }),
       clearTitle: v.string(),
       processedContent: v.object({
@@ -55,10 +55,10 @@ const getBySlugContract = oc
       }),
       relatedPoems: v.array(
         v.object({
-          poem_slug: v.string(),
-          poet_name: v.string(),
-          meter_name: v.string(),
-          poem_title: v.string(),
+          poemSlug: v.string(),
+          poetName: v.string(),
+          meterName: v.string(),
+          poemTitle: v.string(),
         })
       ),
     })

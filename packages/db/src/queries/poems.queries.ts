@@ -7,9 +7,39 @@ import {
   MAX_URLS_PER_SITEMAP,
 } from '../constants';
 import { poemsFullData } from '../schema';
-import type { PoemWithRelatedResponse, RandomPoemLines } from '../types';
-import { extractPoemExcerpt } from '../utils/extract-poem-excerpt';
+import { extractPoemExcerpt, type RandomPoemLines } from '../utils/extract-poem-excerpt';
 import { processPoemContent } from '../utils/process-poem-content';
+
+type RawPoemData = {
+  slug: string;
+  title: string;
+  content: string;
+  poet_name: string;
+  poet_slug: string;
+  meter_name: string;
+  theme_name: string;
+  era_name: string;
+  era_slug: string;
+};
+
+type RawRelatedPoem = {
+  poem_slug: string;
+  poet_name: string;
+  meter_name: string;
+  poem_title: string;
+};
+
+type PoemWithRelatedSuccess = {
+  poem: RawPoemData;
+  related_poems: RawRelatedPoem[];
+};
+
+type PoemWithRelatedError = {
+  error: string;
+  message?: string;
+};
+
+type PoemWithRelatedResponse = PoemWithRelatedSuccess | PoemWithRelatedError;
 
 export type ListPoemSlugsResult = {
   slugs: { slug: string }[];
@@ -89,20 +119,20 @@ type GetPoemResult =
       type: 'found';
       data: {
         metadata: {
-          poet_name: string;
-          poet_slug: string;
-          era_name: string;
-          era_slug: string;
-          meter_name: string;
-          theme_name: string;
+          poetName: string;
+          poetSlug: string;
+          eraName: string;
+          eraSlug: string;
+          meterName: string;
+          themeName: string;
         };
         clearTitle: string;
         processedContent: ReturnType<typeof processPoemContent>;
         relatedPoems: {
-          poem_slug: string;
-          poet_name: string;
-          meter_name: string;
-          poem_title: string;
+          poemSlug: string;
+          poetName: string;
+          meterName: string;
+          poemTitle: string;
         }[];
       };
     }
@@ -145,16 +175,21 @@ export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoem
     type: 'found',
     data: {
       metadata: {
-        poet_name: poem.poet_name,
-        poet_slug: poem.poet_slug,
-        era_name: poem.era_name,
-        era_slug: poem.era_slug,
-        meter_name: poem.meter_name,
-        theme_name: poem.theme_name,
+        poetName: poem.poet_name,
+        poetSlug: poem.poet_slug,
+        eraName: poem.era_name,
+        eraSlug: poem.era_slug,
+        meterName: poem.meter_name,
+        themeName: poem.theme_name,
       },
       clearTitle,
       processedContent,
-      relatedPoems: related_poems,
+      relatedPoems: related_poems.map((r) => ({
+        poemSlug: r.poem_slug,
+        poetName: r.poet_name,
+        meterName: r.meter_name,
+        poemTitle: r.poem_title,
+      })),
     },
   };
 }

@@ -46,7 +46,7 @@ function validateInput(input: string): string | null {
   return null;
 }
 
-function parseIds(value: string | string[]): string[] {
+function splitCsvIds(value: string | string[]): string[] {
   if (Array.isArray(value)) return value.filter((v) => v.trim() !== '');
   return value
     .split(',')
@@ -90,10 +90,10 @@ export function useSearch() {
     if (query) setInputValue(query);
   }, [query]);
 
-  const selectedEras = parseIds(eraIds);
-  const selectedRhymes = parseIds(rhymeIds);
-  const selectedMeters = parseIds(meterIds);
-  const selectedThemes = parseIds(themeIds);
+  const selectedEras = splitCsvIds(eraIds);
+  const selectedRhymes = splitCsvIds(rhymeIds);
+  const selectedMeters = splitCsvIds(meterIds);
+  const selectedThemes = splitCsvIds(themeIds);
 
   const searchParams = {
     q: query,
@@ -135,6 +135,8 @@ export function useSearch() {
         ...result,
       }))
     ) as (PoemsSearchResult | PoetsSearchResult)[]) || [];
+
+  const totalResults = iq.data?.pages[0]?.pagination?.totalResults ?? 0;
 
   const { loadMoreRef } = useInfiniteScroll(
     iq.fetchNextPage,
@@ -252,6 +254,7 @@ export function useSearch() {
     loadMoreRef,
 
     data,
+    totalResults,
     validationError,
     inputValue,
     searchParams,
