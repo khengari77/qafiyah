@@ -5,27 +5,22 @@ import { rhymePoems, rhymeStats } from '../schema';
 import { normalizeRhymePattern } from '../utils/normalize-rhyme-pattern';
 
 export type RhymeLetterGroup = {
-  id: number;
   name: string;
   slug: string;
-  poetsCount: number;
   poemsCount: number;
-  totalUsage: number;
 };
 
 export type ListRhymePoemsResult = {
-  rhymeDetails: { id: number; pattern: string; poemsCount: number };
+  rhymeDetails: { pattern: string; poemsCount: number };
   poems: { title: string; slug: string; meter: string }[];
+  total: number;
   totalPages: number;
 };
 
 export async function listRhymes(db: DbClient): Promise<RhymeLetterGroup[]> {
   const results = await db.select().from(rhymeStats);
 
-  const groupedRhymes = new Map<
-    string,
-    { rhymes: typeof results; totalPoemsCount: number; totalPoetsCount: number }
-  >();
+  const groupedRhymes = new Map<string, { rhymes: typeof results; totalPoemsCount: number }>();
 
   for (const rhyme of results) {
     const cleanPattern = normalizeRhymePattern(rhyme.pattern);
@@ -34,28 +29,24 @@ export async function listRhymes(db: DbClient): Promise<RhymeLetterGroup[]> {
       if (variants.includes(cleanPattern)) {
         let group = groupedRhymes.get(letterName);
         if (!group) {
-          group = { rhymes: [], totalPoemsCount: 0, totalPoetsCount: 0 };
+          group = { rhymes: [], totalPoemsCount: 0 };
           groupedRhymes.set(letterName, group);
         }
         group.rhymes.push(rhyme);
         group.totalPoemsCount += rhyme.poemsCount;
-        group.totalPoetsCount += rhyme.poetsCount;
         break;
       }
     }
   }
 
   const enrichedGroups = Array.from(groupedRhymes.entries()).map(
-    ([letter, { rhymes, totalPoemsCount, totalPoetsCount }]) => {
+    ([letter, { rhymes, totalPoemsCount }]) => {
       const firstRhyme = rhymes[0];
       if (!firstRhyme) throw new Error();
       return {
-        id: firstRhyme.id,
         name: letter,
         slug: firstRhyme.slug,
-        poetsCount: totalPoetsCount,
         poemsCount: totalPoemsCount,
-        totalUsage: totalPoetsCount + totalPoemsCount,
       };
     }
   );
@@ -73,7 +64,6 @@ export async function listRhymePoems(
 
   const rhymeInfo = await db
     .select({
-      rhymeId: rhymePoems.rhymeId,
       rhymePattern: rhymePoems.rhymePattern,
       totalPoems: rhymePoems.totalPoemsByRhyme,
     })
@@ -94,15 +84,16 @@ export async function listRhymePoems(
     .limit(limit)
     .offset(offset);
 
-  const totalPages = Math.ceil(rhymeInfo[0].totalPoems / limit);
+  const total = rhymeInfo[0].totalPoems;
+  const totalPages = Math.ceil(total / limit);
 
   return {
     rhymeDetails: {
-      id: rhymeInfo[0].rhymeId,
       pattern: rhymeInfo[0].rhymePattern,
-      poemsCount: rhymeInfo[0].totalPoems,
+      poemsCount: total,
     },
     poems,
+    total,
     totalPages,
   };
 }

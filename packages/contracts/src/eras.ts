@@ -1,8 +1,13 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { poemListItem, slugAndPageInput, statRow } from './_shared';
+import { paginationFields, poemListItem, slugAndPageInput, statRow } from './_shared';
 
-const listErasContract = oc.route({ method: 'GET', path: '/eras' }).output(v.array(statRow));
+const listErasContract = oc.route({ method: 'GET', path: '/eras' }).output(
+  v.object({
+    eras: v.array(statRow),
+    ...paginationFields,
+  })
+);
 
 const listEraPoemsContract = oc
   .route({ method: 'GET', path: '/eras/{slug}/page/{page}' })
@@ -13,12 +18,11 @@ const listEraPoemsContract = oc
   .output(
     v.object({
       eraDetails: v.object({
-        id: v.number(),
         name: v.string(),
         poemsCount: v.number(),
       }),
       poems: v.array(poemListItem),
-      totalPages: v.number(),
+      ...paginationFields,
     })
   );
 

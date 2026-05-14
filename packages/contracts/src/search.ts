@@ -1,14 +1,8 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { pageParam } from './_shared';
+import { pageParam, paginationFields } from './_shared';
 
-const searchPagination = v.object({
-  currentPage: v.number(),
-  totalPages: v.number(),
-  totalResults: v.number(),
-  hasNextPage: v.boolean(),
-  hasPrevPage: v.boolean(),
-});
+const slugArrayParam = v.optional(v.array(v.string()), []);
 
 const poemsSearchResult = v.object({
   poetName: v.string(),
@@ -33,30 +27,27 @@ const searchContract = oc
   .route({ method: 'GET', path: '/search' })
   .input(
     v.object({
-      q: v.optional(v.string(), ''),
-      search_type: v.picklist(['poems', 'poets']),
-      page: v.optional(pageParam, 1),
-      match_type: v.optional(v.string(), 'all'),
-      meter_ids: v.optional(v.string()),
-      era_ids: v.optional(v.string()),
-      rhyme_ids: v.optional(v.string()),
-      theme_ids: v.optional(v.string()),
+      q: v.pipe(v.string(), v.minLength(1, 'لا نقل إلا الحروف العربية')),
+      searchType: v.picklist(['poems', 'poets']),
+      page: v.optional(pageParam, '1'),
+      matchType: v.optional(v.picklist(['all', 'any', 'exact']), 'all'),
+      meterSlugs: slugArrayParam,
+      eraSlugs: slugArrayParam,
+      rhymeSlugs: slugArrayParam,
+      themeSlugs: slugArrayParam,
     })
   )
-  .errors({
-    EMPTY_QUERY: { status: 400, message: 'لا نقل إلا الحروف العربية' },
-  })
   .output(
-    v.variant('search_type', [
+    v.variant('searchType', [
       v.object({
-        search_type: v.literal('poems'),
+        searchType: v.literal('poems'),
         results: v.array(poemsSearchResult),
-        pagination: searchPagination,
+        ...paginationFields,
       }),
       v.object({
-        search_type: v.literal('poets'),
+        searchType: v.literal('poets'),
         results: v.array(poetsSearchResult),
-        pagination: searchPagination,
+        ...paginationFields,
       }),
     ])
   );

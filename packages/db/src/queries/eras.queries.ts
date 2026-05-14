@@ -4,7 +4,6 @@ import { ERAS_SORT_ORDER, FETCH_PER_PAGE } from '../constants';
 import { eraPoems, eraStats } from '../schema';
 
 export type EraStatsRow = {
-  id: number;
   name: string;
   slug: string;
   poetsCount: number;
@@ -12,13 +11,21 @@ export type EraStatsRow = {
 };
 
 export type ListEraPoemsResult = {
-  eraDetails: { id: number; name: string; poemsCount: number };
+  eraDetails: { name: string; poemsCount: number };
   poems: { title: string; slug: string; poetName: string; meter: string }[];
+  total: number;
   totalPages: number;
 };
 
 export async function listEras(db: DbClient): Promise<EraStatsRow[]> {
-  const results = await db.select().from(eraStats);
+  const results = await db
+    .select({
+      name: eraStats.name,
+      slug: eraStats.slug,
+      poetsCount: eraStats.poetsCount,
+      poemsCount: eraStats.poemsCount,
+    })
+    .from(eraStats);
   return results.sort((a, b) => ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name));
 }
 
@@ -32,7 +39,6 @@ export async function listEraPoems(
 
   const eraInfo = await db
     .select({
-      eraId: eraPoems.eraId,
       eraName: eraPoems.eraName,
       totalPoems: eraPoems.totalPoemsInEra,
     })
@@ -54,15 +60,16 @@ export async function listEraPoems(
     .limit(limit)
     .offset(offset);
 
-  const totalPages = Math.ceil(eraInfo[0].totalPoems / limit);
+  const total = eraInfo[0].totalPoems;
+  const totalPages = Math.ceil(total / limit);
 
   return {
     eraDetails: {
-      id: eraInfo[0].eraId,
       name: eraInfo[0].eraName,
-      poemsCount: eraInfo[0].totalPoems,
+      poemsCount: total,
     },
     poems,
+    total,
     totalPages,
   };
 }

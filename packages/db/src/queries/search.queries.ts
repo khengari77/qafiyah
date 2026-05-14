@@ -1,5 +1,6 @@
-import { type SQL, sql } from 'drizzle-orm';
+import { inArray, type SQL, sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
+import { eraStats, meterStats, rhymeStats, themeStats } from '../schema';
 
 export type PoemsSearchRow = {
   poetName: string;
@@ -51,16 +52,59 @@ function intArrayParam(ids: number[] | null): SQL {
   return sql`${`{${ids.join(',')}}`}::INTEGER[]`;
 }
 
+async function lookupMeterIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
+  if (!slugs || slugs.length === 0) return null;
+  const rows = await db
+    .select({ id: meterStats.id })
+    .from(meterStats)
+    .where(inArray(meterStats.slug, slugs));
+  return rows.map((r) => r.id);
+}
+
+async function lookupEraIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
+  if (!slugs || slugs.length === 0) return null;
+  const rows = await db
+    .select({ id: eraStats.id })
+    .from(eraStats)
+    .where(inArray(eraStats.slug, slugs));
+  return rows.map((r) => r.id);
+}
+
+async function lookupThemeIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
+  if (!slugs || slugs.length === 0) return null;
+  const rows = await db
+    .select({ id: themeStats.id })
+    .from(themeStats)
+    .where(inArray(themeStats.slug, slugs));
+  return rows.map((r) => r.id);
+}
+
+async function lookupRhymeIds(db: DbClient, slugs: string[] | null): Promise<number[] | null> {
+  if (!slugs || slugs.length === 0) return null;
+  const rows = await db
+    .select({ id: rhymeStats.id })
+    .from(rhymeStats)
+    .where(inArray(rhymeStats.slug, slugs));
+  return rows.map((r) => r.id);
+}
+
 export async function searchPoems(
   db: DbClient,
   query: string,
   page: number,
   matchType: string,
-  meterIds: number[] | null,
-  eraIds: number[] | null,
-  themeIds: number[] | null,
-  rhymeIds: number[] | null
+  meterSlugs: string[] | null,
+  eraSlugs: string[] | null,
+  themeSlugs: string[] | null,
+  rhymeSlugs: string[] | null
 ): Promise<SearchPage<PoemsSearchRow>> {
+  const [meterIds, eraIds, themeIds, rhymeIds] = await Promise.all([
+    lookupMeterIds(db, meterSlugs),
+    lookupEraIds(db, eraSlugs),
+    lookupThemeIds(db, themeSlugs),
+    lookupRhymeIds(db, rhymeSlugs),
+  ]);
+
   const raw = (await db.execute(
     sql`SELECT * FROM search_poems(
       ${query}::TEXT,
@@ -94,8 +138,10 @@ export async function searchPoets(
   query: string,
   page: number,
   matchType: string,
-  eraIds: number[] | null
+  eraSlugs: string[] | null
 ): Promise<SearchPage<PoetsSearchRow>> {
+  const eraIds = await lookupEraIds(db, eraSlugs);
+
   const raw = (await db.execute(
     sql`SELECT * FROM search_poets(
       ${query}::TEXT,

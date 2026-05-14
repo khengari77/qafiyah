@@ -1,18 +1,17 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { poemListItemNoPoet, slugAndPageInput } from './_shared';
+import {
+  paginationFields,
+  poemListItemNoPoet,
+  slugAndPageInput,
+  statRowNoPoetsCount,
+} from './_shared';
 
 const listRhymesContract = oc.route({ method: 'GET', path: '/rhymes' }).output(
-  v.array(
-    v.object({
-      id: v.number(),
-      name: v.string(),
-      slug: v.string(),
-      poetsCount: v.number(),
-      poemsCount: v.number(),
-      totalUsage: v.number(),
-    })
-  )
+  v.object({
+    rhymes: v.array(statRowNoPoetsCount),
+    ...paginationFields,
+  })
 );
 
 const listRhymePoemsContract = oc
@@ -24,12 +23,11 @@ const listRhymePoemsContract = oc
   .output(
     v.object({
       rhymeDetails: v.object({
-        id: v.number(),
         pattern: v.string(),
         poemsCount: v.number(),
       }),
       poems: v.array(poemListItemNoPoet),
-      totalPages: v.number(),
+      ...paginationFields,
     })
   );
 

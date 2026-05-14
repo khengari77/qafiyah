@@ -4,21 +4,27 @@ import { FETCH_PER_PAGE, FORMAL_METERS } from '../constants';
 import { meterPoems, meterStats } from '../schema';
 
 export type MeterStatsRow = {
-  id: number;
   name: string;
   slug: string;
   poemsCount: number;
-  poetsCount: number;
 };
 
 export type ListMeterPoemsResult = {
-  meterDetails: { id: number; name: string; poemsCount: number };
+  meterDetails: { name: string; poemsCount: number };
   poems: { title: string; slug: string; poetName: string }[];
+  total: number;
   totalPages: number;
 };
 
 export async function listMeters(db: DbClient): Promise<MeterStatsRow[]> {
-  const results = await db.select().from(meterStats).where(inArray(meterStats.name, FORMAL_METERS));
+  const results = await db
+    .select({
+      name: meterStats.name,
+      slug: meterStats.slug,
+      poemsCount: meterStats.poemsCount,
+    })
+    .from(meterStats)
+    .where(inArray(meterStats.name, FORMAL_METERS));
   return results.sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 }
 
@@ -32,7 +38,6 @@ export async function listMeterPoems(
 
   const meterInfo = await db
     .select({
-      meterId: meterPoems.meterId,
       meterName: meterPoems.meterName,
       totalPoems: meterPoems.totalPoemsInMeter,
     })
@@ -53,15 +58,16 @@ export async function listMeterPoems(
     .limit(limit)
     .offset(offset);
 
-  const totalPages = Math.ceil(meterInfo[0].totalPoems / limit);
+  const total = meterInfo[0].totalPoems;
+  const totalPages = Math.ceil(total / limit);
 
   return {
     meterDetails: {
-      id: meterInfo[0].meterId,
       name: meterInfo[0].meterName,
-      poemsCount: meterInfo[0].totalPoems,
+      poemsCount: total,
     },
     poems,
+    total,
     totalPages,
   };
 }

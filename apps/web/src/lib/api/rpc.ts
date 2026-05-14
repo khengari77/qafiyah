@@ -4,8 +4,8 @@ import { OpenAPILink } from '@orpc/openapi-client/fetch';
 import { type AppContract, contract } from '@qafiyah/contracts';
 import { API_URL } from '@/constants/globals';
 
-const SSR_BASE_URL = (import.meta.env['BUILD_API_URL'] as string | undefined) ?? API_URL;
-const BROWSER_BASE_URL = API_URL;
+const SSR_BASE_URL = `${(import.meta.env['BUILD_API_URL'] as string | undefined) ?? API_URL}/v1`;
+const BROWSER_BASE_URL = `${API_URL}/v1`;
 
 function makeClient(baseUrl: string): ContractRouterClient<AppContract> {
   const link = new OpenAPILink(contract, { url: baseUrl });

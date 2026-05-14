@@ -1,8 +1,8 @@
 import { pub } from './procedures/_base';
 import { listEraPoems, listEras } from './procedures/eras.procedures';
 import { listMeterPoems, listMeters } from './procedures/meters.procedures';
-import { getBySlug, listAllSlugs, listSlugs } from './procedures/poems.procedures';
-import { getPoetBySlug, listPoetPoems, listPoets } from './procedures/poets.procedures';
+import { getBySlug, listSlugs } from './procedures/poems.procedures';
+import { listPoetPoems, listPoets } from './procedures/poets.procedures';
 import { listRhymePoems, listRhymes } from './procedures/rhymes.procedures';
 import { search } from './procedures/search.procedures';
 import { listThemePoems, listThemes } from './procedures/themes.procedures';
@@ -18,12 +18,10 @@ export const router = pub.router({
   },
   poems: {
     listSlugs,
-    listAllSlugs,
     getBySlug,
   },
   poets: {
     list: listPoets,
-    getBySlug: getPoetBySlug,
     listPoems: listPoetPoems,
   },
   rhymes: {

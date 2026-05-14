@@ -4,7 +4,6 @@ import {
   FALLBACK_RANDOM_POEM_LINES,
   FALLBACK_RANDOM_POEM_SLUG,
   MAX_EXCERPT_LENGTH,
-  MAX_URLS_PER_SITEMAP,
 } from '../constants';
 import { poemsFullData } from '../schema';
 import { extractPoemExcerpt, type RandomPoemLines } from '../utils/extract-poem-excerpt';
@@ -41,33 +40,15 @@ type PoemWithRelatedError = {
 
 type PoemWithRelatedResponse = PoemWithRelatedSuccess | PoemWithRelatedError;
 
-export type ListPoemSlugsResult = {
-  slugs: { slug: string }[];
+export type ListAllPoemSlugsResult = {
+  slugs: string[];
   total: number;
-  totalPages: number;
 };
 
-export async function listPoemSlugs(
-  db: DbClient,
-  page: number,
-  limit: number = MAX_URLS_PER_SITEMAP
-): Promise<ListPoemSlugsResult> {
-  const offset = (page - 1) * limit;
-  const slugs = await db
-    .select({ slug: poemsFullData.slug })
-    .from(poemsFullData)
-    .limit(limit)
-    .offset(offset);
-
-  const [{ count } = { count: 0 }] = await db.select({ count: sql`count(*)` }).from(poemsFullData);
-  const total = Number(count);
-
-  return { slugs, total, totalPages: Math.ceil(total / limit) };
-}
-
-export async function listAllPoemSlugs(db: DbClient): Promise<string[]> {
+export async function listAllPoemSlugs(db: DbClient): Promise<ListAllPoemSlugsResult> {
   const rows = await db.select({ slug: poemsFullData.slug }).from(poemsFullData);
-  return rows.map((r) => r.slug);
+  const slugs = rows.map((r) => r.slug);
+  return { slugs, total: slugs.length };
 }
 
 export async function getRandomPoemLines(db: DbClient): Promise<string> {
@@ -129,10 +110,10 @@ type GetPoemResult =
         clearTitle: string;
         processedContent: ReturnType<typeof processPoemContent>;
         relatedPoems: {
-          poemSlug: string;
+          title: string;
+          slug: string;
           poetName: string;
-          meterName: string;
-          poemTitle: string;
+          meter: string;
         }[];
       };
     }
@@ -185,10 +166,10 @@ export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoem
       clearTitle,
       processedContent,
       relatedPoems: related_poems.map((r) => ({
-        poemSlug: r.poem_slug,
+        title: r.poem_title,
+        slug: r.poem_slug,
         poetName: r.poet_name,
-        meterName: r.meter_name,
-        poemTitle: r.poem_title,
+        meter: r.meter_name,
       })),
     },
   };

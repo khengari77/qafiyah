@@ -1,8 +1,14 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { poemListItem, slugAndPageInput, statRow } from './_shared';
 
-const listThemesContract = oc.route({ method: 'GET', path: '/themes' }).output(v.array(statRow));
+import { paginationFields, poemListItem, slugAndPageInput, statRowNoPoetsCount } from './_shared';
+
+const listThemesContract = oc.route({ method: 'GET', path: '/themes' }).output(
+  v.object({
+    themes: v.array(statRowNoPoetsCount),
+    ...paginationFields,
+  })
+);
 
 const listThemePoemsContract = oc
   .route({ method: 'GET', path: '/themes/{slug}/page/{page}' })
@@ -13,12 +19,11 @@ const listThemePoemsContract = oc
   .output(
     v.object({
       themeDetails: v.object({
-        id: v.number(),
         name: v.string(),
         poemsCount: v.number(),
       }),
       poems: v.array(poemListItem),
-      totalPages: v.number(),
+      ...paginationFields,
     })
   );
 

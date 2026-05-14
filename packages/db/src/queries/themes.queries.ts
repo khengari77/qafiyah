@@ -4,21 +4,26 @@ import { FETCH_PER_PAGE } from '../constants';
 import { themePoems, themeStats } from '../schema';
 
 export type ThemeStatsRow = {
-  id: number;
   name: string;
   slug: string;
   poemsCount: number;
-  poetsCount: number;
 };
 
 export type ListThemePoemsResult = {
-  themeDetails: { id: number; name: string; poemsCount: number };
+  themeDetails: { name: string; poemsCount: number };
   poems: { title: string; slug: string; poetName: string; meter: string }[];
+  total: number;
   totalPages: number;
 };
 
 export async function listThemes(db: DbClient): Promise<ThemeStatsRow[]> {
-  const results = await db.select().from(themeStats);
+  const results = await db
+    .select({
+      name: themeStats.name,
+      slug: themeStats.slug,
+      poemsCount: themeStats.poemsCount,
+    })
+    .from(themeStats);
   return results.sort((a, b) => b.poemsCount - a.poemsCount);
 }
 
@@ -32,7 +37,6 @@ export async function listThemePoems(
 
   const themeInfo = await db
     .select({
-      themeId: themePoems.themeId,
       themeName: themePoems.themeName,
       totalPoems: themePoems.totalPoemsByTheme,
     })
@@ -54,15 +58,16 @@ export async function listThemePoems(
     .limit(limit)
     .offset(offset);
 
-  const totalPages = Math.ceil(themeInfo[0].totalPoems / limit);
+  const total = themeInfo[0].totalPoems;
+  const totalPages = Math.ceil(total / limit);
 
   return {
     themeDetails: {
-      id: themeInfo[0].themeId,
       name: themeInfo[0].themeName,
-      poemsCount: themeInfo[0].totalPoems,
+      poemsCount: total,
     },
     poems,
+    total,
     totalPages,
   };
 }

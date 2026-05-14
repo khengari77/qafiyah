@@ -1,5 +1,6 @@
 import { createDb } from '@qafiyah/db';
 import { createMiddleware } from 'hono/factory';
+import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
 
 export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
@@ -14,13 +15,13 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
     return await next();
   } catch (error) {
     console.error('Database error:', error);
-    return c.json(
-      {
-        success: false,
-        error: 'Database unavailable',
+    return sendProblem(
+      c,
+      makeProblem({
+        code: 'SERVICE_UNAVAILABLE',
         status: 503,
-      },
-      503
+        detail: 'Database unavailable',
+      })
     );
   }
 });

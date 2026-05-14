@@ -1,9 +1,9 @@
 import type { ApiOutputs } from './rpc';
 
-export type Era = ApiOutputs['eras']['list'][number];
-export type Meter = ApiOutputs['meters']['list'][number];
-export type Rhyme = ApiOutputs['rhymes']['list'][number];
-export type Theme = ApiOutputs['themes']['list'][number];
+export type Era = ApiOutputs['eras']['list']['eras'][number];
+export type Meter = ApiOutputs['meters']['list']['meters'][number];
+export type Rhyme = ApiOutputs['rhymes']['list']['rhymes'][number];
+export type Theme = ApiOutputs['themes']['list']['themes'][number];
 
 export type EraPoems = ApiOutputs['eras']['listPoems'];
 export type MeterPoems = ApiOutputs['meters']['listPoems'];
@@ -11,7 +11,7 @@ export type PoetPoems = ApiOutputs['poets']['listPoems'];
 export type RhymePoems = ApiOutputs['rhymes']['listPoems'];
 export type ThemePoems = ApiOutputs['themes']['listPoems'];
 
-export type PoetsData = Pick<ApiOutputs['poets']['list'], 'poets'>;
+export type PoetsData = { poets: ApiOutputs['poets']['list']['poets'] };
 
 export type PoemResponseData = ApiOutputs['poems']['getBySlug'];
 export type PoemMetadata = PoemResponseData['metadata'];
@@ -26,8 +26,7 @@ export type PaginationMeta = {
 };
 
 type SearchResponse = ApiOutputs['search']['search'];
-export type PoemsSearchResponseData = Extract<SearchResponse, { search_type: 'poems' }>;
-export type PoetsSearchResponseData = Extract<SearchResponse, { search_type: 'poets' }>;
+export type PoemsSearchResponseData = Extract<SearchResponse, { searchType: 'poems' }>;
+export type PoetsSearchResponseData = Extract<SearchResponse, { searchType: 'poets' }>;
 export type PoemsSearchResult = PoemsSearchResponseData['results'][number];
 export type PoetsSearchResult = PoetsSearchResponseData['results'][number];
-export type SearchPagination = PoemsSearchResponseData['pagination'];

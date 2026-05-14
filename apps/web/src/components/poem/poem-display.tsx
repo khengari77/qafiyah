@@ -134,10 +134,10 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
                 return (
                   <ListCard
                     className="rounded-2xl"
-                    key={`${item.poemSlug} ${metadata.poetSlug}`}
+                    key={`${item.slug} ${metadata.poetSlug}`}
                     title={item.poetName}
-                    href={`/poems/${item.poemSlug}`}
-                    name={item.poemTitle}
+                    href={`/poems/${item.slug}`}
+                    name={item.title}
                   />
                 );
               })

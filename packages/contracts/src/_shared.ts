@@ -1,7 +1,7 @@
 import * as v from 'valibot';
 
 export const pageParam = v.pipe(
-  v.unknown(),
+  v.string(),
   v.transform(Number),
   v.number(),
   v.integer(),
@@ -18,11 +18,16 @@ export const slugInput = v.object({
 });
 
 export const statRow = v.object({
-  id: v.number(),
   name: v.string(),
   slug: v.string(),
   poemsCount: v.number(),
   poetsCount: v.number(),
+});
+
+export const statRowNoPoetsCount = v.object({
+  name: v.string(),
+  slug: v.string(),
+  poemsCount: v.number(),
 });
 
 export const poemListItem = v.object({
@@ -43,3 +48,9 @@ export const poemListItemNoPoet = v.object({
   slug: v.string(),
   meter: v.string(),
 });
+
+export const paginationFields = {
+  page: v.number(),
+  totalPages: v.number(),
+  total: v.number(),
+};

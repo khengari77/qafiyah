@@ -102,7 +102,7 @@ export async function withRetry<T>(
 
 export async function fetchFormattedPoem(): Promise<Result<string>> {
   return await withRetry(async () => {
-    const res = await fetch(`${PROD_API_URL}/poems/random`);
+    const res = await fetch(`${PROD_API_URL}/v1/poems/random`);
     if (!res.ok) {
       throw new Error(`API returned status ${res.status}`);
     }

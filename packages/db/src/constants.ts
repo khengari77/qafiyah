@@ -62,7 +62,6 @@ export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
 ]);
 
 export const FETCH_PER_PAGE = 30;
-export const MAX_URLS_PER_SITEMAP = 1000;
 export const MAX_EXCERPT_LENGTH = 280;
 
 export const FALLBACK_RANDOM_POEM_LINES =

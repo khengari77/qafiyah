@@ -4,45 +4,29 @@ import { pub } from './_base';
 const RESULTS_PER_POEMS_PAGE = 5;
 const RESULTS_PER_POETS_PAGE = 10;
 
-function parseCsvNumbers(csv: string | undefined): number[] | null {
-  if (!csv) return null;
-  const ids = csv
-    .split(',')
-    .map((s) => Number.parseInt(s.trim(), 10))
-    .filter((n) => Number.isFinite(n));
-  return ids.length > 0 ? ids : null;
+function paginate(currentPage: number, totalResults: number, perPage: number) {
+  const totalPages = Math.max(1, Math.ceil(totalResults / perPage));
+  return { page: currentPage, totalPages, total: totalResults };
 }
 
-function makePagination(currentPage: number, totalResults: number, perPage: number) {
-  const totalPages = Math.ceil(totalResults / perPage);
-  return {
-    currentPage,
-    totalPages,
-    totalResults,
-    hasNextPage: currentPage < totalPages,
-    hasPrevPage: currentPage > 1,
-  };
-}
+export const search = pub.search.search.handler(async ({ context, input }) => {
+  const sanitizedQuery = cleanArabicQuery(input.q);
 
-export const search = pub.search.search.handler(async ({ context, input, errors }) => {
-  const sanitizedQuery = decodeURIComponent(cleanArabicQuery(input.q));
-  if (!sanitizedQuery) throw errors.EMPTY_QUERY();
-
-  if (input.search_type === 'poems') {
+  if (input.searchType === 'poems') {
     const { rows, totalCount } = await searchQueries.searchPoems(
       context.db,
       sanitizedQuery,
       input.page,
-      input.match_type,
-      parseCsvNumbers(input.meter_ids),
-      parseCsvNumbers(input.era_ids),
-      parseCsvNumbers(input.theme_ids),
-      parseCsvNumbers(input.rhyme_ids)
+      input.matchType,
+      input.meterSlugs.length > 0 ? input.meterSlugs : null,
+      input.eraSlugs.length > 0 ? input.eraSlugs : null,
+      input.themeSlugs.length > 0 ? input.themeSlugs : null,
+      input.rhymeSlugs.length > 0 ? input.rhymeSlugs : null
     );
     return {
-      search_type: 'poems' as const,
+      searchType: 'poems' as const,
       results: rows,
-      pagination: makePagination(input.page, totalCount, RESULTS_PER_POEMS_PAGE),
+      ...paginate(input.page, totalCount, RESULTS_PER_POEMS_PAGE),
     };
   }
 
@@ -50,12 +34,12 @@ export const search = pub.search.search.handler(async ({ context, input, errors 
     context.db,
     sanitizedQuery,
     input.page,
-    input.match_type,
-    parseCsvNumbers(input.era_ids)
+    input.matchType,
+    input.eraSlugs.length > 0 ? input.eraSlugs : null
   );
   return {
-    search_type: 'poets' as const,
+    searchType: 'poets' as const,
     results: rows,
-    pagination: makePagination(input.page, totalCount, RESULTS_PER_POETS_PAGE),
+    ...paginate(input.page, totalCount, RESULTS_PER_POETS_PAGE),
   };
 });

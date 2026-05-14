@@ -5,16 +5,8 @@ import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { search } from '@/lib/api/client';
-import type { PoemsSearchResult, PoetsSearchResult, SearchPagination } from '@/lib/api/types';
+import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { useInfiniteScroll } from './use-infinite-scroll';
-
-const EMPTY_PAGINATION: SearchPagination = {
-  currentPage: 1,
-  totalPages: 0,
-  totalResults: 0,
-  hasNextPage: false,
-  hasPrevPage: false,
-};
 
 type SearchType = 'poems' | 'poets';
 type MatchType = 'all' | 'any' | 'exact';
@@ -108,21 +100,21 @@ export function useSearch() {
   const iq = useInfiniteQuery({
     queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
     queryFn: async ({ pageParam = 1 }) => {
-      if (!query) return { results: [], pagination: EMPTY_PAGINATION };
+      if (!query) return { results: [], page: 1, totalPages: 0, total: 0, searchType };
       return search({
         q: query,
         searchType,
         page: String(pageParam),
         matchType,
-        meterIds: meterIds && meterIds.length > 0 ? meterIds : undefined,
-        eraIds: eraIds && eraIds.length > 0 ? eraIds : undefined,
-        rhymeIds: rhymeIds && rhymeIds.length > 0 ? rhymeIds : undefined,
-        themeIds: themeIds && themeIds.length > 0 ? themeIds : undefined,
+        meterSlugs: splitCsvIds(meterIds),
+        eraSlugs: splitCsvIds(eraIds),
+        rhymeSlugs: splitCsvIds(rhymeIds),
+        themeSlugs: splitCsvIds(themeIds),
       });
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
-      lastPage.pagination.hasNextPage ? lastPage.pagination.currentPage + 1 : undefined,
+      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: !!query,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -136,7 +128,7 @@ export function useSearch() {
       }))
     ) as (PoemsSearchResult | PoetsSearchResult)[]) || [];
 
-  const totalResults = iq.data?.pages[0]?.pagination?.totalResults ?? 0;
+  const totalResults = iq.data?.pages[0]?.total ?? 0;
 
   const { loadMoreRef } = useInfiniteScroll(
     iq.fetchNextPage,

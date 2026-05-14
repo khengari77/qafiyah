@@ -1,6 +1,7 @@
 import { poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
 
 const app = new Hono<AppContext>()
@@ -21,12 +22,23 @@ const app = new Hono<AppContext>()
   })
   .onError((error, c) => {
     if (error instanceof HTTPException) {
-      return c.json({ success: false, error: error.message, status: error.status }, error.status);
+      return sendProblem(
+        c,
+        makeProblem({
+          code: error.status === 404 ? 'NOT_FOUND' : 'BAD_REQUEST',
+          status: error.status,
+          detail: error.message,
+        })
+      );
     }
     console.error(error);
-    return c.json(
-      { success: false, error: 'Internal Server Error. POEMS Route', status: 500 },
-      500
+    return sendProblem(
+      c,
+      makeProblem({
+        code: 'INTERNAL_SERVER_ERROR',
+        status: 500,
+        detail: 'Failed to handle poems route',
+      })
     );
   });
 

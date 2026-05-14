@@ -6,11 +6,11 @@ type SearchArgs = {
   q: string;
   searchType: 'poems' | 'poets';
   page: string;
-  matchType: string;
-  meterIds: string | undefined;
-  eraIds: string | undefined;
-  rhymeIds: string | undefined;
-  themeIds: string | undefined;
+  matchType: 'all' | 'any' | 'exact';
+  meterSlugs: string[];
+  eraSlugs: string[];
+  rhymeSlugs: string[];
+  themeSlugs: string[];
 };
 
 type SearchResult = PoemsSearchResponseData | PoetsSearchResponseData;
@@ -18,20 +18,20 @@ type SearchResult = PoemsSearchResponseData | PoetsSearchResponseData;
 export async function search(args: SearchArgs): Promise<SearchResult> {
   return apiBrowser.search.search({
     q: args.q,
-    search_type: args.searchType,
-    page: Number(args.page),
-    match_type: args.matchType,
-    meter_ids: args.searchType === 'poems' ? args.meterIds : undefined,
-    rhyme_ids: args.searchType === 'poems' ? args.rhymeIds : undefined,
-    theme_ids: args.searchType === 'poems' ? args.themeIds : undefined,
-    era_ids: args.eraIds,
+    searchType: args.searchType,
+    page: args.page,
+    matchType: args.matchType,
+    meterSlugs: args.searchType === 'poems' ? args.meterSlugs : [],
+    rhymeSlugs: args.searchType === 'poems' ? args.rhymeSlugs : [],
+    themeSlugs: args.searchType === 'poems' ? args.themeSlugs : [],
+    eraSlugs: args.eraSlugs,
   });
 }
 
 export async function getRandomPoemSlug(): Promise<string> {
-  // /poems/random returns text/plain (kept as a plain Hono route in apps/api).
+  // /v1/poems/random returns text/plain (kept as a plain Hono route in apps/api).
   // Not exposed via oRPC, so we fetch it directly here.
-  const response = await fetch(`${API_URL}/poems/random?option=slug`);
+  const response = await fetch(`${API_URL}/v1/poems/random?option=slug`);
   if (!response.ok) {
     throw new Error(`Random poem request failed: ${response.status}`);
   }

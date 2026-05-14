@@ -1,33 +1,24 @@
 import { eq } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { FETCH_PER_PAGE } from '../constants';
-import { poemsFullData, poetPoems, poetStats } from '../schema';
+import { poetPoems, poetStats } from '../schema';
 
 export type PoetStatsRow = {
-  id: number;
   name: string;
   slug: string;
-  eraId: number;
   poemsCount: number;
 };
 
 export type ListPoetsResult = {
   poets: PoetStatsRow[];
-  totalPoets: number;
+  total: number;
   totalPages: number;
 };
 
-export type GetPoetBySlugResult = {
-  poet: {
-    name: string;
-    poemsCount: number;
-    era: { name: string; slug: string } | null;
-  };
-};
-
 export type ListPoetPoemsResult = {
-  poetDetails: { id: number; name: string; poemsCount: number };
+  poetDetails: { name: string; poemsCount: number };
   poems: { title: string; slug: string; meter: string }[];
+  total: number;
   totalPages: number;
 };
 
@@ -35,45 +26,19 @@ export async function listPoets(db: DbClient, page: number): Promise<ListPoetsRe
   const limit = FETCH_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const poets = await db.select().from(poetStats).limit(limit).offset(offset);
-  const totalPoets = await db.$count(poetStats);
-  const totalPages = Math.ceil(totalPoets / limit);
-
-  return { poets, totalPoets, totalPages };
-}
-
-export async function getPoetBySlug(
-  db: DbClient,
-  slug: string
-): Promise<GetPoetBySlugResult | null> {
-  const poetInfo = await db
+  const poets = await db
     .select({
-      poetId: poetPoems.poetId,
-      poetName: poetPoems.poetName,
-      totalPoems: poetPoems.totalPoemsByPoet,
+      name: poetStats.name,
+      slug: poetStats.slug,
+      poemsCount: poetStats.poemsCount,
     })
-    .from(poetPoems)
-    .where(eq(poetPoems.poetSlug, slug))
-    .limit(1);
+    .from(poetStats)
+    .limit(limit)
+    .offset(offset);
+  const total = await db.$count(poetStats);
+  const totalPages = Math.ceil(total / limit);
 
-  if (!poetInfo.length || !poetInfo[0]) return null;
-
-  const eraInfo = await db
-    .select({ eraName: poemsFullData.era_name, eraSlug: poemsFullData.era_slug })
-    .from(poemsFullData)
-    .where(eq(poemsFullData.poet_slug, slug))
-    .limit(1);
-
-  return {
-    poet: {
-      name: poetInfo[0].poetName,
-      poemsCount: poetInfo[0].totalPoems,
-      era:
-        eraInfo.length && eraInfo[0]?.eraName && eraInfo[0].eraSlug
-          ? { name: eraInfo[0].eraName, slug: eraInfo[0].eraSlug }
-          : null,
-    },
-  };
+  return { poets, total, totalPages };
 }
 
 export async function listPoetPoems(
@@ -86,7 +51,6 @@ export async function listPoetPoems(
 
   const poetInfo = await db
     .select({
-      poetId: poetPoems.poetId,
       poetName: poetPoems.poetName,
       totalPoems: poetPoems.totalPoemsByPoet,
     })
@@ -107,15 +71,16 @@ export async function listPoetPoems(
     .limit(limit)
     .offset(offset);
 
-  const totalPages = Math.ceil(poetInfo[0].totalPoems / limit);
+  const total = poetInfo[0].totalPoems;
+  const totalPages = Math.ceil(total / limit);
 
   return {
     poetDetails: {
-      id: poetInfo[0].poetId,
       name: poetInfo[0].poetName,
-      poemsCount: poetInfo[0].totalPoems,
+      poemsCount: total,
     },
     poems,
+    total,
     totalPages,
   };
 }

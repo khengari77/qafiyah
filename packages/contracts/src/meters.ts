@@ -1,8 +1,18 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { poemListItemNoMeter, slugAndPageInput, statRow } from './_shared';
+import {
+  paginationFields,
+  poemListItemNoMeter,
+  slugAndPageInput,
+  statRowNoPoetsCount,
+} from './_shared';
 
-const listMetersContract = oc.route({ method: 'GET', path: '/meters' }).output(v.array(statRow));
+const listMetersContract = oc.route({ method: 'GET', path: '/meters' }).output(
+  v.object({
+    meters: v.array(statRowNoPoetsCount),
+    ...paginationFields,
+  })
+);
 
 const listMeterPoemsContract = oc
   .route({ method: 'GET', path: '/meters/{slug}/page/{page}' })
@@ -13,12 +23,11 @@ const listMeterPoemsContract = oc
   .output(
     v.object({
       meterDetails: v.object({
-        id: v.number(),
         name: v.string(),
         poemsCount: v.number(),
       }),
       poems: v.array(poemListItemNoMeter),
-      totalPages: v.number(),
+      ...paginationFields,
     })
   );
 
