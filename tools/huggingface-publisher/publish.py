@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Qafiyah Dataset Publisher
+Qafiyah Hugging Face Publisher
 
 Publishes the Qafiyah classical Arabic poetry dataset to Hugging Face Hub.
 """
