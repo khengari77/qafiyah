@@ -3,6 +3,9 @@
 # Set up the local Postgres database from the newest dump in data/datasets/.
 # Idempotent: re-running drops and recreates the database from scratch.
 #
+# The container (see docker-compose.yml) bootstraps the `qafiyah` user and
+# database on first boot, so this script only needs to restore the dump.
+#
 
 set -euo pipefail
 
@@ -12,7 +15,7 @@ set -euo pipefail
 
 readonly DB_NAME="qafiyah"
 readonly DB_USER="qafiyah"
-readonly DB_PASSWORD="postgres"
+readonly DB_PASSWORD="qafiyah"
 readonly DB_HOST="127.0.0.1"
 readonly DB_PORT="5433"
 
@@ -30,7 +33,6 @@ readonly MAX_WAIT_SECONDS=30
 # -----------------------------------------------------------------------------
 
 log_info()    { echo "[INFO] $*"; }
-log_warn()    { echo "[WARN] $*"; }
 log_error()   { echo "[ERROR] $*" >&2; }
 log_success() { echo "[OK] $*"; }
 
@@ -67,7 +69,9 @@ wait_for_db() {
     local waited=0
 
     log_info "Waiting for Postgres to be ready..."
-    while ! $compose exec -T "$SERVICE" pg_isready -U postgres &>/dev/null; do
+    # Probe TCP (not the unix socket) — Postgres' Docker entrypoint runs a
+    # socket-only init phase before the real network listener is up.
+    while ! $compose exec -T "$SERVICE" pg_isready -h localhost -U "$DB_USER" -d "$DB_NAME" &>/dev/null; do
         if ((waited >= MAX_WAIT_SECONDS)); then
             log_error "Postgres did not become ready in ${MAX_WAIT_SECONDS}s"
             log_info "Check logs: $compose logs $SERVICE"
@@ -80,20 +84,6 @@ wait_for_db() {
     log_success "Postgres is ready"
 }
 
-ensure_user() {
-    local compose=$1
-
-    if $compose exec -T "$SERVICE" psql -U postgres -tAc \
-        "SELECT 1 FROM pg_roles WHERE rolname='$DB_USER'" | grep -q 1; then
-        log_info "User '$DB_USER' already exists"
-        return
-    fi
-
-    $compose exec -T "$SERVICE" psql -U postgres -c \
-        "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD' CREATEDB;"
-    log_success "User '$DB_USER' created"
-}
-
 restore_database() {
     local compose=$1
     local dump=$2
@@ -101,11 +91,14 @@ restore_database() {
     name=$(basename "$dump")
 
     log_info "Recreating database '$DB_NAME'..."
-    $compose exec -T "$SERVICE" psql -U postgres -c \
-        "DROP DATABASE IF EXISTS $DB_NAME;"
-    $compose exec -T "$SERVICE" psql -U postgres -c \
+    # Connect to the default `postgres` database to drop+recreate `qafiyah`.
+    # FORCE (Postgres 13+) terminates any open connections to the target DB.
+    $compose exec -T "$SERVICE" psql -U "$DB_USER" -d postgres -c \
+        "DROP DATABASE IF EXISTS $DB_NAME WITH (FORCE);"
+    $compose exec -T "$SERVICE" psql -U "$DB_USER" -d postgres -c \
         "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
-    $compose exec -T "$SERVICE" psql -U postgres -d "$DB_NAME" -c \
+    # The dump recreates `public`, so drop the default one Postgres adds.
+    $compose exec -T "$SERVICE" psql -U "$DB_USER" -d "$DB_NAME" -c \
         "DROP SCHEMA public CASCADE;"
 
     log_info "Copying dump into container..."
@@ -140,7 +133,7 @@ EOF
 PUBLIC_API_URL=http://localhost:8787
 EOF
 
-    log_success "Env files updated: $API_ENV_FILE, $WEB_ENV_FILE"
+    log_success "Env files written: $API_ENV_FILE, $WEB_ENV_FILE"
 }
 
 # -----------------------------------------------------------------------------
@@ -170,7 +163,6 @@ main() {
     $compose up -d "$SERVICE"
     wait_for_db "$compose"
 
-    ensure_user "$compose"
     restore_database "$compose" "$dump"
     write_env_files
 

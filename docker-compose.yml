@@ -4,15 +4,15 @@ services:
     container_name: qafiyah-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
+      POSTGRES_USER: qafiyah
+      POSTGRES_PASSWORD: qafiyah
+      POSTGRES_DB: qafiyah
     ports:
       - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -h localhost -U qafiyah -d qafiyah"]
       interval: 10s
       timeout: 5s
       retries: 5
