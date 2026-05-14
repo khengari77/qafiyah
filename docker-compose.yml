@@ -1,8 +1,7 @@
 services:
-  # Development database - Full dataset
-  db-dev:
+  db:
     image: postgres:17-alpine
-    container_name: qafiyah-db-dev
+    container_name: qafiyah-db
     restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
@@ -11,27 +10,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - db_dev_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
-
-  # Test database - Reduced dataset
-  db-test:
-    image: postgres:17-alpine
-    container_name: qafiyah-db-test
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: postgres
-    ports:
-      - "5434:5432"
-    volumes:
-      - db_test_data:/var/lib/postgresql/data
+      - db_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -40,9 +19,5 @@ services:
       start_period: 10s
 
 volumes:
-  db_dev_data:
-    driver: local
-    name: qafiyah-db-dev-data
-  db_test_data:
-    driver: local
-    name: qafiyah-db-test-data
+  db_data:
+    name: qafiyah-db-data

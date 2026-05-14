@@ -11,12 +11,11 @@ pnpm lint            # biome check --write .
 pnpm format          # biome + prettier (md/mdx)
 pnpm types           # tsc --noEmit all workspaces
 pnpm test            # vitest all workspaces
-pnpm db:setup        # Docker Postgres: dev :5433, test :5434
+pnpm db:setup        # Docker Postgres on :5433, restored from latest dump
 pnpm clean:dev       # kill orphan astro/wrangler/workerd processes
 pnpm ci              # format + lint + types + test + knip + madge
 
 pnpm --filter @qafiyah/api dev          # wrangler dev
-pnpm --filter @qafiyah/api dev:test     # wrangler dev --env test
 pnpm --filter @qafiyah/api test         # vitest API only
 vitest run path/to/file.test.ts         # single file
 ```
@@ -68,7 +67,7 @@ Use sparingly. Most code needs none.
 
 - **One mission per session.**
 - **Port conflicts:** `pnpm clean:dev`, then restart. `dev/check-port.mjs` guards against silent rebinding.
-- **DB dumps:** `data/datasets/` (newest = latest). `pnpm db:setup` restores to Docker on :5433/:5434.
+- **DB dumps:** `data/datasets/` (newest = latest). `pnpm db:setup` restores the newest dump into Docker Postgres on :5433.
 - **Web build is ~2 hours.** To verify without a full build: run `pnpm --filter @qafiyah/web build` in the background, kill after ~20s (enough for Wrangler + first `getStaticPaths` errors to surface), then `pnpm clean:dev`. Only run to completion for a deployable build.
 
 ## Known Bug
