@@ -3,7 +3,7 @@ import { formatArabicCount } from 'arabic-count-format';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import { fetchEras } from '@/lib/api/static';
-import { toArabicDigits } from '@/utils/texts/arabic-digits';
+import { toArabicDigits } from '@/lib/arabic';
 
 let eras: Awaited<ReturnType<typeof fetchEras>> = [];
 try {

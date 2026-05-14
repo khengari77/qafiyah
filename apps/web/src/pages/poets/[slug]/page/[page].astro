@@ -4,7 +4,7 @@ import { SITE_URL } from '@/constants/globals';
 import { POEMS_PER_PAGE } from '@/constants/pagination';
 import Layout from '@/layouts/Layout.astro';
 import { fetchPoetPoemPage, fetchPoetsWithPoemCount, generatePageNumbers } from '@/lib/api/static';
-import { toArabicDigits } from '@/utils/texts/arabic-digits';
+import { toArabicDigits } from '@/lib/arabic';
 
 const stripQuotes = (s: string) => s.replace(/"/g, '');
 

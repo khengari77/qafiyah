@@ -1,6 +1,5 @@
 'use client';
 
-import { Card } from '@/components/base/card';
 import {
   erasOptions,
   matchTypeOptions,
@@ -20,6 +19,7 @@ import {
   THEMES_NOUN_FORMS,
 } from '@/components/search/constants/texts';
 import { useSearch } from '@/components/search/hooks/use-search';
+import { Card } from '@/components/ui/card';
 import { Filters } from './filters';
 import { FilterBadges } from './filters-badges';
 import { FiltersButton } from './filters-button';

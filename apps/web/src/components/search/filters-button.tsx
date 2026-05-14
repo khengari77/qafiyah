@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
-import { Button } from '@/components/base/button';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type Props = {

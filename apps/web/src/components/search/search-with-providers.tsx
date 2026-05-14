@@ -1,6 +1,6 @@
 import { NuqsAdapter } from 'nuqs/adapters/react';
 import { Providers } from '@/providers/react-query';
-import { SearchContainer } from './components/search-container';
+import { SearchContainer } from './search-container';
 
 export function SearchWithProviders() {
   return (

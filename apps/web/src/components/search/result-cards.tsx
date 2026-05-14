@@ -1,4 +1,4 @@
-import { Badge } from '@/components/base/badge';
+import { Badge } from '@/components/ui/badge';
 import { SITE_URL } from '@/constants/globals';
 import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
 import { HighlightedText } from './highlighted-text';

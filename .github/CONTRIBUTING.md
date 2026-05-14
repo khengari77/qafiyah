@@ -26,7 +26,7 @@ Contributions are particularly valuable in the following areas:
 
 ## Guidelines
 
-- Adhere to the project's [Code of Conduct](./CODE_OF_CONDUCT.md).
+- Adhere to the project's [Code of Conduct](CODE_OF_CONDUCT.md).
 - **Commit messages** are enforced via a commit-msg hook. Every commit (except merge commits) must follow [Conventional Commits](https://www.conventionalcommits.org/):
   - **Format**: Start with a type followed by a colon and space (e.g. `feat: `, `fix: `). Allowed types: `feat`, `fix`, `chore`, `docs`, `style`, `refactor`, `test`, `perf`, `build`, `ci`, `revert`, `wip`, `merge`, `hotfix`, `deps`, `config`, `lint`, `types`.
   - **Scope** (optional): Add in parentheses after the type (e.g. `feat(auth): `).

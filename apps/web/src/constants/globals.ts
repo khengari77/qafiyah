@@ -1,5 +1,5 @@
 import { DEV_WEB_URL, PROD_API_URL, PROD_DOMAIN, SITE_NAME_AR } from '@qafiyah/constants';
-import { toArabicDigits } from '@/utils/texts/arabic-digits';
+import { toArabicDigits } from '@/lib/arabic';
 
 export {
   DATABASE_DUMPS_URL,

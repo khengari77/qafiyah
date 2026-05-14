@@ -4,7 +4,7 @@ import { Minus, Plus } from 'lucide-react';
 import { ListCard } from '@/components/ui/list-card';
 import { useFontSize } from '@/hooks/use-font-size';
 import type { PoemMetadata, RelatedPoems } from '@/lib/api/types';
-import { formatVerseCount } from '@/utils/texts/get-verse-count';
+import { formatVerseCount } from '@/lib/arabic';
 
 type PoemProps = {
   clearTitle: string;

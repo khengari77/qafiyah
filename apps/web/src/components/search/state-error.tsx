@@ -1,6 +1,6 @@
 import { Frown } from 'lucide-react';
-import { Button } from '@/components/base/button';
-import { Card } from '@/components/base/card';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { SITE_URL } from '@/constants/globals';
 
 type Props = {

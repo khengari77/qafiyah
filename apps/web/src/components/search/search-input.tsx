@@ -2,7 +2,7 @@
 
 import { CircleX } from 'lucide-react';
 import type { ChangeEventHandler, KeyboardEventHandler } from 'react';
-import { Input } from '@/components/base/input';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 type Props = {

@@ -1,4 +1,4 @@
-import { Badge } from '@/components/base/badge';
+import { Badge } from '@/components/ui/badge';
 
 type Props = {
   selectedErasLength: number;
