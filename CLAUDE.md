@@ -1,22 +1,22 @@
 # CLAUDE.md
 
-Qafiyah is an Arabic poetry monorepo (pnpm + Turborepo): `apps/web` (Astro 6 static), `apps/api` (Hono + oRPC on Cloudflare Workers), `apps/bot` (X/Twitter bot), `packages/db` (Drizzle + Postgres, API-only), `packages/contracts` (shared oRPC contracts), `packages/constants` (brand/URLs/ports), `packages/typescript` (shared tsconfigs).
+Qafiyah is an Arabic poetry monorepo (bun + Turborepo): `apps/web` (Astro 6 static), `apps/api` (Hono + oRPC on Cloudflare Workers), `apps/bot` (X/Twitter bot), `packages/db` (Drizzle + Postgres, API-only), `packages/contracts` (shared oRPC contracts), `packages/constants` (brand/URLs/ports), `packages/typescript` (shared tsconfigs).
 
 ## Commands
 
 ```bash
-pnpm dev             # turbo dev (web + API)
-pnpm build           # turbo build
-pnpm lint            # biome check --write .
-pnpm format          # biome + prettier (md/mdx)
-pnpm types           # tsc --noEmit all workspaces
-pnpm test            # vitest all workspaces
-pnpm db:setup        # Docker Postgres on :5433, restored from latest dump
-pnpm clean:dev       # kill orphan astro/wrangler/workerd processes
-pnpm ci              # format + lint + types + test + knip + madge
+bun run dev             # turbo dev (web + API)
+bun run build           # turbo build
+bun run lint            # biome check --write .
+bun run format          # biome + prettier (md/mdx)
+bun run types           # tsc --noEmit all workspaces
+bun run test            # vitest all workspaces
+bun run db:setup        # Docker Postgres on :5433, restored from latest dump
+bun run clean:dev       # kill orphan astro/wrangler/workerd processes
+bun run ci              # format + lint + types + test + knip + madge
 
-pnpm --filter @qafiyah/api dev          # wrangler dev
-pnpm --filter @qafiyah/api test         # vitest API only
+bun --filter @qafiyah/api run dev       # wrangler dev
+bun --filter @qafiyah/api run test      # vitest API only
 vitest run path/to/file.test.ts         # single file
 ```
 
@@ -25,7 +25,7 @@ vitest run path/to/file.test.ts         # single file
 - **Biome**: all JS/TS lint + format. `biome.json`: 2-space, 100-char, single quotes, es5 commas.
 - **Prettier**: `.md`/`.mdx` only.
 - **Commitlint**: Conventional Commits (`feat`, `fix`, `refactor`, …).
-- **knip** + **madge**: unused exports + circular imports (run in `pnpm ci`).
+- **knip** + **madge**: unused exports + circular imports (run in `bun run ci`).
 
 ## Architecture
 
@@ -47,7 +47,7 @@ vitest run path/to/file.test.ts         # single file
 
 |       | Criterion | Gate                                               |
 | ----- | --------- | -------------------------------------------------- |
-| **T** | Tested    | `pnpm test` passes; new logic has coverage         |
+| **T** | Tested    | `bun run test` passes; new logic has coverage      |
 | **R** | Readable  | 0 lint errors; self-explanatory names              |
 | **U** | Unified   | Matches Biome config + Conventional Commits        |
 | **S** | Secured   | No secrets in code; inputs validated at boundaries |
@@ -66,9 +66,9 @@ Use sparingly. Most code needs none.
 ## Session Discipline
 
 - **One mission per session.**
-- **Port conflicts:** `pnpm clean:dev`, then restart. `scripts/check-port.mjs` guards against silent rebinding.
-- **DB dumps:** `dumps/` (newest = latest). `pnpm db:setup` restores the newest dump into Docker Postgres on :5433.
-- **Web build is ~2 hours.** To verify without a full build: run `pnpm --filter @qafiyah/web build` in the background, kill after ~20s (enough for Wrangler + first `getStaticPaths` errors to surface), then `pnpm clean:dev`. Only run to completion for a deployable build.
+- **Port conflicts:** `bun run clean:dev`, then restart. `scripts/check-port.mjs` guards against silent rebinding.
+- **DB dumps:** `dumps/` (newest = latest). `bun run db:setup` restores the newest dump into Docker Postgres on :5433.
+- **Web build is ~2 hours.** To verify without a full build: run `bun --filter @qafiyah/web run build` in the background, kill after ~20s (enough for Wrangler + first `getStaticPaths` errors to surface), then `bun run clean:dev`. Only run to completion for a deployable build.
 
 ## Known Bug
 

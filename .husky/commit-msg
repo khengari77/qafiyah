@@ -19,4 +19,4 @@ if [ "$message_length" -gt "$max_length" ]; then
   exit 1
 fi
 
-pnpm exec commitlint --edit "$commit_msg_file"
+bunx commitlint --edit "$commit_msg_file"

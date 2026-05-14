@@ -16,7 +16,7 @@
       "!**/.turbo",
       "!**/coverage",
       "!**/*.min.js",
-      "!**/pnpm-lock.yaml",
+      "!**/bun.lock",
       "!**/dumps",
       "!**/env.d.ts",
       "!**/worker-configuration.d.ts",

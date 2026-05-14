@@ -170,7 +170,7 @@ main() {
     log_success "Setup complete"
     echo "  Database: postgresql://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME"
     echo ""
-    echo "  pnpm dev   → start the API + web dev servers"
+    echo "  bun run dev   → start the API + web dev servers"
 }
 
 main "$@"

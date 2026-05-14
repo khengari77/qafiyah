@@ -1,8 +1,14 @@
 # Database Dumps
 
 PostgreSQL custom-format (`pg_dump -Fc`) snapshots of the `public` schema.
-Newer subdirectories supersede older ones — the highest-numbered directory is
-the current dump.
+
+## Directory Naming Convention
+
+Each dump is stored in a subdirectory named `{sequence}_{DD}_{MM}_{YYYY}`, where `{sequence}` is a zero-padded four-digit index that determines sort order. Example: `0003_29_01_2026` is the third dump, created on 29 January 2026. The highest-numbered directory always contains the current dump.
+
+## Format Compatibility
+
+Dumps are produced with `pg_dump -Fc` (PostgreSQL custom format, version 1.16). PostgreSQL 17 or later is required to restore them with `pg_restore`. Older PostgreSQL versions may produce an error about an unsupported dump format version.
 
 ## Requirements
 
@@ -11,25 +17,25 @@ the current dump.
 
 ## Restore (local development)
 
-If you're working in this repo, prefer the one-liner — it spins up Postgres in
-Docker, restores the newest dump, and writes the env files:
+If you are working in this repo, the database self-seeds: `bun run db:up` spins up Postgres in Docker and restores the newest dump on a fresh volume (or `bun run dev` to also start the app). To force a re-restore from a newer dump on an existing volume, use `bun run db:reset`:
 
 ```bash
-pnpm db:setup
+bun run db:up       # or: bun run db:reset to wipe the volume + re-seed
 ```
 
 ## Restore (manual / external use)
 
-Replace the path below with the newest `*.dump` in this directory:
+Find the latest dump file and restore it:
 
 ```bash
+# Find the latest dump: ls dumps/*/\*.dump | sort | tail -1
 dropdb --if-exists qafiyah && createdb qafiyah && \
 pg_restore \
   -U qafiyah \
   -d qafiyah \
   --no-owner \
   --no-privileges \
-  ./0003_29_01_2026/qafiyah_public_20260129_170552.dump
+  ./0031_26_05_2026/qafiyah_public_20260526_013039.dump
 ```
 
 ## Verify

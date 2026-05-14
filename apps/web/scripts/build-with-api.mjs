@@ -44,9 +44,9 @@ async function waitForPort(port, host, timeoutMs) {
   throw new Error(
     `[build-with-api] API failed to listen on ${host}:${port} within ${timeoutMs}ms.\n` +
       `Hints:\n` +
-      `  - Did 'pnpm db:setup' succeed?\n` +
+      `  - Did 'bun db:setup' succeed?\n` +
       `  - Is DATABASE_URL set in apps/api/.dev.vars?\n` +
-      `  - Try running 'pnpm --filter @qafiyah/api dev' manually to see errors.`
+      `  - Try running 'bun --filter @qafiyah/api dev' manually to see errors.`
   );
 }
 
@@ -56,7 +56,7 @@ async function main() {
 
   if (!alreadyUp) {
     console.log('[build-with-api] Starting wrangler dev for @qafiyah/api...');
-    api = spawn('pnpm', ['--filter', '@qafiyah/api', 'dev'], {
+    api = spawn('bun', ['--filter', '@qafiyah/api', 'run', 'dev'], {
       cwd: repoRoot,
       stdio: 'inherit',
       env: process.env,

@@ -2,4 +2,4 @@
 set -e
 
 echo "Running all checks..."
-pnpm run ci
+bun run ci
