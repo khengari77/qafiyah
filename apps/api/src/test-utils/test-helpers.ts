@@ -7,7 +7,7 @@ import type { DbClient } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import { vi } from 'vitest';
-import type { AppContext, Bindings } from '../types';
+import type { AppContext, Bindings } from '@/types';
 
 /**
  * Creates a chainable query builder mock that handles Drizzle's query patterns

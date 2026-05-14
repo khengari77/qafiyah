@@ -1,10 +1,10 @@
 'use client';
 
 import { Minus, Plus } from 'lucide-react';
+import { ListCard } from '@/components/ui/list-card';
 import { useFontSize } from '@/hooks/use-font-size';
 import type { PoemMetadata, RelatedPoems } from '@/lib/api/types';
 import { formatVerseCount } from '@/utils/texts/get-verse-count';
-import { ListCard } from '../ui/list-card';
 
 type PoemProps = {
   clearTitle: string;

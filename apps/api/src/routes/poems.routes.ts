@@ -1,7 +1,7 @@
 import { poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
-import type { AppContext } from '../types';
+import type { AppContext } from '@/types';
 
 const app = new Hono<AppContext>()
   .get('/random', async (c) => {

@@ -1,6 +1,6 @@
 import { GITHUB_REPO_URL, SITE_NAME_EN } from '@qafiyah/constants';
 import { Hono } from 'hono';
-import type { AppContext } from '../types';
+import type { AppContext } from '@/types';
 
 const app = new Hono<AppContext>().get('/', (c) => {
   return c.text(

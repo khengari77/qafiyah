@@ -1,6 +1,6 @@
 import { createDb } from '@qafiyah/db';
 import { createMiddleware } from 'hono/factory';
-import type { AppContext } from '../types';
+import type { AppContext } from '@/types';
 
 export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
   try {

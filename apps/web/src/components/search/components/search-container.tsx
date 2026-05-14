@@ -8,7 +8,7 @@ import {
   rhymesOptions,
   searchTypeOptions,
   themesOptions,
-} from '../constants';
+} from '@/components/search/constants';
 import {
   ERAS_NOUN_FORMS,
   getBadgeCount,
@@ -18,8 +18,8 @@ import {
   RHYMES_NOUN_FORMS,
   SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
-} from '../constants/texts';
-import { useSearch } from '../hooks/use-search';
+} from '@/components/search/constants/texts';
+import { useSearch } from '@/components/search/hooks/use-search';
 import { Filters } from './filters';
 import { FilterBadges } from './filters-badges';
 import { FiltersButton } from './filters-button';

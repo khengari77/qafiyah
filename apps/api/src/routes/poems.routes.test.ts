@@ -6,7 +6,7 @@
 
 import { FALLBACK_RANDOM_POEM_LINES, FALLBACK_RANDOM_POEM_SLUG } from '@qafiyah/db';
 import { describe, expect, it, vi } from 'vitest';
-import { createMockDb, createTestClient } from '../test-utils/test-helpers';
+import { createMockDb, createTestClient } from '@/test-utils/test-helpers';
 import poems from './poems.routes';
 
 describe('poems routes', () => {

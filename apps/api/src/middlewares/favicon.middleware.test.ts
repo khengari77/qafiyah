@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
-import type { AppContext } from '../types';
+import type { AppContext } from '@/types';
 import serveEmojiFavicon from './favicon.middleware';
 
 describe('favicon.middleware', () => {

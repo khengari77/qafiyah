@@ -4,7 +4,7 @@
 
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AppContext } from '../types';
+import type { AppContext } from '@/types';
 import { dbMiddleware } from './db.middleware';
 
 describe('dbMiddleware', () => {

@@ -1,15 +1,15 @@
 import { Loader2, SearchIcon } from 'lucide-react';
-import { SelectMulti } from '@/components/ui/select-multi';
-import { SelectSingle } from '@/components/ui/select-single';
-import { BinaryToggleButton } from '@/components/ui/toggle-button';
-import { cn } from '@/lib/utils';
 import {
   ERAS_NOUN_FORMS,
   METERS_NOUN_FORMS,
   RHYMES_NOUN_FORMS,
   SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
-} from '../constants/texts';
+} from '@/components/search/constants/texts';
+import { SelectMulti } from '@/components/ui/select-multi';
+import { SelectSingle } from '@/components/ui/select-single';
+import { BinaryToggleButton } from '@/components/ui/toggle-button';
+import { cn } from '@/lib/utils';
 
 type FilterOption = { value: string; label: string };
 
