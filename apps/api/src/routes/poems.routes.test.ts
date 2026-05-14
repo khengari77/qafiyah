@@ -4,7 +4,6 @@
  * in apps/api/src/procedures/poems.procedures.ts.
  */
 
-import { FALLBACK_RANDOM_POEM_LINES, FALLBACK_RANDOM_POEM_SLUG } from '@qafiyah/db';
 import { describe, expect, it, vi } from 'vitest';
 import { createMockDb, createTestClient } from '@/test-utils/test-helpers';
 import poems from './poems.routes';
@@ -30,7 +29,7 @@ describe('poems routes', () => {
     expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
-  it('should return fallback slug when database returns no result', async () => {
+  it('should fail with 500 when database returns no slug', async () => {
     const db = createMockDb();
     db.execute = vi.fn().mockResolvedValue([{}]);
 
@@ -38,9 +37,7 @@ describe('poems routes', () => {
 
     const res = await client.$get('/random?option=slug');
 
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toBe(FALLBACK_RANDOM_POEM_SLUG);
+    expect(res.status).toBe(500);
   });
 
   it('should return random poem lines', async () => {
@@ -69,7 +66,7 @@ describe('poems routes', () => {
     expect(res.headers.get('Content-Type')?.toLowerCase()).toBe('text/plain; charset=utf-8');
   });
 
-  it('should return fallback lines when database error occurs', async () => {
+  it('should fail with 500 when database error occurs', async () => {
     const db = createMockDb();
     db.execute = vi.fn().mockRejectedValue(new Error('Database error'));
 
@@ -77,8 +74,6 @@ describe('poems routes', () => {
 
     const res = await client.$get('/random?option=lines');
 
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toBe(FALLBACK_RANDOM_POEM_LINES);
+    expect(res.status).toBe(500);
   });
 });

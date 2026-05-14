@@ -1,6 +1,5 @@
 export type { DbClient } from './client';
 export { createDb } from './client';
-export { FALLBACK_RANDOM_POEM_LINES, FALLBACK_RANDOM_POEM_SLUG } from './constants';
 export * as erasQueries from './queries/eras.queries';
 export * as metersQueries from './queries/meters.queries';
 export * as poemsQueries from './queries/poems.queries';

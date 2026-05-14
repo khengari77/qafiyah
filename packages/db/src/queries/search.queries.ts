@@ -153,7 +153,14 @@ export async function searchPoems(
 
   if (!raw || raw.length === 0) return { rows: [], totalCount: 0 };
 
-  const totalCount = Number(raw[0]?.total_count ?? 0);
+  const rawTotal = raw[0]?.total_count;
+  if (rawTotal === undefined || rawTotal === null) {
+    throw new Error('searchPoems: SQL row missing total_count');
+  }
+  const totalCount = Number(rawTotal);
+  if (!Number.isFinite(totalCount)) {
+    throw new Error(`searchPoems: total_count is not a finite number (got ${String(rawTotal)})`);
+  }
   const rows: PoemsSearchRow[] = raw.map((r) => ({
     poetName: r.poet_name,
     poetEra: r.poet_era,
@@ -187,7 +194,14 @@ export async function searchPoets(
 
   if (!raw || raw.length === 0) return { rows: [], totalCount: 0 };
 
-  const totalCount = Number(raw[0]?.total_count ?? 0);
+  const rawTotal = raw[0]?.total_count;
+  if (rawTotal === undefined || rawTotal === null) {
+    throw new Error('searchPoets: SQL row missing total_count');
+  }
+  const totalCount = Number(rawTotal);
+  if (!Number.isFinite(totalCount)) {
+    throw new Error(`searchPoets: total_count is not a finite number (got ${String(rawTotal)})`);
+  }
   const rows: PoetsSearchRow[] = raw.map((r) => ({
     poetName: r.poet_name,
     poetEra: r.poet_era,

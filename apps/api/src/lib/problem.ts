@@ -77,7 +77,10 @@ function extractValidationErrors(data: unknown): ProblemDetail['errors'] | undef
   const issues = data['issues'];
   if (!Array.isArray(issues)) return undefined;
   return issues.flatMap((issue) => {
-    if (!isObject(issue)) return [];
+    if (!isObject(issue)) {
+      console.warn('extractValidationErrors: dropping non-object issue', issue);
+      return [];
+    }
     const message = typeof issue['message'] === 'string' ? issue['message'] : 'Invalid value';
     const path = Array.isArray(issue['path'])
       ? issue['path']

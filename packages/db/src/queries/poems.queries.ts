@@ -1,10 +1,6 @@
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import {
-  FALLBACK_RANDOM_POEM_LINES,
-  FALLBACK_RANDOM_POEM_SLUG,
-  MAX_EXCERPT_LENGTH,
-} from '../constants';
+import { MAX_EXCERPT_LENGTH } from '../constants';
 import { poemsFullData } from '../schema';
 import { extractPoemExcerpt, type RandomPoemLines } from '../utils/extract-poem-excerpt';
 import { processPoemContent } from '../utils/process-poem-content';
@@ -52,47 +48,49 @@ export async function listAllPoemSlugs(db: DbClient): Promise<ListAllPoemSlugsRe
 }
 
 export async function getRandomPoemLines(db: DbClient): Promise<string> {
-  try {
-    const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
+  const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
 
-    if (!result?.length || !result[0]?.['get_random_eligible_poem']) {
-      throw new Error('No poem found');
-    }
-
-    const poemJson = result[0]['get_random_eligible_poem'];
-    const poem: RandomPoemLines = typeof poemJson === 'string' ? JSON.parse(poemJson) : poemJson;
-
-    if (!poem?.content) throw new Error('Invalid poem format');
-
-    const content = extractPoemExcerpt(poem);
-
-    if (content.length > MAX_EXCERPT_LENGTH) throw new Error('Poem excerpt too long');
-
-    return content;
-  } catch {
-    return FALLBACK_RANDOM_POEM_LINES;
+  if (!result?.length || !result[0]?.['get_random_eligible_poem']) {
+    throw new Error('getRandomPoemLines: SQL returned no eligible poem');
   }
+
+  const poemJson = result[0]['get_random_eligible_poem'];
+  const poem: RandomPoemLines = typeof poemJson === 'string' ? JSON.parse(poemJson) : poemJson;
+
+  if (!poem?.content) {
+    throw new Error('getRandomPoemLines: poem missing content field');
+  }
+
+  const content = extractPoemExcerpt(poem);
+
+  if (content.length > MAX_EXCERPT_LENGTH) {
+    throw new Error(
+      `getRandomPoemLines: excerpt length ${content.length} exceeds MAX_EXCERPT_LENGTH ${MAX_EXCERPT_LENGTH}`
+    );
+  }
+
+  return content;
 }
 
 export async function getRandomPoemSlug(db: DbClient): Promise<string> {
-  try {
-    const result = await db.execute(sql`SELECT get_random_eligible_poem_slug()`);
-    const row = result?.[0];
+  const result = await db.execute(sql`SELECT get_random_eligible_poem_slug()`);
+  const row = result?.[0];
 
-    if (!row?.['get_random_eligible_poem_slug']) throw new Error('No poem slug found');
-
-    const slug =
-      typeof row['get_random_eligible_poem_slug'] === 'object' &&
-      row['get_random_eligible_poem_slug'] !== null &&
-      'slug' in row['get_random_eligible_poem_slug'] &&
-      typeof row['get_random_eligible_poem_slug'].slug === 'string'
-        ? row['get_random_eligible_poem_slug'].slug
-        : FALLBACK_RANDOM_POEM_SLUG;
-
-    return slug;
-  } catch {
-    return FALLBACK_RANDOM_POEM_SLUG;
+  if (!row?.['get_random_eligible_poem_slug']) {
+    throw new Error('getRandomPoemSlug: SQL returned no eligible poem slug');
   }
+
+  const value = row['get_random_eligible_poem_slug'];
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    !('slug' in value) ||
+    typeof value.slug !== 'string'
+  ) {
+    throw new Error('getRandomPoemSlug: unexpected SQL payload shape');
+  }
+
+  return value.slug;
 }
 
 type GetPoemResult =

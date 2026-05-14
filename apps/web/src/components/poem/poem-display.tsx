@@ -22,7 +22,10 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
       '_blank',
       'noopener,noreferrer'
     );
-  const verseCountNum = Number.parseInt(String(verseCount), 10) || 0;
+  const verseCountNum = Number.parseInt(String(verseCount), 10);
+  if (!Number.isFinite(verseCountNum)) {
+    throw new Error(`PoemDisplay: verseCount is not a valid number (got "${String(verseCount)}")`);
+  }
 
   return (
     <div className="w-full flex justify-center items-start my-14 xs:my-20 lg:my-28">

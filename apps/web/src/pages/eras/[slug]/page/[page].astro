@@ -1,6 +1,5 @@
 ---
 import { SITE_URL } from '@/constants/globals';
-import { POEMS_PER_PAGE } from '@/constants/pagination';
 import Layout from '@/layouts/Layout.astro';
 import { fetchEraPoemPage, fetchErasWithPoemCount, generatePageNumbers } from '@/lib/api/static';
 import { toArabicDigits } from '@/lib/arabic';
@@ -45,9 +44,7 @@ if (!result?.data) {
 
 const { data, pagination } = result;
 const { eraDetails: era, poems } = data;
-const totalPages = pagination?.totalPages || Math.ceil(era.poemsCount / POEMS_PER_PAGE);
-const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
-const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
+const { totalPages, hasNextPage, hasPrevPage } = pagination;
 const nextPageUrl = `/eras/${slug}/page/${pageNumber + 1}`;
 const prevPageUrl = `/eras/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;

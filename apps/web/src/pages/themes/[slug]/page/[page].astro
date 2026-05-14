@@ -1,6 +1,5 @@
 ---
 import { SITE_URL } from '@/constants/globals';
-import { POEMS_PER_PAGE } from '@/constants/pagination';
 import Layout from '@/layouts/Layout.astro';
 import {
   fetchThemePoemPage,
@@ -36,9 +35,7 @@ if (!result?.data) {
 
 const { data, pagination } = result;
 const { themeDetails: theme, poems } = data;
-const totalPages = pagination?.totalPages || Math.ceil(theme.poemsCount / POEMS_PER_PAGE);
-const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
-const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
+const { totalPages, hasNextPage, hasPrevPage } = pagination;
 const nextPageUrl = `/themes/${slug}/page/${pageNumber + 1}`;
 const prevPageUrl = `/themes/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
