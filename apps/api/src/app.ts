@@ -10,6 +10,7 @@ import { dbMiddleware } from './middlewares/db.middleware';
 import serveEmojiFavicon from './middlewares/favicon.middleware';
 import { router, routerNamespaces } from './router';
 import index from './routes/index.routes';
+import llms from './routes/llms.routes';
 import poems from './routes/poems.routes';
 import type { AppContext } from './types';
 
@@ -67,6 +68,7 @@ app.use('/v1/*', async (c, next) => {
 
 app
   .route('/', index)
+  .route('/', llms)
   .route('/v1', index)
   .route('/v1/poems', poems)
   .notFound((c) =>

@@ -1,0 +1,24 @@
+# قافية (Qafiyah)
+
+> Free, open-source reference for Arabic poetry. Catalogs classical and modern Arabic poems indexed by poet, era, meter, rhyme, and theme. Site language is Arabic; URLs use Latin transliteration of Arabic slugs.
+
+## Browse
+
+- [Poets](https://qafiyah.com/poets/page/1): Paginated index of poets
+- [Eras](https://qafiyah.com/eras): Historical eras (e.g. Jahili, Umayyad, Abbasid, modern)
+- [Meters](https://qafiyah.com/meters): Classical Arabic meters (al-ʿarūḍ)
+- [Rhymes](https://qafiyah.com/rhymes): Rhyme letters (qāfiyah)
+- [Themes](https://qafiyah.com/themes): Thematic categories
+
+## Data & API
+
+- [Public API docs](https://api.qafiyah.com/v1/docs): Read-only JSON HTTP API
+- [API llms.txt](https://api.qafiyah.com/llms.txt): Machine-readable index of API endpoints
+- [OpenAPI spec](https://api.qafiyah.com/v1/openapi.json): OpenAPI 3 specification
+- [Database dumps](https://github.com/alwalxed/qafiyah/tree/main/dumps): Periodic Postgres snapshots
+- [Random poem](https://api.qafiyah.com/v1/poems/random): Random poem slug (text/plain)
+
+## Source
+
+- [GitHub](https://github.com/alwalxed/qafiyah): Monorepo source
+- [Sitemap](https://qafiyah.com/sitemap-index.xml): Full URL index
