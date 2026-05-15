@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createTestClient } from '@/test-utils/test-helpers';
+import { createTestClient } from '@/test-utils';
 import llms from './llms.routes';
 
 describe('llms routes', () => {

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockDb, createTestClient } from '@/test-utils/test-helpers';
+import { createMockDb, createTestClient } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listRhymesMock = vi.fn();

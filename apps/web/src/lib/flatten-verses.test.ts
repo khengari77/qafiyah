@@ -1,4 +1,4 @@
-import { flattenVerses } from './flatten-verse-description';
+import { flattenVerses } from './flatten-verses';
 
 describe('flattenVerses', () => {
   it('returns empty string for empty array', () => {

@@ -6,7 +6,7 @@
 
 import { HTTPException } from 'hono/http-exception';
 import { describe, expect, it, vi } from 'vitest';
-import { createMockDb, createTestClient } from '@/test-utils/test-helpers';
+import { createMockDb, createTestClient } from '@/test-utils';
 import poems from './poems.routes';
 
 describe('poems routes', () => {

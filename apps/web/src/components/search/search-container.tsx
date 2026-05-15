@@ -7,6 +7,8 @@ import {
   SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
 } from '@qafiyah/constants';
+import { useSearch } from '@/components/search/hooks/use-search';
+import { getBadgeCount, getNoResultsText, getResultText } from '@/components/search/search-format';
 import {
   erasOptions,
   matchTypeOptions,
@@ -14,13 +16,7 @@ import {
   rhymesOptions,
   searchTypeOptions,
   themesOptions,
-} from '@/components/search/constants';
-import {
-  getBadgeCount,
-  getNoResultsText,
-  getResultText,
-} from '@/components/search/constants/texts';
-import { useSearch } from '@/components/search/hooks/use-search';
+} from '@/components/search/search-options';
 import { Card } from '@/components/ui/card';
 import { Filters } from './filters';
 import { FilterBadges } from './filters-badges';

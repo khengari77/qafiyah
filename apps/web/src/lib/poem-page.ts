@@ -11,7 +11,7 @@ import {
 import { SITE_NAME, SITE_URL } from '@/constants/globals';
 import { fetchPoem } from '@/lib/api/static';
 import type { PoemResponseData } from '@/lib/api/types';
-import { flattenVerses } from '@/lib/flatten-verse-description';
+import { flattenVerses } from '@/lib/flatten-verses';
 
 /** Strip chars that break Astro's codegen when strings are embedded into generated JS props. */
 function safeMetaText(value: string): string {
