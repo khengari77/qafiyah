@@ -12,7 +12,7 @@ const listErasContract = oc.route({ method: 'GET', path: '/eras' }).output(listR
 
 const listEraPoemsContract = oc
   .route({ method: 'GET', path: '/eras/{slug}/poems' })
-  .input(slugAndPageInput)
+  .input(slugAndPageInput('abbasid'))
   .errors({
     NOT_FOUND: { status: 404, message: 'Era not found' },
   })

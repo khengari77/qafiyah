@@ -14,7 +14,7 @@ const listThemesContract = oc
 
 const listThemePoemsContract = oc
   .route({ method: 'GET', path: '/themes/{slug}/poems' })
-  .input(slugAndPageInput)
+  .input(slugAndPageInput('61a2570d-9acc-493d-a05d-7dd2404c17ff'))
   .errors({
     NOT_FOUND: { status: 404, message: 'Theme not found' },
   })

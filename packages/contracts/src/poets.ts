@@ -25,7 +25,7 @@ const listPoetsContract = oc
 
 const listPoetPoemsContract = oc
   .route({ method: 'GET', path: '/poets/{slug}/poems' })
-  .input(slugAndPageInput)
+  .input(slugAndPageInput('abu-nawas'))
   .errors({
     NOT_FOUND: { status: 404, message: 'Poet not found' },
   })

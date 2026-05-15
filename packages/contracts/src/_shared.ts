@@ -8,14 +8,11 @@ export const pageParam = v.pipe(
   v.minValue(1)
 );
 
-export const slugInput = v.object({
-  slug: v.string(),
-});
+export const slugInput = (example: string) =>
+  v.object({ slug: v.pipe(v.string(), v.examples([example])) });
 
-export const slugAndPageInput = v.object({
-  slug: v.string(),
-  page: v.optional(pageParam, '1'),
-});
+export const slugAndPageInput = (example: string) =>
+  v.object({ slug: v.pipe(v.string(), v.examples([example])), page: v.optional(pageParam, '1') });
 
 export const pageQueryInput = v.object({
   page: v.optional(pageParam, '1'),

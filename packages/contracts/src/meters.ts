@@ -14,7 +14,7 @@ const listMetersContract = oc
 
 const listMeterPoemsContract = oc
   .route({ method: 'GET', path: '/meters/{slug}/poems' })
-  .input(slugAndPageInput)
+  .input(slugAndPageInput('altawil'))
   .errors({
     NOT_FOUND: { status: 404, message: 'Meter not found' },
   })

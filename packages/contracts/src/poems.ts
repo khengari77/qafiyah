@@ -22,7 +22,7 @@ const poemResource = v.object({
 
 const getBySlugContract = oc
   .route({ method: 'GET', path: '/poems/{slug}' })
-  .input(slugInput)
+  .input(slugInput('887d1dcd-fb04-4f09-a448-d08287dface0'))
   .errors({
     NOT_FOUND: { status: 404, message: 'Poem not found' },
     POEM_PARSE_ERROR: { status: 500, message: 'Poem data could not be parsed' },

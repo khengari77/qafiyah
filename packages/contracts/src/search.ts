@@ -35,8 +35,11 @@ const searchContract = oc
   .input(
     v.pipe(
       v.object({
-        q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH)), ''),
-        searchType: v.picklist(SEARCH_TYPE_VALUES),
+        q: v.optional(
+          v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])),
+          ''
+        ),
+        searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
         page: v.optional(pageParam, '1'),
         matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
         meterSlugs: slugArrayParam,

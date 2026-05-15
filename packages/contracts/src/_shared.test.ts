@@ -44,33 +44,33 @@ describe('pageParam', () => {
 
 describe('slugAndPageInput', () => {
   it('parses valid slug and page', () => {
-    const result = v.parse(slugAndPageInput, { slug: 'my-slug', page: '2' });
+    const result = v.parse(slugAndPageInput('my-slug'), { slug: 'my-slug', page: '2' });
     expect(result.slug).toBe('my-slug');
     expect(result.page).toBe(2);
   });
 
   it('defaults page to 1 when omitted', () => {
-    const result = v.parse(slugAndPageInput, { slug: 'my-slug' });
+    const result = v.parse(slugAndPageInput('my-slug'), { slug: 'my-slug' });
     expect(result.page).toBe(1);
   });
 
   it('rejects missing slug', () => {
-    expect(() => v.parse(slugAndPageInput, { page: '1' })).toThrow();
+    expect(() => v.parse(slugAndPageInput('my-slug'), { page: '1' })).toThrow();
   });
 
   it('rejects invalid page', () => {
-    expect(() => v.parse(slugAndPageInput, { slug: 'my-slug', page: '0' })).toThrow();
+    expect(() => v.parse(slugAndPageInput('my-slug'), { slug: 'my-slug', page: '0' })).toThrow();
   });
 });
 
 describe('slugInput', () => {
   it('parses valid slug', () => {
-    const result = v.parse(slugInput, { slug: 'mutanabbi' });
+    const result = v.parse(slugInput('mutanabbi'), { slug: 'mutanabbi' });
     expect(result.slug).toBe('mutanabbi');
   });
 
   it('rejects missing slug', () => {
-    expect(() => v.parse(slugInput, {})).toThrow();
+    expect(() => v.parse(slugInput('mutanabbi'), {})).toThrow();
   });
 });
 
