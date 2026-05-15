@@ -9,13 +9,11 @@ import {
   API_SPEC_VERSION,
   API_V1_PREFIX,
   CORS_MAX_AGE_SECONDS,
-  DEV_API_LOOPBACK_URL,
   FAVICON_EMOJI,
   GITHUB_REPO_URL,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_NOT_FOUND,
   ORPC_BYPASS_PATHS,
-  PROD_API_URL,
   SITE_NAME_EN,
 } from '@qafiyah/constants';
 import { Hono } from 'hono';
@@ -53,7 +51,7 @@ const orpcHandler = new OpenAPIHandler(router, {
       schemaConverters: [new ValibotToJsonSchemaConverter()],
       specPath: API_OPENAPI_SPEC_PATH,
       docsPath: API_OPENAPI_DOCS_PATH,
-      specGenerateOptions: {
+      specGenerateOptions: ({ request }) => ({
         info: {
           title: `${SITE_NAME_EN} API`,
           version: API_SPEC_VERSION,
@@ -61,11 +59,8 @@ const orpcHandler = new OpenAPIHandler(router, {
           contact: { name: SITE_NAME_EN, url: GITHUB_REPO_URL },
           license: { name: API_SPEC_LICENSE_NAME },
         },
-        servers: [
-          { url: `${PROD_API_URL}${API_V1_PREFIX}`, description: 'Production' },
-          { url: `${DEV_API_LOOPBACK_URL}${API_V1_PREFIX}`, description: 'Local dev' },
-        ],
-      },
+        servers: [{ url: `${request.url.origin}${API_V1_PREFIX}` }],
+      }),
     }),
   ],
 });
