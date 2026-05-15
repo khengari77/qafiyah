@@ -8,6 +8,7 @@ export type RhymeLetterGroup = {
   name: string;
   slug: string;
   poemsCount: number;
+  poetsCount: number;
 };
 
 export type ListRhymePoemsResult = {
@@ -20,7 +21,10 @@ export type ListRhymePoemsResult = {
 export async function listRhymes(db: DbClient): Promise<RhymeLetterGroup[]> {
   const results = await db.select().from(rhymeStats);
 
-  const groupedRhymes = new Map<string, { rhymes: typeof results; totalPoemsCount: number }>();
+  const groupedRhymes = new Map<
+    string,
+    { rhymes: typeof results; totalPoemsCount: number; totalPoetsCount: number }
+  >();
 
   for (const rhyme of results) {
     const cleanPattern = normalizeRhymePattern(rhyme.pattern);
@@ -29,24 +33,26 @@ export async function listRhymes(db: DbClient): Promise<RhymeLetterGroup[]> {
       if (variants.includes(cleanPattern)) {
         let group = groupedRhymes.get(letterName);
         if (!group) {
-          group = { rhymes: [], totalPoemsCount: 0 };
+          group = { rhymes: [], totalPoemsCount: 0, totalPoetsCount: 0 };
           groupedRhymes.set(letterName, group);
         }
         group.rhymes.push(rhyme);
         group.totalPoemsCount += rhyme.poemsCount;
+        group.totalPoetsCount += rhyme.poetsCount;
         break;
       }
     }
   }
 
   const enrichedGroups = Array.from(groupedRhymes.entries()).map(
-    ([letter, { rhymes, totalPoemsCount }]) => {
+    ([letter, { rhymes, totalPoemsCount, totalPoetsCount }]) => {
       const firstRhyme = rhymes[0];
       if (!firstRhyme) throw new Error();
       return {
         name: letter,
         slug: firstRhyme.slug,
         poemsCount: totalPoemsCount,
+        poetsCount: totalPoetsCount,
       };
     }
   );

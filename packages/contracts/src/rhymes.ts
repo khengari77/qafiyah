@@ -1,15 +1,10 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import {
-  paginationFields,
-  poemListItemNoPoet,
-  slugAndPageInput,
-  statRowNoPoetsCount,
-} from './_shared';
+import { paginationFields, poemListItemNoPoet, slugAndPageInput, statRow } from './_shared';
 
 const listRhymesContract = oc.route({ method: 'GET', path: '/rhymes' }).output(
   v.object({
-    rhymes: v.array(statRowNoPoetsCount),
+    rhymes: v.array(statRow),
     ...paginationFields,
   })
 );

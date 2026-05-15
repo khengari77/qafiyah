@@ -7,6 +7,7 @@ export type MeterStatsRow = {
   name: string;
   slug: string;
   poemsCount: number;
+  poetsCount: number;
 };
 
 export type ListMeterPoemsResult = {
@@ -22,6 +23,7 @@ export async function listMeters(db: DbClient): Promise<MeterStatsRow[]> {
       name: meterStats.name,
       slug: meterStats.slug,
       poemsCount: meterStats.poemsCount,
+      poetsCount: meterStats.poetsCount,
     })
     .from(meterStats)
     .where(inArray(meterStats.name, FORMAL_METERS));
