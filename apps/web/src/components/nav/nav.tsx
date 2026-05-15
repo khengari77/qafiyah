@@ -1,8 +1,7 @@
 'use client';
 
+import { NAV_LINKS, RESPONSIVE_ICON_SIZE } from '@qafiyah/constants';
 import { Menu } from 'lucide-react';
-import { responsiveIconSize } from '@/constants/globals';
-import { NAV_LINKS } from '@/constants/nav-links';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { NavLinks } from './nav-links';
@@ -25,7 +24,7 @@ export function Nav({ onMenuToggle, className }: Props) {
             aria-label="فتح القائمة"
             onClick={onMenuToggle}
           >
-            <Menu className={cn(responsiveIconSize, 'opacity-70')} />
+            <Menu className={cn(RESPONSIVE_ICON_SIZE, 'opacity-70')} />
           </button>
           <NavLinks links={NAV_LINKS} className="hidden md:block" />
         </div>

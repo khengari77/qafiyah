@@ -1,16 +1,23 @@
 ---
-import { GITHUB_REPO_URL, SITE_NAME_AR, X_HANDLE_URL } from '@qafiyah/constants';
+import {
+  GITHUB_REPO_URL,
+  HTML_HEAD_METADATA,
+  POEM_LANGUAGE,
+  SCHEMA_ORG_CONTEXT,
+  SITE_LOGO_PATH,
+  SITE_NAME_AR,
+  X_HANDLE_URL,
+} from '@qafiyah/constants';
 import { SearchWithProviders } from '@/components/search/search-with-providers';
 import { SITE_URL } from '@/constants/globals';
-import { htmlHeadMetadata } from '@/constants/site-metadata';
 import Layout from '@/layouts/Layout.astro';
 
 const jsonLd = {
-  '@context': 'https://schema.org',
+  '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'WebSite',
-  name: htmlHeadMetadata.title,
+  name: HTML_HEAD_METADATA.title,
   url: SITE_URL,
-  description: htmlHeadMetadata.description,
+  description: HTML_HEAD_METADATA.description,
   potentialAction: {
     '@type': 'SearchAction',
     target: `${SITE_URL}/?q={search_term_string}`,
@@ -21,20 +28,20 @@ const jsonLd = {
     name: SITE_NAME_AR,
     logo: {
       '@type': 'ImageObject',
-      url: `${SITE_URL}/logo.png`,
+      url: `${SITE_URL}${SITE_LOGO_PATH}`,
       width: '112',
       height: '112',
     },
     sameAs: [X_HANDLE_URL, GITHUB_REPO_URL],
   },
-  inLanguage: 'ar',
+  inLanguage: POEM_LANGUAGE,
 };
 ---
 
 <Layout
-  title={htmlHeadMetadata.title}
-  description={htmlHeadMetadata.description}
-  keywords={htmlHeadMetadata.keywords}
+  title={HTML_HEAD_METADATA.title}
+  description={HTML_HEAD_METADATA.description}
+  keywords={HTML_HEAD_METADATA.keywords}
   canonical="/"
   jsonLd={jsonLd}
 >
@@ -43,7 +50,7 @@ const jsonLd = {
     aria-hidden="true"
     tabindex="-1"
   >
-    {htmlHeadMetadata.description}
+    {HTML_HEAD_METADATA.description}
   </p>
   <SearchWithProviders client:only="react" />
 </Layout>

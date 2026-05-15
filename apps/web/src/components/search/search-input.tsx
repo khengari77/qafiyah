@@ -1,5 +1,6 @@
 'use client';
 
+import { MAX_QUERY_LENGTH } from '@qafiyah/constants';
 import { CircleX } from 'lucide-react';
 import type { ChangeEventHandler, KeyboardEventHandler } from 'react';
 import { Input } from '@/components/ui/input';
@@ -39,7 +40,7 @@ export function SearchInput({
         <Input
           tabIndex={0}
           placeholder={placeholder}
-          maxLength={50}
+          maxLength={MAX_QUERY_LENGTH}
           value={inputValue}
           autoComplete="off"
           autoCorrect="off"

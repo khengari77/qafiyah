@@ -1,3 +1,8 @@
+import {
+  POSTGRES_CONNECT_TIMEOUT_SECONDS,
+  POSTGRES_IDLE_TIMEOUT_SECONDS,
+  POSTGRES_POOL_MAX,
+} from '@qafiyah/constants';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -19,9 +24,9 @@ export function createDb(databaseUrl: string): DbClient {
     user: url.username,
     password: url.password,
     ssl: false,
-    max: 2,
-    idle_timeout: 30,
-    connect_timeout: 10,
+    max: POSTGRES_POOL_MAX,
+    idle_timeout: POSTGRES_IDLE_TIMEOUT_SECONDS,
+    connect_timeout: POSTGRES_CONNECT_TIMEOUT_SECONDS,
     prepare: false,
     transform: { undefined: null },
     onnotice: () => {},

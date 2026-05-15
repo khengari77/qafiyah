@@ -1,7 +1,7 @@
 'use client';
 
+import type { NavLink } from '@qafiyah/constants';
 import { useEffect, useState } from 'react';
-import type { NavLink } from '@/constants/nav-links';
 import { NavItem } from './nav-item';
 
 type Props = {

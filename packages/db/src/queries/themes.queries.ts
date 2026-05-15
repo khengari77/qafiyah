@@ -1,6 +1,6 @@
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { eq } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { FETCH_PER_PAGE } from '../constants';
 import { themePoems, themeStats } from '../schema';
 
 export type ThemeStatsRow = {
@@ -32,7 +32,7 @@ export async function listThemePoems(
   slug: string,
   page: number
 ): Promise<ListThemePoemsResult | null> {
-  const limit = FETCH_PER_PAGE;
+  const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
   const [themeInfo, poems] = await Promise.all([

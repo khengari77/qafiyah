@@ -1,6 +1,6 @@
+import { ERAS_SORT_ORDER, POEMS_PER_PAGE } from '@qafiyah/constants';
 import { eq } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { ERAS_SORT_ORDER, FETCH_PER_PAGE } from '../constants';
 import { eraPoems, eraStats } from '../schema';
 
 export type EraStatsRow = {
@@ -34,7 +34,7 @@ export async function listEraPoems(
   slug: string,
   page: number
 ): Promise<ListEraPoemsResult | null> {
-  const limit = FETCH_PER_PAGE;
+  const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
   const [eraInfo, poems] = await Promise.all([

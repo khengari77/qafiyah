@@ -1,6 +1,6 @@
+import { FORMAL_METERS, POEMS_PER_PAGE } from '@qafiyah/constants';
 import { eq, inArray } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { FETCH_PER_PAGE, FORMAL_METERS } from '../constants';
 import { meterPoems, meterStats } from '../schema';
 
 export type MeterStatsRow = {
@@ -33,7 +33,7 @@ export async function listMeterPoems(
   slug: string,
   page: number
 ): Promise<ListMeterPoemsResult | null> {
-  const limit = FETCH_PER_PAGE;
+  const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
   const [meterInfo, poems] = await Promise.all([

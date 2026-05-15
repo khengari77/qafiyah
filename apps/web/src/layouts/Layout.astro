@@ -1,8 +1,13 @@
 ---
+import {
+  HTML_HEAD_METADATA,
+  SITE_THEME_COLOR_HEX,
+  TWITTER_HANDLE,
+  TWITTER_ID,
+} from '@qafiyah/constants';
 import { Footer } from '@/components/footer';
 import { NavWithMenu } from '@/components/nav/nav-with-menu';
-import { isDev, SITE_NAME, SITE_URL, TWITTER_HANDLE, TWITTER_ID } from '@/constants/globals';
-import { htmlHeadMetadata } from '@/constants/site-metadata';
+import { isDev, SITE_NAME, SITE_URL } from '@/constants/globals';
 import '../styles/globals.css';
 
 interface Props {
@@ -20,9 +25,9 @@ interface Props {
 }
 
 const {
-  title = htmlHeadMetadata.title,
-  description = htmlHeadMetadata.description,
-  keywords = htmlHeadMetadata.keywords,
+  title = HTML_HEAD_METADATA.title,
+  description = HTML_HEAD_METADATA.description,
+  keywords = HTML_HEAD_METADATA.keywords,
   canonical = '/',
   ogTitle,
   ogDescription,
@@ -46,11 +51,11 @@ const htmlClass = isDev ? 'debug-screens' : '';
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#fafafa" />
+    <meta name="theme-color" content={SITE_THEME_COLOR_HEX} />
     <title>{title}</title>
     <meta name="description" content={description} />
     {keywordsStr && <meta name="keywords" content={keywordsStr} />}
-    <meta name="author" content={htmlHeadMetadata.author} />
+    <meta name="author" content={HTML_HEAD_METADATA.author} />
     <meta name="robots" content={robotsContent} />
     <meta name="googlebot" content={robotsContent} />
     <meta name="google" content="notranslate" />
@@ -63,7 +68,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
     <meta property="og:url" content={ogUrl} />
     <meta property="og:title" content={resolvedOgTitle} />
     <meta property="og:description" content={resolvedOgDescription} />
-    <meta property="og:image" content={`${SITE_URL}${htmlHeadMetadata.openGraphUrl}`} />
+    <meta property="og:image" content={`${SITE_URL}${HTML_HEAD_METADATA.openGraphUrl}`} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/png" />
@@ -75,7 +80,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
     <meta name="twitter:creator:id" content={TWITTER_ID} />
     <meta name="twitter:title" content={resolvedTwitterTitle} />
     <meta name="twitter:description" content={resolvedTwitterDescription} />
-    <meta name="twitter:image" content={`${SITE_URL}${htmlHeadMetadata.twitterSummaryCardImageUrl}`} />
+    <meta name="twitter:image" content={`${SITE_URL}${HTML_HEAD_METADATA.twitterSummaryCardImageUrl}`} />
 
     <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" />

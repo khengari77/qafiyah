@@ -1,6 +1,6 @@
+import { SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '@qafiyah/constants';
 import { type SQL, sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '../constants';
 
 export type PoemsSearchRow = {
   poetName: string;

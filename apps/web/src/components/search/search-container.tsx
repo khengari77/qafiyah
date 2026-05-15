@@ -1,6 +1,13 @@
 'use client';
 
 import {
+  ERAS_NOUN_FORMS,
+  METERS_NOUN_FORMS,
+  RHYMES_NOUN_FORMS,
+  SEARCH_TEXTS,
+  THEMES_NOUN_FORMS,
+} from '@qafiyah/constants';
+import {
   erasOptions,
   matchTypeOptions,
   metersOptions,
@@ -9,14 +16,9 @@ import {
   themesOptions,
 } from '@/components/search/constants';
 import {
-  ERAS_NOUN_FORMS,
   getBadgeCount,
   getNoResultsText,
   getResultText,
-  METERS_NOUN_FORMS,
-  RHYMES_NOUN_FORMS,
-  SEARCH_TEXTS,
-  THEMES_NOUN_FORMS,
 } from '@/components/search/constants/texts';
 import { useSearch } from '@/components/search/hooks/use-search';
 import { Card } from '@/components/ui/card';
@@ -74,7 +76,11 @@ export function SearchContainer() {
           <div className="p-0 bg">
             <div className="flex flex-col gap-4">
               <SearchInput
-                placeholder={searchType === 'poems' ? 'ابحث في مليون بيت' : 'ابحث عن ديوان شاعر'}
+                placeholder={
+                  searchType === 'poems'
+                    ? SEARCH_TEXTS.poemsSearchPlaceholder
+                    : SEARCH_TEXTS.poetsSearchPlaceholder
+                }
                 searchLabel={SEARCH_TEXTS.search}
                 inputValue={inputValue}
                 validationError={validationError}

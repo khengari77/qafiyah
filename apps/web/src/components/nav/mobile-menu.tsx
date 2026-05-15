@@ -1,9 +1,8 @@
 'use client';
 
+import { NAV_LINKS, RESPONSIVE_ICON_SIZE } from '@qafiyah/constants';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
-import { responsiveIconSize } from '@/constants/globals';
-import { NAV_LINKS } from '@/constants/nav-links';
 import { NavLinks } from './nav-links';
 
 type Props = {
@@ -40,7 +39,7 @@ export function MobileMenu({ isOpen, onClose }: Props) {
         aria-label="إغلاق القائمة"
         onClick={onClose}
       >
-        <X className={responsiveIconSize} />
+        <X className={RESPONSIVE_ICON_SIZE} />
       </button>
     </div>
   );

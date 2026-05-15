@@ -1,26 +1,32 @@
 'use client';
 
+import {
+  type MATCH_TYPE_VALUES,
+  MAX_QUERY_LENGTH,
+  NON_ARABIC_AND_SPACE_REGEX,
+  SEARCH_RESULTS_STALE_TIME_MS,
+  SEARCH_TEXTS,
+  type SEARCH_TYPE_VALUES,
+} from '@qafiyah/constants';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { search } from '@/lib/api/client';
 import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
-import { SEARCH_TEXTS } from '../constants/texts';
 import { useInfiniteScroll } from './use-infinite-scroll';
 
-type SearchType = 'poems' | 'poets';
-type MatchType = 'all' | 'any' | 'exact';
-
-const MAX_QUERY_LENGTH = 50;
-const ARABIC_AND_SPACE = /[^؀-ۿݐ-ݿࢠ-ࣿء-ي\s]/g;
+type SearchType = (typeof SEARCH_TYPE_VALUES)[number];
+type MatchType = (typeof MATCH_TYPE_VALUES)[number];
 
 function sanitizeArabicInput(raw: string): string {
-  return raw.replace(ARABIC_AND_SPACE, '').replace(/\s+/g, ' ');
+  return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(/\s+/g, ' ');
 }
 
 function validateText(input: string): string | null {
-  if (input.length > MAX_QUERY_LENGTH) return `يجب ألا يتجاوز النص ${MAX_QUERY_LENGTH} حرفًا`;
+  if (input.length > MAX_QUERY_LENGTH) {
+    return SEARCH_TEXTS.maxLengthErrorTemplate.replace('{n}', String(MAX_QUERY_LENGTH));
+  }
   return null;
 }
 
@@ -109,7 +115,7 @@ export function useSearch() {
     getNextPageParam: (lastPage) =>
       lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
     enabled: canSearch,
-    staleTime: 5 * 60 * 1000,
+    staleTime: SEARCH_RESULTS_STALE_TIME_MS,
     refetchOnWindowFocus: false,
   });
 

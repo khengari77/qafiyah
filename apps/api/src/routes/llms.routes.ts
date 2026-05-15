@@ -1,8 +1,15 @@
-import { GITHUB_REPO_URL, PROD_API_URL, PROD_SITE_URL, SITE_NAME_EN } from '@qafiyah/constants';
+import {
+  API_V1_PREFIX,
+  GITHUB_REPO_URL,
+  LLMS_CACHE_CONTROL,
+  PROD_API_URL,
+  PROD_SITE_URL,
+  SITE_NAME_EN,
+} from '@qafiyah/constants';
 import { Hono } from 'hono';
 import type { AppContext } from '@/types';
 
-const BASE = `${PROD_API_URL}/v1`;
+const BASE = `${PROD_API_URL}${API_V1_PREFIX}`;
 
 const body = `# ${SITE_NAME_EN} API
 
@@ -40,7 +47,7 @@ Base URL: ${BASE}
 
 const app = new Hono<AppContext>().get('/llms.txt', (c) => {
   c.header('Content-Type', 'text/plain; charset=utf-8');
-  c.header('Cache-Control', 'public, max-age=3600');
+  c.header('Cache-Control', LLMS_CACHE_CONTROL);
   return c.body(body);
 });
 

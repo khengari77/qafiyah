@@ -1,6 +1,6 @@
+import { ARABIC_LETTERS_MAP, POEMS_PER_PAGE } from '@qafiyah/constants';
 import { eq } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { ARABIC_LETTERS_MAP, FETCH_PER_PAGE } from '../constants';
 import { rhymePoems, rhymeStats } from '../schema';
 import { normalizeRhymePattern } from '../utils/normalize-rhyme-pattern';
 
@@ -59,7 +59,7 @@ export async function listRhymePoems(
   slug: string,
   page: number
 ): Promise<ListRhymePoemsResult | null> {
-  const limit = FETCH_PER_PAGE;
+  const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
   const [rhymeInfo, poems] = await Promise.all([

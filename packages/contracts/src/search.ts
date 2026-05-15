@@ -1,4 +1,10 @@
 import { oc } from '@orpc/contract';
+import {
+  MATCH_TYPE_VALUES,
+  MAX_QUERY_LENGTH,
+  SEARCH_TEXTS,
+  SEARCH_TYPE_VALUES,
+} from '@qafiyah/constants';
 import * as v from 'valibot';
 import { pageParam, paginationFields } from './_shared';
 
@@ -23,17 +29,15 @@ const poetsSearchResult = v.object({
   relevance: v.number(),
 });
 
-const MAX_QUERY_LENGTH = 50;
-
 const searchContract = oc
   .route({ method: 'GET', path: '/search' })
   .input(
     v.pipe(
       v.object({
         q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH)), ''),
-        searchType: v.picklist(['poems', 'poets']),
+        searchType: v.picklist(SEARCH_TYPE_VALUES),
         page: v.optional(pageParam, '1'),
-        matchType: v.optional(v.picklist(['all', 'any', 'exact']), 'all'),
+        matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
         meterSlugs: slugArrayParam,
         eraSlugs: slugArrayParam,
         rhymeSlugs: slugArrayParam,
@@ -48,7 +52,7 @@ const searchContract = oc
             input.rhymeSlugs.length >
           0;
         return hasText || hasFilters;
-      }, 'أدخل كلمة بحث أو اختر فلترًا واحدًا على الأقل')
+      }, SEARCH_TEXTS.missingQueryOrFilterError)
     )
   )
   .output(

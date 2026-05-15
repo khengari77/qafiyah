@@ -61,8 +61,28 @@ export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
   ['ياء', ['ي', 'ى', 'ئ', 'ياء', 'الياء']],
 ]);
 
-export const FETCH_PER_PAGE = 30;
-export const MAX_EXCERPT_LENGTH = 280;
+export const ARABIC_DIGITS_MAP: Record<string, string> = {
+  '0': '٠',
+  '1': '١',
+  '2': '٢',
+  '3': '٣',
+  '4': '٤',
+  '5': '٥',
+  '6': '٦',
+  '7': '٧',
+  '8': '٨',
+  '9': '٩',
+};
 
-export const SEARCH_POEMS_PER_PAGE = 5;
-export const SEARCH_POETS_PER_PAGE = 10;
+// Allows Arabic letters and whitespace; strips everything else.
+// Covers: Basic Arabic (U+0600–U+06FF), Supplement (U+0750–U+077F), Extended-A (U+08A0–U+08FF).
+export const NON_ARABIC_AND_SPACE_REGEX = /[^؀-ۿݐ-ݿࢠ-ࣿ\s]/g;
+
+// Same range but Basic Arabic block only; used in pure display contexts.
+export const NON_ARABIC_BASIC_REGEX = /[^؀-ۿ\s]/g;
+
+// Arabic diacritical marks (tashkeel):
+//   U+0610–U+061A  extended Arabic signs (sallallahou, etc.)
+//   U+064B–U+065F  vowel marks (fathatan, kasratan, fatha, damma, kasra, shadda, sukun, …)
+//   U+06D6–U+06ED  Quranic annotation marks
+export const TASHKEEL_REGEX = /[ؐ-ًؚ-ٟۖ-ۭ]/g;

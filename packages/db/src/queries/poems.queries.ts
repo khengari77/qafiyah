@@ -1,6 +1,6 @@
+import { MAX_EXCERPT_LENGTH } from '@qafiyah/constants';
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { MAX_EXCERPT_LENGTH } from '../constants';
 import { poemsFullData } from '../schema';
 import { extractPoemExcerpt, type RandomPoemLines } from '../utils/extract-poem-excerpt';
 import { processPoemContent } from '../utils/process-poem-content';

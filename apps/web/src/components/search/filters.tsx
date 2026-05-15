@@ -4,7 +4,7 @@ import {
   RHYMES_NOUN_FORMS,
   SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
-} from '@/components/search/constants/texts';
+} from '@qafiyah/constants';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import { BinaryToggleButton } from '@/components/ui/toggle-button';

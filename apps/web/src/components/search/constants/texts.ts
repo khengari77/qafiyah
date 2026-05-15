@@ -1,58 +1,12 @@
-import type { ArabicNounForms } from 'arabic-count-format';
+import {
+  type ArabicNounForms,
+  NON_ARABIC_BASIC_REGEX,
+  QUERY_DISPLAY_TRUNCATE_LENGTH,
+  RESULT_TEXT_TRUNCATE_LENGTH,
+  RESULTS_NOUN_FORMS,
+  SEARCH_TEXTS,
+} from '@qafiyah/constants';
 import { formatArabicCount } from 'arabic-count-format';
-
-export const SEARCH_TEXTS = {
-  refreshThePage: 'حدث الصفحة',
-  currentHeaderTitle: 'مرجع الشعر العربي',
-  search: 'ابحث',
-  erasLabel: 'العصور',
-  erasPlaceholder: 'عصر أو عدة عصور',
-  metersLabel: 'البحور',
-  metersPlaceholder: 'بحر أو عدة بحور',
-  themesLabel: 'الأغراض',
-  themesPlaceholder: 'غرض أو عدة أغراض',
-  rhymesLabel: 'القوافي',
-  rhymesPlaceholder: 'قافية أو عدة قوافي',
-  searchTypeLabel: 'المجال',
-  searchTypePlaceholder: 'اختر نوع البحث',
-  matchTypeLabel: 'الطريقة',
-  matchTypePlaceholder: 'اختر طريقة البحث',
-  errorMessage: 'عذرًا، وقع خلل غير متوقّع. إن استمر، فتواصل معنا تويتر',
-  searchFootnote: 'فرق بين القطع والوصل والتاء المربوطة والهاء',
-  filterOnlyResultLabel: 'بهذه الفلاتر',
-  noFilterResultsText: 'لم يُعثر على نتائج بهذه الفلاتر',
-  arabicOnlyError: 'البحث بالعربية فقط',
-} as const;
-
-export const ERAS_NOUN_FORMS: ArabicNounForms = {
-  singular: 'عصر',
-  dual: 'عصران',
-  plural: 'عصور',
-};
-
-export const METERS_NOUN_FORMS: ArabicNounForms = {
-  singular: 'بحر',
-  dual: 'بحران',
-  plural: 'بحور',
-};
-
-export const THEMES_NOUN_FORMS: ArabicNounForms = {
-  singular: 'غرض',
-  dual: 'غرضان',
-  plural: 'أغراض',
-};
-
-export const RHYMES_NOUN_FORMS: ArabicNounForms = {
-  singular: 'قافية',
-  dual: 'قافيتان',
-  plural: 'قوافي',
-};
-
-const RESULTS_NOUN_FORMS: ArabicNounForms = {
-  singular: 'نتيجة',
-  dual: 'نتيجتان',
-  plural: 'نتائج',
-};
 
 export function getBadgeCount(count: number, nounForms: ArabicNounForms): string {
   return formatArabicCount({ count, nounForms });
@@ -60,8 +14,8 @@ export function getBadgeCount(count: number, nounForms: ArabicNounForms): string
 
 export function getNoResultsText({ hasText, query }: { hasText: boolean; query: string }): string {
   if (!hasText) return SEARCH_TEXTS.noFilterResultsText;
-  const cleaned = query.replace(/[^؀-ۿ\s]/g, '').slice(0, 20);
-  return `لم يُعثر على نتيجة لـ "${cleaned}${query.length > 20 ? '...' : ''}"`;
+  const cleaned = query.replace(NON_ARABIC_BASIC_REGEX, '').slice(0, QUERY_DISPLAY_TRUNCATE_LENGTH);
+  return `لم يُعثر على نتيجة لـ "${cleaned}${query.length > QUERY_DISPLAY_TRUNCATE_LENGTH ? '...' : ''}"`;
 }
 
 export function getResultText({
@@ -77,7 +31,8 @@ export function getResultText({
   matchType: 'all' | 'any' | 'exact';
   hasText: boolean;
 }): string {
-  const searchTypeText = searchType === 'poems' ? 'بيت' : 'شاعر';
+  const searchTypeText =
+    searchType === 'poems' ? SEARCH_TEXTS.poemSingular : SEARCH_TEXTS.poetSingular;
   const resultsText = formatArabicCount({ count, nounForms: RESULTS_NOUN_FORMS });
 
   if (!hasText) {
@@ -86,14 +41,16 @@ export function getResultText({
 
   const matchTypeText =
     matchType === 'any'
-      ? 'بعض الكلمات'
+      ? SEARCH_TEXTS.matchTypeAny
       : matchType === 'all'
-        ? 'كل الكلمات'
-        : 'كل الكلمات (متتالية)';
+        ? SEARCH_TEXTS.matchTypeAll
+        : SEARCH_TEXTS.matchTypeExact;
 
-  const cleanedInput = query.replace(/[^؀-ۿ\s]/g, '');
+  const cleanedInput = query.replace(NON_ARABIC_BASIC_REGEX, '');
   const shortenedInputText =
-    cleanedInput.length > 10 ? `${cleanedInput.slice(0, 10)}...` : cleanedInput;
+    cleanedInput.length > RESULT_TEXT_TRUNCATE_LENGTH
+      ? `${cleanedInput.slice(0, RESULT_TEXT_TRUNCATE_LENGTH)}...`
+      : cleanedInput;
 
   return `عثر على ${resultsText} لـ "${shortenedInputText}" بحثًا عن «${searchTypeText}» بحثَ (${matchTypeText})`;
 }

@@ -5,7 +5,7 @@
  */
 
 import { ORPCError } from '@orpc/client';
-import { POEMS_PER_PAGE } from '@/constants/pagination';
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { apiServer } from './rpc';
 import type {
   Era,

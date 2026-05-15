@@ -109,6 +109,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@orpc/contract": "^1.14.2",
+        "@qafiyah/constants": "workspace:*",
         "valibot": "^1.0.0",
       },
       "devDependencies": {
@@ -120,6 +121,7 @@
       "name": "@qafiyah/db",
       "version": "0.0.0",
       "dependencies": {
+        "@qafiyah/constants": "workspace:*",
         "drizzle-orm": "^0.45.2",
         "postgres": "^3.4.5",
       },

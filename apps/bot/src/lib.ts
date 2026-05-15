@@ -1,13 +1,15 @@
-import { PROD_API_URL } from '@qafiyah/constants';
+import {
+  API_RANDOM_POEM_PATH,
+  INITIAL_RETRY_DELAY_MS,
+  MAX_RETRY_ATTEMPTS,
+  MAX_TWEET_LENGTH,
+  PROD_API_URL,
+} from '@qafiyah/constants';
 import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
 
 dotenv.config();
-
-const MAX_RETRY_ATTEMPTS = 3;
-const INITIAL_RETRY_DELAY_MS = 1000;
-const MAX_TWEET_LENGTH = 280;
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: Error };
 
@@ -102,7 +104,7 @@ export async function withRetry<T>(
 
 export async function fetchFormattedPoem(): Promise<Result<string>> {
   return await withRetry(async () => {
-    const res = await fetch(`${PROD_API_URL}/v1/poems/random`);
+    const res = await fetch(`${PROD_API_URL}${API_RANDOM_POEM_PATH}`);
     if (!res.ok) {
       throw new Error(`API returned status ${res.status}`);
     }

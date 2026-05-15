@@ -1,5 +1,6 @@
 'use client';
 
+import { INFINITE_SCROLL_THRESHOLD } from '@qafiyah/constants';
 import { useEffect, useRef } from 'react';
 
 export function useInfiniteScroll(
@@ -18,7 +19,7 @@ export function useInfiniteScroll(
             fetchNextPage();
           }
         },
-        { threshold: 0.1 }
+        { threshold: INFINITE_SCROLL_THRESHOLD }
       );
 
       observer.current.observe(loadMoreRef.current);

@@ -1,6 +1,6 @@
 ---
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { SITE_URL } from '@/constants/globals';
-import { POEMS_PER_PAGE } from '@/constants/pagination';
 import Layout from '@/layouts/Layout.astro';
 import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
 import { toArabicDigits } from '@/lib/arabic';

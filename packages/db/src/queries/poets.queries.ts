@@ -1,6 +1,6 @@
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { eq } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { FETCH_PER_PAGE } from '../constants';
 import { poetPoems, poetStats } from '../schema';
 
 export type PoetStatsRow = {
@@ -23,7 +23,7 @@ export type ListPoetPoemsResult = {
 };
 
 export async function listPoets(db: DbClient, page: number): Promise<ListPoetsResult> {
-  const limit = FETCH_PER_PAGE;
+  const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
   const [poets, total] = await Promise.all([
@@ -48,7 +48,7 @@ export async function listPoetPoems(
   slug: string,
   page: number
 ): Promise<ListPoetPoemsResult | null> {
-  const limit = FETCH_PER_PAGE;
+  const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
   const [poetInfo, poems] = await Promise.all([

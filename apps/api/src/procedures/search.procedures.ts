@@ -1,8 +1,6 @@
+import { SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '@qafiyah/constants';
 import { cleanArabicQuery, searchQueries } from '@qafiyah/db';
 import { pub } from './_base';
-
-const RESULTS_PER_POEMS_PAGE = 5;
-const RESULTS_PER_POETS_PAGE = 10;
 
 function paginate(currentPage: number, totalResults: number, perPage: number) {
   const totalPages = Math.max(1, Math.ceil(totalResults / perPage));
@@ -45,7 +43,7 @@ export const search = pub.search.search.handler(async ({ context, input }) => {
     return {
       searchType: 'poems' as const,
       results: rows,
-      ...paginate(input.page, totalCount, RESULTS_PER_POEMS_PAGE),
+      ...paginate(input.page, totalCount, SEARCH_POEMS_PER_PAGE),
     };
   }
 
@@ -62,6 +60,6 @@ export const search = pub.search.search.handler(async ({ context, input }) => {
   return {
     searchType: 'poets' as const,
     results: rows,
-    ...paginate(input.page, totalCount, RESULTS_PER_POETS_PAGE),
+    ...paginate(input.page, totalCount, SEARCH_POETS_PER_PAGE),
   };
 });
