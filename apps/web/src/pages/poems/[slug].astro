@@ -6,7 +6,7 @@ import { loadPoemPage } from '@/lib/poem-page';
 
 export async function getStaticPaths() {
   const slugs = await fetchAllPoemSlugs();
-  return slugs.map((slug) => ({ params: { slug } }));
+  return slugs.map((poemSlug) => ({ params: { slug: poemSlug } }));
 }
 
 const { slug } = Astro.params;

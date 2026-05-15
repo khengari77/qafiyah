@@ -61,7 +61,7 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
             value={filters.matchType.value}
             onChange={filters.matchType.onChange}
             placeholder={SEARCH_TEXTS.searchTypePlaceholder}
-            disabled={!hasText && !hasInputText}
+            disabled={!(hasText || hasInputText)}
           />
         </div>
 

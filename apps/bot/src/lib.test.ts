@@ -10,11 +10,8 @@ import {
   withRetry,
 } from './lib';
 
-vi.mock('node-fetch', () => ({ default: vi.fn() }));
-
-import fetch from 'node-fetch';
-
-const mockFetch = fetch as unknown as ReturnType<typeof vi.fn>;
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
 
 // ---------------------------------------------------------------------------
 // initializeTwitterClient

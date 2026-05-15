@@ -54,7 +54,9 @@ async function main() {
   const alreadyUp = await probePort(PORT, HOST);
   let api = null;
 
-  if (!alreadyUp) {
+  if (alreadyUp) {
+    console.log('[build-with-api] API already running on port', PORT, '— reusing.');
+  } else {
     console.log('[build-with-api] Starting wrangler dev for @qafiyah/api...');
     api = spawn('bun', ['--filter', '@qafiyah/api', 'run', 'dev'], {
       cwd: repoRoot,
@@ -69,8 +71,6 @@ async function main() {
     });
     await waitForPort(PORT, HOST, READY_TIMEOUT_MS);
     console.log('[build-with-api] API is ready, starting astro build...');
-  } else {
-    console.log('[build-with-api] API already running on port', PORT, '— reusing.');
   }
 
   const buildEnv = {

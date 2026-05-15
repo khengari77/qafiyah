@@ -66,7 +66,7 @@ export async function listPoetPoems(
     sql`SELECT name, poems_count FROM poet_stats WHERE slug = ${slug} LIMIT 1`
   )) as unknown as ParentRow[];
 
-  if (!parentRows.length || !parentRows[0]) return null;
+  if (parentRows.length === 0 || !parentRows[0]) return null;
 
   const total = Number(parentRows[0].poems_count);
 

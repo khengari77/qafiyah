@@ -34,7 +34,7 @@ const ERA_NAMES = new Map([
 const { slug, page } = Astro.params;
 const pageNumber = Number.parseInt(page as string, 10);
 
-if (!slug || !Number.isFinite(pageNumber) || pageNumber < 1) {
+if (!(slug && Number.isFinite(pageNumber)) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
 

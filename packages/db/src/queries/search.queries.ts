@@ -83,7 +83,7 @@ async function lookupFilterIds(
   const t = themeSlugs && themeSlugs.length > 0 ? themeSlugs : null;
   const r = rhymeSlugs && rhymeSlugs.length > 0 ? rhymeSlugs : null;
 
-  if (!m && !e && !t && !r) {
+  if (!(m || e || t || r)) {
     return { meterIds: null, eraIds: null, themeIds: null, rhymeIds: null };
   }
 
@@ -93,13 +93,13 @@ async function lookupFilterIds(
   const rLit = r ? textArrayLiteral(r) : null;
 
   const rows = (await db.execute(sql`
-    SELECT 'meter' AS kind, id FROM meter_stats WHERE ${mLit !== null ? sql`(id::TEXT = ANY(${mLit}::TEXT[]) OR slug::TEXT = ANY(${mLit}::TEXT[]))` : sql`FALSE`}
+    SELECT 'meter' AS kind, id FROM meter_stats WHERE ${mLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${mLit}::TEXT[]) OR slug::TEXT = ANY(${mLit}::TEXT[]))`}
     UNION ALL
-    SELECT 'era' AS kind, id FROM era_stats WHERE ${eLit !== null ? sql`(id::TEXT = ANY(${eLit}::TEXT[]) OR slug::TEXT = ANY(${eLit}::TEXT[]))` : sql`FALSE`}
+    SELECT 'era' AS kind, id FROM era_stats WHERE ${eLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${eLit}::TEXT[]) OR slug::TEXT = ANY(${eLit}::TEXT[]))`}
     UNION ALL
-    SELECT 'theme' AS kind, id FROM theme_stats WHERE ${tLit !== null ? sql`(id::TEXT = ANY(${tLit}::TEXT[]) OR slug::TEXT = ANY(${tLit}::TEXT[]))` : sql`FALSE`}
+    SELECT 'theme' AS kind, id FROM theme_stats WHERE ${tLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${tLit}::TEXT[]) OR slug::TEXT = ANY(${tLit}::TEXT[]))`}
     UNION ALL
-    SELECT 'rhyme' AS kind, id FROM rhyme_stats WHERE ${rLit !== null ? sql`(id::TEXT = ANY(${rLit}::TEXT[]) OR slug::TEXT = ANY(${rLit}::TEXT[]))` : sql`FALSE`}
+    SELECT 'rhyme' AS kind, id FROM rhyme_stats WHERE ${rLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${rLit}::TEXT[]) OR slug::TEXT = ANY(${rLit}::TEXT[]))`}
   `)) as unknown as { kind: 'meter' | 'era' | 'theme' | 'rhyme'; id: number }[];
 
   const meterBucket: number[] = [];

@@ -29,7 +29,7 @@ export function createDb(databaseUrl: string): DbClient {
     connect_timeout: POSTGRES_CONNECT_TIMEOUT_SECONDS,
     prepare: false,
     transform: { undefined: null },
-    onnotice: () => {},
+    onnotice: () => undefined,
   });
   return drizzle(client) as DbClient;
 }

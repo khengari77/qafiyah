@@ -44,9 +44,11 @@
   // ==================== SPELLING ====================
   "cSpell.words": [
     "alwalxed",
+    "envin",
     "healthcheck",
     "isready",
     "llms",
+    "onnotice",
     "orpc",
     "plpgsql",
     "Qafiyah",

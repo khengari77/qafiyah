@@ -2,7 +2,7 @@ import { VERSE_DESCRIPTION_OPTIMAL_LENGTH, VERSE_SEPARATOR_DISPLAY } from '@qafi
 
 /** Builds a short plain-text snippet from verse halves for meta descriptions. */
 export function flattenVerses(verses: [string, string][]): string {
-  if (!verses?.length) return '';
+  if (!verses || verses.length === 0) return '';
   let result = '';
   for (let i = 0; i < verses.length; i++) {
     const verse = verses[i];
@@ -15,6 +15,6 @@ export function flattenVerses(verses: [string, string][]): string {
     if (verse[1]) result += verse[1];
   }
   return result.length > VERSE_DESCRIPTION_OPTIMAL_LENGTH
-    ? result.substring(0, VERSE_DESCRIPTION_OPTIMAL_LENGTH)
+    ? result.slice(0, VERSE_DESCRIPTION_OPTIMAL_LENGTH)
     : result;
 }

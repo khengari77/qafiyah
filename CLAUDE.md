@@ -41,7 +41,7 @@ vitest run path/to/file.test.ts         # single file
 
 **`packages/constants`**, Source-only. Brand strings, prod URLs, dev ports (`DEV_WEB_PORT=4321`, `DEV_API_PORT=8787`). Always update here, not in app code.
 
-**`packages/typescript`**, Shared tsconfigs (`base`, `astro`, `cloudflare`, `node`). Workspace-only.
+**`packages/typescript`**, Shared tsconfigs (`base`, `astro`, `cloudflare`, `bun`). Workspace-only.
 
 ## Quality Checklist (TRUST 5)
 

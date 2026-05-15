@@ -4,7 +4,6 @@ import { listEraPoems, listEras } from './eras.queries';
 
 function makeChain(data: unknown[]) {
   const p = Promise.resolve(data);
-  // biome-ignore lint/suspicious/noExplicitAny: test mock
   let chain: any;
   chain = {
     where: vi.fn(() => chain),
@@ -77,7 +76,6 @@ describe('listEraPoems', () => {
 
   it('returns null when parent row is falsy', async () => {
     const mockDb = {
-      // biome-ignore lint/suspicious/noExplicitAny: testing null element scenario
       execute: vi.fn().mockResolvedValueOnce([null as any]),
     } as unknown as DbClient;
 

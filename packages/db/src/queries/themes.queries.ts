@@ -50,7 +50,7 @@ export async function listThemePoems(
     sql`SELECT name, poems_count FROM theme_stats WHERE slug = ${slug}::UUID LIMIT 1`
   )) as unknown as ParentRow[];
 
-  if (!parentRows.length || !parentRows[0]) return null;
+  if (parentRows.length === 0 || !parentRows[0]) return null;
 
   const total = Number(parentRows[0].poems_count);
 

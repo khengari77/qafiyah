@@ -50,7 +50,7 @@ export async function listAllPoemSlugs(db: DbClient): Promise<ListAllPoemSlugsRe
 export async function getRandomPoemLines(db: DbClient): Promise<string> {
   const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
 
-  if (!result?.length || !result[0]?.['get_random_eligible_poem']) {
+  if (!result || result.length === 0 || !result[0]?.['get_random_eligible_poem']) {
     throw new Error('getRandomPoemLines: SQL returned no eligible poem');
   }
 
@@ -139,7 +139,7 @@ function textArrayLiteral(values: string[]): string {
 export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoemResult> {
   const result = await db.execute(sql`SELECT get_poem_with_related(${slug})`);
 
-  if (!result?.length || !result[0]?.['get_poem_with_related']) {
+  if (!result || result.length === 0 || !result[0]?.['get_poem_with_related']) {
     return { type: 'not_found' };
   }
 
@@ -152,14 +152,16 @@ export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoem
   const { poem, related_poems } = uncheckedData;
 
   if (
-    !poem?.title ||
-    !poem.content ||
-    !poem.poet_name ||
-    !poem.poet_slug ||
-    !poem.meter_name ||
-    !poem.theme_name ||
-    !poem.era_name ||
-    !poem.era_slug
+    !(
+      poem?.title &&
+      poem.content &&
+      poem.poet_name &&
+      poem.poet_slug &&
+      poem.meter_name &&
+      poem.theme_name &&
+      poem.era_name &&
+      poem.era_slug
+    )
   ) {
     console.error(`Incomplete poem data for slug: ${slug}`);
     return { type: 'error', message: 'Incomplete poem data' };
@@ -191,7 +193,7 @@ export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoem
   const meterSlug = meterLookup[0]?.slug;
   const themeSlug = themeLookup[0]?.slug;
 
-  if (!meterSlug || !themeSlug) {
+  if (!(meterSlug && themeSlug)) {
     console.error(`Missing meter or theme slug for poem ${slug}`);
     return { type: 'error', message: 'Incomplete poem data' };
   }

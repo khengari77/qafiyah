@@ -8,6 +8,7 @@ import { createDb, type DbClient } from '../client';
 import { listPoemsByFilters, listPoetsByFilters, searchPoems, searchPoets } from './search.queries';
 
 const TEST_DATABASE_URL = process.env['TEST_DATABASE_URL'] ?? '';
+const UUID_REGEX = /^[0-9a-f-]{36}$/;
 const skip = TEST_DATABASE_URL === '';
 const describeIfDb = skip ? describe.skip : describe;
 
@@ -31,7 +32,7 @@ describeIfDb('filter-only search queries (integration)', () => {
       expect(row.poetEra).toBe('عباسي');
       expect(row.poetEraSlug).toBe('abbasid');
       expect(row.poemTitle).toBeTypeOf('string');
-      expect(row.poemSlug).toMatch(/^[0-9a-f-]{36}$/);
+      expect(row.poemSlug).toMatch(UUID_REGEX);
       expect(row.poemMeterSlug).toBeTypeOf('string');
     }
   });

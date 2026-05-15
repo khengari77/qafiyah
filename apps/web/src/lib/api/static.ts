@@ -109,11 +109,11 @@ export async function fetchPoetPoemPage(
 // Eras
 // ============================================================================
 
-export async function fetchEras(): Promise<Era[]> {
+export function fetchEras(): Promise<Era[]> {
   return dedup('eras:list', async () => (await apiServer.eras.list()).data);
 }
 
-export async function fetchErasWithPoemCount(): Promise<Era[]> {
+export function fetchErasWithPoemCount(): Promise<Era[]> {
   return fetchEras();
 }
 
@@ -133,11 +133,11 @@ export async function fetchEraPoemPage(
 // Meters
 // ============================================================================
 
-export async function fetchMeters(): Promise<Meter[]> {
+export function fetchMeters(): Promise<Meter[]> {
   return dedup('meters:list', async () => (await apiServer.meters.list()).data);
 }
 
-export async function fetchMetersWithPoemCount(): Promise<Meter[]> {
+export function fetchMetersWithPoemCount(): Promise<Meter[]> {
   return fetchMeters();
 }
 
@@ -157,11 +157,11 @@ export async function fetchMeterPoemPage(
 // Rhymes
 // ============================================================================
 
-export async function fetchRhymes(): Promise<Rhyme[]> {
+export function fetchRhymes(): Promise<Rhyme[]> {
   return dedup('rhymes:list', async () => (await apiServer.rhymes.list()).data);
 }
 
-export async function fetchRhymesWithPoemCount(): Promise<Rhyme[]> {
+export function fetchRhymesWithPoemCount(): Promise<Rhyme[]> {
   return fetchRhymes();
 }
 
@@ -181,11 +181,11 @@ export async function fetchRhymePoemPage(
 // Themes
 // ============================================================================
 
-export async function fetchThemes(): Promise<Theme[]> {
+export function fetchThemes(): Promise<Theme[]> {
   return dedup('themes:list', async () => (await apiServer.themes.list()).data);
 }
 
-export async function fetchThemesWithPoemCount(): Promise<Theme[]> {
+export function fetchThemesWithPoemCount(): Promise<Theme[]> {
   return fetchThemes();
 }
 

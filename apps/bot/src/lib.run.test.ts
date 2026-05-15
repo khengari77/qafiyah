@@ -1,20 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('node-fetch', () => ({ default: vi.fn() }));
 vi.mock('twitter-api-v2', () => ({
   TwitterApi: vi.fn(),
 }));
 
-import fetch from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
 import { run } from './lib';
 
-const mockFetch = fetch as unknown as ReturnType<typeof vi.fn>;
+const mockFetch = vi.fn();
+vi.stubGlobal('fetch', mockFetch);
 const MockTwitterApi = TwitterApi as unknown as ReturnType<typeof vi.fn>;
 
 class ExitError extends Error {
-  constructor(public readonly code: number) {
+  readonly code: number;
+  constructor(code: number) {
     super(`process.exit(${code})`);
+    this.code = code;
   }
 }
 
@@ -59,7 +60,7 @@ describe('run()', () => {
     MockTwitterApi.mockImplementation(
       class {
         constructor() {
-          // eslint-disable-next-line @typescript-eslint/only-throw-error
+          // biome-ignore lint/style/useThrowOnlyError: testing non-Error throw handling
           throw 'string error';
         }
       }

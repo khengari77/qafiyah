@@ -1,5 +1,5 @@
 {
-  "extends": "@qafiyah/typescript/node.json",
+  "extends": "@qafiyah/typescript/bun.json",
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",

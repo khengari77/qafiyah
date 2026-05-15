@@ -58,7 +58,7 @@ export async function listRhymes(db: DbClient): Promise<RhymeLetterGroup[]> {
   const enrichedGroups = Array.from(groupedRhymes.entries()).map(
     ([letter, { rhymes, totalPoemsCount, totalPoetsCount }]) => {
       const firstRhyme = rhymes[0];
-      if (!firstRhyme) throw new Error();
+      if (!firstRhyme) throw new Error('listRhymes: no first rhyme for letter');
       return {
         name: letter,
         slug: firstRhyme.slug,
@@ -83,7 +83,7 @@ export async function listRhymePoems(
     sql`SELECT pattern AS name, poems_count FROM rhyme_stats WHERE slug = ${slug}::UUID LIMIT 1`
   )) as unknown as ParentRow[];
 
-  if (!parentRows.length || !parentRows[0]) return null;
+  if (parentRows.length === 0 || !parentRows[0]) return null;
 
   const total = Number(parentRows[0].poems_count);
 

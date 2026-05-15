@@ -9,7 +9,6 @@ import {
 
 function makeChain(data: unknown[]) {
   const p = Promise.resolve(data);
-  // biome-ignore lint/suspicious/noExplicitAny: test mock
   let chain: any;
   chain = {
     where: vi.fn(() => chain),

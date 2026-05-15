@@ -99,7 +99,7 @@ export function useSearch() {
 
   const iq = useInfiniteQuery({
     queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
-    queryFn: async ({ pageParam = 1 }) => {
+    queryFn: ({ pageParam = 1 }) => {
       return search({
         q: query,
         searchType,

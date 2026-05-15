@@ -16,7 +16,7 @@ type SearchArgs = {
 
 type SearchResult = PoemsSearchEnvelope | PoetsSearchEnvelope;
 
-export async function search(args: SearchArgs): Promise<SearchResult> {
+export function search(args: SearchArgs): Promise<SearchResult> {
   return apiBrowser.search.search({
     q: args.q,
     searchType: args.searchType,

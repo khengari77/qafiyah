@@ -67,7 +67,7 @@ describe('makeProblem', () => {
   });
 
   it('maps all known error codes to human-readable titles', () => {
-    const cases: Array<[string, string]> = [
+    const cases: [string, string][] = [
       ['NOT_FOUND', 'Resource not found'],
       ['POEM_PARSE_ERROR', 'Poem data could not be parsed'],
       ['INPUT_VALIDATION_FAILED', 'Validation failed'],

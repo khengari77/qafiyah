@@ -20,7 +20,7 @@ export function RandomPoemButton() {
           <Loader2 className="animate-spin h-4 w-4" aria-hidden="true" />
         </p>
       )}
-      {!isError && !isLoading && <p>قصيدة عشوائية</p>}
+      {!(isError || isLoading) && <p>قصيدة عشوائية</p>}
     </button>
   );
 }

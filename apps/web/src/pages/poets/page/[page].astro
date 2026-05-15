@@ -5,7 +5,9 @@ import Layout from '@/layouts/Layout.astro';
 import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
 import { toArabicDigits } from '@/lib/arabic';
 
-const stripQuotes = (s: string) => s.replace(/"/g, '');
+const DOUBLE_QUOTE_REGEX = /"/g;
+const CAT_POET_PREFIX_REGEX = /^cat-poet-/;
+const stripQuotes = (s: string) => s.replace(DOUBLE_QUOTE_REGEX, '');
 
 export async function getStaticPaths() {
   const totalPages = await fetchPoetsTotalPages();
@@ -49,7 +51,7 @@ const jsonLd = {
   itemListElement: poets.map((poet, index) => {
     const poetSlug = String(poet.slug ?? '')
       .toLowerCase()
-      .replace(/^cat-poet-/, '');
+      .replace(CAT_POET_PREFIX_REGEX, '');
     return {
       '@type': 'ListItem',
       position: index + 1,

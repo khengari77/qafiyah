@@ -5,7 +5,6 @@ import {
   MAX_TWEET_LENGTH,
   PROD_API_URL,
 } from '@qafiyah/constants';
-import fetch from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
 import { env } from './env';
 

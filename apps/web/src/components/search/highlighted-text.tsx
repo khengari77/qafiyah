@@ -3,13 +3,15 @@
 import { Fragment } from 'react';
 import { cn } from '@/lib/utils';
 
+const MARK_SPLIT_REGEX = /<\/?mark>/;
+
 type Props = {
   text: string;
   className?: string;
 };
 
 export function HighlightedText({ text, className = '' }: Props) {
-  const parts = text.split(/<\/?mark>/);
+  const parts = text.split(MARK_SPLIT_REGEX);
 
   const processedParts = parts.map((part, index) => {
     const isHighlighted = index % 2 === 1;

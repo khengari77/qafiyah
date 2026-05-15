@@ -19,7 +19,7 @@ describe('dbMiddleware', () => {
     });
   });
 
-  it('should set database connection when DATABASE_URL is provided', async () => {
+  it('should set database connection when DATABASE_URL is provided', () => {
     // Note: This test would need actual database mocking or a test database
     // For now, we verify the middleware structure exists
     expect(dbMiddleware).toBeDefined();

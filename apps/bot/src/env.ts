@@ -1,8 +1,5 @@
-import * as dotenv from 'dotenv';
 import { defineEnv } from 'envin';
 import * as v from 'valibot';
-
-dotenv.config();
 
 const _env = defineEnv({
   server: {

@@ -9,10 +9,12 @@ import {
   PROD_SITE_URL,
 } from './index';
 
+const HTTPS_REGEX = /^https:\/\//;
+
 describe('constants', () => {
   it('prod URLs use https and correct domain', () => {
-    expect(PROD_SITE_URL).toMatch(/^https:\/\//);
-    expect(PROD_API_URL).toMatch(/^https:\/\//);
+    expect(PROD_SITE_URL).toMatch(HTTPS_REGEX);
+    expect(PROD_API_URL).toMatch(HTTPS_REGEX);
     expect(PROD_SITE_URL).toContain(PROD_DOMAIN);
     expect(PROD_API_URL).toContain(PROD_DOMAIN);
   });

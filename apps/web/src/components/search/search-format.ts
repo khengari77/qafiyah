@@ -39,12 +39,12 @@ export function getResultText({
     return `عثر على ${resultsText} ${SEARCH_TEXTS.filterOnlyResultLabel} بحثًا عن «${searchTypeText}»`;
   }
 
-  const matchTypeText =
-    matchType === 'any'
-      ? SEARCH_TEXTS.matchTypeAny
-      : matchType === 'all'
-        ? SEARCH_TEXTS.matchTypeAll
-        : SEARCH_TEXTS.matchTypeExact;
+  const matchTypeLabels: Record<'any' | 'all' | 'exact', string> = {
+    any: SEARCH_TEXTS.matchTypeAny,
+    all: SEARCH_TEXTS.matchTypeAll,
+    exact: SEARCH_TEXTS.matchTypeExact,
+  };
+  const matchTypeText = matchTypeLabels[matchType];
 
   const cleanedInput = query.replace(NON_ARABIC_BASIC_REGEX, '');
   const shortenedInputText =
