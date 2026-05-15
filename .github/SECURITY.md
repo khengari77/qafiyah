@@ -1,5 +1,14 @@
 # Security Policy
 
+## Supported Versions
+
+Security updates are provided for the latest deployment only. This project does not maintain versioned releases, the `main` branch is the canonical production version.
+
+| Version          | Supported |
+| ---------------- | --------- |
+| `main` (latest)  | Yes       |
+| Any prior commit | No        |
+
 ## Reporting Security Vulnerabilities
 
 If you discover a security vulnerability in this project, please follow responsible disclosure practices:
@@ -10,17 +19,14 @@ If you discover a security vulnerability in this project, please follow responsi
    - Steps to reproduce the issue
    - Potential impact and affected components
    - Suggested remediation (optional)
-3. You will receive an acknowledgment of your report within **72 hours**.
-4. Confirmed vulnerabilities will be addressed and patched in a timely manner.
+3. Alternatively, use [GitHub's private vulnerability reporting](https://github.com/alwalxed/qafiyah/security/advisories/new) to submit a report confidentially through the GitHub interface.
+4. You will receive an acknowledgment of your report within **72 hours**.
+5. Confirmed vulnerabilities will be addressed and patched in a timely manner.
 
 ## Disclosure Policy
 
 - Security vulnerabilities will be publicly disclosed after a fix has been released and deployed.
 - If a fix cannot be provided within **90 days** of the initial report, the vulnerability will be disclosed at that time regardless of patch status.
-
-## Supported Versions
-
-Security updates and patches are provided exclusively for the **latest stable release**. Previous versions are not supported and will not receive security updates.
 
 ## Security Best Practices
 

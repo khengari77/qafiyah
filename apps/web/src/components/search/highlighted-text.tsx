@@ -17,7 +17,7 @@ export function HighlightedText({ text, className = '' }: Props) {
     const segments = part.split('*');
 
     return (
-      // biome-ignore lint/suspicious/noArrayIndexKey: parts come from a stable text split — order is fixed and content can repeat
+      // biome-ignore lint/suspicious/noArrayIndexKey: parts come from a stable text split, order is fixed and content can repeat
       <Fragment key={`part-${index}-${part.slice(0, 10)}`}>
         {segments.map((segment, segIndex) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: segment order within a part is fixed by the source string

@@ -1,4 +1,5 @@
 ---
+import { POEMS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { formatArabicCount } from 'arabic-count-format';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
@@ -41,14 +42,14 @@ const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(tota
 
 const poemsLabel = formatArabicCount({
   count: poet.poemsCount,
-  nounForms: { singular: 'قصيدة', dual: 'قصيدتان', plural: 'قصائد' },
+  nounForms: POEMS_NOUN_FORMS,
 });
 
-const title = `قافية: ديوان «${poet.name}» - صفحة (${toArabicDigits(page as string)})`;
+const title = `${SITE_NAME_AR}: ديوان «${poet.name}» - صفحة (${toArabicDigits(page as string)})`;
 const description = `قصائد الشاعر ${poet.name}، عدد القصائد: ${toArabicDigits(poet.poemsCount)}`;
 
 const jsonLd = {
-  '@context': 'https://schema.org',
+  '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'Person',
   name: poet.name,
   url: `${SITE_URL}/poets/${slug}/page/${pageNumber}`,
@@ -71,10 +72,10 @@ const jsonLd = {
   title={title}
   description={description}
   canonical={`/poets/${slug}/page/${pageNumber}`}
-  ogTitle={`قافية | ديوان ${poet.name}`}
+  ogTitle={`${SITE_NAME_AR} | ديوان ${poet.name}`}
   ogDescription={description}
   ogUrl={`${SITE_URL}/poets/${slug}/page/${pageNumber}`}
-  twitterTitle={`قافية | ديوان ${poet.name}`}
+  twitterTitle={`${SITE_NAME_AR} | ديوان ${poet.name}`}
   twitterDescription={description}
   jsonLd={jsonLd}
 >

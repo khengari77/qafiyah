@@ -69,7 +69,7 @@ wait_for_db() {
     local waited=0
 
     log_info "Waiting for Postgres to be ready..."
-    # Probe TCP (not the unix socket) — Postgres' Docker entrypoint runs a
+    # Probe TCP (not the unix socket), Postgres' Docker entrypoint runs a
     # socket-only init phase before the real network listener is up.
     while ! $compose exec -T "$SERVICE" pg_isready -h localhost -U "$DB_USER" -d "$DB_NAME" &>/dev/null; do
         if ((waited >= MAX_WAIT_SECONDS)); then

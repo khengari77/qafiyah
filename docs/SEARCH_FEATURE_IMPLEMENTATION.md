@@ -1,8 +1,18 @@
-# Qafiyah Search – Reproducible Setup Guide
+# Search Feature Implementation
+
+## About This Document
+
+This document is a reference for the PostgreSQL Full-Text Search (FTS) implementation in Qafiyah. It records the schema changes, SQL functions, and design decisions made during implementation. It is not a step-by-step setup guide for local development, use `bun run db:setup` for that.
+
+## Status
+
+The PostgreSQL Full-Text Search implementation described in this document is deployed in production. The `search_vector` generated columns and GIN indexes are present on the `poems` and `poets` tables in the production database. The `search_poems` and `search_poets` functions are live.
+
+The semantic/AI search extension is not yet deployed.
 
 ## Overview
 
-This document outlines the implementation of a search feature for our website using PostgreSQL Full-Text Search (FTS). The search allows users to find poems by content or title, and poets by name, with appropriate filtering options.
+This document outlines the implementation of a search feature for the Qafiyah website using PostgreSQL Full-Text Search (FTS). The search allows users to find poems by content or title, and poets by name, with filtering options by era, meter, rhyme pattern, and theme.
 
 ## Data Structure
 
@@ -12,16 +22,16 @@ The database contains the following key entities:
 - Poets (with biographical information)
 - Supporting entities: Eras, Meters, Rhymes, Themes
 
-Poems are stored with full diacritics, and verses are separated by asterisks (`*`). Each verse (bayt) consists of two hemistiches (shatar).
+Poems are stored with full diacritics. Each poem's content is a sequence of verses (أبيات) separated by asterisks (`*`). Each verse consists of two hemistiches (شطران).
 
 ## Arabic Text Considerations
 
-1. **Diacritics handling**: Poems are stored with diacritics, but searches are typically performed without them.
-2. **Line separation**: Poems are made of verses, and verses are made of lines. Each line is separated by an asterisk (`*`). This is how we store them in the table.
+1. **Diacritics handling**: Poems are stored with diacritics, but searches are performed without them. The `normalize_arabic_text` function strips diacritics before indexing and before matching.
+2. **Verse separator**: Verses are separated by `*` in the stored content. The `*` character is replaced with a space during normalization to prevent token merging across verse boundaries.
 
-## Sample
+## Sample Data
 
-### 📝 Pomes Table
+### Poems Table
 
 ```sql
 SELECT * FROM poems LIMIT 1;
@@ -29,20 +39,17 @@ SELECT * FROM poems LIMIT 1;
 
 | id  | title                  | meter_id | num_verses | theme_id | poet_id | filename        | content                                                                                                                                                      | rhyme_id | type_id |
 | --- | ---------------------- | -------- | ---------- | -------- | ------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- |
-| 18  | من مبلغ عني المثلم آية | 19       | 2          | 12       | 3095    | poem103882.html | مَن مُبلِغٌ عَنّي المُثَلَّمَ آيَةً*وَسَهلاً فَقَد نَفَّرتُم الوَحشَ أَجمَعا*هُمُ إِخوَتي ديناً فَلا تَقرُبَنَّهُم\*أَبا حَشرَج وَأَفحَصَ لِجَنبَيكَ مَضجَعا | 36       | 2       |
+| 18  | من مبلغ عني المثلم آية | 19       | 2          | 12       | 3095    | poem103882.html | مَن مُبلِغٌ عَنّي المُثَلَّمَ آيَةً*وَسَهلاً فَقَد نَفَّرتُم الوَحشَ أَجمَعا*هُمُ إِخوَتي ديناً فَلا تَقرُبَنَّهُم\*أَبا حَشرَج وَأَفحَصَ لِجَنبَيكَ مَضجَعا | 36       | 2       |
 
-### 🧑‍🎤 Poets Table
+### Poets Table
 
 ```sql
-SELECT * from poets LIMIT 1;
+SELECT * FROM poets LIMIT 1;
 ```
 
 | id   | name             | slug                | era_id | bio                                                        |
 | ---- | ---------------- | ------------------- | ------ | ---------------------------------------------------------- |
 | 2630 | أبو محمد الفقعسي | abu-mohammed-faqasi | 1      | عبد الله بن ربعي بن خالد الحذلمي الفقعسي الأسدي، أبو محمد. |
-
-راجز إسلامي، عاصر حروب الردة في عهد الخليفة أبو بكر الصديق رضي الله عنه.
-تردد اسمه كثيراً في كتب اللغة والمعاجم حيث كانت أراجيزه تستخدم كشواهد لغوية أو نحوية، فيما أهملته كتب الأدب. |
 
 ## Implementation Steps
 
@@ -62,15 +69,15 @@ DECLARE
 BEGIN
   cleaned := regexp_replace(
     input_text,
-    '[\u064B-\u0652\u0670\u06D6\u06DC\u06DF\u06E0\u06E1\u06E2\u06E3\u06E4\u06E5\u06E6\u06E7\u06E8\u06E9\u06EA\u06EB\u06EC\u06ED\u06EE\u06EF\u06F0-\u06FF]',
+    '[ً-ْٰۣۖۜ۟۠ۡۢۤۥۦۧۨ۩۪ۭ۫۬ۮۯ۰-ۿ]',
     '',
     'g'
   );
 
   IF keep_asterisk THEN
-    pattern := '[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FFء *]';
+    pattern := '[^؀-ۿݐ-ݿࢠ-ࣿء *]';
   ELSE
-    pattern := '[^\u0600-\u06FF\u0750-\u077F\u08A0-\u08FFء ]';
+    pattern := '[^؀-ۿݐ-ݿࢠ-ࣿء ]';
   END IF;
 
   RETURN regexp_replace(cleaned, pattern, '', 'g');
@@ -81,18 +88,17 @@ LANGUAGE plpgsql IMMUTABLE SECURITY DEFINER;
 
 ### 2. Add Full-Text Search Columns (Generated)
 
-#### 📝 Poems Table
+#### Poems Table
 
 ```sql
 ALTER TABLE poems
 DROP COLUMN IF EXISTS search_vector;
 
--- Arabic text is normalized
--- diacritics are removed,
--- and only Arabic letters + spaces are kept
--- The '*' verse separator is explicitly replaced with a space
--- to prevent token merging. and 'simple' configuration is used
--- because PostgreSQL's default parser doesn't handle Arabic well
+-- Arabic text is normalized: diacritics are removed,
+-- only Arabic letters and spaces are kept.
+-- The '*' verse separator is replaced with a space to prevent token merging.
+-- The 'simple' configuration is used because PostgreSQL's default parser
+-- does not handle Arabic tokenization.
 ALTER TABLE poems
 ADD COLUMN search_vector tsvector
 GENERATED ALWAYS AS (
@@ -107,7 +113,7 @@ GENERATED ALWAYS AS (
 ) STORED;
 ```
 
-#### 🧑‍🎤 Poets Table
+#### Poets Table
 
 ```sql
 ALTER TABLE poets
@@ -132,7 +138,7 @@ CREATE INDEX poets_search_idx ON poets USING GIN (search_vector);
 
 ### 4. Search Functions
 
-#### 🔍 `search_poems`
+#### search_poems
 
 ```sql
 CREATE OR REPLACE FUNCTION search_poems(
@@ -213,7 +219,7 @@ $$
 LANGUAGE plpgsql SECURITY DEFINER;
 ```
 
-#### 🔍 `search_poets`
+#### search_poets
 
 ```sql
 CREATE OR REPLACE FUNCTION search_poets(
@@ -237,10 +243,8 @@ DECLARE
   total_results BIGINT;
   weight_config REAL[] := ARRAY[0.1, 0.2, 0.4, 1.0];
 BEGIN
-  -- Process the query text (normalize Arabic text)
   processed_query := normalize_arabic_text(query_text, FALSE);
 
-  -- Determine the tsquery based on the match type
   IF match_type = 'exact' THEN
     tsquery_obj := phraseto_tsquery('simple', processed_query);
   ELSIF match_type = 'all' THEN
@@ -251,14 +255,12 @@ BEGIN
     tsquery_obj := to_tsquery('simple', regexp_replace(processed_query, '\s+', ' & ', 'g'));
   END IF;
 
-  -- Count the total number of results
   SELECT COUNT(*) INTO total_results
   FROM poets p
   JOIN eras e ON p.era_id = e.id
   WHERE p.search_vector @@ tsquery_obj
     AND (era_ids IS NULL OR p.era_id = ANY(era_ids));
 
-  -- Return the query results, ordering by relevance and poet name
   RETURN QUERY
   SELECT
     p.name,

@@ -1,4 +1,5 @@
 ---
+import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import { fetchThemes } from '@/lib/api/static';
@@ -12,14 +13,14 @@ try {
 }
 const stripQuotes = (s: string) => s.replace(/"/g, '');
 
-const title = 'قافية | تصفح حسب الأغراض';
+const title = `${SITE_NAME_AR} | تصفح حسب الأغراض`;
 const jsonLd = {
-  '@context': 'https://schema.org',
+  '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'أغراض الشعر',
   url: `${SITE_URL}/themes`,
-  description: `قائمة بجميع أغراض الشعر في موقع قافية - ${toArabicDigits(themes.length)} غرض`,
-  isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
+  description: `قائمة بجميع أغراض الشعر في موقع ${SITE_NAME_AR} - ${toArabicDigits(themes.length)} غرض`,
+  isPartOf: { '@type': 'WebSite', name: SITE_NAME_AR, url: SITE_URL },
   numberOfItems: themes.length,
   itemListElement: themes.map((theme, index) => ({
     '@type': 'ListItem',

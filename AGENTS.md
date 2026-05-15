@@ -1,3 +1,7 @@
+# Agent Guidelines
+
+This file provides coding standards and architectural rules for AI coding agents working in the Qafiyah repository. Follow these conventions in all generated or modified code.
+
 ## TypeScript
 
 - `type` > `interface`. No `enum`/`any`. `readonly` everywhere. Named exports only.
@@ -39,5 +43,5 @@
 ## Comments
 
 - Explain why, not what. If a comment explains what the code does, the code needs better naming.
-- Last resort. Delete outdated ones — wrong comments are worse than none.
+- Last resort. Delete outdated ones, wrong comments are worse than none.
 - TODOs must reference an issue or owner; orphaned TODOs get deleted.

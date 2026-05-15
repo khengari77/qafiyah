@@ -77,7 +77,7 @@ export async function withRetry<T>(
       const errorObj = error instanceof Error ? error : new Error(String(error));
 
       if (errorObj instanceof TerminalError) {
-        console.log(`${operationName}: Terminal error — ${errorObj.message}`);
+        console.log(`${operationName}: Terminal error, ${errorObj.message}`);
         return err(errorObj);
       }
 

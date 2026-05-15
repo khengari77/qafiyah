@@ -1,17 +1,18 @@
 ---
-import { NOT_FOUND_CODE, NOT_FOUND_MESSAGE, NOT_FOUND_TITLE } from '@/constants/globals';
+import { NOT_FOUND_MESSAGE_AR } from '@qafiyah/constants';
+import { NOT_FOUND_CODE, NOT_FOUND_TITLE } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 ---
 
 <Layout
   title={NOT_FOUND_TITLE}
-  description={NOT_FOUND_MESSAGE}
+  description={NOT_FOUND_MESSAGE_AR}
   robotsIndex={false}
 >
   <div class="h-full text-center mx-auto flex justify-center items-center flex-col gap-20">
     <div class="flex flex-col justify-center items-center gap-2">
       <h1 class="text-9xl font-bold text-zinc-700">{NOT_FOUND_CODE}</h1>
-      <p class="text-4xl text-zinc-500">{NOT_FOUND_MESSAGE}</p>
+      <p class="text-4xl text-zinc-500">{NOT_FOUND_MESSAGE_AR}</p>
     </div>
   </div>
 </Layout>

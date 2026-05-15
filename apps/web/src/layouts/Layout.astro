@@ -1,13 +1,14 @@
 ---
 import {
   HTML_HEAD_METADATA,
+  SITE_NAME_AR,
   SITE_THEME_COLOR_HEX,
   TWITTER_HANDLE,
   TWITTER_ID,
 } from '@qafiyah/constants';
 import { Footer } from '@/components/footer';
 import { NavWithMenu } from '@/components/nav/nav-with-menu';
-import { isDev, SITE_NAME, SITE_URL } from '@/constants/globals';
+import { isDev, SITE_URL } from '@/constants/globals';
 import '../styles/globals.css';
 
 interface Props {
@@ -63,7 +64,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
 
     <!-- OpenGraph -->
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:site_name" content={SITE_NAME_AR} />
     <meta property="og:locale" content="ar_AR" />
     <meta property="og:url" content={ogUrl} />
     <meta property="og:title" content={resolvedOgTitle} />

@@ -1,6 +1,6 @@
 import { SITE_NAME_AR } from './brand';
 
-export const SITE_TITLE = 'قافية: مرجع الشعر العربي';
+export const SITE_TITLE = `${SITE_NAME_AR}: مرجع الشعر العربي`;
 export const SITE_DESCRIPTION =
   'نعنى بجمع شعر العرب، فحفظه من حفظ كتاب الله، كما قال ابن عباس: الشعر ديوان العرب، فإذا خفي علينا الحرف من القرآن، رجعنا إلى ديوانهم فالتمسناه فيه';
 

@@ -1,4 +1,5 @@
 ---
+import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import { fetchMeters } from '@/lib/api/static';
@@ -12,14 +13,14 @@ try {
 }
 const stripQuotes = (s: string) => s.replace(/"/g, '');
 
-const title = 'قافية | تصفح حسب البحور';
+const title = `${SITE_NAME_AR} | تصفح حسب البحور`;
 const jsonLd = {
-  '@context': 'https://schema.org',
+  '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'البحور الشعرية',
   url: `${SITE_URL}/meters`,
-  description: `قائمة بجميع البحور الشعرية في موقع قافية - ${toArabicDigits(meters.length)} بحر`,
-  isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
+  description: `قائمة بجميع البحور الشعرية في موقع ${SITE_NAME_AR} - ${toArabicDigits(meters.length)} بحر`,
+  isPartOf: { '@type': 'WebSite', name: SITE_NAME_AR, url: SITE_URL },
   numberOfItems: meters.length,
   itemListElement: meters.map((meter, index) => ({
     '@type': 'ListItem',

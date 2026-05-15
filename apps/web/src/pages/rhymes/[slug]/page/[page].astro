@@ -1,4 +1,5 @@
 ---
+import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import {
@@ -42,10 +43,10 @@ const nextPageUrl = `/rhymes/${slug}/page/${pageNumber + 1}`;
 const prevPageUrl = `/rhymes/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 
-const title = `قافية | قصائد على قافية ${rhyme.name} | صفحة (${toArabicDigits(page as string)})`;
+const title = `${SITE_NAME_AR} | قصائد على قافية ${rhyme.name} | صفحة (${toArabicDigits(page as string)})`;
 
 const jsonLd = {
-  '@context': 'https://schema.org',
+  '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'Collection',
   name: `قصائد قافية ${rhyme.name}`,
   url: `${SITE_URL}/rhymes/${slug}/page/${pageNumber}`,

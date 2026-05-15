@@ -6,7 +6,7 @@ if (!port) {
   process.exit(2);
 }
 
-// Probe both address families — Astro typically binds [::1], wrangler typically binds 127.0.0.1.
+// Probe both address families, Astro typically binds [::1], wrangler typically binds 127.0.0.1.
 // A test bind on the wrong family wouldn't collide with the real listener.
 const hosts = ['127.0.0.1', '::1'];
 

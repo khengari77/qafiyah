@@ -4,11 +4,11 @@ import {
   POEM_LANGUAGE,
   SCHEMA_ORG_CONTEXT,
   SITE_LOGO_PATH,
-  SITE_ORGANIZATION_NAME,
+  SITE_NAME_AR,
   TWITTER_DESCRIPTION_TEMPLATE_AR,
   UNKNOWN_POET_NAME,
 } from '@qafiyah/constants';
-import { SITE_NAME, SITE_URL } from '@/constants/globals';
+import { SITE_URL } from '@/constants/globals';
 import { fetchPoem } from '@/lib/api/static';
 import type { Poem } from '@/lib/api/types';
 import { flattenVerses } from '@/lib/flatten-verses';
@@ -46,7 +46,7 @@ export async function loadPoemPage(slug: string): Promise<{
   const safeClearTitle = safeMetaText(clearTitle);
   const safePoetName = safeMetaText(poetName);
   const description = safeMetaText(rawDescription);
-  const pageTitle = `${safeClearTitle} - ${safePoetName} - ${SITE_NAME}`;
+  const pageTitle = `${safeClearTitle} - ${safePoetName} - ${SITE_NAME_AR}`;
   const pageUrl = `${SITE_URL}/poems/${slug}`;
   const canonicalPath = `/poems/${slug}`;
   const twitterDescription = safeMetaText(
@@ -75,7 +75,7 @@ export async function loadPoemPage(slug: string): Promise<{
     keywords: sanitizedKeywords,
     publisher: {
       '@type': 'Organization',
-      name: SITE_ORGANIZATION_NAME,
+      name: SITE_NAME_AR,
       logo: { '@type': 'ImageObject', url: `${SITE_URL}${SITE_LOGO_PATH}` },
     },
   };

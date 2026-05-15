@@ -1,3 +1,4 @@
+import { HTTP_SERVICE_UNAVAILABLE } from '@qafiyah/constants';
 import { createDb } from '@qafiyah/db';
 import { createMiddleware } from 'hono/factory';
 import { makeProblem, sendProblem } from '@/lib/problem';
@@ -19,7 +20,7 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
       c,
       makeProblem({
         code: 'SERVICE_UNAVAILABLE',
-        status: 503,
+        status: HTTP_SERVICE_UNAVAILABLE,
         detail: 'Database unavailable',
       })
     );

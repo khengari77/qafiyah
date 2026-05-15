@@ -64,6 +64,12 @@ export const RHYMES_NOUN_FORMS: ArabicNounForms = {
   plural: 'قوافي',
 };
 
+export const POEMS_NOUN_FORMS: ArabicNounForms = {
+  singular: 'قصيدة',
+  dual: 'قصيدتان',
+  plural: 'قصائد',
+};
+
 export const RESULTS_NOUN_FORMS: ArabicNounForms = {
   singular: 'نتيجة',
   dual: 'نتيجتان',

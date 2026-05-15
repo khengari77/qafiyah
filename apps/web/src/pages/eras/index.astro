@@ -1,4 +1,5 @@
 ---
+import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { formatArabicCount } from 'arabic-count-format';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
@@ -15,17 +16,17 @@ const stripQuotes = (s: string) => s.replace(/"/g, '');
 
 const eraLabel = formatArabicCount({
   count: eras.length,
-  nounForms: { singular: 'عصر', dual: 'عصران', plural: 'عصور' },
+  nounForms: ERAS_NOUN_FORMS,
 });
 
-const title = 'قافية | تصفح حسب العصور';
+const title = `${SITE_NAME_AR} | تصفح حسب العصور`;
 const jsonLd = {
-  '@context': 'https://schema.org',
+  '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'العصور الشعرية',
   url: `${SITE_URL}/eras`,
-  description: `قائمة بجميع العصور الشعرية في موقع قافية - ${toArabicDigits(eras.length)} عصر`,
-  isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
+  description: `قائمة بجميع العصور الشعرية في موقع ${SITE_NAME_AR} - ${toArabicDigits(eras.length)} عصر`,
+  isPartOf: { '@type': 'WebSite', name: SITE_NAME_AR, url: SITE_URL },
   numberOfItems: eras.length,
   itemListElement: eras.map((era, index) => ({
     '@type': 'ListItem',

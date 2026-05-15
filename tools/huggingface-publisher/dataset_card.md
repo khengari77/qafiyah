@@ -19,7 +19,7 @@ task_categories:
 
 ## Dataset Summary
 
-Qafiyah is a comprehensive dataset of classical Arabic poetry, containing over 84,000 poems from 900+ poets across 10 historical eras. Each entry includes the full poem text, individual verses, and rich metadata such as poet details, era, meter, themes, and rhyme patterns.
+Qafiyah is a comprehensive dataset of classical Arabic poetry, containing 85,342 poems and 944,844 verses from 932 poets across 10 historical eras. Each entry includes the full poem text, individual verses, and rich metadata such as poet details, era, meter, themes, and rhyme patterns.
 
 The dataset is derived from the open-source [Qafiyah project](https://qafiyah.com), which provides a public website, REST API, and database dumps for Arabic poetry research.
 
@@ -50,7 +50,7 @@ The dataset is derived from the open-source [Qafiyah project](https://qafiyah.co
 
 | Split | Examples |
 | ----- | -------- |
-| train | 84,329+  |
+| train | 85,342   |
 
 ## Usage
 
@@ -65,7 +65,8 @@ poem = ds["train"][0]
 print(f"Title: {poem['title']}")
 print(f"Poet: {poem['poet_name']}")
 print(f"Era: {poem['era_name']}")
-print(f"\nVerses:")
+
+print("\nVerses:")
 for verse in poem['verses']:
     print(f"  {verse}")
 ```
@@ -88,16 +89,18 @@ print(f"Found {len(tawil_poems)} poems in Tawil meter")
 
 ## Historical Eras
 
-The dataset covers these historical periods:
+The dataset covers the following 10 historical periods of Arabic poetry:
 
-1. **Pre-Islamic (الجاهلي)** - Before 622 CE
-2. **Early Islamic (صدر الإسلام)** - 622-661 CE
-3. **Umayyad (الأموي)** - 661-750 CE
-4. **Abbasid (العباسي)** - 750-1258 CE
-5. **Andalusian (الأندلسي)** - 711-1492 CE
-6. **Mamluk (المملوكي)** - 1250-1517 CE
-7. **Ottoman (العثماني)** - 1517-1798 CE
-8. **Modern (الحديث)** - 1798-present
+1. **Pre-Islamic / Jahili (الجاهلي)**, Before 622 CE
+2. **Mukhadram (المخضرم)**, Transitional era; poets who lived in both the pre-Islamic and early Islamic periods (~600–661 CE)
+3. **Early Islamic (الإسلامي)**, 622–750 CE
+4. **Umayyad (الأموي)**, 661–750 CE
+5. **Abbasid (العباسي)**, 750–1258 CE
+6. **Andalusian (الأندلسي)**, 711–1492 CE
+7. **Ayyubid (الأيوبي)**, 1171–1341 CE
+8. **Mamluk (المملوكي)**, 1250–1517 CE
+9. **Ottoman (العثماني)**, 1517–1798 CE
+10. **Late / Post-classical (المتأخر)**, 18th century onward
 
 ## Licensing Information
 
@@ -106,10 +109,10 @@ This dataset is released under the MIT license.
 ## Citation
 
 ```bibtex
-@misc{qafiyah2025,
+@misc{qafiyah2026,
   title={Qafiyah: A Dataset of Classical Arabic Poetry},
   author={Qafiyah Contributors},
-  year={2025},
+  year={2026},
   url={https://huggingface.co/datasets/qafiyah/classical-arabic-poetry}
 }
 ```

@@ -8,7 +8,7 @@
  * BUILD_API_URL injected so apps/web/src/lib/api/static.ts hits the local API.
  *
  * BUILD_API_URL is a server-only env var (no PUBLIC_ prefix) so it never leaks
- * into the browser bundle — PUBLIC_API_URL stays pointed at the production API.
+ * into the browser bundle, PUBLIC_API_URL stays pointed at the production API.
  */
 
 import { spawn } from 'node:child_process';

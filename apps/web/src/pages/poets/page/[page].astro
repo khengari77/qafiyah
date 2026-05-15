@@ -1,5 +1,5 @@
 ---
-import { POEMS_PER_PAGE } from '@qafiyah/constants';
+import { POEMS_PER_PAGE, SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
@@ -37,14 +37,14 @@ const nextPageUrl = `/poets/page/${pageNumber + 1}`;
 const prevPageUrl = `/poets/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 
-const title = `قافية | تصفح حسب الدواوين | صفحة (${toArabicDigits(page as string)})`;
+const title = `${SITE_NAME_AR} | تصفح حسب الدواوين | صفحة (${toArabicDigits(page as string)})`;
 const jsonLd = {
-  '@context': 'https://schema.org',
+  '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'قائمة الشعراء',
   url: `${SITE_URL}/poets/page/${pageNumber}`,
-  description: `قائمة بجميع الشعراء في موقع قافية - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
-  isPartOf: { '@type': 'WebSite', name: 'قافية', url: SITE_URL },
+  description: `قائمة بجميع الشعراء في موقع ${SITE_NAME_AR} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+  isPartOf: { '@type': 'WebSite', name: SITE_NAME_AR, url: SITE_URL },
   numberOfItems: totalPoets,
   itemListElement: poets.map((poet, index) => {
     const poetSlug = String(poet.slug ?? '')
