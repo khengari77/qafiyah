@@ -52,5 +52,73 @@ const jsonLd = {
   >
     {HTML_HEAD_METADATA.description}
   </p>
-  <SearchWithProviders client:only="react" />
+
+  <div class="flex-1 w-full h-full flex flex-col relative">
+    <div
+      id="search-shell"
+      aria-hidden="true"
+      class="absolute inset-0 pointer-events-none select-none bg-zinc-50 z-10"
+    >
+      <section class="w-full mx-auto max-w-2xl flex flex-col justify-start pb-24">
+        <div class="h-[25svh] w-full"></div>
+        <div class="w-full flex flex-col gap-10 md:gap-16" dir="rtl">
+          <h1
+            class="font-bold text-center justify-center items-center text-2xl xxs:text-3xl xs:text-4xl md:text-5xl text-zinc-800 flex py-2"
+          >
+            مرجع الشعر العربي
+          </h1>
+          <div class="bg-transparent p-0">
+            <div class="flex flex-col gap-4">
+              <div class="w-full">
+                <div class="mb-2 h-4"></div>
+                <div class="relative">
+                  <input
+                    type="text"
+                    placeholder="ابحث في مليون بيت"
+                    disabled
+                    dir="rtl"
+                    class="flex w-full rounded-xl border-0 ring-1 ring-zinc-300/40 bg-white px-3 h-12 shadow-none placeholder:text-zinc-800/50 text-right pl-10 md:text-lg text-zinc-800 focus-visible:outline-none"
+                  />
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <button
+                  disabled
+                  tabindex="-1"
+                  class="text-base font-normal h-12 rounded-xl flex gap-6 items-center px-4 shadow-none ring-1 border-0 text-zinc-50 bg-zinc-800 ring-zinc-800"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="8"
+                    height="8"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    ><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg
+                  >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="8"
+                    height="8"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    ><polyline points="6 9 12 15 18 9"></polyline></svg
+                  >
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <SearchWithProviders client:only="react" />
+  </div>
 </Layout>
