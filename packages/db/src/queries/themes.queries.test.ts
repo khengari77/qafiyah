@@ -10,6 +10,7 @@ function makeChain(data: unknown[]) {
     where: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
+    // biome-ignore lint/suspicious/noThenProperty: intentional thenable for drizzle chain mock
     then: p.then.bind(p),
     catch: p.catch.bind(p),
     finally: p.finally.bind(p),
@@ -28,8 +29,8 @@ describe('listThemes', () => {
     } as unknown as DbClient;
 
     const result = await listThemes(mockDb);
-    expect(result[0].name).toBe('غزل');
-    expect(result[1].name).toBe('رثاء');
+    expect(result[0]?.name).toBe('غزل');
+    expect(result[1]?.name).toBe('رثاء');
   });
 
   it('returns empty array when no themes exist', async () => {
@@ -60,9 +61,9 @@ describe('listThemePoems', () => {
 
     const result = await listThemePoems(mockDb, 'ghazal-slug', 1);
     expect(result).not.toBeNull();
-    expect(result!.themeDetails.name).toBe('غزل');
-    expect(result!.total).toBe(40);
-    expect(result!.poems[0].title).toBe('قصيدة');
+    expect(result?.themeDetails.name).toBe('غزل');
+    expect(result?.total).toBe(40);
+    expect(result?.poems[0]?.title).toBe('قصيدة');
   });
 
   it('returns null when theme is not found', async () => {

@@ -10,6 +10,7 @@ function makeChain(data: unknown[]) {
     where: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
+    // biome-ignore lint/suspicious/noThenProperty: intentional thenable for drizzle chain mock
     then: p.then.bind(p),
     catch: p.catch.bind(p),
     finally: p.finally.bind(p),
@@ -28,8 +29,8 @@ describe('listEras', () => {
     } as unknown as DbClient;
 
     const result = await listEras(mockDb);
-    expect(result[0].name).toBe('جاهلي');
-    expect(result[1].name).toBe('عباسي');
+    expect(result[0]?.name).toBe('جاهلي');
+    expect(result[1]?.name).toBe('عباسي');
   });
 
   it('returns empty array when no eras exist', async () => {
@@ -55,9 +56,9 @@ describe('listEraPoems', () => {
 
     const result = await listEraPoems(mockDb, 'abbasid', 1);
     expect(result).not.toBeNull();
-    expect(result!.eraDetails.name).toBe('العصر العباسي');
-    expect(result!.total).toBe(50);
-    expect(result!.poems[0].title).toBe('قصيدة');
+    expect(result?.eraDetails.name).toBe('العصر العباسي');
+    expect(result?.total).toBe(50);
+    expect(result?.poems[0]?.title).toBe('قصيدة');
   });
 
   it('returns null when era is not found (empty array)', async () => {
@@ -73,10 +74,10 @@ describe('listEraPoems', () => {
   });
 
   it('returns null when eraInfo[0] is falsy (null first element)', async () => {
-    // biome-ignore lint/suspicious/noExplicitAny: testing null element scenario
     const mockDb = {
       select: vi
         .fn()
+        // biome-ignore lint/suspicious/noExplicitAny: testing null element scenario
         .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([null as any])) })
         .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
     } as unknown as DbClient;
@@ -95,6 +96,6 @@ describe('listEraPoems', () => {
     } as unknown as DbClient;
 
     const result = await listEraPoems(mockDb, 'abbasid', 1);
-    expect(result!.totalPages).toBe(3); // ceil(90/30)
+    expect(result?.totalPages).toBe(3); // ceil(90/30)
   });
 });

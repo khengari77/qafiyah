@@ -10,6 +10,7 @@ function makeChain(data: unknown[]) {
     where: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
+    // biome-ignore lint/suspicious/noThenProperty: intentional thenable for drizzle chain mock
     then: p.then.bind(p),
     catch: p.catch.bind(p),
     finally: p.finally.bind(p),
@@ -29,7 +30,7 @@ describe('listMeters', () => {
 
     const result = await listMeters(mockDb);
     expect(result.length).toBe(2);
-    expect(result[0].name).toBe('الطويل');
+    expect(result[0]?.name).toBe('الطويل');
   });
 
   it('returns empty array when no meters exist', async () => {
@@ -55,9 +56,9 @@ describe('listMeterPoems', () => {
 
     const result = await listMeterPoems(mockDb, 'altawil', 1);
     expect(result).not.toBeNull();
-    expect(result!.meterDetails.name).toBe('الطويل');
-    expect(result!.total).toBe(100);
-    expect(result!.poems[0].title).toBe('قصيدة');
+    expect(result?.meterDetails.name).toBe('الطويل');
+    expect(result?.total).toBe(100);
+    expect(result?.poems[0]?.title).toBe('قصيدة');
   });
 
   it('returns null when meter is not found', async () => {
@@ -82,6 +83,6 @@ describe('listMeterPoems', () => {
     } as unknown as DbClient;
 
     const result = await listMeterPoems(mockDb, 'altawil', 2);
-    expect(result!.totalPages).toBe(2); // ceil(60/30)
+    expect(result?.totalPages).toBe(2); // ceil(60/30)
   });
 });

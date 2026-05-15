@@ -120,8 +120,8 @@ describe('searchPoems (mock)', () => {
 
     const result = await searchPoems(mockDb, 'قصيدة', 1, 'all', null, null, null, null);
     expect(result.totalCount).toBe(5);
-    expect(result.rows[0].poetName).toBe('المتنبي');
-    expect(result.rows[0].poemMeter).toBe('الطويل');
+    expect(result.rows[0]?.poetName).toBe('المتنبي');
+    expect(result.rows[0]?.poemMeter).toBe('الطويل');
   });
 
   it('looks up filter IDs then searches (covers all 4 kind branches + unknown)', async () => {
@@ -224,8 +224,8 @@ describe('searchPoets (mock)', () => {
 
     const result = await searchPoets(mockDb, 'شاعر', 1, 'all', null);
     expect(result.totalCount).toBe(3);
-    expect(result.rows[0].poetName).toBe('المتنبي');
-    expect(result.rows[0].poetBio).toBe('شاعر عباسي');
+    expect(result.rows[0]?.poetName).toBe('المتنبي');
+    expect(result.rows[0]?.poetBio).toBe('شاعر عباسي');
   });
 
   it('looks up era IDs then searches (2 execute calls)', async () => {
@@ -310,7 +310,7 @@ describe('listPoemsByFilters (mock)', () => {
 
     const result = await listPoemsByFilters(mockDb, 1, null, null, null, null);
     expect(result.totalCount).toBe(1);
-    expect(result.rows[0].poetName).toBe('شاعر');
+    expect(result.rows[0]?.poetName).toBe('شاعر');
   });
 
   it('covers intArrayParam branches: null, [], and [id]', async () => {
@@ -366,7 +366,7 @@ describe('listPoetsByFilters (mock)', () => {
 
     const result = await listPoetsByFilters(mockDb, 1, null);
     expect(result.totalCount).toBe(1);
-    expect(result.rows[0].poetName).toBe('شاعر');
+    expect(result.rows[0]?.poetName).toBe('شاعر');
   });
 
   it('looks up era IDs when era slugs are provided', async () => {

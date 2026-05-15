@@ -10,6 +10,7 @@ function makeChain(data: unknown[]) {
     where: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
+    // biome-ignore lint/suspicious/noThenProperty: intentional thenable for drizzle chain mock
     then: p.then.bind(p),
     catch: p.catch.bind(p),
     finally: p.finally.bind(p),
@@ -30,8 +31,8 @@ describe('listRhymes', () => {
     const result = await listRhymes(mockDb);
     const baaGroup = result.find((r) => r.name === 'باء');
     expect(baaGroup).toBeDefined();
-    expect(baaGroup!.poemsCount).toBe(30);
-    expect(baaGroup!.poetsCount).toBe(13);
+    expect(baaGroup?.poemsCount).toBe(30);
+    expect(baaGroup?.poetsCount).toBe(13);
   });
 
   it('returns empty array when no rhymes exist', async () => {
@@ -67,9 +68,9 @@ describe('listRhymePoems', () => {
 
     const result = await listRhymePoems(mockDb, 'rhyme-slug', 1);
     expect(result).not.toBeNull();
-    expect(result!.rhymeDetails.pattern).toBe('ب');
-    expect(result!.total).toBe(30);
-    expect(result!.poems[0].title).toBe('قصيدة');
+    expect(result?.rhymeDetails.pattern).toBe('ب');
+    expect(result?.total).toBe(30);
+    expect(result?.poems[0]?.title).toBe('قصيدة');
   });
 
   it('returns null when rhyme is not found', async () => {

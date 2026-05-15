@@ -15,6 +15,7 @@ function makeChain(data: unknown[]) {
     where: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
+    // biome-ignore lint/suspicious/noThenProperty: intentional thenable for drizzle chain mock
     then: p.then.bind(p),
     catch: p.catch.bind(p),
     finally: p.finally.bind(p),
@@ -203,7 +204,7 @@ describe('getPoemBySlug', () => {
     if (result.type === 'found') {
       expect(result.data.clearTitle).toBe('قصيدة المتنبي');
       expect(result.data.metadata.poetName).toBe('المتنبي');
-      expect(result.data.relatedPoems[0].slug).toBe('related-slug');
+      expect(result.data.relatedPoems[0]?.slug).toBe('related-slug');
     }
   });
 
