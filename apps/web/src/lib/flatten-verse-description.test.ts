@@ -42,4 +42,22 @@ describe('flattenVerses', () => {
     const result = flattenVerses([['شطر', '']]);
     expect(result).toContain('شطر');
   });
+
+  it('handles verse with empty first half (skips first half)', () => {
+    const result = flattenVerses([['', 'الشطر الثاني']]);
+    expect(result).toContain('الشطر الثاني');
+  });
+
+  it('actually truncates result string when accumulated result exceeds limit', () => {
+    // nextLen = 149 + 149 + 2 = 300 (passes the break check), but actual = 149 + 3 + 149 = 301
+    const half = 'ب'.repeat(149);
+    const result = flattenVerses([[half, half]]);
+    expect(result.length).toBe(300);
+  });
+
+  it('handles null/undefined verse element defensively', () => {
+    const verses = [null] as unknown as [string, string][];
+    const result = flattenVerses(verses);
+    expect(result).toBe('');
+  });
 });

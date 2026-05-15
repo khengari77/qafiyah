@@ -43,6 +43,12 @@ describe('processPoemContent', () => {
     expect(keywords).toBe('كلمة,أخرى');
   });
 
+  it('uses empty string fallback when first half of a pair is empty', () => {
+    // Content starting with '*' → lines[0] = '' (falsy) → '' fallback used for first half
+    const { verses } = processPoemContent('*ب');
+    expect(verses).toEqual([['', 'ب']]);
+  });
+
   it('handles a single line (one verse with empty second half)', () => {
     const { verses, verseCount } = processPoemContent('بيت');
     expect(verses).toEqual([['بيت', '']]);

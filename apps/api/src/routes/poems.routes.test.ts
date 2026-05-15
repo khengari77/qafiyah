@@ -4,11 +4,24 @@
  * in apps/api/src/procedures/poems.procedures.ts.
  */
 
+import { HTTPException } from 'hono/http-exception';
 import { describe, expect, it, vi } from 'vitest';
 import { createMockDb, createTestClient } from '@/test-utils/test-helpers';
 import poems from './poems.routes';
 
 describe('poems routes', () => {
+  it('defaults to slug when no option query param is provided', async () => {
+    const mockResult = [{ get_random_eligible_poem_slug: { slug: 'default-slug' } }];
+    const db = createMockDb();
+    db.execute = vi.fn().mockResolvedValue(mockResult);
+
+    const client = createTestClient(poems, { db });
+    const res = await client.$get('/random');
+
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe('default-slug');
+  });
+
   it('should return random poem slug', async () => {
     const mockResult = [
       {
@@ -75,5 +88,32 @@ describe('poems routes', () => {
     const res = await client.$get('/random?option=lines');
 
     expect(res.status).toBe(500);
+  });
+
+  it('returns problem+json when db throws a 404 HTTPException', async () => {
+    const db = createMockDb();
+    db.execute = vi.fn().mockRejectedValue(new HTTPException(404, { message: 'not found' }));
+
+    const client = createTestClient(poems, { db });
+
+    const res = await client.$get('/random?option=slug');
+
+    expect(res.status).toBe(404);
+    expect(res.headers.get('Content-Type')).toBe('application/problem+json');
+    const body = (await res.json()) as { code: string };
+    expect(body.code).toBe('NOT_FOUND');
+  });
+
+  it('returns BAD_REQUEST problem when db throws a non-404 HTTPException', async () => {
+    const db = createMockDb();
+    db.execute = vi.fn().mockRejectedValue(new HTTPException(400, { message: 'bad input' }));
+
+    const client = createTestClient(poems, { db });
+
+    const res = await client.$get('/random?option=slug');
+
+    expect(res.status).toBe(400);
+    const body = (await res.json()) as { code: string };
+    expect(body.code).toBe('BAD_REQUEST');
   });
 });

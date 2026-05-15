@@ -36,6 +36,20 @@ describe('extractPoemExcerpt', () => {
     expect(extractPoemExcerpt(p)).toContain('المتنبي');
   });
 
+  it('uses empty string fallback when lines[randomIndex] is empty', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    // Content starting with '*' → lines[0] = '' (falsy) → '' fallback used
+    const result = extractPoemExcerpt(poem('*شطر ثانٍ*شطر ثالث*شطر رابع'));
+    expect(result).toContain('شاعر');
+  });
+
+  it('uses empty string fallback when lines[randomIndex + 1] is empty', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0);
+    // Content with empty second segment → lines[1] = '' (falsy) → '' fallback used
+    const result = extractPoemExcerpt(poem('شطر أول**شطر ثالث*شطر رابع'));
+    expect(result).toContain('شاعر');
+  });
+
   it('always selects a valid pair of consecutive lines', () => {
     const lines = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'];
     const content = lines.join('*');

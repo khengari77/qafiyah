@@ -83,6 +83,13 @@ describe('withRetry', () => {
     expect(op).toHaveBeenCalledTimes(1);
   });
 
+  it('wraps a non-Error thrown value in an Error (rate limit path)', async () => {
+    const op = vi.fn().mockRejectedValue('status 429 from server');
+    const result = await withRetry(op, 'test');
+    expect(result.ok).toBe(false);
+    expect((result as ReturnType<typeof err>).error.message).toBe('Rate limit hit. Aborting.');
+  });
+
   it('returns err immediately on TerminalError without retrying', async () => {
     const op = vi.fn().mockRejectedValue(new TerminalError('fatal'));
     const result = await withRetry(op, 'test');

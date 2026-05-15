@@ -10,7 +10,8 @@
   },
   "scripts": {
     "types": "tsc --noEmit --pretty",
-    "lint": "biome check --write ."
+    "lint": "biome check --write .",
+    "test": "vitest run"
   },
   "dependencies": {
     "@orpc/contract": "^1.14.2",
@@ -19,6 +20,8 @@
   },
   "devDependencies": {
     "@qafiyah/typescript": "workspace:*",
-    "typescript": "^5"
+    "@vitest/coverage-v8": "^4.1.6",
+    "typescript": "^5",
+    "vitest": "^4.1.6"
   }
 }
