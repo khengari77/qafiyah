@@ -2,8 +2,9 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ES2022",
+    "useDefineForClassFields": true,
+
     "strict": true,
-    "alwaysStrict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitReturns": true,
@@ -14,11 +15,16 @@
     "exactOptionalPropertyTypes": true,
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
-    "forceConsistentCasingInFileNames": true,
-    "moduleDetection": "force",
+
+    "verbatimModuleSyntax": true,
     "isolatedModules": true,
+    "moduleDetection": "force",
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "noUncheckedSideEffectImports": true,
+
     "skipLibCheck": true,
-    "resolveJsonModule": true
+    "noErrorTruncation": true
   }
 }
