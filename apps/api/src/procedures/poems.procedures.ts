@@ -1,4 +1,5 @@
 import { poemsQueries } from '@qafiyah/db';
+import { match } from 'ts-pattern';
 import { pub } from './_base';
 import { listEnvelope, resourceEnvelope } from './_envelope';
 import { toPoemResource } from './_mappers';
@@ -10,7 +11,13 @@ export const listSlugs = pub.poems.listSlugs.handler(async ({ context }) => {
 
 export const getBySlug = pub.poems.getBySlug.handler(async ({ context, input, errors }) => {
   const result = await poemsQueries.getPoemBySlug(context.db, input.slug);
-  if (result.type === 'not_found') throw errors.NOT_FOUND();
-  if (result.type === 'error') throw errors.POEM_PARSE_ERROR({ message: result.message });
-  return resourceEnvelope(toPoemResource(input.slug, result.data));
+  return match(result)
+    .with({ type: 'not_found' }, () => {
+      throw errors.NOT_FOUND();
+    })
+    .with({ type: 'error' }, ({ message }) => {
+      throw errors.POEM_PARSE_ERROR({ message });
+    })
+    .with({ type: 'found' }, ({ data }) => resourceEnvelope(toPoemResource(input.slug, data)))
+    .exhaustive();
 });

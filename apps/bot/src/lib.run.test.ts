@@ -18,21 +18,6 @@ class ExitError extends Error {
   }
 }
 
-const REQUIRED_VARS = [
-  'TWITTER_APP_KEY',
-  'TWITTER_APP_SECRET',
-  'TWITTER_ACCESS_TOKEN',
-  'TWITTER_ACCESS_SECRET',
-] as const;
-
-function setTwitterEnv() {
-  for (const v of REQUIRED_VARS) process.env[v] = 'test_value';
-}
-
-function clearTwitterEnv() {
-  for (const v of REQUIRED_VARS) delete process.env[v];
-}
-
 async function runExpectingExit(): Promise<ExitError> {
   try {
     await run();
@@ -51,19 +36,11 @@ describe('run()', () => {
     vi.spyOn(process, 'exit').mockImplementation((code?: number | string | null) => {
       throw new ExitError(typeof code === 'number' ? code : 0);
     });
-    setTwitterEnv();
   });
 
   afterEach(() => {
-    clearTwitterEnv();
     vi.useRealTimers();
     vi.restoreAllMocks();
-  });
-
-  it('exits with 1 when initializeTwitterClient fails (missing env)', async () => {
-    clearTwitterEnv();
-    const e = await runExpectingExit();
-    expect(e.code).toBe(1);
   });
 
   it('exits with 1 when TwitterApi constructor throws an Error', async () => {

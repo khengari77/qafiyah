@@ -18,7 +18,9 @@
     "@qafiyah/contracts": "workspace:*",
     "@qafiyah/db": "workspace:*",
     "@qafiyah/typescript": "workspace:*",
-    "hono": "^4.11.4"
+    "hono": "^4.11.4",
+    "ts-pattern": "^5.9.0",
+    "valibot": "^1.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250214.0",

@@ -100,18 +100,19 @@ async function lookupFilterIds(
     SELECT 'theme' AS kind, id FROM theme_stats WHERE ${tLit !== null ? sql`(id::TEXT = ANY(${tLit}::TEXT[]) OR slug::TEXT = ANY(${tLit}::TEXT[]))` : sql`FALSE`}
     UNION ALL
     SELECT 'rhyme' AS kind, id FROM rhyme_stats WHERE ${rLit !== null ? sql`(id::TEXT = ANY(${rLit}::TEXT[]) OR slug::TEXT = ANY(${rLit}::TEXT[]))` : sql`FALSE`}
-  `)) as unknown as { kind: string; id: number }[];
+  `)) as unknown as { kind: 'meter' | 'era' | 'theme' | 'rhyme'; id: number }[];
 
   const meterBucket: number[] = [];
   const eraBucket: number[] = [];
   const themeBucket: number[] = [];
   const rhymeBucket: number[] = [];
-  for (const row of rows) {
-    if (row.kind === 'meter') meterBucket.push(row.id);
-    else if (row.kind === 'era') eraBucket.push(row.id);
-    else if (row.kind === 'theme') themeBucket.push(row.id);
-    else if (row.kind === 'rhyme') rhymeBucket.push(row.id);
-  }
+  const buckets: Record<'meter' | 'era' | 'theme' | 'rhyme', number[]> = {
+    meter: meterBucket,
+    era: eraBucket,
+    theme: themeBucket,
+    rhyme: rhymeBucket,
+  };
+  for (const row of rows) (buckets as Record<string, number[] | undefined>)[row.kind]?.push(row.id);
   return {
     meterIds: m ? meterBucket : null,
     eraIds: e ? eraBucket : null,

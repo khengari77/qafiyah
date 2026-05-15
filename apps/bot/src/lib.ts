@@ -5,11 +5,9 @@ import {
   MAX_TWEET_LENGTH,
   PROD_API_URL,
 } from '@qafiyah/constants';
-import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import { TwitterApi } from 'twitter-api-v2';
-
-dotenv.config();
+import { env } from './env';
 
 type Result<T> = { ok: true; value: T } | { ok: false; error: Error };
 
@@ -28,33 +26,13 @@ export class TerminalError extends Error {
   }
 }
 
-export function getEnvVar(name: string): Result<string> {
-  const value = process.env[name];
-  if (!value) {
-    return err(new Error(`Missing required environment variable: ${name}`));
-  }
-  return ok(value);
-}
-
 export function initializeTwitterClient(): Result<TwitterApi> {
-  const appKeyResult = getEnvVar('TWITTER_APP_KEY');
-  if (!appKeyResult.ok) return appKeyResult;
-
-  const appSecretResult = getEnvVar('TWITTER_APP_SECRET');
-  if (!appSecretResult.ok) return appSecretResult;
-
-  const accessTokenResult = getEnvVar('TWITTER_ACCESS_TOKEN');
-  if (!accessTokenResult.ok) return accessTokenResult;
-
-  const accessSecretResult = getEnvVar('TWITTER_ACCESS_SECRET');
-  if (!accessSecretResult.ok) return accessSecretResult;
-
   try {
     const client = new TwitterApi({
-      appKey: appKeyResult.value,
-      appSecret: appSecretResult.value,
-      accessToken: accessTokenResult.value,
-      accessSecret: accessSecretResult.value,
+      appKey: env.TWITTER_APP_KEY,
+      appSecret: env.TWITTER_APP_SECRET,
+      accessToken: env.TWITTER_ACCESS_TOKEN,
+      accessSecret: env.TWITTER_ACCESS_SECRET,
     });
     return ok(client);
   } catch (error) {

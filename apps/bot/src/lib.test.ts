@@ -3,7 +3,6 @@ import { vi } from 'vitest';
 import {
   type err,
   fetchFormattedPoem,
-  getEnvVar,
   initializeTwitterClient,
   ok,
   postTweet,
@@ -18,54 +17,12 @@ import fetch from 'node-fetch';
 const mockFetch = fetch as unknown as ReturnType<typeof vi.fn>;
 
 // ---------------------------------------------------------------------------
-// getEnvVar
-// ---------------------------------------------------------------------------
-describe('getEnvVar', () => {
-  afterEach(() => {
-    delete process.env.TEST_VAR;
-  });
-
-  it('returns ok when env var is present', () => {
-    process.env.TEST_VAR = 'value';
-    expect(getEnvVar('TEST_VAR')).toEqual({ ok: true, value: 'value' });
-  });
-
-  it('returns err when env var is missing', () => {
-    const result = getEnvVar('TEST_VAR');
-    expect(result.ok).toBe(false);
-    expect((result as ReturnType<typeof err>).error.message).toContain('TEST_VAR');
-  });
-});
-
-// ---------------------------------------------------------------------------
 // initializeTwitterClient
 // ---------------------------------------------------------------------------
 describe('initializeTwitterClient', () => {
-  const REQUIRED_VARS = [
-    'TWITTER_APP_KEY',
-    'TWITTER_APP_SECRET',
-    'TWITTER_ACCESS_TOKEN',
-    'TWITTER_ACCESS_SECRET',
-  ] as const;
-
-  beforeEach(() => {
-    for (const v of REQUIRED_VARS) process.env[v] = 'test_value';
-  });
-
-  afterEach(() => {
-    for (const v of REQUIRED_VARS) delete process.env[v];
-  });
-
   it('returns ok when all four env vars are present', () => {
     const result = initializeTwitterClient();
     expect(result.ok).toBe(true);
-  });
-
-  it.each(REQUIRED_VARS)('returns err when %s is missing', (missing) => {
-    delete process.env[missing];
-    const result = initializeTwitterClient();
-    expect(result.ok).toBe(false);
-    expect((result as ReturnType<typeof err>).error.message).toContain(missing);
   });
 });
 

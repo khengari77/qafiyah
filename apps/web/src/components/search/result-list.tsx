@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import type { Ref } from 'react';
+import { match } from 'ts-pattern';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
 import { PoemCard, PoetCard } from './result-cards';
 import { ErrorState } from './state-error';
@@ -61,11 +62,14 @@ export function ResultList({
       )}
 
       {data.map((item) =>
-        item.type === 'poem' ? (
-          <PoemCard key={`${item.slug}-${item.relevance}`} item={item} />
-        ) : (
-          <PoetCard key={`${item.slug}-${item.relevance}`} item={item} />
-        )
+        match(item)
+          .with({ type: 'poem' }, (poem) => (
+            <PoemCard key={`${poem.slug}-${poem.relevance}`} item={poem} />
+          ))
+          .with({ type: 'poet' }, (poet) => (
+            <PoetCard key={`${poet.slug}-${poet.relevance}`} item={poet} />
+          ))
+          .exhaustive()
       )}
 
       {data.length > 0 && (
