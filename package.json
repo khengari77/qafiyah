@@ -14,7 +14,7 @@
     "test": "turbo run test",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
-    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge"
+    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge && bun audit"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.12",
