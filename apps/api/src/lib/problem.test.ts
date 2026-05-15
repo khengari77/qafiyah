@@ -35,6 +35,18 @@ describe('makeProblem', () => {
     expect('detail' in problem).toBe(false);
   });
 
+  it('includes instance when provided', () => {
+    const problem = makeProblem({ code: 'NOT_FOUND', status: 404, instance: '/v1/poems/missing' });
+
+    expect(problem.instance).toBe('/v1/poems/missing');
+  });
+
+  it('omits instance when not provided', () => {
+    const problem = makeProblem({ code: 'NOT_FOUND', status: 404 });
+
+    expect('instance' in problem).toBe(false);
+  });
+
   it('includes errors array when provided', () => {
     const errors = [{ path: 'slug', message: 'Required' }];
     const problem = makeProblem({ code: 'INPUT_VALIDATION_FAILED', status: 400, errors });
@@ -89,13 +101,27 @@ describe('transformOrpcResponse', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const result = await transformOrpcResponse(response);
+    const result = await transformOrpcResponse(response, '/v1/poems/missing');
 
     expect(result.status).toBe(404);
     expect(result.headers.get('Content-Type')).toBe('application/problem+json');
-    const body = (await result.json()) as { code: string; type: string };
+    const body = (await result.json()) as { code: string; type: string; instance: string };
     expect(body.code).toBe('NOT_FOUND');
     expect(body.type).toContain('not-found');
+    expect(body.instance).toBe('/v1/poems/missing');
+  });
+
+  it('omits instance when no requestPath is provided', async () => {
+    const orpcBody = { code: 'NOT_FOUND' };
+    const response = new Response(JSON.stringify(orpcBody), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    const result = await transformOrpcResponse(response);
+
+    const body = (await result.json()) as { instance?: string };
+    expect(body.instance).toBeUndefined();
   });
 
   it('transforms 400 validation error with issues to problem+json with errors', async () => {
@@ -111,13 +137,17 @@ describe('transformOrpcResponse', () => {
       headers: { 'Content-Type': 'application/json' },
     });
 
-    const result = await transformOrpcResponse(response);
+    const result = await transformOrpcResponse(response, '/v1/eras/bad/poems');
 
     expect(result.status).toBe(400);
-    const body = (await result.json()) as { errors: Array<{ path: string; message: string }> };
+    const body = (await result.json()) as {
+      errors: Array<{ path: string; message: string }>;
+      instance: string;
+    };
     expect(body.errors).toHaveLength(1);
     expect(body.errors[0]?.path).toBe('slug');
     expect(body.errors[0]?.message).toBe('Required');
+    expect(body.instance).toBe('/v1/eras/bad/poems');
   });
 
   it('passes through non-JSON error responses unchanged', async () => {

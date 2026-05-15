@@ -1,51 +1,46 @@
 import { Badge } from '@/components/ui/badge';
 import { SITE_URL } from '@/constants/globals';
-import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
+import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
 import { HighlightedText } from './highlighted-text';
 
 const badgeClassname =
   'text-[11px] lg:text-sm font-normal text-zinc-600/90 shadow-none border-0 ring-none bg-zinc-50';
 
-export function PoemCard({
-  item: { poemMeter, poemSlug, poemSnippet, poemTitle, poetEra, poetName, poetSlug },
-}: {
-  item: PoemsSearchResult;
-}) {
+export function PoemCard({ item }: { item: PoemSearchResult }) {
+  const { title, slug, snippet, poet, meter, era } = item;
   return (
     <div className="shadow-none group overflow-hidden border-0 ring-1 ring-zinc-300/50 hover:border-zinc-200 transition-all duration-300 bg-white rounded-xl flex justify-center items-center p-4 md:p-6">
       <div className="flex flex-col w-full h-full gap-4">
-        {/*  */}
         <div className="flex flex-col gap-1.5">
           <a
-            href={`${SITE_URL}/poems/${poemSlug}`}
+            href={`${SITE_URL}/poems/${slug}`}
             className="text-base md:text-lg 2xl:text-xl font-bold text-zinc-900 group-hover:text-zinc-900 transition-colors hover:underline hover:underline-offset-4"
           >
-            {poemTitle}
+            {title}
           </a>
 
           <a
-            href={`${SITE_URL}/poets/${poetSlug}/page/1`}
+            href={`${SITE_URL}/poets/${poet.slug}/page/1`}
             className="text-base md:text-lg hover:cursor-pointer font-normal text-zinc-900/80 hover:text-zinc-900 hover:underline hover:underline-offset-4"
           >
-            {poetName || 'شاعر'}
+            {poet.name || 'شاعر'}
           </a>
         </div>
 
-        {/*  */}
         <div className="flex flex-col gap-2">
           <HighlightedText
             className="text-sm sm:text-base md:text-lg font-normal text-zinc-900"
-            text={poemSnippet}
+            text={snippet}
           />
           <div className="flex justify-end items-center gap-1">
-            {poemMeter && (
+            {meter.name && (
               <Badge variant="outline" className={badgeClassname}>
-                {poemMeter.split(' ')[0]}
+                {meter.name.split(' ')[0]}
               </Badge>
             )}
-            {poetEra && (
+            {era.name && (
               <Badge variant="outline" className={badgeClassname}>
-                {poetEra.split(' ')[0] || 'عصر غير معروف'}
+                {era.name.split(' ')[0] || 'عصر غير معروف'}
               </Badge>
             )}
           </div>
@@ -55,21 +50,22 @@ export function PoemCard({
   );
 }
 
-export function PoetCard({ item: { poetEra, poetName, poetSlug } }: { item: PoetsSearchResult }) {
+export function PoetCard({ item }: { item: PoetSearchResult }) {
+  const { name, slug, era } = item;
   return (
     <div className="shadow-none group overflow-hidden border-0 ring-1 ring-zinc-300/50 hover:border-zinc-200 transition-all duration-300 bg-white rounded-xl flex justify-center items-center p-4 md:p-6">
       <a
         className="flex flex-row justify-between items-centers gap-2 w-full "
-        href={`${SITE_URL}/poets/${poetSlug}/page/1`}
+        href={`${SITE_URL}/poets/${slug}/page/1`}
       >
         <h2 className="flex-1 text-base md:text-lg 2xl:text-xl font-bold text-zinc-900 group-hover:text-zinc-900 transition-colors  hover:underline hover:underline-offset-4">
-          {poetName || 'شاعر'}
+          {name || 'شاعر'}
         </h2>
 
         <div className="flex justify-center items-center">
-          {poetEra && (
+          {era.name && (
             <Badge variant="outline" className={badgeClassname}>
-              {poetEra || 'عصر غير معروف'}
+              {era.name || 'عصر غير معروف'}
             </Badge>
           )}
         </div>

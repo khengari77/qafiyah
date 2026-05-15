@@ -30,13 +30,26 @@ async function buildOrpcApp() {
       prefix: '/v1',
     });
     if (!result.matched) return next();
-    return transformOrpcResponse(result.response);
+    return transformOrpcResponse(result.response, c.req.path);
   });
   return app;
 }
 
 const sampleTheme = { name: 'الغزل', slug: 'love', poemsCount: 400 };
-const samplePoem = { title: 'قصيدة', slug: 'poem-1', poetName: 'شاعر', meter: 'الطويل' };
+const samplePoemRow = {
+  title: 'قصيدة',
+  slug: 'poem-1',
+  poetName: 'شاعر',
+  poetSlug: 'shaer',
+  meterName: 'الطويل',
+  meterSlug: 'tawil',
+};
+
+type ListBody = {
+  data: unknown[];
+  pagination: { page: number; pageSize: number; totalPages: number; totalItems: number };
+  meta?: { name: string; slug: string; poemsCount: number };
+};
 
 describe('themes procedures', () => {
   beforeEach(() => {
@@ -48,7 +61,7 @@ describe('themes procedures', () => {
   });
 
   describe('listThemes', () => {
-    it('returns themes list with pagination fields', async () => {
+    it('returns themes list wrapped in envelope', async () => {
       listThemesMock.mockResolvedValue([sampleTheme]);
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
@@ -56,10 +69,9 @@ describe('themes procedures', () => {
       const res = await client.$get('/v1/themes');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { themes: unknown[]; total: number; page: number };
-      expect(body.themes).toHaveLength(1);
-      expect(body.total).toBe(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.pagination.totalItems).toBe(1);
     });
 
     it('returns empty list when no themes exist', async () => {
@@ -70,29 +82,28 @@ describe('themes procedures', () => {
       const res = await client.$get('/v1/themes');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { themes: unknown[]; total: number };
-      expect(body.themes).toHaveLength(0);
-      expect(body.total).toBe(0);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(0);
     });
   });
 
   describe('listThemePoems', () => {
-    it('returns theme poems on valid slug and page', async () => {
+    it('returns theme poems with nested sub-resources and meta', async () => {
       listThemePoemsMock.mockResolvedValue({
-        themeDetails: { name: 'الغزل', poemsCount: 400 },
-        poems: [samplePoem],
+        parent: { name: 'الغزل', slug: 'love', poemsCount: 400 },
+        poems: [samplePoemRow],
         total: 1,
         totalPages: 1,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/themes/love/page/1');
+      const res = await client.$get('/v1/themes/love/poems?page=1');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { poems: unknown[]; page: number };
-      expect(body.poems).toHaveLength(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.meta?.name).toBe('الغزل');
     });
 
     it('returns 404 when theme slug not found', async () => {
@@ -100,22 +111,22 @@ describe('themes procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/themes/unknown-theme/page/1');
+      const res = await client.$get('/v1/themes/unknown-theme/poems?page=1');
 
       expect(res.status).toBe(404);
     });
 
     it('passes slug and page to the query', async () => {
       listThemePoemsMock.mockResolvedValue({
-        themeDetails: { name: 'الغزل', poemsCount: 400 },
+        parent: { name: 'الغزل', slug: 'love', poemsCount: 400 },
         poems: [],
         total: 400,
-        totalPages: 20,
+        totalPages: 14,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/themes/love/page/7');
+      await client.$get('/v1/themes/love/poems?page=7');
 
       expect(listThemePoemsMock).toHaveBeenCalledWith(expect.anything(), 'love', 7);
     });

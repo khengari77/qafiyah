@@ -30,13 +30,26 @@ async function buildOrpcApp() {
       prefix: '/v1',
     });
     if (!result.matched) return next();
-    return transformOrpcResponse(result.response);
+    return transformOrpcResponse(result.response, c.req.path);
   });
   return app;
 }
 
 const samplePoet = { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 };
-const samplePoem = { title: 'قصيدة', slug: 'poem-1', meter: 'الطويل' };
+const samplePoemRow = {
+  title: 'قصيدة',
+  slug: 'poem-1',
+  poetName: 'المتنبي',
+  poetSlug: 'mutanabbi',
+  meterName: 'الطويل',
+  meterSlug: 'tawil',
+};
+
+type ListBody = {
+  data: unknown[];
+  pagination: { page: number; pageSize: number; totalPages: number; totalItems: number };
+  meta?: { name: string; slug: string; poemsCount: number };
+};
 
 describe('poets procedures', () => {
   beforeEach(() => {
@@ -48,17 +61,17 @@ describe('poets procedures', () => {
   });
 
   describe('listPoets', () => {
-    it('returns poets with pagination fields', async () => {
+    it('returns poets list wrapped in envelope', async () => {
       listPoetsMock.mockResolvedValue({ poets: [samplePoet], total: 1, totalPages: 1 });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poets/page/1');
+      const res = await client.$get('/v1/poets?page=1');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { poets: unknown[]; total: number; page: number };
-      expect(body.poets).toHaveLength(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.pagination.page).toBe(1);
     });
 
     it('returns 404 when page has no poets', async () => {
@@ -66,9 +79,19 @@ describe('poets procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poets/page/999');
+      const res = await client.$get('/v1/poets?page=999');
 
       expect(res.status).toBe(404);
+    });
+
+    it('defaults to page 1 when no page is provided', async () => {
+      listPoetsMock.mockResolvedValue({ poets: [samplePoet], total: 1, totalPages: 1 });
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      await client.$get('/v1/poets');
+
+      expect(listPoetsMock).toHaveBeenCalledWith(expect.anything(), 1);
     });
 
     it('passes page number to the query', async () => {
@@ -76,29 +99,29 @@ describe('poets procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/poets/page/3');
+      await client.$get('/v1/poets?page=3');
 
       expect(listPoetsMock).toHaveBeenCalledWith(expect.anything(), 3);
     });
   });
 
   describe('listPoetPoems', () => {
-    it('returns poet poems on valid slug and page', async () => {
+    it('returns poet poems with nested sub-resources and meta', async () => {
       listPoetPoemsMock.mockResolvedValue({
-        poetDetails: { name: 'المتنبي', poemsCount: 300 },
-        poems: [samplePoem],
+        parent: { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 },
+        poems: [samplePoemRow],
         total: 1,
         totalPages: 1,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poets/mutanabbi/page/1');
+      const res = await client.$get('/v1/poets/mutanabbi/poems?page=1');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { poems: unknown[]; page: number };
-      expect(body.poems).toHaveLength(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.meta?.name).toBe('المتنبي');
     });
 
     it('returns 404 when poet slug not found', async () => {
@@ -106,22 +129,22 @@ describe('poets procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poets/unknown-poet/page/1');
+      const res = await client.$get('/v1/poets/unknown-poet/poems?page=1');
 
       expect(res.status).toBe(404);
     });
 
     it('passes slug and page to the query', async () => {
       listPoetPoemsMock.mockResolvedValue({
-        poetDetails: { name: 'المتنبي', poemsCount: 300 },
+        parent: { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 },
         poems: [],
         total: 300,
-        totalPages: 15,
+        totalPages: 10,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/poets/mutanabbi/page/2');
+      await client.$get('/v1/poets/mutanabbi/poems?page=2');
 
       expect(listPoetPoemsMock).toHaveBeenCalledWith(expect.anything(), 'mutanabbi', 2);
     });

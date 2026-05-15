@@ -13,7 +13,7 @@ import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useState } from 'react';
 import { search } from '@/lib/api/client';
-import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
+import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
 import { useInfiniteScroll } from './use-infinite-scroll';
 
 type SearchType = (typeof SEARCH_TYPE_VALUES)[number];
@@ -113,21 +113,18 @@ export function useSearch() {
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>
-      lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+      lastPage.pagination.page < lastPage.pagination.totalPages
+        ? lastPage.pagination.page + 1
+        : undefined,
     enabled: canSearch,
     staleTime: SEARCH_RESULTS_STALE_TIME_MS,
     refetchOnWindowFocus: false,
   });
 
-  const data =
-    (iq.data?.pages.flatMap((page) =>
-      (page.results || []).map((result) => ({
-        type: searchType === 'poems' ? 'poem' : 'poet',
-        ...result,
-      }))
-    ) as (PoemsSearchResult | PoetsSearchResult)[]) || [];
+  const data: (PoemSearchResult | PoetSearchResult)[] =
+    iq.data?.pages.flatMap((page) => page.data as (PoemSearchResult | PoetSearchResult)[]) ?? [];
 
-  const totalResults = iq.data?.pages[0]?.total ?? 0;
+  const totalResults = iq.data?.pages[0]?.pagination.totalItems ?? 0;
 
   const { loadMoreRef } = useInfiniteScroll(
     iq.fetchNextPage,

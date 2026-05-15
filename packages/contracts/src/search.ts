@@ -6,26 +6,27 @@ import {
   SEARCH_TYPE_VALUES,
 } from '@qafiyah/constants';
 import * as v from 'valibot';
-import { pageParam, paginationFields } from './_shared';
+import { pageParam, pagination, subRef } from './_shared';
 
 const slugArrayParam = v.optional(v.array(v.string()), []);
 
-const poemsSearchResult = v.object({
-  poetName: v.string(),
-  poetEra: v.string(),
-  poetSlug: v.string(),
-  poemTitle: v.string(),
-  poemSnippet: v.string(),
-  poemMeter: v.string(),
-  poemSlug: v.string(),
+const poemSearchResult = v.object({
+  type: v.literal('poem'),
+  title: v.string(),
+  slug: v.string(),
+  snippet: v.string(),
+  poet: subRef,
+  meter: subRef,
+  era: subRef,
   relevance: v.number(),
 });
 
-const poetsSearchResult = v.object({
-  poetName: v.string(),
-  poetEra: v.string(),
-  poetSlug: v.string(),
-  poetBio: v.string(),
+const poetSearchResult = v.object({
+  type: v.literal('poet'),
+  name: v.string(),
+  slug: v.string(),
+  bio: v.string(),
+  era: subRef,
   relevance: v.number(),
 });
 
@@ -59,13 +60,13 @@ const searchContract = oc
     v.variant('searchType', [
       v.object({
         searchType: v.literal('poems'),
-        results: v.array(poemsSearchResult),
-        ...paginationFields,
+        data: v.array(poemSearchResult),
+        pagination,
       }),
       v.object({
         searchType: v.literal('poets'),
-        results: v.array(poetsSearchResult),
-        ...paginationFields,
+        data: v.array(poetSearchResult),
+        pagination,
       }),
     ])
   );

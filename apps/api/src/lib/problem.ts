@@ -7,6 +7,7 @@ type ProblemDetail = {
   title: string;
   status: number;
   code: string;
+  instance?: string;
   detail?: string;
   errors?: { path?: string; message: string }[];
 };
@@ -36,6 +37,7 @@ export function makeProblem(args: {
   status: number;
   detail?: string;
   title?: string;
+  instance?: string;
   errors?: ProblemDetail['errors'];
 }): ProblemDetail {
   return {
@@ -43,6 +45,7 @@ export function makeProblem(args: {
     title: args.title ?? titleForCode(args.code, args.code),
     status: args.status,
     code: args.code,
+    ...(args.instance !== undefined && { instance: args.instance }),
     ...(args.detail !== undefined && { detail: args.detail }),
     ...(args.errors !== undefined && { errors: args.errors }),
   };
@@ -56,7 +59,9 @@ function problemResponse(problem: ProblemDetail): Response {
 }
 
 export function sendProblem(c: Context, problem: ProblemDetail): Response {
-  return c.body(JSON.stringify(problem), problem.status as ContentfulStatusCode, {
+  const withInstance =
+    problem.instance === undefined ? { ...problem, instance: c.req.path } : problem;
+  return c.body(JSON.stringify(withInstance), withInstance.status as ContentfulStatusCode, {
     'Content-Type': 'application/problem+json',
   });
 }
@@ -93,7 +98,11 @@ function extractValidationErrors(data: unknown): ProblemDetail['errors'] | undef
   });
 }
 
-function orpcErrorToProblem(body: unknown, status: number): ProblemDetail {
+function orpcErrorToProblem(
+  body: unknown,
+  status: number,
+  instance: string | undefined
+): ProblemDetail {
   const error = isObject(body) ? (body as OrpcErrorBody) : {};
   const code = typeof error.code === 'string' ? error.code : 'INTERNAL_SERVER_ERROR';
   const message = typeof error.message === 'string' ? error.message : undefined;
@@ -107,12 +116,16 @@ function orpcErrorToProblem(body: unknown, status: number): ProblemDetail {
   return makeProblem({
     code,
     status,
+    ...(instance !== undefined && { instance }),
     ...(detail !== undefined && { detail }),
     ...(validationErrors && validationErrors.length > 0 && { errors: validationErrors }),
   });
 }
 
-export async function transformOrpcResponse(response: Response): Promise<Response> {
+export async function transformOrpcResponse(
+  response: Response,
+  instance?: string
+): Promise<Response> {
   if (response.status < 400) return response;
   const contentType = response.headers.get('content-type') ?? '';
   if (!contentType.includes('application/json')) return response;
@@ -124,6 +137,6 @@ export async function transformOrpcResponse(response: Response): Promise<Respons
     return response;
   }
 
-  const problem = orpcErrorToProblem(body, response.status);
+  const problem = orpcErrorToProblem(body, response.status, instance);
   return problemResponse(problem);
 }

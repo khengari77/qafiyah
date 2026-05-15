@@ -44,42 +44,41 @@ describe('listEras', () => {
 });
 
 describe('listEraPoems', () => {
-  it('returns era details and poems on success', async () => {
-    const eraInfoRow = { eraName: 'العصر العباسي', totalPoems: 50 };
-    const poemRow = { title: 'قصيدة', slug: 'poem-slug', poetName: 'شاعر', meter: 'الطويل' };
+  it('returns parent and poems with nested slugs', async () => {
+    const parentRow = { name: 'العصر العباسي', poems_count: 50 };
+    const poemRow = {
+      title: 'قصيدة',
+      slug: 'poem-slug',
+      poet_name: 'المتنبي',
+      poet_slug: 'al-mutanabbi',
+      meter_name: 'الطويل',
+      meter_slug: 'taweel',
+    };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([eraInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([poemRow])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     } as unknown as DbClient;
 
     const result = await listEraPoems(mockDb, 'abbasid', 1);
     expect(result).not.toBeNull();
-    expect(result?.eraDetails.name).toBe('العصر العباسي');
+    expect(result?.parent).toEqual({ name: 'العصر العباسي', slug: 'abbasid', poemsCount: 50 });
     expect(result?.total).toBe(50);
-    expect(result?.poems[0]?.title).toBe('قصيدة');
+    expect(result?.poems[0]?.poetSlug).toBe('al-mutanabbi');
+    expect(result?.poems[0]?.meterSlug).toBe('taweel');
   });
 
-  it('returns null when era is not found (empty array)', async () => {
+  it('returns null when era stats lookup is empty', async () => {
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listEraPoems(mockDb, 'nonexistent', 1);
     expect(result).toBeNull();
   });
 
-  it('returns null when eraInfo[0] is falsy (null first element)', async () => {
+  it('returns null when parent row is falsy', async () => {
     const mockDb = {
-      select: vi
-        .fn()
-        // biome-ignore lint/suspicious/noExplicitAny: testing null element scenario
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([null as any])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      // biome-ignore lint/suspicious/noExplicitAny: testing null element scenario
+      execute: vi.fn().mockResolvedValueOnce([null as any]),
     } as unknown as DbClient;
 
     const result = await listEraPoems(mockDb, 'test', 1);
@@ -87,15 +86,22 @@ describe('listEraPoems', () => {
   });
 
   it('computes totalPages correctly', async () => {
-    const eraInfoRow = { eraName: 'العصر العباسي', totalPoems: 90 };
+    const parentRow = { name: 'العصر العباسي', poems_count: 90 };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([eraInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listEraPoems(mockDb, 'abbasid', 1);
-    expect(result?.totalPages).toBe(3); // ceil(90/30)
+    expect(result?.totalPages).toBe(3);
+  });
+
+  it('coerces string poems_count to number', async () => {
+    const parentRow = { name: 'x', poems_count: '42' };
+    const mockDb = {
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
+    } as unknown as DbClient;
+
+    const result = await listEraPoems(mockDb, 'x', 1);
+    expect(result?.total).toBe(42);
   });
 });

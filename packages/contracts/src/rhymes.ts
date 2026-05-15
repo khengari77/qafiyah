@@ -1,30 +1,24 @@
 import { oc } from '@orpc/contract';
-import * as v from 'valibot';
-import { paginationFields, poemListItemNoPoet, slugAndPageInput, statRow } from './_shared';
+import {
+  listResponse,
+  listResponseWithMeta,
+  parentMeta,
+  poemListItem,
+  slugAndPageInput,
+  statRow,
+} from './_shared';
 
-const listRhymesContract = oc.route({ method: 'GET', path: '/rhymes' }).output(
-  v.object({
-    rhymes: v.array(statRow),
-    ...paginationFields,
-  })
-);
+const listRhymesContract = oc
+  .route({ method: 'GET', path: '/rhymes' })
+  .output(listResponse(statRow));
 
 const listRhymePoemsContract = oc
-  .route({ method: 'GET', path: '/rhymes/{slug}/page/{page}' })
+  .route({ method: 'GET', path: '/rhymes/{slug}/poems' })
   .input(slugAndPageInput)
   .errors({
     NOT_FOUND: { status: 404, message: 'Rhyme not found' },
   })
-  .output(
-    v.object({
-      rhymeDetails: v.object({
-        pattern: v.string(),
-        poemsCount: v.number(),
-      }),
-      poems: v.array(poemListItemNoPoet),
-      ...paginationFields,
-    })
-  );
+  .output(listResponseWithMeta(poemListItem, parentMeta));
 
 export const rhymesContract = {
   list: listRhymesContract,

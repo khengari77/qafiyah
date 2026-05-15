@@ -30,7 +30,7 @@ async function buildOrpcApp() {
       prefix: '/v1',
     });
     if (!result.matched) return next();
-    return transformOrpcResponse(result.response);
+    return transformOrpcResponse(result.response, c.req.path);
   });
   return app;
 }
@@ -42,7 +42,9 @@ const samplePoemData = {
     eraName: 'عباسي',
     eraSlug: 'abbasid',
     meterName: 'الطويل',
+    meterSlug: 'tawil',
     themeName: 'الغزل',
+    themeSlug: 'love',
   },
   clearTitle: 'قصيدة في الحب',
   processedContent: {
@@ -51,7 +53,16 @@ const samplePoemData = {
     sample: 'الشطر الأول',
     keywords: 'قصيدة',
   },
-  relatedPoems: [{ title: 'قصيدة أخرى', slug: 'other-poem', poetName: 'شاعر', meter: 'الكامل' }],
+  relatedPoems: [
+    {
+      title: 'قصيدة أخرى',
+      slug: 'other-poem',
+      poetName: 'شاعر',
+      poetSlug: 'shaer',
+      meterName: 'الكامل',
+      meterSlug: 'kamil',
+    },
+  ],
 };
 
 describe('poems procedures', () => {
@@ -64,7 +75,7 @@ describe('poems procedures', () => {
   });
 
   describe('listSlugs', () => {
-    it('returns slugs list and total', async () => {
+    it('returns slugs list wrapped in envelope', async () => {
       listAllPoemSlugsMock.mockResolvedValue({ slugs: ['poem-1', 'poem-2'], total: 2 });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
@@ -72,9 +83,12 @@ describe('poems procedures', () => {
       const res = await client.$get('/v1/poems/slugs');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { slugs: string[]; total: number };
-      expect(body.slugs).toEqual(['poem-1', 'poem-2']);
-      expect(body.total).toBe(2);
+      const body = (await res.json()) as {
+        data: string[];
+        pagination: { totalItems: number };
+      };
+      expect(body.data).toEqual(['poem-1', 'poem-2']);
+      expect(body.pagination.totalItems).toBe(2);
     });
 
     it('returns empty list when no poems exist', async () => {
@@ -85,24 +99,38 @@ describe('poems procedures', () => {
       const res = await client.$get('/v1/poems/slugs');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { slugs: string[]; total: number };
-      expect(body.slugs).toHaveLength(0);
-      expect(body.total).toBe(0);
+      const body = (await res.json()) as { data: string[]; pagination: { totalItems: number } };
+      expect(body.data).toHaveLength(0);
+      expect(body.pagination.totalItems).toBe(0);
     });
   });
 
   describe('getBySlug', () => {
-    it('returns poem data when found', async () => {
+    it('returns poem resource wrapped in { data } envelope', async () => {
       getPoemBySlugMock.mockResolvedValue({ type: 'found', data: samplePoemData });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poems/slug/my-poem');
+      const res = await client.$get('/v1/poems/my-poem');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as typeof samplePoemData;
-      expect(body.clearTitle).toBe('قصيدة في الحب');
-      expect(body.metadata.poetName).toBe('المتنبي');
+      const body = (await res.json()) as {
+        data: {
+          title: string;
+          slug: string;
+          poet: { name: string; slug: string };
+          meter: { name: string; slug: string };
+          theme: { name: string; slug: string };
+          era: { name: string; slug: string };
+          relatedPoems: Array<{ poet: { slug: string }; meter: { slug: string } }>;
+        };
+      };
+      expect(body.data.title).toBe('قصيدة في الحب');
+      expect(body.data.slug).toBe('my-poem');
+      expect(body.data.poet).toEqual({ name: 'المتنبي', slug: 'mutanabbi' });
+      expect(body.data.meter).toEqual({ name: 'الطويل', slug: 'tawil' });
+      expect(body.data.theme).toEqual({ name: 'الغزل', slug: 'love' });
+      expect(body.data.relatedPoems[0]?.poet.slug).toBe('shaer');
     });
 
     it('returns 404 when poem not found', async () => {
@@ -110,7 +138,7 @@ describe('poems procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poems/slug/nonexistent-poem');
+      const res = await client.$get('/v1/poems/nonexistent-poem');
 
       expect(res.status).toBe(404);
     });
@@ -120,7 +148,7 @@ describe('poems procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poems/slug/bad-poem');
+      const res = await client.$get('/v1/poems/bad-poem');
 
       expect(res.status).toBe(500);
     });
@@ -130,7 +158,7 @@ describe('poems procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/poems/slug/specific-slug');
+      await client.$get('/v1/poems/specific-slug');
 
       expect(getPoemBySlugMock).toHaveBeenCalledWith(expect.anything(), 'specific-slug');
     });

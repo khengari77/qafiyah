@@ -93,30 +93,48 @@ export async function getRandomPoemSlug(db: DbClient): Promise<string> {
   return value.slug;
 }
 
+export type RelatedPoem = {
+  title: string;
+  slug: string;
+  poetName: string;
+  poetSlug: string;
+  meterName: string;
+  meterSlug: string;
+};
+
+export type PoemResourceData = {
+  metadata: {
+    poetName: string;
+    poetSlug: string;
+    eraName: string;
+    eraSlug: string;
+    meterName: string;
+    meterSlug: string;
+    themeName: string;
+    themeSlug: string;
+  };
+  clearTitle: string;
+  processedContent: ReturnType<typeof processPoemContent>;
+  relatedPoems: RelatedPoem[];
+};
+
 type GetPoemResult =
-  | {
-      type: 'found';
-      data: {
-        metadata: {
-          poetName: string;
-          poetSlug: string;
-          eraName: string;
-          eraSlug: string;
-          meterName: string;
-          themeName: string;
-        };
-        clearTitle: string;
-        processedContent: ReturnType<typeof processPoemContent>;
-        relatedPoems: {
-          title: string;
-          slug: string;
-          poetName: string;
-          meter: string;
-        }[];
-      };
-    }
+  | { type: 'found'; data: PoemResourceData }
   | { type: 'not_found' }
   | { type: 'error'; message: string };
+
+type MeterLookupRow = { slug: string };
+type ThemeLookupRow = { slug: string };
+type RelatedEnrichmentRow = {
+  poem_slug: string;
+  poet_slug: string;
+  meter_slug: string;
+};
+
+function textArrayLiteral(values: string[]): string {
+  const escaped = values.map((v) => `"${v.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+  return `{${escaped.join(',')}}`;
+}
 
 export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoemResult> {
   const result = await db.execute(sql`SELECT get_poem_with_related(${slug})`);
@@ -147,8 +165,53 @@ export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoem
     return { type: 'error', message: 'Incomplete poem data' };
   }
 
+  const relatedSlugs = related_poems.map((r) => r.poem_slug);
+
+  const [meterLookup, themeLookup, relatedEnrichment] = await Promise.all([
+    db.execute(
+      sql`SELECT slug FROM public.meters WHERE name = ${poem.meter_name} LIMIT 1`
+    ) as unknown as Promise<MeterLookupRow[]>,
+    db.execute(
+      sql`SELECT slug FROM public.themes WHERE name = ${poem.theme_name} LIMIT 1`
+    ) as unknown as Promise<ThemeLookupRow[]>,
+    relatedSlugs.length === 0
+      ? Promise.resolve([] as RelatedEnrichmentRow[])
+      : (db.execute(sql`
+          SELECT
+            p.slug::TEXT AS poem_slug,
+            pt.slug AS poet_slug,
+            m.slug AS meter_slug
+          FROM public.poems p
+          JOIN public.poets pt ON p.poet_id = pt.id
+          JOIN public.meters m ON p.meter_id = m.id
+          WHERE p.slug::TEXT = ANY(${textArrayLiteral(relatedSlugs)}::TEXT[])
+        `) as unknown as Promise<RelatedEnrichmentRow[]>),
+  ]);
+
+  const meterSlug = meterLookup[0]?.slug;
+  const themeSlug = themeLookup[0]?.slug;
+
+  if (!meterSlug || !themeSlug) {
+    console.error(`Missing meter or theme slug for poem ${slug}`);
+    return { type: 'error', message: 'Incomplete poem data' };
+  }
+
+  const enrichmentMap = new Map(relatedEnrichment.map((r) => [r.poem_slug, r]));
+
   const clearTitle = poem.title.replace(/"/g, '');
   const processedContent = processPoemContent(poem.content);
+
+  const relatedPoems: RelatedPoem[] = related_poems.map((r) => {
+    const enriched = enrichmentMap.get(r.poem_slug);
+    return {
+      title: r.poem_title,
+      slug: r.poem_slug,
+      poetName: r.poet_name,
+      poetSlug: enriched?.poet_slug ?? '',
+      meterName: r.meter_name,
+      meterSlug: enriched?.meter_slug ?? '',
+    };
+  });
 
   return {
     type: 'found',
@@ -159,16 +222,13 @@ export async function getPoemBySlug(db: DbClient, slug: string): Promise<GetPoem
         eraName: poem.era_name,
         eraSlug: poem.era_slug,
         meterName: poem.meter_name,
+        meterSlug,
         themeName: poem.theme_name,
+        themeSlug,
       },
       clearTitle,
       processedContent,
-      relatedPoems: related_poems.map((r) => ({
-        title: r.poem_title,
-        slug: r.poem_slug,
-        poetName: r.poet_name,
-        meter: r.meter_name,
-      })),
+      relatedPoems,
     },
   };
 }

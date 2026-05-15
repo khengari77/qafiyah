@@ -30,13 +30,26 @@ async function buildOrpcApp() {
       prefix: '/v1',
     });
     if (!result.matched) return next();
-    return transformOrpcResponse(result.response);
+    return transformOrpcResponse(result.response, c.req.path);
   });
   return app;
 }
 
 const sampleMeter = { name: 'الطويل', slug: 'tawil', poemsCount: 500, poetsCount: 200 };
-const samplePoem = { title: 'قصيدة', slug: 'poem-1', poetName: 'شاعر' };
+const samplePoemRow = {
+  title: 'قصيدة',
+  slug: 'poem-1',
+  poetName: 'شاعر',
+  poetSlug: 'shaer',
+  meterName: 'الطويل',
+  meterSlug: 'tawil',
+};
+
+type ListBody = {
+  data: unknown[];
+  pagination: { page: number; pageSize: number; totalPages: number; totalItems: number };
+  meta?: { name: string; slug: string; poemsCount: number };
+};
 
 describe('meters procedures', () => {
   beforeEach(() => {
@@ -48,7 +61,7 @@ describe('meters procedures', () => {
   });
 
   describe('listMeters', () => {
-    it('returns meters list with pagination fields', async () => {
+    it('returns meters list wrapped in envelope', async () => {
       listMetersMock.mockResolvedValue([sampleMeter]);
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
@@ -56,10 +69,9 @@ describe('meters procedures', () => {
       const res = await client.$get('/v1/meters');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { meters: unknown[]; total: number; page: number };
-      expect(body.meters).toHaveLength(1);
-      expect(body.total).toBe(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.pagination.totalItems).toBe(1);
     });
 
     it('returns empty list when no meters exist', async () => {
@@ -70,29 +82,28 @@ describe('meters procedures', () => {
       const res = await client.$get('/v1/meters');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { meters: unknown[]; total: number };
-      expect(body.meters).toHaveLength(0);
-      expect(body.total).toBe(0);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(0);
     });
   });
 
   describe('listMeterPoems', () => {
-    it('returns meter poems on valid slug and page', async () => {
+    it('returns meter poems with nested sub-resources and meta', async () => {
       listMeterPoemsMock.mockResolvedValue({
-        meterDetails: { name: 'الطويل', poemsCount: 500 },
-        poems: [samplePoem],
+        parent: { name: 'الطويل', slug: 'tawil', poemsCount: 500 },
+        poems: [samplePoemRow],
         total: 1,
         totalPages: 1,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/meters/tawil/page/1');
+      const res = await client.$get('/v1/meters/tawil/poems?page=1');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { poems: unknown[]; page: number };
-      expect(body.poems).toHaveLength(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.meta?.slug).toBe('tawil');
     });
 
     it('returns 404 when meter slug not found', async () => {
@@ -100,22 +111,22 @@ describe('meters procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/meters/unknown-meter/page/1');
+      const res = await client.$get('/v1/meters/unknown-meter/poems?page=1');
 
       expect(res.status).toBe(404);
     });
 
     it('passes slug and page to the query', async () => {
       listMeterPoemsMock.mockResolvedValue({
-        meterDetails: { name: 'الطويل', poemsCount: 500 },
+        parent: { name: 'الطويل', slug: 'tawil', poemsCount: 500 },
         poems: [],
         total: 500,
-        totalPages: 25,
+        totalPages: 17,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/meters/tawil/page/5');
+      await client.$get('/v1/meters/tawil/poems?page=5');
 
       expect(listMeterPoemsMock).toHaveBeenCalledWith(expect.anything(), 'tawil', 5);
     });

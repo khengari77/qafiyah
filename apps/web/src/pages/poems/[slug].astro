@@ -33,10 +33,13 @@ const { poem, layout: seo } = pageData;
 >
   <PoemDisplay
     client:idle
-    clearTitle={poem.clearTitle}
-    metadata={poem.metadata}
-    verses={poem.processedContent.verses}
-    verseCount={poem.processedContent.verseCount}
+    title={poem.title}
+    poet={poem.poet}
+    era={poem.era}
+    meter={poem.meter}
+    theme={poem.theme}
+    verses={poem.verses}
+    verseCount={poem.verseCount}
     relatedPoems={poem.relatedPoems}
   />
 </Layout>

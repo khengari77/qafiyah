@@ -1,48 +1,33 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { slugInput } from './_shared';
+import { listResponse, poemListItem, resourceResponse, slugInput, subRef } from './_shared';
 
-const listSlugsContract = oc.route({ method: 'GET', path: '/poems/slugs' }).output(
-  v.object({
-    slugs: v.array(v.string()),
-    total: v.number(),
-  })
-);
+const listSlugsContract = oc
+  .route({ method: 'GET', path: '/poems/slugs' })
+  .output(listResponse(v.string()));
+
+const poemResource = v.object({
+  title: v.string(),
+  slug: v.string(),
+  verses: v.array(v.tuple([v.string(), v.string()])),
+  verseCount: v.number(),
+  sample: v.string(),
+  keywords: v.string(),
+  poet: subRef,
+  era: subRef,
+  meter: subRef,
+  theme: subRef,
+  relatedPoems: v.array(poemListItem),
+});
 
 const getBySlugContract = oc
-  .route({ method: 'GET', path: '/poems/slug/{slug}' })
+  .route({ method: 'GET', path: '/poems/{slug}' })
   .input(slugInput)
   .errors({
     NOT_FOUND: { status: 404, message: 'Poem not found' },
     POEM_PARSE_ERROR: { status: 500, message: 'Poem data could not be parsed' },
   })
-  .output(
-    v.object({
-      metadata: v.object({
-        poetName: v.string(),
-        poetSlug: v.string(),
-        eraName: v.string(),
-        eraSlug: v.string(),
-        meterName: v.string(),
-        themeName: v.string(),
-      }),
-      clearTitle: v.string(),
-      processedContent: v.object({
-        verses: v.array(v.tuple([v.string(), v.string()])),
-        verseCount: v.number(),
-        sample: v.string(),
-        keywords: v.string(),
-      }),
-      relatedPoems: v.array(
-        v.object({
-          title: v.string(),
-          slug: v.string(),
-          poetName: v.string(),
-          meter: v.string(),
-        })
-      ),
-    })
-  );
+  .output(resourceResponse(poemResource));
 
 export const poemsContract = {
   listSlugs: listSlugsContract,

@@ -1,11 +1,6 @@
 /**
  * Integration tests for filter-only search against the local Postgres dump.
  * Skipped unless TEST_DATABASE_URL is provided (e.g. `bun run db:setup` then export).
- *
- * Verifies:
- * - listPoemsByFilters resolves slugs OR id-strings to filter ids.
- * - Filtered queries narrow results.
- * - listPoetsByFilters works era-only.
  */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
@@ -34,8 +29,10 @@ describeIfDb('filter-only search queries (integration)', () => {
     expect(result.rows.length).toBeLessThanOrEqual(5);
     for (const row of result.rows) {
       expect(row.poetEra).toBe('عباسي');
+      expect(row.poetEraSlug).toBe('abbasid');
       expect(row.poemTitle).toBeTypeOf('string');
       expect(row.poemSlug).toMatch(/^[0-9a-f-]{36}$/);
+      expect(row.poemMeterSlug).toBeTypeOf('string');
     }
   });
 
@@ -64,6 +61,7 @@ describeIfDb('filter-only search queries (integration)', () => {
     expect(result.rows.length).toBeLessThanOrEqual(10);
     for (const row of result.rows) {
       expect(row.poetEra).toBe('عباسي');
+      expect(row.poetEraSlug).toBe('abbasid');
       expect(row.poetSlug).toBeTypeOf('string');
     }
   });
@@ -94,10 +92,12 @@ describeIfDb('filter-only search queries (integration)', () => {
 const POEMS_ROW = {
   poet_name: 'المتنبي',
   poet_era: 'عباسي',
+  poet_era_slug: 'abbasid',
   poet_slug: 'al-mutanabbi',
   poem_title: 'قصيدة',
   poem_snippet: 'شطر*شطر',
   poem_meter: 'الطويل',
+  poem_meter_slug: 'altawil',
   poem_slug: 'poem-uuid',
   relevance: 0.9,
   total_count: 5,
@@ -106,6 +106,7 @@ const POEMS_ROW = {
 const POETS_ROW = {
   poet_name: 'المتنبي',
   poet_era: 'عباسي',
+  poet_era_slug: 'abbasid',
   poet_slug: 'al-mutanabbi',
   poet_bio: 'شاعر عباسي',
   relevance: 0.8,
@@ -122,15 +123,17 @@ describe('searchPoems (mock)', () => {
     expect(result.totalCount).toBe(5);
     expect(result.rows[0]?.poetName).toBe('المتنبي');
     expect(result.rows[0]?.poemMeter).toBe('الطويل');
+    expect(result.rows[0]?.poemMeterSlug).toBe('altawil');
+    expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
   });
 
-  it('looks up filter IDs then searches (covers all 4 kind branches + unknown)', async () => {
+  it('looks up filter IDs then searches', async () => {
     const lookupRows = [
       { kind: 'meter', id: 1 },
       { kind: 'era', id: 2 },
       { kind: 'theme', id: 3 },
       { kind: 'rhyme', id: 4 },
-      { kind: 'unknown', id: 99 }, // falls through all else-if branches (implicit else)
+      { kind: 'unknown', id: 99 },
     ];
     const mockDb = {
       execute: vi.fn().mockResolvedValueOnce(lookupRows).mockResolvedValueOnce([POEMS_ROW]),
@@ -159,7 +162,7 @@ describe('searchPoems (mock)', () => {
     expect(mockDb.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('covers mLit-null branch (era filter only, meter SQL uses FALSE)', async () => {
+  it('covers mLit-null branch (era filter only)', async () => {
     const mockDb = {
       execute: vi
         .fn()
@@ -171,9 +174,7 @@ describe('searchPoems (mock)', () => {
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
 
-  it('covers eLit-null path (meter-only filter, eLit/tLit/rLit all null)', async () => {
-    // e=null while m non-null → enters execute path → eLit=null → sql`FALSE` for era/theme/rhyme
-    // Also covers: eraIds: e ? eraBucket : null → null branch
+  it('covers eLit-null path (meter-only filter)', async () => {
     const mockDb = {
       execute: vi
         .fn()
@@ -226,9 +227,10 @@ describe('searchPoets (mock)', () => {
     expect(result.totalCount).toBe(3);
     expect(result.rows[0]?.poetName).toBe('المتنبي');
     expect(result.rows[0]?.poetBio).toBe('شاعر عباسي');
+    expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
   });
 
-  it('looks up era IDs then searches (2 execute calls)', async () => {
+  it('looks up era IDs then searches', async () => {
     const mockDb = {
       execute: vi
         .fn()
@@ -283,10 +285,12 @@ describe('searchPoets (mock)', () => {
 const FILTER_POEMS_ROW = {
   poet_name: 'شاعر',
   poet_era: 'عباسي',
+  poet_era_slug: 'abbasid',
   poet_slug: 'poet-slug',
   poem_title: 'قصيدة',
   poem_snippet: 'شطر',
   poem_meter: 'الطويل',
+  poem_meter_slug: 'altawil',
   poem_slug: 'poem-uuid',
   relevance: 0,
 };
@@ -294,6 +298,7 @@ const FILTER_POEMS_ROW = {
 const FILTER_POETS_ROW = {
   poet_name: 'شاعر',
   poet_era: 'عباسي',
+  poet_era_slug: 'abbasid',
   poet_slug: 'poet-slug',
   poet_bio: 'بيو',
   relevance: 0,
@@ -311,13 +316,12 @@ describe('listPoemsByFilters (mock)', () => {
     const result = await listPoemsByFilters(mockDb, 1, null, null, null, null);
     expect(result.totalCount).toBe(1);
     expect(result.rows[0]?.poetName).toBe('شاعر');
+    expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
+    expect(result.rows[0]?.poemMeterSlug).toBe('altawil');
   });
 
   it('covers intArrayParam branches: null, [], and [id]', async () => {
-    // meterSlugs=['الطويل'] → lookup returns id for meter, no era/theme/rhyme
-    // → meterIds=[1], eraIds=null, themeIds=null, rhymeIds=null
-    // But pass all 4 slugs, return partial to get [] for some
-    const lookupRows = [{ kind: 'meter', id: 1 }]; // no era/theme/rhyme rows
+    const lookupRows = [{ kind: 'meter', id: 1 }];
     const mockDb = {
       execute: vi
         .fn()
@@ -326,7 +330,6 @@ describe('listPoemsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     } as unknown as DbClient;
 
-    // Pass all 4 filter types; only meter returns an ID → eraIds=[], themeIds=[], rhymeIds=[]
     const result = await listPoemsByFilters(mockDb, 1, ['الطويل'], ['abbasid'], ['فخر'], ['meem']);
     expect(result.totalCount).toBe(1);
   });
@@ -367,6 +370,7 @@ describe('listPoetsByFilters (mock)', () => {
     const result = await listPoetsByFilters(mockDb, 1, null);
     expect(result.totalCount).toBe(1);
     expect(result.rows[0]?.poetName).toBe('شاعر');
+    expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
   });
 
   it('looks up era IDs when era slugs are provided', async () => {

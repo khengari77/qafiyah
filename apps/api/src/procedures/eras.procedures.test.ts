@@ -30,13 +30,26 @@ async function buildOrpcApp() {
       prefix: '/v1',
     });
     if (!result.matched) return next();
-    return transformOrpcResponse(result.response);
+    return transformOrpcResponse(result.response, c.req.path);
   });
   return app;
 }
 
 const sampleEra = { name: 'عباسي', slug: 'abbasid', poemsCount: 100, poetsCount: 50 };
-const samplePoem = { title: 'قصيدة', slug: 'poem-1', poetName: 'شاعر', meter: 'الطويل' };
+const samplePoemRow = {
+  title: 'قصيدة',
+  slug: 'poem-1',
+  poetName: 'شاعر',
+  poetSlug: 'shaer',
+  meterName: 'الطويل',
+  meterSlug: 'taweel',
+};
+
+type ListBody = {
+  data: unknown[];
+  pagination: { page: number; pageSize: number; totalPages: number; totalItems: number };
+  meta?: { name: string; slug: string; poemsCount: number };
+};
 
 describe('eras procedures', () => {
   beforeEach(() => {
@@ -48,7 +61,7 @@ describe('eras procedures', () => {
   });
 
   describe('listEras', () => {
-    it('returns eras list with pagination fields', async () => {
+    it('returns eras list wrapped in envelope', async () => {
       listErasMock.mockResolvedValue([sampleEra]);
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
@@ -56,10 +69,10 @@ describe('eras procedures', () => {
       const res = await client.$get('/v1/eras');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { eras: unknown[]; total: number; page: number };
-      expect(body.eras).toHaveLength(1);
-      expect(body.total).toBe(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.pagination.totalItems).toBe(1);
+      expect(body.pagination.page).toBe(1);
     });
 
     it('returns empty list when no eras exist', async () => {
@@ -70,29 +83,36 @@ describe('eras procedures', () => {
       const res = await client.$get('/v1/eras');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { eras: unknown[]; total: number };
-      expect(body.eras).toHaveLength(0);
-      expect(body.total).toBe(0);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(0);
+      expect(body.pagination.totalItems).toBe(0);
     });
   });
 
   describe('listEraPoems', () => {
-    it('returns era poems on valid slug and page', async () => {
+    it('returns poems with nested sub-resources and meta', async () => {
       listEraPoemsMock.mockResolvedValue({
-        eraDetails: { name: 'عباسي', poemsCount: 100 },
-        poems: [samplePoem],
+        parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 100 },
+        poems: [samplePoemRow],
         total: 1,
         totalPages: 1,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/eras/abbasid/page/1');
+      const res = await client.$get('/v1/eras/abbasid/poems?page=1');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { poems: unknown[]; page: number };
-      expect(body.poems).toHaveLength(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.pagination.page).toBe(1);
+      expect(body.meta).toEqual({ name: 'عباسي', slug: 'abbasid', poemsCount: 100 });
+      const poem = body.data[0] as {
+        poet: { name: string; slug: string };
+        meter: { name: string; slug: string };
+      };
+      expect(poem.poet).toEqual({ name: 'شاعر', slug: 'shaer' });
+      expect(poem.meter).toEqual({ name: 'الطويل', slug: 'taweel' });
     });
 
     it('returns 404 when era slug not found', async () => {
@@ -100,26 +120,44 @@ describe('eras procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/eras/unknown-era/page/1');
+      const res = await client.$get('/v1/eras/unknown-era/poems?page=1');
 
       expect(res.status).toBe(404);
     });
 
-    it('uses the page from input', async () => {
+    it('defaults to page 1 when no page query is provided', async () => {
       listEraPoemsMock.mockResolvedValue({
-        eraDetails: { name: 'عباسي', poemsCount: 200 },
-        poems: [samplePoem],
+        parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 200 },
+        poems: [samplePoemRow],
         total: 200,
-        totalPages: 10,
+        totalPages: 7,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/eras/abbasid/page/3');
+      const res = await client.$get('/v1/eras/abbasid/poems');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { page: number };
-      expect(body.page).toBe(3);
+      const body = (await res.json()) as ListBody;
+      expect(body.pagination.page).toBe(1);
+      expect(listEraPoemsMock).toHaveBeenCalledWith(expect.anything(), 'abbasid', 1);
+    });
+
+    it('passes page from query string to the query', async () => {
+      listEraPoemsMock.mockResolvedValue({
+        parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 200 },
+        poems: [samplePoemRow],
+        total: 200,
+        totalPages: 7,
+      });
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/eras/abbasid/poems?page=3');
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as ListBody;
+      expect(body.pagination.page).toBe(3);
       expect(listEraPoemsMock).toHaveBeenCalledWith(expect.anything(), 'abbasid', 3);
     });
   });

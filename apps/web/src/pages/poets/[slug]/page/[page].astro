@@ -25,14 +25,16 @@ if (!slug || !Number.isFinite(pageNumber) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
 
-const result = await fetchPoetPoemPage(slug as string, page as string);
-if (!result?.data) {
+const response = await fetchPoetPoemPage(slug as string, page as string);
+if (!response) {
   return Astro.redirect('/404');
 }
 
-const { data, pagination } = result;
-const { poetDetails: poet, poems } = data;
-const { totalPages, hasNextPage, hasPrevPage } = pagination;
+const poems = response.data;
+const poet = response.meta;
+const { totalPages } = response.pagination;
+const hasNextPage = pageNumber < totalPages;
+const hasPrevPage = pageNumber > 1;
 const nextPageUrl = `/poets/${slug}/page/${pageNumber + 1}`;
 const prevPageUrl = `/poets/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
@@ -59,7 +61,7 @@ const jsonLd = {
   workExample: poems.slice(0, 10).map((poem) => ({
     '@type': 'CreativeWork',
     name: poem.title,
-    description: `قصيدة (${poem.title}) على ${poem.meter}`,
+    description: `قصيدة (${poem.title}) على ${poem.meter.name}`,
     url: `${SITE_URL}/poems/${poem.slug}`,
   })),
 };
@@ -91,7 +93,7 @@ const jsonLd = {
               {stripQuotes(poem.title)}
             </p>
             <p class="text-xs xs:text-lg sm:text-xl lg:text-lg text-zinc-600/80 group-hover:text-zinc-500 duration-300 text-wrap">
-              {poem.meter}
+              {poem.meter.name}
             </p>
           </a>
         )) : (

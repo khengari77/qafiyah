@@ -44,34 +44,28 @@ describe('listThemes', () => {
 });
 
 describe('listThemePoems', () => {
-  it('returns theme details and poems on success', async () => {
-    const themeInfoRow = { themeName: 'غزل', totalPoems: 40 };
+  it('returns parent and poems with nested slugs', async () => {
+    const parentRow = { name: 'غزل', poems_count: 40 };
     const poemRow = {
       title: 'قصيدة',
       slug: 'poem-slug',
-      poetName: 'شاعر',
-      meter: 'الطويل',
+      poet_name: 'شاعر',
+      poet_slug: 'poet-1',
+      meter_name: 'الطويل',
+      meter_slug: 'altawil',
     };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([themeInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([poemRow])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     } as unknown as DbClient;
 
-    const result = await listThemePoems(mockDb, 'ghazal-slug', 1);
-    expect(result).not.toBeNull();
-    expect(result?.themeDetails.name).toBe('غزل');
-    expect(result?.total).toBe(40);
-    expect(result?.poems[0]?.title).toBe('قصيدة');
+    const result = await listThemePoems(mockDb, 'ghazal', 1);
+    expect(result?.parent.name).toBe('غزل');
+    expect(result?.poems[0]?.meterSlug).toBe('altawil');
   });
 
   it('returns null when theme is not found', async () => {
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listThemePoems(mockDb, 'nonexistent', 1);

@@ -28,14 +28,16 @@ if (!slug || !Number.isFinite(pageNumber) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
 
-const result = await fetchMeterPoemPage(slug as string, page as string);
-if (!result?.data) {
+const response = await fetchMeterPoemPage(slug as string, page as string);
+if (!response) {
   return Astro.redirect('/404');
 }
 
-const { data, pagination } = result;
-const { meterDetails: meter, poems } = data;
-const { totalPages, hasNextPage, hasPrevPage } = pagination;
+const poems = response.data;
+const meter = response.meta;
+const { totalPages } = response.pagination;
+const hasNextPage = pageNumber < totalPages;
+const hasPrevPage = pageNumber > 1;
 const nextPageUrl = `/meters/${slug}/page/${pageNumber + 1}`;
 const prevPageUrl = `/meters/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
@@ -84,7 +86,7 @@ const jsonLd = {
               {stripQuotes(poem.title)}
             </p>
             <p class="text-xs xs:text-lg sm:text-xl lg:text-lg text-zinc-600/80 group-hover:text-zinc-500 duration-300 text-wrap">
-              {poem.poetName}
+              {poem.poet.name}
             </p>
           </a>
         )) : (

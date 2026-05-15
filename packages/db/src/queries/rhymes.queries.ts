@@ -1,8 +1,9 @@
 import { ARABIC_LETTERS_MAP, POEMS_PER_PAGE } from '@qafiyah/constants';
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { rhymePoems, rhymeStats } from '../schema';
+import { rhymeStats } from '../schema';
 import { normalizeRhymePattern } from '../utils/normalize-rhyme-pattern';
+import type { PoemListRow } from './eras.queries';
 
 export type RhymeLetterGroup = {
   name: string;
@@ -12,10 +13,20 @@ export type RhymeLetterGroup = {
 };
 
 export type ListRhymePoemsResult = {
-  rhymeDetails: { pattern: string; poemsCount: number };
-  poems: { title: string; slug: string; meter: string }[];
+  parent: { name: string; slug: string; poemsCount: number };
+  poems: PoemListRow[];
   total: number;
   totalPages: number;
+};
+
+type ParentRow = { name: string; poems_count: number | string };
+type RawPoemRow = {
+  title: string;
+  slug: string;
+  poet_name: string;
+  poet_slug: string;
+  meter_name: string;
+  meter_slug: string;
 };
 
 export async function listRhymes(db: DbClient): Promise<RhymeLetterGroup[]> {
@@ -68,39 +79,44 @@ export async function listRhymePoems(
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const [rhymeInfo, poems] = await Promise.all([
-    db
-      .select({
-        rhymePattern: rhymePoems.rhymePattern,
-        totalPoems: rhymePoems.totalPoemsByRhyme,
-      })
-      .from(rhymePoems)
-      .where(eq(rhymePoems.rhymeSlug, slug))
-      .limit(1),
-    db
-      .select({
-        title: rhymePoems.poemTitle,
-        slug: rhymePoems.poemSlug,
-        meter: rhymePoems.meterName,
-      })
-      .from(rhymePoems)
-      .where(eq(rhymePoems.rhymeSlug, slug))
-      .limit(limit)
-      .offset(offset),
-  ]);
+  const parentRows = (await db.execute(
+    sql`SELECT pattern AS name, poems_count FROM rhyme_stats WHERE slug = ${slug}::UUID LIMIT 1`
+  )) as unknown as ParentRow[];
 
-  if (!rhymeInfo.length || !rhymeInfo[0]) return null;
+  if (!parentRows.length || !parentRows[0]) return null;
 
-  const total = rhymeInfo[0].totalPoems;
-  const totalPages = Math.ceil(total / limit);
+  const total = Number(parentRows[0].poems_count);
+
+  const rawPoems = (await db.execute(sql`
+    SELECT
+      p.title AS title,
+      p.slug::TEXT AS slug,
+      pt.name AS poet_name,
+      pt.slug AS poet_slug,
+      m.name AS meter_name,
+      m.slug AS meter_slug
+    FROM public.poems p
+    JOIN public.poets pt ON p.poet_id = pt.id
+    JOIN public.meters m ON p.meter_id = m.id
+    JOIN public.rhymes r ON p.rhyme_id = r.id
+    WHERE r.slug = ${slug}::UUID
+    ORDER BY p.id
+    LIMIT ${limit} OFFSET ${offset}
+  `)) as unknown as RawPoemRow[];
+
+  const poems: PoemListRow[] = rawPoems.map((r) => ({
+    title: r.title,
+    slug: r.slug,
+    poetName: r.poet_name,
+    poetSlug: r.poet_slug,
+    meterName: r.meter_name,
+    meterSlug: r.meter_slug,
+  }));
 
   return {
-    rhymeDetails: {
-      pattern: rhymeInfo[0].rhymePattern,
-      poemsCount: total,
-    },
+    parent: { name: parentRows[0].name, slug, poemsCount: total },
     poems,
     total,
-    totalPages,
+    totalPages: Math.ceil(total / limit),
   };
 }

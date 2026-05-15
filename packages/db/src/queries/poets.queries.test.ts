@@ -46,29 +46,28 @@ describe('listPoets', () => {
 });
 
 describe('listPoetPoems', () => {
-  it('returns poet details and poems on success', async () => {
-    const poetInfoRow = { poetName: 'المتنبي', totalPoems: 50 };
-    const poemRow = { title: 'قصيدة', slug: 'poem-slug', meter: 'الطويل' };
+  it('returns parent and poems with nested slugs', async () => {
+    const parentRow = { name: 'المتنبي', poems_count: 50 };
+    const poemRow = {
+      title: 'قصيدة',
+      slug: 'poem-slug',
+      poet_name: 'المتنبي',
+      poet_slug: 'al-mutanabbi',
+      meter_name: 'الطويل',
+      meter_slug: 'altawil',
+    };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([poetInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([poemRow])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     } as unknown as DbClient;
 
     const result = await listPoetPoems(mockDb, 'al-mutanabbi', 1);
-    expect(result).not.toBeNull();
-    expect(result?.poetDetails.name).toBe('المتنبي');
-    expect(result?.total).toBe(50);
-    expect(result?.poems[0]?.title).toBe('قصيدة');
+    expect(result?.parent.name).toBe('المتنبي');
+    expect(result?.poems[0]?.meterSlug).toBe('altawil');
   });
 
   it('returns null when poet is not found', async () => {
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listPoetPoems(mockDb, 'nonexistent', 1);
@@ -76,15 +75,12 @@ describe('listPoetPoems', () => {
   });
 
   it('computes totalPages correctly', async () => {
-    const poetInfoRow = { poetName: 'شاعر', totalPoems: 31 };
+    const parentRow = { name: 'شاعر', poems_count: 31 };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([poetInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listPoetPoems(mockDb, 'poet-slug', 1);
-    expect(result?.totalPages).toBe(2); // ceil(31/30)
+    expect(result?.totalPages).toBe(2);
   });
 });

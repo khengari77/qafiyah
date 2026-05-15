@@ -5,10 +5,12 @@ import type { DbClient } from '../client';
 export type PoemsSearchRow = {
   poetName: string;
   poetEra: string;
+  poetEraSlug: string;
   poetSlug: string;
   poemTitle: string;
   poemSnippet: string;
   poemMeter: string;
+  poemMeterSlug: string;
   poemSlug: string;
   relevance: number;
 };
@@ -16,6 +18,7 @@ export type PoemsSearchRow = {
 export type PoetsSearchRow = {
   poetName: string;
   poetEra: string;
+  poetEraSlug: string;
   poetSlug: string;
   poetBio: string;
   relevance: number;
@@ -29,10 +32,12 @@ export type SearchPage<T> = {
 type RawPoemsSearchRow = {
   poet_name: string;
   poet_era: string;
+  poet_era_slug: string;
   poet_slug: string;
   poem_title: string;
   poem_snippet: string;
   poem_meter: string;
+  poem_meter_slug: string;
   poem_slug: string;
   relevance: number;
   total_count: number | string;
@@ -41,14 +46,13 @@ type RawPoemsSearchRow = {
 type RawPoetsSearchRow = {
   poet_name: string;
   poet_era: string;
+  poet_era_slug: string;
   poet_slug: string;
   poet_bio: string;
   relevance: number;
   total_count: number | string;
 };
 
-// null = user did not set this filter (matches everything).
-// [] = user set this filter but no slug matched (matches nothing).
 function intArrayParam(ids: number[] | null): SQL {
   if (ids === null) return sql`NULL::INTEGER[]`;
   if (ids.length === 0) return sql`'{}'::INTEGER[]`;
@@ -67,8 +71,6 @@ type FilterIds = {
   rhymeIds: number[] | null;
 };
 
-// Accepts either text slugs (e.g. 'abbasid') or stringified IDs (e.g. '2').
-// Web currently sends id-strings; matching both keeps the API forward-compatible.
 async function lookupFilterIds(
   db: DbClient,
   meterSlugs: string[] | null,
@@ -127,6 +129,32 @@ async function lookupEraIdsOnly(db: DbClient, slugs: string[] | null): Promise<n
   return rows.map((r) => r.id);
 }
 
+function mapPoemRow(r: Omit<RawPoemsSearchRow, 'total_count'>): PoemsSearchRow {
+  return {
+    poetName: r.poet_name,
+    poetEra: r.poet_era,
+    poetEraSlug: r.poet_era_slug,
+    poetSlug: r.poet_slug,
+    poemTitle: r.poem_title,
+    poemSnippet: r.poem_snippet,
+    poemMeter: r.poem_meter,
+    poemMeterSlug: r.poem_meter_slug,
+    poemSlug: r.poem_slug,
+    relevance: r.relevance,
+  };
+}
+
+function mapPoetRow(r: Omit<RawPoetsSearchRow, 'total_count'>): PoetsSearchRow {
+  return {
+    poetName: r.poet_name,
+    poetEra: r.poet_era,
+    poetEraSlug: r.poet_era_slug,
+    poetSlug: r.poet_slug,
+    poetBio: r.poet_bio,
+    relevance: r.relevance,
+  };
+}
+
 export async function searchPoems(
   db: DbClient,
   query: string,
@@ -145,17 +173,26 @@ export async function searchPoems(
     rhymeSlugs
   );
 
-  const raw = (await db.execute(
-    sql`SELECT * FROM search_poems(
-      ${query}::TEXT,
-      ${page}::INTEGER,
-      ${matchType}::TEXT,
-      ${intArrayParam(meterIds)},
-      ${intArrayParam(eraIds)},
-      ${intArrayParam(themeIds)},
-      ${intArrayParam(rhymeIds)}
-    )`
-  )) as unknown as RawPoemsSearchRow[];
+  const raw = (await db.execute(sql`
+    WITH s AS (
+      SELECT * FROM search_poems(
+        ${query}::TEXT,
+        ${page}::INTEGER,
+        ${matchType}::TEXT,
+        ${intArrayParam(meterIds)},
+        ${intArrayParam(eraIds)},
+        ${intArrayParam(themeIds)},
+        ${intArrayParam(rhymeIds)}
+      )
+    )
+    SELECT
+      s.*,
+      m.slug AS poem_meter_slug,
+      e.slug AS poet_era_slug
+    FROM s
+    LEFT JOIN public.meters m ON m.name = s.poem_meter
+    LEFT JOIN public.eras e ON e.name = s.poet_era
+  `)) as unknown as RawPoemsSearchRow[];
 
   if (!raw || raw.length === 0) return { rows: [], totalCount: 0 };
 
@@ -167,17 +204,7 @@ export async function searchPoems(
   if (!Number.isFinite(totalCount)) {
     throw new Error(`searchPoems: total_count is not a finite number (got ${String(rawTotal)})`);
   }
-  const rows: PoemsSearchRow[] = raw.map((r) => ({
-    poetName: r.poet_name,
-    poetEra: r.poet_era,
-    poetSlug: r.poet_slug,
-    poemTitle: r.poem_title,
-    poemSnippet: r.poem_snippet,
-    poemMeter: r.poem_meter,
-    poemSlug: r.poem_slug,
-    relevance: r.relevance,
-  }));
-  return { rows, totalCount };
+  return { rows: raw.map(mapPoemRow), totalCount };
 }
 
 export async function searchPoets(
@@ -189,14 +216,21 @@ export async function searchPoets(
 ): Promise<SearchPage<PoetsSearchRow>> {
   const eraIds = await lookupEraIdsOnly(db, eraSlugs);
 
-  const raw = (await db.execute(
-    sql`SELECT * FROM search_poets(
-      ${query}::TEXT,
-      ${page}::INTEGER,
-      ${matchType}::TEXT,
-      ${intArrayParam(eraIds)}
-    )`
-  )) as unknown as RawPoetsSearchRow[];
+  const raw = (await db.execute(sql`
+    WITH s AS (
+      SELECT * FROM search_poets(
+        ${query}::TEXT,
+        ${page}::INTEGER,
+        ${matchType}::TEXT,
+        ${intArrayParam(eraIds)}
+      )
+    )
+    SELECT
+      s.*,
+      e.slug AS poet_era_slug
+    FROM s
+    LEFT JOIN public.eras e ON e.name = s.poet_era
+  `)) as unknown as RawPoetsSearchRow[];
 
   if (!raw || raw.length === 0) return { rows: [], totalCount: 0 };
 
@@ -208,14 +242,7 @@ export async function searchPoets(
   if (!Number.isFinite(totalCount)) {
     throw new Error(`searchPoets: total_count is not a finite number (got ${String(rawTotal)})`);
   }
-  const rows: PoetsSearchRow[] = raw.map((r) => ({
-    poetName: r.poet_name,
-    poetEra: r.poet_era,
-    poetSlug: r.poet_slug,
-    poetBio: r.poet_bio,
-    relevance: r.relevance,
-  }));
-  return { rows, totalCount };
+  return { rows: raw.map(mapPoetRow), totalCount };
 }
 
 type CountRow = { total: number | string };
@@ -263,10 +290,12 @@ export async function listPoemsByFilters(
     SELECT
       pt.name AS poet_name,
       e.name AS poet_era,
+      e.slug AS poet_era_slug,
       pt.slug AS poet_slug,
       p.title AS poem_title,
       array_to_string((string_to_array(p.content, '*'))[1:2], '*') AS poem_snippet,
       m.name AS poem_meter,
+      m.slug AS poem_meter_slug,
       p.slug AS poem_slug,
       0::real AS relevance
     FROM public.poems p
@@ -289,18 +318,11 @@ export async function listPoemsByFilters(
   const [rawRows, rawCount] = await Promise.all([rowsPromise, countPromise]);
 
   const typedRows = rawRows as unknown as Omit<RawPoemsSearchRow, 'total_count'>[];
-  const rows: PoemsSearchRow[] = typedRows.map((r) => ({
-    poetName: r.poet_name,
-    poetEra: r.poet_era,
-    poetSlug: r.poet_slug,
-    poemTitle: r.poem_title,
-    poemSnippet: r.poem_snippet,
-    poemMeter: r.poem_meter,
-    poemSlug: r.poem_slug,
-    relevance: r.relevance,
-  }));
 
-  return { rows, totalCount: readTotalCount(rawCount, 'listPoemsByFilters') };
+  return {
+    rows: typedRows.map(mapPoemRow),
+    totalCount: readTotalCount(rawCount, 'listPoemsByFilters'),
+  };
 }
 
 export async function listPoetsByFilters(
@@ -318,6 +340,7 @@ export async function listPoetsByFilters(
     SELECT
       pt.name AS poet_name,
       e.name AS poet_era,
+      e.slug AS poet_era_slug,
       pt.slug AS poet_slug,
       COALESCE(pt.bio, '') AS poet_bio,
       0::double precision AS relevance
@@ -338,13 +361,9 @@ export async function listPoetsByFilters(
   const [rawRows, rawCount] = await Promise.all([rowsPromise, countPromise]);
 
   const typedRows = rawRows as unknown as Omit<RawPoetsSearchRow, 'total_count'>[];
-  const rows: PoetsSearchRow[] = typedRows.map((r) => ({
-    poetName: r.poet_name,
-    poetEra: r.poet_era,
-    poetSlug: r.poet_slug,
-    poetBio: r.poet_bio,
-    relevance: r.relevance,
-  }));
 
-  return { rows, totalCount: readTotalCount(rawCount, 'listPoetsByFilters') };
+  return {
+    rows: typedRows.map(mapPoetRow),
+    totalCount: readTotalCount(rawCount, 'listPoetsByFilters'),
+  };
 }

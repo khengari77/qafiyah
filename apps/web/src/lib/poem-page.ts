@@ -10,10 +10,9 @@ import {
 } from '@qafiyah/constants';
 import { SITE_NAME, SITE_URL } from '@/constants/globals';
 import { fetchPoem } from '@/lib/api/static';
-import type { PoemResponseData } from '@/lib/api/types';
+import type { Poem } from '@/lib/api/types';
 import { flattenVerses } from '@/lib/flatten-verses';
 
-/** Strip chars that break Astro's codegen when strings are embedded into generated JS props. */
 function safeMetaText(value: string): string {
   return value
     .replace(/['"\\]/g, '')
@@ -24,7 +23,7 @@ function safeMetaText(value: string): string {
 type PoemLayoutProps = {
   title: string;
   description: string;
-  keywords: PoemResponseData['processedContent']['keywords'];
+  keywords: string;
   canonical: string;
   ogTitle: string;
   ogDescription: string;
@@ -35,15 +34,15 @@ type PoemLayoutProps = {
 };
 
 export async function loadPoemPage(slug: string): Promise<{
-  poem: PoemResponseData;
+  poem: Poem;
   layout: PoemLayoutProps;
 } | null> {
   const poem = await fetchPoem(slug);
   if (!poem) return null;
 
-  const clearTitle = poem.clearTitle || POEM_DEFAULT_TITLE;
-  const poetName = poem.metadata.poetName || UNKNOWN_POET_NAME;
-  const rawDescription = flattenVerses(poem.processedContent.verses as [string, string][]);
+  const clearTitle = poem.title || POEM_DEFAULT_TITLE;
+  const poetName = poem.poet.name || UNKNOWN_POET_NAME;
+  const rawDescription = flattenVerses(poem.verses);
   const safeClearTitle = safeMetaText(clearTitle);
   const safePoetName = safeMetaText(poetName);
   const description = safeMetaText(rawDescription);
@@ -53,28 +52,26 @@ export async function loadPoemPage(slug: string): Promise<{
   const twitterDescription = safeMetaText(
     TWITTER_DESCRIPTION_TEMPLATE_AR.replace('{poet}', poetName)
   );
-  const sanitizedKeywords = safeMetaText(poem.processedContent.keywords);
+  const sanitizedKeywords = safeMetaText(poem.keywords);
 
   const jsonLd = {
     '@context': SCHEMA_ORG_CONTEXT,
     '@type': 'CreativeWork',
-    name: safeMetaText(poem.clearTitle),
-    headline: safeMetaText(`${poem.clearTitle} | ${poem.metadata.poetName}`),
+    name: safeMetaText(poem.title),
+    headline: safeMetaText(`${poem.title} | ${poem.poet.name}`),
     author: {
       '@type': 'Person',
-      name: poem.metadata.poetName,
-      url: poem.metadata.poetSlug,
+      name: poem.poet.name,
+      url: poem.poet.slug,
     },
     inLanguage: POEM_LANGUAGE,
     datePublished: new Date().toISOString(),
     url: pageUrl,
     isPartOf: [
-      { '@type': 'Collection', name: poem.metadata.poetName, url: poem.metadata.poetSlug },
-      { '@type': 'Collection', name: poem.metadata.eraName, url: poem.metadata.eraSlug },
+      { '@type': 'Collection', name: poem.poet.name, url: poem.poet.slug },
+      { '@type': 'Collection', name: poem.era.name, url: poem.era.slug },
     ],
-    description: safeMetaText(
-      poem.processedContent.verses.flat().join(POEM_KEYWORDS_JOIN_SEPARATOR)
-    ),
+    description: safeMetaText(poem.verses.flat().join(POEM_KEYWORDS_JOIN_SEPARATOR)),
     keywords: sanitizedKeywords,
     publisher: {
       '@type': 'Organization',

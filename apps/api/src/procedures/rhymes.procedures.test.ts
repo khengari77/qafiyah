@@ -30,13 +30,26 @@ async function buildOrpcApp() {
       prefix: '/v1',
     });
     if (!result.matched) return next();
-    return transformOrpcResponse(result.response);
+    return transformOrpcResponse(result.response, c.req.path);
   });
   return app;
 }
 
 const sampleRhyme = { name: 'الميم', slug: 'meem', poemsCount: 150, poetsCount: 80 };
-const samplePoem = { title: 'قصيدة', slug: 'poem-1', meter: 'الطويل' };
+const samplePoemRow = {
+  title: 'قصيدة',
+  slug: 'poem-1',
+  poetName: 'شاعر',
+  poetSlug: 'shaer',
+  meterName: 'الطويل',
+  meterSlug: 'tawil',
+};
+
+type ListBody = {
+  data: unknown[];
+  pagination: { page: number; pageSize: number; totalPages: number; totalItems: number };
+  meta?: { name: string; slug: string; poemsCount: number };
+};
 
 describe('rhymes procedures', () => {
   beforeEach(() => {
@@ -48,7 +61,7 @@ describe('rhymes procedures', () => {
   });
 
   describe('listRhymes', () => {
-    it('returns rhymes list with pagination fields', async () => {
+    it('returns rhymes list wrapped in envelope', async () => {
       listRhymesMock.mockResolvedValue([sampleRhyme]);
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
@@ -56,10 +69,9 @@ describe('rhymes procedures', () => {
       const res = await client.$get('/v1/rhymes');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { rhymes: unknown[]; total: number; page: number };
-      expect(body.rhymes).toHaveLength(1);
-      expect(body.total).toBe(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.pagination.totalItems).toBe(1);
     });
 
     it('returns empty list when no rhymes exist', async () => {
@@ -70,29 +82,28 @@ describe('rhymes procedures', () => {
       const res = await client.$get('/v1/rhymes');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { rhymes: unknown[]; total: number };
-      expect(body.rhymes).toHaveLength(0);
-      expect(body.total).toBe(0);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(0);
     });
   });
 
   describe('listRhymePoems', () => {
-    it('returns rhyme poems on valid slug and page', async () => {
+    it('returns rhyme poems with nested sub-resources and meta', async () => {
       listRhymePoemsMock.mockResolvedValue({
-        rhymeDetails: { pattern: 'م', poemsCount: 150 },
-        poems: [samplePoem],
+        parent: { name: 'م', slug: 'meem', poemsCount: 150 },
+        poems: [samplePoemRow],
         total: 1,
         totalPages: 1,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/rhymes/meem/page/1');
+      const res = await client.$get('/v1/rhymes/meem/poems?page=1');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { poems: unknown[]; page: number };
-      expect(body.poems).toHaveLength(1);
-      expect(body.page).toBe(1);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(1);
+      expect(body.meta?.name).toBe('م');
     });
 
     it('returns 404 when rhyme slug not found', async () => {
@@ -100,22 +111,22 @@ describe('rhymes procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/rhymes/unknown-rhyme/page/1');
+      const res = await client.$get('/v1/rhymes/unknown-rhyme/poems?page=1');
 
       expect(res.status).toBe(404);
     });
 
     it('passes slug and page to the query', async () => {
       listRhymePoemsMock.mockResolvedValue({
-        rhymeDetails: { pattern: 'م', poemsCount: 150 },
+        parent: { name: 'م', slug: 'meem', poemsCount: 150 },
         poems: [],
         total: 150,
-        totalPages: 8,
+        totalPages: 5,
       });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/rhymes/meem/page/4');
+      await client.$get('/v1/rhymes/meem/poems?page=4');
 
       expect(listRhymePoemsMock).toHaveBeenCalledWith(expect.anything(), 'meem', 4);
     });

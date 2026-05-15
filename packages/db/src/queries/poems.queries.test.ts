@@ -194,9 +194,16 @@ const fullPoemData = {
 };
 
 describe('getPoemBySlug', () => {
-  it('returns found result with mapped data', async () => {
+  it('returns found result with enriched slugs for poem and related', async () => {
     const mockDb = {
-      execute: vi.fn().mockResolvedValue([{ get_poem_with_related: fullPoemData }]),
+      execute: vi
+        .fn()
+        .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
+        .mockResolvedValueOnce([{ slug: 'altawil' }]) // meter
+        .mockResolvedValueOnce([{ slug: 'fakhr' }]) // theme
+        .mockResolvedValueOnce([
+          { poem_slug: 'related-slug', poet_slug: 'other-poet', meter_slug: 'albasit' },
+        ]),
     } as unknown as DbClient;
 
     const result = await getPoemBySlug(mockDb, 'poem-slug');
@@ -204,13 +211,21 @@ describe('getPoemBySlug', () => {
     if (result.type === 'found') {
       expect(result.data.clearTitle).toBe('قصيدة المتنبي');
       expect(result.data.metadata.poetName).toBe('المتنبي');
-      expect(result.data.relatedPoems[0]?.slug).toBe('related-slug');
+      expect(result.data.metadata.meterSlug).toBe('altawil');
+      expect(result.data.metadata.themeSlug).toBe('fakhr');
+      expect(result.data.relatedPoems[0]?.poetSlug).toBe('other-poet');
+      expect(result.data.relatedPoems[0]?.meterSlug).toBe('albasit');
     }
   });
 
   it('strips double quotes from title', async () => {
     const mockDb = {
-      execute: vi.fn().mockResolvedValue([{ get_poem_with_related: fullPoemData }]),
+      execute: vi
+        .fn()
+        .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
+        .mockResolvedValueOnce([{ slug: 'altawil' }])
+        .mockResolvedValueOnce([{ slug: 'fakhr' }])
+        .mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await getPoemBySlug(mockDb, 'poem-slug');
@@ -279,5 +294,19 @@ describe('getPoemBySlug', () => {
     if (result.type === 'error') {
       expect(result.message).toBe('Incomplete poem data');
     }
+  });
+
+  it('returns error when meter slug enrichment is missing', async () => {
+    const mockDb = {
+      execute: vi
+        .fn()
+        .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
+        .mockResolvedValueOnce([]) // meter lookup empty
+        .mockResolvedValueOnce([{ slug: 'fakhr' }])
+        .mockResolvedValueOnce([]),
+    } as unknown as DbClient;
+
+    const result = await getPoemBySlug(mockDb, 'slug');
+    expect(result.type).toBe('error');
   });
 });

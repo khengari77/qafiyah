@@ -34,7 +34,7 @@ async function buildOrpcApp() {
       prefix: '/v1',
     });
     if (!result.matched) return next();
-    return transformOrpcResponse(result.response);
+    return transformOrpcResponse(result.response, c.req.path);
   });
   return app;
 }
@@ -42,20 +42,29 @@ async function buildOrpcApp() {
 const samplePoemRow = {
   poetName: 'p',
   poetEra: 'e',
-  poetSlug: 's',
+  poetEraSlug: 'e-slug',
+  poetSlug: 'p-slug',
   poemTitle: 't',
   poemSnippet: 'x',
   poemMeter: 'm',
-  poemSlug: 's',
+  poemMeterSlug: 'm-slug',
+  poemSlug: 'poem-slug',
   relevance: 0,
 };
 
 const samplePoetRow = {
   poetName: 'p',
   poetEra: 'e',
-  poetSlug: 's',
+  poetEraSlug: 'e-slug',
+  poetSlug: 'p-slug',
   poetBio: '',
   relevance: 0,
+};
+
+type SearchBody = {
+  searchType: 'poems' | 'poets';
+  data: Array<{ type: string; slug?: string }>;
+  pagination: { totalItems: number; page: number };
 };
 
 describe('search procedure', () => {
@@ -86,9 +95,11 @@ describe('search procedure', () => {
     expect(res.status).toBe(200);
     expect(searchPoemsMock).toHaveBeenCalledTimes(1);
     expect(listPoemsByFiltersMock).not.toHaveBeenCalled();
-    const body = (await res.json()) as { total: number; results: unknown[] };
-    expect(body.total).toBe(1);
-    expect(body.results).toHaveLength(1);
+    const body = (await res.json()) as SearchBody;
+    expect(body.searchType).toBe('poems');
+    expect(body.pagination.totalItems).toBe(1);
+    expect(body.data).toHaveLength(1);
+    expect(body.data[0]?.type).toBe('poem');
   });
 
   it('filter-only call routes to listPoemsByFilters', async () => {
@@ -123,6 +134,9 @@ describe('search procedure', () => {
     expect(res.status).toBe(200);
     expect(listPoetsByFiltersMock).toHaveBeenCalledTimes(1);
     expect(searchPoetsMock).not.toHaveBeenCalled();
+    const body = (await res.json()) as SearchBody;
+    expect(body.searchType).toBe('poets');
+    expect(body.data[0]?.type).toBe('poet');
   });
 
   it('poets text query routes to searchPoets', async () => {

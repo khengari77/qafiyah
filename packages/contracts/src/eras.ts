@@ -1,30 +1,22 @@
 import { oc } from '@orpc/contract';
-import * as v from 'valibot';
-import { paginationFields, poemListItem, slugAndPageInput, statRow } from './_shared';
+import {
+  listResponse,
+  listResponseWithMeta,
+  parentMeta,
+  poemListItem,
+  slugAndPageInput,
+  statRow,
+} from './_shared';
 
-const listErasContract = oc.route({ method: 'GET', path: '/eras' }).output(
-  v.object({
-    eras: v.array(statRow),
-    ...paginationFields,
-  })
-);
+const listErasContract = oc.route({ method: 'GET', path: '/eras' }).output(listResponse(statRow));
 
 const listEraPoemsContract = oc
-  .route({ method: 'GET', path: '/eras/{slug}/page/{page}' })
+  .route({ method: 'GET', path: '/eras/{slug}/poems' })
   .input(slugAndPageInput)
   .errors({
     NOT_FOUND: { status: 404, message: 'Era not found' },
   })
-  .output(
-    v.object({
-      eraDetails: v.object({
-        name: v.string(),
-        poemsCount: v.number(),
-      }),
-      poems: v.array(poemListItem),
-      ...paginationFields,
-    })
-  );
+  .output(listResponseWithMeta(poemListItem, parentMeta));
 
 export const erasContract = {
   list: listErasContract,

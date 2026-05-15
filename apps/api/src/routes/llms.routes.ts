@@ -25,16 +25,16 @@ Base URL: ${BASE}
 ## Endpoints
 
 - [GET /v1/eras](${BASE}/eras): List historical eras with poem counts
-- [GET /v1/eras/{slug}/page/{page}](${BASE}/eras): Poems by era, paginated
+- [GET /v1/eras/{slug}/poems?page={n}](${BASE}/eras): Poems by era, paginated
 - [GET /v1/meters](${BASE}/meters): List classical Arabic meters
-- [GET /v1/meters/{slug}/page/{page}](${BASE}/meters): Poems by meter, paginated
-- [GET /v1/poets/page/{page}](${BASE}/poets/page/1): List poets, paginated
-- [GET /v1/poets/{slug}/page/{page}](${BASE}/poets): Poems by poet, paginated
+- [GET /v1/meters/{slug}/poems?page={n}](${BASE}/meters): Poems by meter, paginated
+- [GET /v1/poets?page={n}](${BASE}/poets?page=1): List poets, paginated
+- [GET /v1/poets/{slug}/poems?page={n}](${BASE}/poets): Poems by poet, paginated
 - [GET /v1/rhymes](${BASE}/rhymes): List rhyme letters with poem counts
-- [GET /v1/rhymes/{slug}/page/{page}](${BASE}/rhymes): Poems by rhyme, paginated
+- [GET /v1/rhymes/{slug}/poems?page={n}](${BASE}/rhymes): Poems by rhyme, paginated
 - [GET /v1/themes](${BASE}/themes): List themes with poem counts
-- [GET /v1/themes/{slug}/page/{page}](${BASE}/themes): Poems by theme, paginated
-- [GET /v1/poems/slug/{slug}](${BASE}/poems): Full poem by slug
+- [GET /v1/themes/{slug}/poems?page={n}](${BASE}/themes): Poems by theme, paginated
+- [GET /v1/poems/{slug}](${BASE}/poems): Full poem by slug
 - [GET /v1/poems/slugs](${BASE}/poems/slugs): All poem slugs
 - [GET /v1/poems/random](${BASE}/poems/random): Random poem slug as text/plain (append ?option=lines for content)
 - [GET /v1/search](${BASE}/search): Full-text search across poems

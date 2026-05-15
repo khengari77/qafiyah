@@ -8,12 +8,21 @@ export const pageParam = v.pipe(
   v.minValue(1)
 );
 
-export const slugAndPageInput = v.object({
+export const slugInput = v.object({
   slug: v.string(),
-  page: pageParam,
 });
 
-export const slugInput = v.object({
+export const slugAndPageInput = v.object({
+  slug: v.string(),
+  page: v.optional(pageParam, '1'),
+});
+
+export const pageQueryInput = v.object({
+  page: v.optional(pageParam, '1'),
+});
+
+export const subRef = v.object({
+  name: v.string(),
   slug: v.string(),
 });
 
@@ -30,27 +39,33 @@ export const statRowNoPoetsCount = v.object({
   poemsCount: v.number(),
 });
 
+export const parentMeta = v.object({
+  name: v.string(),
+  slug: v.string(),
+  poemsCount: v.number(),
+});
+
 export const poemListItem = v.object({
   title: v.string(),
   slug: v.string(),
-  poetName: v.string(),
-  meter: v.string(),
+  poet: subRef,
+  meter: subRef,
 });
 
-export const poemListItemNoMeter = v.object({
-  title: v.string(),
-  slug: v.string(),
-  poetName: v.string(),
-});
-
-export const poemListItemNoPoet = v.object({
-  title: v.string(),
-  slug: v.string(),
-  meter: v.string(),
-});
-
-export const paginationFields = {
+export const pagination = v.object({
   page: v.number(),
+  pageSize: v.number(),
   totalPages: v.number(),
-  total: v.number(),
-};
+  totalItems: v.number(),
+});
+
+export const listResponse = <TItem extends v.GenericSchema>(item: TItem) =>
+  v.object({ data: v.array(item), pagination });
+
+export const listResponseWithMeta = <TItem extends v.GenericSchema, TMeta extends v.GenericSchema>(
+  item: TItem,
+  meta: TMeta
+) => v.object({ data: v.array(item), pagination, meta });
+
+export const resourceResponse = <TItem extends v.GenericSchema>(item: TItem) =>
+  v.object({ data: item });

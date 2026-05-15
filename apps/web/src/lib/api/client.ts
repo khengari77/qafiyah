@@ -1,7 +1,7 @@
 import { API_RANDOM_POEM_PATH } from '@qafiyah/constants';
 import { API_URL } from '@/constants/globals';
 import { apiBrowser } from './rpc';
-import type { PoemsSearchResponseData, PoetsSearchResponseData } from './types';
+import type { PoemsSearchEnvelope, PoetsSearchEnvelope } from './types';
 
 type SearchArgs = {
   q: string;
@@ -14,7 +14,7 @@ type SearchArgs = {
   themeSlugs: string[];
 };
 
-type SearchResult = PoemsSearchResponseData | PoetsSearchResponseData;
+type SearchResult = PoemsSearchEnvelope | PoetsSearchEnvelope;
 
 export async function search(args: SearchArgs): Promise<SearchResult> {
   return apiBrowser.search.search({
@@ -30,8 +30,6 @@ export async function search(args: SearchArgs): Promise<SearchResult> {
 }
 
 export async function getRandomPoemSlug(): Promise<string> {
-  // /v1/poems/random returns text/plain (kept as a plain Hono route in apps/api).
-  // Not exposed via oRPC, so we fetch it directly here.
   const response = await fetch(`${API_URL}${API_RANDOM_POEM_PATH}?option=slug`);
   if (!response.ok) {
     throw new Error(`Random poem request failed: ${response.status}`);

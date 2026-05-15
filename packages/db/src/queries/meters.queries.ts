@@ -1,7 +1,8 @@
 import { FORMAL_METERS, POEMS_PER_PAGE } from '@qafiyah/constants';
-import { eq, inArray } from 'drizzle-orm';
+import { inArray, sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { meterPoems, meterStats } from '../schema';
+import { meterStats } from '../schema';
+import type { PoemListRow } from './eras.queries';
 
 export type MeterStatsRow = {
   name: string;
@@ -11,10 +12,20 @@ export type MeterStatsRow = {
 };
 
 export type ListMeterPoemsResult = {
-  meterDetails: { name: string; poemsCount: number };
-  poems: { title: string; slug: string; poetName: string }[];
+  parent: { name: string; slug: string; poemsCount: number };
+  poems: PoemListRow[];
   total: number;
   totalPages: number;
+};
+
+type ParentRow = { name: string; poems_count: number | string };
+type RawPoemRow = {
+  title: string;
+  slug: string;
+  poet_name: string;
+  poet_slug: string;
+  meter_name: string;
+  meter_slug: string;
 };
 
 export async function listMeters(db: DbClient): Promise<MeterStatsRow[]> {
@@ -38,39 +49,43 @@ export async function listMeterPoems(
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const [meterInfo, poems] = await Promise.all([
-    db
-      .select({
-        meterName: meterPoems.meterName,
-        totalPoems: meterPoems.totalPoemsInMeter,
-      })
-      .from(meterPoems)
-      .where(eq(meterPoems.meterSlug, slug))
-      .limit(1),
-    db
-      .select({
-        title: meterPoems.poemTitle,
-        slug: meterPoems.poemSlug,
-        poetName: meterPoems.poetName,
-      })
-      .from(meterPoems)
-      .where(eq(meterPoems.meterSlug, slug))
-      .limit(limit)
-      .offset(offset),
-  ]);
+  const parentRows = (await db.execute(
+    sql`SELECT name, poems_count FROM meter_stats WHERE slug = ${slug} LIMIT 1`
+  )) as unknown as ParentRow[];
 
-  if (!meterInfo.length || !meterInfo[0]) return null;
+  if (!parentRows.length || !parentRows[0]) return null;
 
-  const total = meterInfo[0].totalPoems;
-  const totalPages = Math.ceil(total / limit);
+  const total = Number(parentRows[0].poems_count);
+
+  const rawPoems = (await db.execute(sql`
+    SELECT
+      p.title AS title,
+      p.slug AS slug,
+      pt.name AS poet_name,
+      pt.slug AS poet_slug,
+      m.name AS meter_name,
+      m.slug AS meter_slug
+    FROM public.poems p
+    JOIN public.poets pt ON p.poet_id = pt.id
+    JOIN public.meters m ON p.meter_id = m.id
+    WHERE m.slug = ${slug}
+    ORDER BY p.id
+    LIMIT ${limit} OFFSET ${offset}
+  `)) as unknown as RawPoemRow[];
+
+  const poems: PoemListRow[] = rawPoems.map((r) => ({
+    title: r.title,
+    slug: r.slug,
+    poetName: r.poet_name,
+    poetSlug: r.poet_slug,
+    meterName: r.meter_name,
+    meterSlug: r.meter_slug,
+  }));
 
   return {
-    meterDetails: {
-      name: meterInfo[0].meterName,
-      poemsCount: total,
-    },
+    parent: { name: parentRows[0].name, slug, poemsCount: total },
     poems,
     total,
-    totalPages,
+    totalPages: Math.ceil(total / limit),
   };
 }

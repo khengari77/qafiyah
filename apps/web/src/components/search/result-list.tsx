@@ -1,13 +1,13 @@
 import { Loader2 } from 'lucide-react';
 import type { Ref } from 'react';
-import type { PoemsSearchResult, PoetsSearchResult } from '@/lib/api/types';
+import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
 import { PoemCard, PoetCard } from './result-cards';
 import { ErrorState } from './state-error';
 import { LoadingState } from './state-loading';
 import { NoResultsState } from './state-no-results';
 
 type Props = {
-  data: (PoemsSearchResult | PoetsSearchResult)[];
+  data: (PoemSearchResult | PoetSearchResult)[];
   loadMoreRef: Ref<HTMLDivElement>;
   isError: boolean;
   isFetchingNextPage: boolean;
@@ -31,7 +31,6 @@ export function ResultList({
   isSuccess,
   hasText,
   hasFilters,
-  searchType,
   errorMessage,
   refreshText,
   noResultsText,
@@ -50,9 +49,9 @@ export function ResultList({
   if (isLoading && !isFetchingNextPage) {
     return <LoadingState />;
   }
+
   return (
     <div className="space-y-3">
-      {/* Tiny Result Counts */}
       {data.length > 0 && (
         <div className="w-full flex justify-start items-start">
           <span className="">
@@ -61,15 +60,13 @@ export function ResultList({
         </div>
       )}
 
-      {searchType === 'poems' &&
-        (data as PoemsSearchResult[]).map((item) => (
-          <PoemCard key={`${item.poemSlug}-${item.relevance}`} item={item} />
-        ))}
-
-      {searchType === 'poets' &&
-        (data as PoetsSearchResult[]).map((item) => (
-          <PoetCard key={`${item.poetSlug}-${item.relevance}`} item={item} />
-        ))}
+      {data.map((item) =>
+        item.type === 'poem' ? (
+          <PoemCard key={`${item.slug}-${item.relevance}`} item={item} />
+        ) : (
+          <PoetCard key={`${item.slug}-${item.relevance}`} item={item} />
+        )
+      )}
 
       {data.length > 0 && (
         <div ref={loadMoreRef} className="h-32 flex justify-center items-center">

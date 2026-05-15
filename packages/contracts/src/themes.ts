@@ -1,31 +1,24 @@
 import { oc } from '@orpc/contract';
-import * as v from 'valibot';
+import {
+  listResponse,
+  listResponseWithMeta,
+  parentMeta,
+  poemListItem,
+  slugAndPageInput,
+  statRowNoPoetsCount,
+} from './_shared';
 
-import { paginationFields, poemListItem, slugAndPageInput, statRowNoPoetsCount } from './_shared';
-
-const listThemesContract = oc.route({ method: 'GET', path: '/themes' }).output(
-  v.object({
-    themes: v.array(statRowNoPoetsCount),
-    ...paginationFields,
-  })
-);
+const listThemesContract = oc
+  .route({ method: 'GET', path: '/themes' })
+  .output(listResponse(statRowNoPoetsCount));
 
 const listThemePoemsContract = oc
-  .route({ method: 'GET', path: '/themes/{slug}/page/{page}' })
+  .route({ method: 'GET', path: '/themes/{slug}/poems' })
   .input(slugAndPageInput)
   .errors({
     NOT_FOUND: { status: 404, message: 'Theme not found' },
   })
-  .output(
-    v.object({
-      themeDetails: v.object({
-        name: v.string(),
-        poemsCount: v.number(),
-      }),
-      poems: v.array(poemListItem),
-      ...paginationFields,
-    })
-  );
+  .output(listResponseWithMeta(poemListItem, parentMeta));
 
 export const themesContract = {
   list: listThemesContract,

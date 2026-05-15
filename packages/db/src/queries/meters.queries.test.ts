@@ -44,29 +44,28 @@ describe('listMeters', () => {
 });
 
 describe('listMeterPoems', () => {
-  it('returns meter details and poems on success', async () => {
-    const meterInfoRow = { meterName: 'الطويل', totalPoems: 100 };
-    const poemRow = { title: 'قصيدة', slug: 'poem-slug', poetName: 'شاعر' };
+  it('returns parent and poems with nested slugs', async () => {
+    const parentRow = { name: 'الطويل', poems_count: 100 };
+    const poemRow = {
+      title: 'قصيدة',
+      slug: 'poem-slug',
+      poet_name: 'شاعر',
+      poet_slug: 'poet-1',
+      meter_name: 'الطويل',
+      meter_slug: 'altawil',
+    };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([meterInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([poemRow])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     } as unknown as DbClient;
 
     const result = await listMeterPoems(mockDb, 'altawil', 1);
-    expect(result).not.toBeNull();
-    expect(result?.meterDetails.name).toBe('الطويل');
-    expect(result?.total).toBe(100);
-    expect(result?.poems[0]?.title).toBe('قصيدة');
+    expect(result?.parent).toEqual({ name: 'الطويل', slug: 'altawil', poemsCount: 100 });
+    expect(result?.poems[0]?.poetSlug).toBe('poet-1');
   });
 
   it('returns null when meter is not found', async () => {
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listMeterPoems(mockDb, 'nonexistent', 1);
@@ -74,15 +73,12 @@ describe('listMeterPoems', () => {
   });
 
   it('computes totalPages correctly', async () => {
-    const meterInfoRow = { meterName: 'الطويل', totalPoems: 60 };
+    const parentRow = { name: 'الطويل', poems_count: 60 };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([meterInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listMeterPoems(mockDb, 'altawil', 2);
-    expect(result?.totalPages).toBe(2); // ceil(60/30)
+    expect(result?.totalPages).toBe(2);
   });
 });

@@ -56,29 +56,28 @@ describe('listRhymes', () => {
 });
 
 describe('listRhymePoems', () => {
-  it('returns rhyme details and poems on success', async () => {
-    const rhymeInfoRow = { rhymePattern: 'ب', totalPoems: 30 };
-    const poemRow = { title: 'قصيدة', slug: 'poem-slug', meter: 'الطويل' };
+  it('returns parent and poems with nested slugs', async () => {
+    const parentRow = { name: 'ب', poems_count: 30 };
+    const poemRow = {
+      title: 'قصيدة',
+      slug: 'poem-slug',
+      poet_name: 'شاعر',
+      poet_slug: 'poet-1',
+      meter_name: 'الطويل',
+      meter_slug: 'altawil',
+    };
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([rhymeInfoRow])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([poemRow])) }),
+      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     } as unknown as DbClient;
 
     const result = await listRhymePoems(mockDb, 'rhyme-slug', 1);
-    expect(result).not.toBeNull();
-    expect(result?.rhymeDetails.pattern).toBe('ب');
-    expect(result?.total).toBe(30);
-    expect(result?.poems[0]?.title).toBe('قصيدة');
+    expect(result?.parent.name).toBe('ب');
+    expect(result?.poems[0]?.poetSlug).toBe('poet-1');
   });
 
   it('returns null when rhyme is not found', async () => {
     const mockDb = {
-      select: vi
-        .fn()
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) })
-        .mockReturnValueOnce({ from: vi.fn().mockReturnValue(makeChain([])) }),
+      execute: vi.fn().mockResolvedValueOnce([]),
     } as unknown as DbClient;
 
     const result = await listRhymePoems(mockDb, 'nonexistent', 1);

@@ -1,32 +1,29 @@
 import type { ApiOutputs } from './rpc';
 
-export type Era = ApiOutputs['eras']['list']['eras'][number];
-export type Meter = ApiOutputs['meters']['list']['meters'][number];
-export type Rhyme = ApiOutputs['rhymes']['list']['rhymes'][number];
-export type Theme = ApiOutputs['themes']['list']['themes'][number];
+type ListData<T> = T extends { data: infer D } ? D : never;
+type ResourceData<T> = T extends { data: infer D } ? D : never;
 
-export type EraPoems = ApiOutputs['eras']['listPoems'];
-export type MeterPoems = ApiOutputs['meters']['listPoems'];
-export type PoetPoems = ApiOutputs['poets']['listPoems'];
-export type RhymePoems = ApiOutputs['rhymes']['listPoems'];
-export type ThemePoems = ApiOutputs['themes']['listPoems'];
+// Collection items
+export type Era = ListData<ApiOutputs['eras']['list']>[number];
+export type Meter = ListData<ApiOutputs['meters']['list']>[number];
+export type Rhyme = ListData<ApiOutputs['rhymes']['list']>[number];
+export type Theme = ListData<ApiOutputs['themes']['list']>[number];
+export type Poet = ListData<ApiOutputs['poets']['list']>[number];
 
-export type PoetsData = { poets: ApiOutputs['poets']['list']['poets'] };
+// Full envelopes (carry data + pagination + meta)
+export type EraPoemsResponse = ApiOutputs['eras']['listPoems'];
+export type MeterPoemsResponse = ApiOutputs['meters']['listPoems'];
+export type PoetPoemsResponse = ApiOutputs['poets']['listPoems'];
+export type RhymePoemsResponse = ApiOutputs['rhymes']['listPoems'];
+export type ThemePoemsResponse = ApiOutputs['themes']['listPoems'];
+export type PoetsResponse = ApiOutputs['poets']['list'];
 
-export type PoemResponseData = ApiOutputs['poems']['getBySlug'];
-export type PoemMetadata = PoemResponseData['metadata'];
-export type RelatedPoems = PoemResponseData['relatedPoems'][number];
+// Single resource
+export type Poem = ResourceData<ApiOutputs['poems']['getBySlug']>;
 
-export type PaginationMeta = {
-  currentPage: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-  totalItems?: number;
-};
-
+// Search
 type SearchResponse = ApiOutputs['search']['search'];
-export type PoemsSearchResponseData = Extract<SearchResponse, { searchType: 'poems' }>;
-export type PoetsSearchResponseData = Extract<SearchResponse, { searchType: 'poets' }>;
-export type PoemsSearchResult = PoemsSearchResponseData['results'][number];
-export type PoetsSearchResult = PoetsSearchResponseData['results'][number];
+export type PoemsSearchEnvelope = Extract<SearchResponse, { searchType: 'poems' }>;
+export type PoetsSearchEnvelope = Extract<SearchResponse, { searchType: 'poets' }>;
+export type PoemSearchResult = ListData<PoemsSearchEnvelope>[number];
+export type PoetSearchResult = ListData<PoetsSearchEnvelope>[number];

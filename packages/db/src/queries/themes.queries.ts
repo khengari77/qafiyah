@@ -1,7 +1,8 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
-import { eq } from 'drizzle-orm';
+import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
-import { themePoems, themeStats } from '../schema';
+import { themeStats } from '../schema';
+import type { PoemListRow } from './eras.queries';
 
 export type ThemeStatsRow = {
   name: string;
@@ -10,10 +11,20 @@ export type ThemeStatsRow = {
 };
 
 export type ListThemePoemsResult = {
-  themeDetails: { name: string; poemsCount: number };
-  poems: { title: string; slug: string; poetName: string; meter: string }[];
+  parent: { name: string; slug: string; poemsCount: number };
+  poems: PoemListRow[];
   total: number;
   totalPages: number;
+};
+
+type ParentRow = { name: string; poems_count: number | string };
+type RawPoemRow = {
+  title: string;
+  slug: string;
+  poet_name: string;
+  poet_slug: string;
+  meter_name: string;
+  meter_slug: string;
 };
 
 export async function listThemes(db: DbClient): Promise<ThemeStatsRow[]> {
@@ -35,40 +46,44 @@ export async function listThemePoems(
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const [themeInfo, poems] = await Promise.all([
-    db
-      .select({
-        themeName: themePoems.themeName,
-        totalPoems: themePoems.totalPoemsByTheme,
-      })
-      .from(themePoems)
-      .where(eq(themePoems.themeSlug, slug))
-      .limit(1),
-    db
-      .select({
-        title: themePoems.poemTitle,
-        slug: themePoems.poemSlug,
-        poetName: themePoems.poetName,
-        meter: themePoems.meterName,
-      })
-      .from(themePoems)
-      .where(eq(themePoems.themeSlug, slug))
-      .limit(limit)
-      .offset(offset),
-  ]);
+  const parentRows = (await db.execute(
+    sql`SELECT name, poems_count FROM theme_stats WHERE slug = ${slug}::UUID LIMIT 1`
+  )) as unknown as ParentRow[];
 
-  if (!themeInfo.length || !themeInfo[0]) return null;
+  if (!parentRows.length || !parentRows[0]) return null;
 
-  const total = themeInfo[0].totalPoems;
-  const totalPages = Math.ceil(total / limit);
+  const total = Number(parentRows[0].poems_count);
+
+  const rawPoems = (await db.execute(sql`
+    SELECT
+      p.title AS title,
+      p.slug::TEXT AS slug,
+      pt.name AS poet_name,
+      pt.slug AS poet_slug,
+      m.name AS meter_name,
+      m.slug AS meter_slug
+    FROM public.poems p
+    JOIN public.poets pt ON p.poet_id = pt.id
+    JOIN public.meters m ON p.meter_id = m.id
+    JOIN public.themes th ON p.theme_id = th.id
+    WHERE th.slug = ${slug}::UUID
+    ORDER BY p.id
+    LIMIT ${limit} OFFSET ${offset}
+  `)) as unknown as RawPoemRow[];
+
+  const poems: PoemListRow[] = rawPoems.map((r) => ({
+    title: r.title,
+    slug: r.slug,
+    poetName: r.poet_name,
+    poetSlug: r.poet_slug,
+    meterName: r.meter_name,
+    meterSlug: r.meter_slug,
+  }));
 
   return {
-    themeDetails: {
-      name: themeInfo[0].themeName,
-      poemsCount: total,
-    },
+    parent: { name: parentRows[0].name, slug, poemsCount: total },
     poems,
     total,
-    totalPages,
+    totalPages: Math.ceil(total / limit),
   };
 }

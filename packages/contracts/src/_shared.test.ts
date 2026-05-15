@@ -1,15 +1,19 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
 import {
+  listResponse,
+  listResponseWithMeta,
   pageParam,
-  paginationFields,
+  pageQueryInput,
+  pagination,
+  parentMeta,
   poemListItem,
-  poemListItemNoMeter,
-  poemListItemNoPoet,
+  resourceResponse,
   slugAndPageInput,
   slugInput,
   statRow,
   statRowNoPoetsCount,
+  subRef,
 } from './_shared';
 
 describe('pageParam', () => {
@@ -45,12 +49,13 @@ describe('slugAndPageInput', () => {
     expect(result.page).toBe(2);
   });
 
-  it('rejects missing slug', () => {
-    expect(() => v.parse(slugAndPageInput, { page: '1' })).toThrow();
+  it('defaults page to 1 when omitted', () => {
+    const result = v.parse(slugAndPageInput, { slug: 'my-slug' });
+    expect(result.page).toBe(1);
   });
 
-  it('rejects missing page', () => {
-    expect(() => v.parse(slugAndPageInput, { slug: 'my-slug' })).toThrow();
+  it('rejects missing slug', () => {
+    expect(() => v.parse(slugAndPageInput, { page: '1' })).toThrow();
   });
 
   it('rejects invalid page', () => {
@@ -66,6 +71,34 @@ describe('slugInput', () => {
 
   it('rejects missing slug', () => {
     expect(() => v.parse(slugInput, {})).toThrow();
+  });
+});
+
+describe('pageQueryInput', () => {
+  it('defaults page to 1 when omitted', () => {
+    const result = v.parse(pageQueryInput, {});
+    expect(result.page).toBe(1);
+  });
+
+  it('parses provided page', () => {
+    const result = v.parse(pageQueryInput, { page: '3' });
+    expect(result.page).toBe(3);
+  });
+});
+
+describe('subRef', () => {
+  it('parses { name, slug } shape', () => {
+    const result = v.parse(subRef, { name: 'المتنبي', slug: 'al-mutanabbi' });
+    expect(result.name).toBe('المتنبي');
+    expect(result.slug).toBe('al-mutanabbi');
+  });
+
+  it('rejects missing slug', () => {
+    expect(() => v.parse(subRef, { name: 'x' })).toThrow();
+  });
+
+  it('rejects missing name', () => {
+    expect(() => v.parse(subRef, { slug: 'x' })).toThrow();
   });
 });
 
@@ -93,49 +126,113 @@ describe('statRowNoPoetsCount', () => {
     expect(result.poemsCount).toBe(200);
   });
 
-  it('rejects extra fields when strict', () => {
+  it('drops extra fields on parse', () => {
     const input = { name: 'الغزل', slug: 'love', poemsCount: 200, poetsCount: 10 };
     const result = v.parse(statRowNoPoetsCount, input);
     expect(result).not.toHaveProperty('poetsCount');
   });
 });
 
-describe('poemListItem', () => {
-  it('parses a complete poem list item', () => {
-    const input = { title: 'قصيدة', slug: 'poem-1', poetName: 'المتنبي', meter: 'الطويل' };
-    const result = v.parse(poemListItem, input);
-    expect(result.meter).toBe('الطويل');
+describe('parentMeta', () => {
+  it('parses { name, slug, poemsCount }', () => {
+    const result = v.parse(parentMeta, { name: 'عباسي', slug: 'abbasid', poemsCount: 42 });
+    expect(result).toEqual({ name: 'عباسي', slug: 'abbasid', poemsCount: 42 });
   });
 
-  it('rejects missing meter', () => {
-    expect(() => v.parse(poemListItem, { title: 'q', slug: 's', poetName: 'p' })).toThrow();
+  it('rejects missing poemsCount', () => {
+    expect(() => v.parse(parentMeta, { name: 'x', slug: 'x' })).toThrow();
   });
 });
 
-describe('poemListItemNoMeter', () => {
-  it('parses without meter field', () => {
-    const result = v.parse(poemListItemNoMeter, {
+describe('poemListItem', () => {
+  it('parses with nested poet and meter refs', () => {
+    const input = {
       title: 'قصيدة',
       slug: 'poem-1',
-      poetName: 'شاعر',
+      poet: { name: 'المتنبي', slug: 'al-mutanabbi' },
+      meter: { name: 'الطويل', slug: 'taweel' },
+    };
+    const result = v.parse(poemListItem, input);
+    expect(result.poet.name).toBe('المتنبي');
+    expect(result.meter.slug).toBe('taweel');
+  });
+
+  it('rejects flat poetName/meter strings', () => {
+    expect(() =>
+      v.parse(poemListItem, {
+        title: 'q',
+        slug: 's',
+        poetName: 'p',
+        meter: 'm',
+      })
+    ).toThrow();
+  });
+});
+
+describe('pagination', () => {
+  it('parses a complete pagination block', () => {
+    const result = v.parse(pagination, {
+      page: 1,
+      pageSize: 30,
+      totalPages: 5,
+      totalItems: 142,
     });
-    expect(result.title).toBe('قصيدة');
-    expect(result).not.toHaveProperty('meter');
+    expect(result.totalItems).toBe(142);
+  });
+
+  it('rejects missing pageSize', () => {
+    expect(() => v.parse(pagination, { page: 1, totalPages: 5, totalItems: 142 })).toThrow();
   });
 });
 
-describe('poemListItemNoPoet', () => {
-  it('parses without poetName field', () => {
-    const result = v.parse(poemListItemNoPoet, { title: 'قصيدة', slug: 'poem-1', meter: 'الكامل' });
-    expect(result.meter).toBe('الكامل');
-    expect(result).not.toHaveProperty('poetName');
+describe('listResponse', () => {
+  it('wraps items as { data, pagination }', () => {
+    const schema = listResponse(subRef);
+    const result = v.parse(schema, {
+      data: [{ name: 'a', slug: 'a' }],
+      pagination: { page: 1, pageSize: 30, totalPages: 1, totalItems: 1 },
+    });
+    expect(result.data).toHaveLength(1);
+    expect(result.pagination.page).toBe(1);
+  });
+
+  it('rejects responses missing pagination', () => {
+    const schema = listResponse(subRef);
+    expect(() => v.parse(schema, { data: [] })).toThrow();
   });
 });
 
-describe('paginationFields', () => {
-  it('is a plain object with three numeric fields', () => {
-    expect(paginationFields).toHaveProperty('page');
-    expect(paginationFields).toHaveProperty('totalPages');
-    expect(paginationFields).toHaveProperty('total');
+describe('listResponseWithMeta', () => {
+  it('wraps items as { data, pagination, meta }', () => {
+    const schema = listResponseWithMeta(subRef, parentMeta);
+    const result = v.parse(schema, {
+      data: [],
+      pagination: { page: 1, pageSize: 30, totalPages: 1, totalItems: 0 },
+      meta: { name: 'x', slug: 'x', poemsCount: 0 },
+    });
+    expect(result.meta.name).toBe('x');
+  });
+
+  it('rejects responses missing meta', () => {
+    const schema = listResponseWithMeta(subRef, parentMeta);
+    expect(() =>
+      v.parse(schema, {
+        data: [],
+        pagination: { page: 1, pageSize: 30, totalPages: 1, totalItems: 0 },
+      })
+    ).toThrow();
+  });
+});
+
+describe('resourceResponse', () => {
+  it('wraps a single resource as { data }', () => {
+    const schema = resourceResponse(subRef);
+    const result = v.parse(schema, { data: { name: 'x', slug: 'x' } });
+    expect(result.data.name).toBe('x');
+  });
+
+  it('rejects responses missing data', () => {
+    const schema = resourceResponse(subRef);
+    expect(() => v.parse(schema, {})).toThrow();
   });
 });

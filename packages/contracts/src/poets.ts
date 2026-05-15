@@ -1,6 +1,13 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { pageParam, paginationFields, poemListItemNoPoet, slugAndPageInput } from './_shared';
+import {
+  listResponse,
+  listResponseWithMeta,
+  pageQueryInput,
+  parentMeta,
+  poemListItem,
+  slugAndPageInput,
+} from './_shared';
 
 const poetStatRow = v.object({
   name: v.string(),
@@ -9,34 +16,20 @@ const poetStatRow = v.object({
 });
 
 const listPoetsContract = oc
-  .route({ method: 'GET', path: '/poets/page/{page}' })
-  .input(v.object({ page: pageParam }))
+  .route({ method: 'GET', path: '/poets' })
+  .input(pageQueryInput)
   .errors({
     NOT_FOUND: { status: 404, message: 'No poets found for this page' },
   })
-  .output(
-    v.object({
-      poets: v.array(poetStatRow),
-      ...paginationFields,
-    })
-  );
+  .output(listResponse(poetStatRow));
 
 const listPoetPoemsContract = oc
-  .route({ method: 'GET', path: '/poets/{slug}/page/{page}' })
+  .route({ method: 'GET', path: '/poets/{slug}/poems' })
   .input(slugAndPageInput)
   .errors({
     NOT_FOUND: { status: 404, message: 'Poet not found' },
   })
-  .output(
-    v.object({
-      poetDetails: v.object({
-        name: v.string(),
-        poemsCount: v.number(),
-      }),
-      poems: v.array(poemListItemNoPoet),
-      ...paginationFields,
-    })
-  );
+  .output(listResponseWithMeta(poemListItem, parentMeta));
 
 export const poetsContract = {
   list: listPoetsContract,

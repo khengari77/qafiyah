@@ -9,23 +9,18 @@ import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { apiServer } from './rpc';
 import type {
   Era,
-  EraPoems,
+  EraPoemsResponse,
   Meter,
-  MeterPoems,
-  PaginationMeta,
-  PoemResponseData,
-  PoetPoems,
-  PoetsData,
+  MeterPoemsResponse,
+  Poem,
+  Poet,
+  PoetPoemsResponse,
+  PoetsResponse,
   Rhyme,
-  RhymePoems,
+  RhymePoemsResponse,
   Theme,
-  ThemePoems,
+  ThemePoemsResponse,
 } from './types';
-
-// ============================================================================
-// In-process memo for list endpoints. Many getStaticPaths calls fan out the
-// same `/eras`, `/meters`, `/rhymes`, `/themes` listing — dedupe within one build.
-// ============================================================================
 
 const memo = new Map<string, Promise<unknown>>();
 function dedup<T>(key: string, fn: () => Promise<T>): Promise<T> {
@@ -46,12 +41,13 @@ function isNotFound(err: unknown): boolean {
 
 export async function fetchAllPoemSlugs(): Promise<string[]> {
   const result = await apiServer.poems.listSlugs();
-  return result.slugs;
+  return result.data;
 }
 
-export async function fetchPoem(slug: string): Promise<PoemResponseData | null> {
+export async function fetchPoem(slug: string): Promise<Poem | null> {
   try {
-    return await apiServer.poems.getBySlug({ slug });
+    const result = await apiServer.poems.getBySlug({ slug });
+    return result.data;
   } catch (err) {
     if (isNotFound(err)) return null;
     throw err;
@@ -62,37 +58,27 @@ export async function fetchPoem(slug: string): Promise<PoemResponseData | null> 
 // Poets
 // ============================================================================
 
-type PoetStats = {
-  slug: string;
-  name: string;
-  poemsCount: number;
-};
+export async function fetchPoets(page: string): Promise<PoetsResponse | null> {
+  try {
+    return await apiServer.poets.list({ page });
+  } catch (err) {
+    if (isNotFound(err)) return null;
+    throw err;
+  }
+}
 
-export async function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
-  const allPoets: PoetStats[] = [];
+export async function fetchPoetsWithPoemCount(): Promise<Poet[]> {
+  const allPoets: Poet[] = [];
   let page = 1;
   let hasMore = true;
 
   while (hasMore) {
     const response = await fetchPoets(page.toString());
+    if (!response || response.data.length === 0) break;
 
-    if (!response.data?.poets || response.data.poets.length === 0) {
-      hasMore = false;
-      break;
-    }
+    allPoets.push(...response.data);
 
-    allPoets.push(
-      ...response.data.poets.map((p) => ({
-        slug: String(p.slug ?? '')
-          .toLowerCase()
-          .replace(/^cat-poet-/, ''),
-        name: p.name,
-        poemsCount: p.poemsCount,
-      }))
-    );
-
-    const totalPages = response.pagination?.totalPages ?? 1;
-    if (page >= totalPages) {
+    if (page >= response.pagination.totalPages) {
       hasMore = false;
     } else {
       page++;
@@ -102,204 +88,117 @@ export async function fetchPoetsWithPoemCount(): Promise<PoetStats[]> {
   return allPoets;
 }
 
-export async function fetchPoets(
-  page: string
-): Promise<{ data: PoetsData; pagination?: PaginationMeta }> {
-  try {
-    const result = await apiServer.poets.list({ page });
-    return {
-      data: { poets: result.poets },
-      pagination: {
-        currentPage: result.page,
-        totalPages: result.totalPages,
-        totalItems: result.total,
-        hasNextPage: result.page < result.totalPages,
-        hasPrevPage: result.page > 1,
-      },
-    };
-  } catch (err) {
-    if (isNotFound(err)) {
-      return { data: { poets: [] } };
-    }
-    throw err;
-  }
-}
-
 export async function fetchPoetsTotalPages(): Promise<number> {
   const response = await fetchPoets('1');
-  return response.pagination?.totalPages ?? 1;
+  return response?.pagination.totalPages ?? 1;
 }
 
 export async function fetchPoetPoemPage(
   slug: string,
   page: string
-): Promise<{ data: PoetPoems; pagination: PaginationMeta }> {
-  const result = await apiServer.poets.listPoems({ slug, page });
-  return {
-    data: result,
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      hasNextPage: result.page < result.totalPages,
-      hasPrevPage: result.page > 1,
-    },
-  };
+): Promise<PoetPoemsResponse | null> {
+  try {
+    return await apiServer.poets.listPoems({ slug, page });
+  } catch (err) {
+    if (isNotFound(err)) return null;
+    throw err;
+  }
 }
 
 // ============================================================================
 // Eras
 // ============================================================================
 
-type EraStats = {
-  slug: string;
-  name: string;
-  poemsCount: number;
-};
-
 export async function fetchEras(): Promise<Era[]> {
-  return dedup('eras:list', async () => (await apiServer.eras.list()).eras);
+  return dedup('eras:list', async () => (await apiServer.eras.list()).data);
 }
 
-export async function fetchErasWithPoemCount(): Promise<EraStats[]> {
-  const eras = await fetchEras();
-  return eras.map((era) => ({
-    slug: era.slug,
-    name: era.name,
-    poemsCount: era.poemsCount,
-  }));
+export async function fetchErasWithPoemCount(): Promise<Era[]> {
+  return fetchEras();
 }
 
 export async function fetchEraPoemPage(
   slug: string,
   page: string
-): Promise<{ data: EraPoems; pagination: PaginationMeta }> {
-  const result = await apiServer.eras.listPoems({ slug, page });
-  return {
-    data: result,
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      hasNextPage: result.page < result.totalPages,
-      hasPrevPage: result.page > 1,
-    },
-  };
+): Promise<EraPoemsResponse | null> {
+  try {
+    return await apiServer.eras.listPoems({ slug, page });
+  } catch (err) {
+    if (isNotFound(err)) return null;
+    throw err;
+  }
 }
 
 // ============================================================================
 // Meters
 // ============================================================================
 
-type MeterStats = {
-  slug: string;
-  name: string;
-  poemsCount: number;
-};
-
 export async function fetchMeters(): Promise<Meter[]> {
-  return dedup('meters:list', async () => (await apiServer.meters.list()).meters);
+  return dedup('meters:list', async () => (await apiServer.meters.list()).data);
 }
 
-export async function fetchMetersWithPoemCount(): Promise<MeterStats[]> {
-  const meters = await fetchMeters();
-  return meters.map((meter) => ({
-    slug: meter.slug,
-    name: meter.name,
-    poemsCount: meter.poemsCount,
-  }));
+export async function fetchMetersWithPoemCount(): Promise<Meter[]> {
+  return fetchMeters();
 }
 
 export async function fetchMeterPoemPage(
   slug: string,
   page: string
-): Promise<{ data: MeterPoems; pagination: PaginationMeta }> {
-  const result = await apiServer.meters.listPoems({ slug, page });
-  return {
-    data: result,
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      hasNextPage: result.page < result.totalPages,
-      hasPrevPage: result.page > 1,
-    },
-  };
+): Promise<MeterPoemsResponse | null> {
+  try {
+    return await apiServer.meters.listPoems({ slug, page });
+  } catch (err) {
+    if (isNotFound(err)) return null;
+    throw err;
+  }
 }
 
 // ============================================================================
 // Rhymes
 // ============================================================================
 
-type RhymeStats = {
-  slug: string;
-  name: string;
-  poemsCount: number;
-};
-
 export async function fetchRhymes(): Promise<Rhyme[]> {
-  return dedup('rhymes:list', async () => (await apiServer.rhymes.list()).rhymes);
+  return dedup('rhymes:list', async () => (await apiServer.rhymes.list()).data);
 }
 
-export async function fetchRhymesWithPoemCount(): Promise<RhymeStats[]> {
-  const rhymes = await fetchRhymes();
-  return rhymes.map((rhyme) => ({
-    slug: rhyme.slug,
-    name: rhyme.name,
-    poemsCount: rhyme.poemsCount,
-  }));
+export async function fetchRhymesWithPoemCount(): Promise<Rhyme[]> {
+  return fetchRhymes();
 }
 
 export async function fetchRhymePoemPage(
   slug: string,
   page: string
-): Promise<{ data: RhymePoems; pagination: PaginationMeta }> {
-  const result = await apiServer.rhymes.listPoems({ slug, page });
-  return {
-    data: result,
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      hasNextPage: result.page < result.totalPages,
-      hasPrevPage: result.page > 1,
-    },
-  };
+): Promise<RhymePoemsResponse | null> {
+  try {
+    return await apiServer.rhymes.listPoems({ slug, page });
+  } catch (err) {
+    if (isNotFound(err)) return null;
+    throw err;
+  }
 }
 
 // ============================================================================
 // Themes
 // ============================================================================
 
-type ThemeStats = {
-  slug: string;
-  name: string;
-  poemsCount: number;
-};
-
 export async function fetchThemes(): Promise<Theme[]> {
-  return dedup('themes:list', async () => (await apiServer.themes.list()).themes);
+  return dedup('themes:list', async () => (await apiServer.themes.list()).data);
 }
 
-export async function fetchThemesWithPoemCount(): Promise<ThemeStats[]> {
-  const themes = await fetchThemes();
-  return themes.map((theme) => ({
-    slug: theme.slug,
-    name: theme.name,
-    poemsCount: theme.poemsCount,
-  }));
+export async function fetchThemesWithPoemCount(): Promise<Theme[]> {
+  return fetchThemes();
 }
 
 export async function fetchThemePoemPage(
   slug: string,
   page: string
-): Promise<{ data: ThemePoems; pagination: PaginationMeta }> {
-  const result = await apiServer.themes.listPoems({ slug, page });
-  return {
-    data: result,
-    pagination: {
-      currentPage: result.page,
-      totalPages: result.totalPages,
-      hasNextPage: result.page < result.totalPages,
-      hasPrevPage: result.page > 1,
-    },
-  };
+): Promise<ThemePoemsResponse | null> {
+  try {
+    return await apiServer.themes.listPoems({ slug, page });
+  } catch (err) {
+    if (isNotFound(err)) return null;
+    throw err;
+  }
 }
 
 // ============================================================================

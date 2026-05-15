@@ -3,18 +3,30 @@
 import { Minus, Plus } from 'lucide-react';
 import { ListCard } from '@/components/ui/list-card';
 import { useFontSize } from '@/hooks/use-font-size';
-import type { PoemMetadata, RelatedPoems } from '@/lib/api/types';
+import type { Poem } from '@/lib/api/types';
 import { formatVerseCount } from '@/lib/arabic';
 
 type PoemProps = {
-  clearTitle: string;
-  metadata: PoemMetadata;
-  verses: string[][];
+  title: string;
+  poet: Poem['poet'];
+  era: Poem['era'];
+  meter: Poem['meter'];
+  theme: Poem['theme'];
+  verses: Poem['verses'];
   verseCount: string | number;
-  relatedPoems: RelatedPoems[] | undefined;
+  relatedPoems: Poem['relatedPoems'] | undefined;
 };
 
-export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedPoems }: PoemProps) {
+export function PoemDisplay({
+  title,
+  poet,
+  era,
+  meter,
+  theme,
+  verses,
+  verseCount,
+  relatedPoems,
+}: PoemProps) {
   const { decreaseFontSize, increaseFontSize, getVerseFontSize, getVerseGap } = useFontSize();
   const handleTwitterShare = () =>
     window.open(
@@ -30,19 +42,18 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
   return (
     <div className="w-full flex justify-center items-start my-14 xs:my-20 lg:my-28">
       <div className="w-full flex flex-col gap-10 justify-center items-center">
-        {/* Header */}
         <header className="flex justify-center items-center flex-col gap-4 xxs:gap-6 text-center w-full">
           <div className="flex flex-col gap-2 xx:gap-4">
             <h1 className="text-lg xxs:text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-800">
-              {clearTitle}
+              {title}
             </h1>
 
             <h2 className="text-sm xxs:text-base md:text-2xl text-zinc-700">
-              <a href={`/poets/${metadata.poetSlug}/page/1`} className="hover:underline">
-                {metadata.poetName}
+              <a href={`/poets/${poet.slug}/page/1`} className="hover:underline">
+                {poet.name}
               </a>{' '}
-              <a href={`/eras/${metadata.eraSlug}/page/1`} className="hover:underline">
-                {`(${metadata.eraName})`}
+              <a href={`/eras/${era.slug}/page/1`} className="hover:underline">
+                {`(${era.name})`}
               </a>
             </h2>
 
@@ -58,17 +69,15 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
           </div>
 
           <div className="flex w-full md:w-8/12 border border-zinc-300/80 px-2.5 md:px-8 lg:px-16 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl justify-between items-center text-zinc-600 rounded-full">
-            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">{metadata.meterName || ''}</p>
+            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">{meter.name || ''}</p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">
               {formatVerseCount(verseCountNum) || ''}
             </p>
-            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{metadata.themeName || ''}</p>
+            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{theme.name || ''}</p>
           </div>
         </header>
 
-        {/* Content */}
         <div className="relative flex flex-col justify-between items-center bg-white gap-4 py-10 md:py-8 lg:py-16 px-4 rounded-2xl w-full md:w-10/12 xl:w-9/12 shadow-[inset_0px_0px_0px_1px_rgba(0,_0,_0,_0.09)]">
-          {/* CONTROLLER FOR FONTS */}
           <div className="flex items-center gap-4 border rounded-md border-zinc-300/50 bg-zinc-50/30">
             <button
               type="button"
@@ -91,7 +100,6 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
             </button>
           </div>
 
-          {/* POEM */}
           <article className="flex flex-col items-center w-full">
             <div className="w-full sm:w-11/12 md:w-10/12 xl:w-6/12">
               {verses.map((verse) => (
@@ -133,17 +141,15 @@ export function PoemDisplay({ clearTitle, metadata, verses, verseCount, relatedP
           </div>
           <div className="w-full grid grid-cols-1 2xl:grid-cols-2 gap-2 sm:gap-4 2xl:gap-6">
             {relatedPoems && relatedPoems.length > 0 ? (
-              relatedPoems.map((item: RelatedPoems) => {
-                return (
-                  <ListCard
-                    className="rounded-2xl"
-                    key={`${item.slug} ${metadata.poetSlug}`}
-                    title={item.poetName}
-                    href={`/poems/${item.slug}`}
-                    name={item.title}
-                  />
-                );
-              })
+              relatedPoems.map((item) => (
+                <ListCard
+                  className="rounded-2xl"
+                  key={`${item.slug} ${poet.slug}`}
+                  title={item.poet.name}
+                  href={`/poems/${item.slug}`}
+                  name={item.title}
+                />
+              ))
             ) : (
               <div className="text-red-500 text-center py-8">
                 حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.

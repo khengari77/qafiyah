@@ -21,17 +21,18 @@ if (!Number.isFinite(pageNumber) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
 
-const { data: poetsData, pagination } = await fetchPoets(page as string);
+const response = await fetchPoets(page as string);
 
-if (!poetsData?.poets) {
+if (!response || response.data.length === 0) {
   return Astro.redirect('/404');
 }
 
-const { poets } = poetsData;
-const totalPoets = pagination?.totalItems || 0;
-const totalPages = pagination?.totalPages || Math.ceil(totalPoets / POEMS_PER_PAGE);
-const hasNextPage = pagination?.hasNextPage || pageNumber < totalPages;
-const hasPrevPage = pagination?.hasPrevPage || pageNumber > 1;
+const poets = response.data;
+const { pagination } = response;
+const totalPoets = pagination.totalItems;
+const totalPages = pagination.totalPages || Math.ceil(totalPoets / POEMS_PER_PAGE);
+const hasNextPage = pageNumber < totalPages;
+const hasPrevPage = pageNumber > 1;
 const nextPageUrl = `/poets/page/${pageNumber + 1}`;
 const prevPageUrl = `/poets/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;

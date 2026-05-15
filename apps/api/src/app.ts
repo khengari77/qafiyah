@@ -77,7 +77,7 @@ app.use(`${API_V1_PREFIX}/*`, async (c, next) => {
     prefix: API_V1_PREFIX,
   });
   if (!result.matched) return next();
-  return transformOrpcResponse(result.response);
+  return transformOrpcResponse(result.response, c.req.path);
 });
 
 app
