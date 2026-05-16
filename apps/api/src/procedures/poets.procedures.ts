@@ -6,7 +6,7 @@ import { toPoemListItem } from './_mappers';
 
 export const listPoets = pub.poets.list.handler(async ({ context, input, errors }) => {
   const result = await poetsQueries.listPoets(context.db, input.page);
-  if (result.poets.length === 0) throw errors.NOT_FOUND();
+  if (input.page > 1 && input.page > result.totalPages) throw errors.NOT_FOUND();
   return listEnvelope(result.poets, result.total, input.page, POEMS_PER_PAGE);
 });
 

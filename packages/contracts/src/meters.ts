@@ -1,5 +1,6 @@
 import { oc } from '@orpc/contract';
 import {
+  inputValidationError,
   listResponse,
   listResponseWithMeta,
   parentMeta,
@@ -16,6 +17,7 @@ const listMeterPoemsContract = oc
   .route({ method: 'GET', path: '/meters/{slug}/poems' })
   .input(slugAndPageInput('altawil'))
   .errors({
+    ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Meter not found' },
   })
   .output(listResponseWithMeta(poemListItem, parentMeta));

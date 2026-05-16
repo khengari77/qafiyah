@@ -6,7 +6,7 @@ import {
   SEARCH_TYPE_VALUES,
 } from '@qafiyah/constants';
 import * as v from 'valibot';
-import { pageParam, pagination, subRef } from './_shared';
+import { inputValidationError, pageParam, pagination, subRef } from './_shared';
 
 const slugArrayParam = v.optional(v.array(v.string()), []);
 
@@ -59,6 +59,7 @@ const searchContract = oc
       }, SEARCH_TEXTS.missingQueryOrFilterError)
     )
   )
+  .errors({ ...inputValidationError })
   .output(
     v.variant('searchType', [
       v.object({

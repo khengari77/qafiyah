@@ -74,8 +74,21 @@ describe('poets procedures', () => {
       expect(body.pagination.page).toBe(1);
     });
 
-    it('returns 404 when page has no poets', async () => {
+    it('returns 200 with empty data on page 1 when no poets exist', async () => {
       listPoetsMock.mockResolvedValue({ poets: [], total: 0, totalPages: 0 });
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poets?page=1');
+
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as ListBody;
+      expect(body.data).toHaveLength(0);
+      expect(body.pagination.totalItems).toBe(0);
+    });
+
+    it('returns 404 when page exceeds totalPages', async () => {
+      listPoetsMock.mockResolvedValue({ poets: [], total: 10, totalPages: 1 });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

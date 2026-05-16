@@ -1,5 +1,9 @@
 import * as v from 'valibot';
 
+export const inputValidationError = {
+  INPUT_VALIDATION_FAILED: { status: 400, message: 'Input validation failed' },
+} as const;
+
 export const pageParam = v.pipe(
   v.string(),
   v.transform(Number),

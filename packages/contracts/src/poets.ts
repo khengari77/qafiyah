@@ -1,6 +1,7 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
 import {
+  inputValidationError,
   listResponse,
   listResponseWithMeta,
   pageQueryInput,
@@ -19,6 +20,7 @@ const listPoetsContract = oc
   .route({ method: 'GET', path: '/poets' })
   .input(pageQueryInput)
   .errors({
+    ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'No poets found for this page' },
   })
   .output(listResponse(poetStatRow));
@@ -27,6 +29,7 @@ const listPoetPoemsContract = oc
   .route({ method: 'GET', path: '/poets/{slug}/poems' })
   .input(slugAndPageInput('abu-nawas'))
   .errors({
+    ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Poet not found' },
   })
   .output(listResponseWithMeta(poemListItem, parentMeta));

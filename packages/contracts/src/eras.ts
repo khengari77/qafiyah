@@ -1,5 +1,6 @@
 import { oc } from '@orpc/contract';
 import {
+  inputValidationError,
   listResponse,
   listResponseWithMeta,
   parentMeta,
@@ -14,6 +15,7 @@ const listEraPoemsContract = oc
   .route({ method: 'GET', path: '/eras/{slug}/poems' })
   .input(slugAndPageInput('abbasid'))
   .errors({
+    ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Era not found' },
   })
   .output(listResponseWithMeta(poemListItem, parentMeta));
