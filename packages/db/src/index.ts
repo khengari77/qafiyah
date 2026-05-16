@@ -1,5 +1,5 @@
-export type { DbClient } from './client';
-export { createDb } from './client';
+export type { DbClient, DbMode } from './client';
+export { createDb, detectDbMode } from './client';
 export * as erasQueries from './queries/eras.queries';
 export * as metersQueries from './queries/meters.queries';
 export * as poemsQueries from './queries/poems.queries';

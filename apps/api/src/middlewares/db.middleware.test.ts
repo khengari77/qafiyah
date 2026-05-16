@@ -1,59 +1,73 @@
-/**
- * Tests for database middleware
- */
-
 import { Hono } from 'hono';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppContext } from '@/types';
-import { dbMiddleware } from './db.middleware';
+
+const { createDbMock } = vi.hoisted(() => ({ createDbMock: vi.fn() }));
+vi.mock('@qafiyah/db', async () => {
+  const actual = await vi.importActual<typeof import('@qafiyah/db')>('@qafiyah/db');
+  return {
+    ...actual,
+    createDb: createDbMock,
+  };
+});
+
+async function freshMiddleware() {
+  vi.resetModules();
+  const mod = await import('./db.middleware');
+  return mod.dbMiddleware;
+}
+
+function appWith(middleware: Awaited<ReturnType<typeof freshMiddleware>>) {
+  const app = new Hono<AppContext>();
+  app.use(middleware);
+  app.get('/test', (c) => c.json({ hasDb: !!c.get('db') }));
+  return app;
+}
 
 describe('dbMiddleware', () => {
-  let app: Hono<AppContext>;
-
   beforeEach(() => {
-    app = new Hono<AppContext>();
-    app.use(dbMiddleware);
-    app.get('/test', (c) => {
-      const db = c.get('db');
-      return c.json({ hasDb: !!db });
-    });
+    createDbMock.mockReset();
+    createDbMock.mockReturnValue({ __mock: 'db' });
   });
 
-  it('should set database connection when DATABASE_URL is provided', () => {
-    // Note: This test would need actual database mocking or a test database
-    // For now, we verify the middleware structure exists
-    expect(dbMiddleware).toBeDefined();
-  });
-
-  it('should return 503 when database connection fails', async () => {
-    const env = {
-      DATABASE_URL: 'postgresql://invalid:invalid@invalid:5432/invalid',
-    };
-
-    // Create a test app
-    const testApp = new Hono<AppContext>();
-    testApp.use(dbMiddleware);
-    testApp.get('/test', (c) => c.text('ok'));
-
-    const res = await testApp.fetch(new Request('http://localhost/test'), env);
-
-    // The middleware should handle the error and return 503
-    // This test would work with proper mocking
-    expect(res.status).toBeDefined();
-  });
-
-  it('should handle missing DATABASE_URL', async () => {
+  it('returns 503 when DATABASE_URL is missing', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-    const testApp = new Hono<AppContext>();
-    testApp.use(dbMiddleware);
-    testApp.get('/test', (c) => c.text('ok'));
-
-    const res = await testApp.fetch(new Request('http://localhost/test'), {});
-
+    const app = appWith(await freshMiddleware());
+    const res = await app.fetch(new Request('http://localhost/test'), {});
     consoleSpy.mockRestore();
+    expect(res.status).toBe(503);
+  });
 
-    // Should return 503 when database URL is missing
-    expect(res.status).toBeGreaterThanOrEqual(400);
+  it('returns 503 when DATABASE_URL is malformed', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const app = appWith(await freshMiddleware());
+    const res = await app.fetch(new Request('http://localhost/test'), {
+      DATABASE_URL: 'not-a-url',
+    });
+    consoleSpy.mockRestore();
+    expect(res.status).toBe(503);
+  });
+
+  it('creates a fresh db client per request for a localhost URL', async () => {
+    const app = appWith(await freshMiddleware());
+    const env = { DATABASE_URL: 'postgresql://u:p@127.0.0.1:5433/d' };
+
+    await app.fetch(new Request('http://localhost/test'), env);
+    await app.fetch(new Request('http://localhost/test'), env);
+    await app.fetch(new Request('http://localhost/test'), env);
+
+    expect(createDbMock).toHaveBeenCalledTimes(3);
+    expect(createDbMock).toHaveBeenCalledWith(env.DATABASE_URL);
+  });
+
+  it('creates a fresh db client per request for a remote URL', async () => {
+    const app = appWith(await freshMiddleware());
+    const env = { DATABASE_URL: 'postgresql://u:p@db.example.com:5432/d' };
+
+    await app.fetch(new Request('http://localhost/test'), env);
+    await app.fetch(new Request('http://localhost/test'), env);
+
+    expect(createDbMock).toHaveBeenCalledTimes(2);
+    expect(createDbMock).toHaveBeenCalledWith(env.DATABASE_URL);
   });
 });
