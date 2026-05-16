@@ -2,7 +2,7 @@
   "name": "@qafiyah/api",
   "private": true,
   "scripts": {
-    "dev": "bun ../../scripts/check-port.mjs 8787 && wrangler dev",
+    "dev": "bun ../../scripts/check-port.ts 8787 && wrangler dev",
     "build": "wrangler build",
     "deploy": "wrangler deploy --minify",
     "types": "tsc --noEmit --pretty",

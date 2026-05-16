@@ -1,0 +1,7 @@
+{
+  "extends": "../packages/typescript/bun.json",
+  "compilerOptions": {
+    "types": ["bun"]
+  },
+  "include": ["./**/*.ts"]
+}

@@ -15,6 +15,6 @@ export const FONT_SIZE_BASE_GAP_PX = 16;
 
 export const SCHEMA_ORG_CONTEXT = 'https://schema.org';
 export const POEM_LANGUAGE = 'ar';
-export const SITE_LOGO_PATH = '/logo.png';
+export const SITE_LOGO_PATH = '/logo.webp';
 
 export const TWITTER_DESCRIPTION_TEMPLATE_AR = 'ديوان «{poet}» على موقع قافية';

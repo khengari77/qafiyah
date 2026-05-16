@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun ../../scripts/check-port.mjs 4321 && astro dev",
+    "dev": "bun ../../scripts/check-port.ts 4321 && astro dev",
     "build": "bun ./scripts/build-with-api.mjs",
     "build:raw": "astro build",
     "start": "astro preview",
