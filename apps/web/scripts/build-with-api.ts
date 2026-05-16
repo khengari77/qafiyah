@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env bun
 // biome-ignore-all lint/suspicious/noConsole: build supervisor logs progress to the developer.
 
 /**
@@ -11,7 +11,7 @@
  * into the browser bundle, PUBLIC_API_URL stays pointed at the production API.
  */
 
-import { spawn } from 'node:child_process';
+import { type ChildProcess, spawn } from 'node:child_process';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -25,7 +25,7 @@ const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const webDir = path.resolve(scriptDir, '..');
 const repoRoot = path.resolve(webDir, '..', '..');
 
-function probePort(port, host) {
+function probePort(port: number, host: string): Promise<boolean> {
   return new Promise((resolve) => {
     const sock = net.connect({ port, host }, () => {
       sock.end();
@@ -35,11 +35,11 @@ function probePort(port, host) {
   });
 }
 
-async function waitForPort(port, host, timeoutMs) {
+async function waitForPort(port: number, host: string, timeoutMs: number): Promise<void> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     if (await probePort(port, host)) return;
-    await new Promise((r) => setTimeout(r, READY_POLL_MS));
+    await new Promise<void>((r) => setTimeout(r, READY_POLL_MS));
   }
   throw new Error(
     `[build-with-api] API failed to listen on ${host}:${port} within ${timeoutMs}ms.\n` +
@@ -50,9 +50,9 @@ async function waitForPort(port, host, timeoutMs) {
   );
 }
 
-async function main() {
+async function main(): Promise<void> {
   const alreadyUp = await probePort(PORT, HOST);
-  let api = null;
+  let api: ChildProcess | null = null;
 
   if (alreadyUp) {
     console.log('[build-with-api] API already running on port', PORT, '— reusing.');
@@ -84,14 +84,13 @@ async function main() {
     env: buildEnv,
   });
 
-  const exitCode = await new Promise((resolve) => {
+  const exitCode = await new Promise<number>((resolve) => {
     build.on('exit', (code) => resolve(code ?? 1));
   });
 
   if (api) {
     api.kill('SIGTERM');
-    // Give it a moment to exit cleanly
-    await new Promise((r) => setTimeout(r, 500));
+    await new Promise<void>((r) => setTimeout(r, 500));
   }
 
   process.exit(exitCode);

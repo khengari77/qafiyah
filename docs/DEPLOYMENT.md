@@ -25,7 +25,7 @@ The web app is intentionally self-hosted on a VPS behind nginx to keep hosting c
 bun --filter @qafiyah/web run build
 ```
 
-The build script (`scripts/build-with-api.mjs`) automatically:
+The build script (`scripts/build-with-api.ts`) automatically:
 
 1. Starts a local Wrangler dev server on `:8787`
 2. Sets `BUILD_API_URL=http://127.0.0.1:8787`

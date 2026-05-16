@@ -1,7 +1,7 @@
 /**
  * Static build-time data access (Astro SSG).
  * Calls the API over HTTP, at build time against a local Wrangler (started by
- * apps/web/scripts/build-with-api.mjs), at runtime against PROD_API_URL.
+ * apps/web/scripts/build-with-api.ts), at runtime against PROD_API_URL.
  */
 
 import { ORPCError } from '@orpc/client';

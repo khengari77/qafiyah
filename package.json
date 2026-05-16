@@ -5,17 +5,16 @@
     "prepare": "husky",
     "db:setup": "./scripts/setup-database.sh",
     "clean:dev": "pkill -f 'qafiyah/.*(astro|wrangler|workerd)' || true",
-    "preinstall": "bun -e \"if(!String(process.env.npm_config_user_agent||'').startsWith('bun/')){console.error('Use bun (npm/yarn/pnpm not supported). Try: bun install');process.exit(1)}\"",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "types": "turbo run types",
-    "optimize:images": "bun scripts/optimize-images.ts",
     "lint": "biome check --write .",
     "format": "biome format --write . && prettier --write \"**/*.{md,mdx}\"",
     "test": "turbo run test",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
-    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge && bun audit"
+    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge && bun audit",
+    "optimize:images": "bun scripts/optimize-images.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.12",
@@ -23,7 +22,6 @@
     "@commitlint/config-conventional": "^21.0.1",
     "@commitlint/types": "^21.0.1",
     "@types/bun": "^1.3.14",
-    "@types/node": "^25.0.10",
     "husky": "^9.1.7",
     "knip": "^5.82.1",
     "madge": "8.0.0",

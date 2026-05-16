@@ -1,6 +1,7 @@
 import react from '@astrojs/react';
 import sitemap from '@astrojs/sitemap';
 import { PROD_SITE_URL } from '@qafiyah/constants';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'astro/config';
 
 export default defineConfig({
@@ -10,7 +11,7 @@ export default defineConfig({
   trailingSlash: 'never',
   build: { format: 'directory' },
   vite: {
-    // AppRouter is type-only; keep Vite from trying to pre-bundle the API package.
+    plugins: [tailwindcss()],
     optimizeDeps: { exclude: ['@qafiyah/api'] },
   },
 });
