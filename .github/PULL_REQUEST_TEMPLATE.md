@@ -8,12 +8,12 @@ Closes #
 
 <!-- Check one. Matches the Conventional Commits prefix you used. -->
 
-- [ ] `feat` — new feature
-- [ ] `fix` — bug fix
-- [ ] `refactor` — code change that neither fixes a bug nor adds a feature
-- [ ] `docs` — documentation only
-- [ ] `test` — tests only
-- [ ] `chore` — tooling, deps, build, CI
+- [ ] `feat`, new feature
+- [ ] `fix`, bug fix
+- [ ] `refactor`, code change that neither fixes a bug nor adds a feature
+- [ ] `docs`, documentation only
+- [ ] `test`, tests only
+- [ ] `chore`, tooling, deps, build, CI
 
 ## How to test
 

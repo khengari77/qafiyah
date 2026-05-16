@@ -44,7 +44,7 @@ type CliConfig = {
   readonly verbose: boolean;
 };
 
-const helpText = `optimize-images — convert images to WebP (Bun.Image)
+const helpText = `optimize-images, convert images to WebP (Bun.Image)
 
 Usage:
   bun scripts/optimize-images.ts [paths...] [options]
@@ -409,7 +409,7 @@ async function main(): Promise<void> {
     if (r.skipped === 'unsupported') {
       skippedOther += 1;
       if (cfg.verbose && r.message !== 'extension not targeted') {
-        console.log(`[optimize-images] skip ${r.src} — ${r.message}`);
+        console.log(`[optimize-images] skip ${r.src}, ${r.message}`);
       }
       continue;
     }
