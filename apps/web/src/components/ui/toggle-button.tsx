@@ -2,16 +2,16 @@
 
 import { cn } from '@/lib/utils';
 
-interface SelectOption {
-  value: string;
-  label: string;
-}
+type SelectOption = {
+  readonly value: string;
+  readonly label: string;
+};
 
 type Props = {
-  options: [SelectOption, SelectOption];
-  currentValue: string;
-  onToggle: (value: string) => void;
-  className?: string;
+  readonly options: readonly [SelectOption, SelectOption];
+  readonly currentValue: string;
+  readonly onToggle: (value: string) => void;
+  readonly className?: string;
 };
 
 export function BinaryToggleButton({ options, currentValue, onToggle, className }: Props) {
@@ -47,7 +47,7 @@ export function BinaryToggleButton({ options, currentValue, onToggle, className 
   );
 }
 
-function ToggleItem({ label, isActive }: { label: string; isActive: boolean }) {
+function ToggleItem({ label, isActive }: { readonly label: string; readonly isActive: boolean }) {
   return (
     <span
       className={cn(

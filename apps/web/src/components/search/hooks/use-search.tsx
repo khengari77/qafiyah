@@ -19,6 +19,30 @@ import { useInfiniteScroll } from './use-infinite-scroll';
 type SearchType = (typeof SEARCH_TYPE_VALUES)[number];
 type MatchType = (typeof MATCH_TYPE_VALUES)[number];
 
+export type FetchStatus =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'loading' }
+  | {
+      readonly kind: 'success';
+      readonly data: readonly (PoemSearchResult | PoetSearchResult)[];
+    }
+  | {
+      readonly kind: 'success-fetching-more';
+      readonly data: readonly (PoemSearchResult | PoetSearchResult)[];
+    }
+  | { readonly kind: 'error' };
+
+const SEARCH_TYPE_SET: ReadonlySet<SearchType> = new Set(['poems', 'poets']);
+const MATCH_TYPE_SET: ReadonlySet<MatchType> = new Set(['all', 'any', 'exact']);
+
+function isSearchType(value: string): value is SearchType {
+  return SEARCH_TYPE_SET.has(value as SearchType);
+}
+
+function isMatchType(value: string): value is MatchType {
+  return MATCH_TYPE_SET.has(value as MatchType);
+}
+
 function sanitizeArabicInput(raw: string): string {
   return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(/\s+/g, ' ');
 }
@@ -30,9 +54,9 @@ function validateText(input: string): string | null {
   return null;
 }
 
-function splitCsvIds(value: string | string[]): string[] {
+function splitCsvIds(value: string | readonly string[]): readonly string[] {
   if (Array.isArray(value)) return value.filter((v) => v.trim() !== '');
-  return value
+  return (value as string)
     .split(',')
     .map((v) => v.trim())
     .filter(Boolean);
@@ -105,10 +129,10 @@ export function useSearch() {
         searchType,
         page: String(pageParam),
         matchType,
-        meterSlugs: splitCsvIds(meterIds),
-        eraSlugs: splitCsvIds(eraIds),
-        rhymeSlugs: splitCsvIds(rhymeIds),
-        themeSlugs: splitCsvIds(themeIds),
+        meterSlugs: [...splitCsvIds(meterIds)],
+        eraSlugs: [...splitCsvIds(eraIds)],
+        rhymeSlugs: [...splitCsvIds(rhymeIds)],
+        themeSlugs: [...splitCsvIds(themeIds)],
       });
     },
     initialPageParam: 1,
@@ -121,10 +145,19 @@ export function useSearch() {
     refetchOnWindowFocus: false,
   });
 
-  const data: (PoemSearchResult | PoetSearchResult)[] =
+  const data: readonly (PoemSearchResult | PoetSearchResult)[] =
     iq.data?.pages.flatMap((page) => page.data as (PoemSearchResult | PoetSearchResult)[]) ?? [];
 
   const totalResults = iq.data?.pages[0]?.pagination.totalItems ?? 0;
+
+  const status: FetchStatus = (() => {
+    if (!canSearch) return { kind: 'idle' };
+    if (iq.isError) return { kind: 'error' };
+    if (iq.isLoading) return { kind: 'loading' };
+    if (iq.isFetchingNextPage) return { kind: 'success-fetching-more', data };
+    if (iq.isSuccess) return { kind: 'success', data };
+    return { kind: 'loading' };
+  })();
 
   const { loadMoreRef } = useInfiniteScroll(
     iq.fetchNextPage,
@@ -149,12 +182,12 @@ export function useSearch() {
   };
 
   const handleSearchTypeChange = (value: string) => {
-    const newSearchType = value as SearchType;
+    if (!isSearchType(value)) return;
 
-    if (newSearchType === searchType) return;
+    if (value === searchType) return;
 
-    setSearchType(newSearchType);
-    if (newSearchType === 'poets') {
+    setSearchType(value);
+    if (value === 'poets') {
       setMeterIds('');
       setThemeIds('');
       setRhymeIds('');
@@ -163,9 +196,8 @@ export function useSearch() {
   };
 
   const handleMatchTypeChange = (value: string) => {
-    const validMatchTypes = ['all', 'any', 'exact'] as const;
-    if (typeof value === 'string' && validMatchTypes.includes(value as never)) {
-      setMatchType(value as MatchType);
+    if (isMatchType(value)) {
+      setMatchType(value);
     }
   };
 
@@ -204,13 +236,10 @@ export function useSearch() {
     setValidationError(null);
   };
 
-  const hasQuery = !iq.isLoading && (Boolean(inputValue.trim()) || hasFilters);
+  const hasQuery = status.kind !== 'loading' && (Boolean(inputValue.trim()) || hasFilters);
 
   return {
-    isLoading: iq.isLoading,
-    isError: iq.isError,
-    isSuccess: iq.isSuccess,
-    isFetchingNextPage: iq.isFetchingNextPage,
+    status,
     filtersVisible,
     hasQuery,
     hasText,
@@ -219,7 +248,6 @@ export function useSearch() {
 
     loadMoreRef,
 
-    data,
     totalResults,
     validationError,
     inputValue,

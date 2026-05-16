@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockDb, createTestClient } from '@/test-utils';
+import { poemResourceResponseSchema, slugListResponseSchema } from '@/test-schemas';
+import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listAllPoemSlugsMock = vi.fn();
@@ -83,10 +84,7 @@ describe('poems procedures', () => {
       const res = await client.$get('/v1/poems/slugs');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as {
-        data: string[];
-        pagination: { totalItems: number };
-      };
+      const body = await parseJson(res, slugListResponseSchema);
       expect(body.data).toEqual(['poem-1', 'poem-2']);
       expect(body.pagination.totalItems).toBe(2);
     });
@@ -99,7 +97,7 @@ describe('poems procedures', () => {
       const res = await client.$get('/v1/poems/slugs');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as { data: string[]; pagination: { totalItems: number } };
+      const body = await parseJson(res, slugListResponseSchema);
       expect(body.data).toHaveLength(0);
       expect(body.pagination.totalItems).toBe(0);
     });
@@ -114,17 +112,7 @@ describe('poems procedures', () => {
       const res = await client.$get('/v1/poems/my-poem');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as {
-        data: {
-          title: string;
-          slug: string;
-          poet: { name: string; slug: string };
-          meter: { name: string; slug: string };
-          theme: { name: string; slug: string };
-          era: { name: string; slug: string };
-          relatedPoems: Array<{ poet: { slug: string }; meter: { slug: string } }>;
-        };
-      };
+      const body = await parseJson(res, poemResourceResponseSchema);
       expect(body.data.title).toBe('قصيدة في الحب');
       expect(body.data.slug).toBe('my-poem');
       expect(body.data.poet).toEqual({ name: 'المتنبي', slug: 'mutanabbi' });

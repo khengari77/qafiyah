@@ -6,8 +6,8 @@ import { cn } from '@/lib/utils';
 const MARK_SPLIT_REGEX = /<\/?mark>/;
 
 type Props = {
-  text: string;
-  className?: string;
+  readonly text: string;
+  readonly className?: string;
 };
 
 export function HighlightedText({ text, className = '' }: Props) {

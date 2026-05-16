@@ -1,4 +1,5 @@
 ---
+import type { PoemSlug } from '@qafiyah/contracts';
 import { PoemDisplay } from '@/components/poem/poem-display';
 import Layout from '@/layouts/Layout.astro';
 import { fetchAllPoemSlugs } from '@/lib/api/static';
@@ -10,7 +11,8 @@ export async function getStaticPaths() {
 }
 
 const { slug } = Astro.params;
-const pageData = await loadPoemPage(slug as string);
+// URL parameter boundary: brand the bare-string slug as a PoemSlug for the typed API.
+const pageData = await loadPoemPage(slug as PoemSlug);
 
 if (!pageData) {
   return Astro.redirect('/404');

@@ -1,22 +1,11 @@
 import * as v from 'valibot';
 import { describe, expect, it } from 'vitest';
-import { searchRouterContract } from './search';
+import { searchInputSchema } from './search';
 
-type SearchInput = {
-  q: string;
-  searchType: 'poems' | 'poets';
-  page: number;
-  matchType: 'all' | 'any';
-  meterSlugs: string[];
-  eraSlugs: string[];
-  rhymeSlugs: string[];
-  themeSlugs: string[];
-};
-
-const searchSchema = searchRouterContract.search['~orpc'].inputSchema as v.GenericSchema;
+type SearchInput = v.InferOutput<typeof searchInputSchema>;
 
 function parseSearch(input: unknown): SearchInput {
-  return v.parse(searchSchema, input) as SearchInput;
+  return v.parse(searchInputSchema, input);
 }
 
 describe('search input validation', () => {

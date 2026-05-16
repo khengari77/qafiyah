@@ -7,8 +7,8 @@ import { Logo } from './logo';
 import { NavLinks } from './nav-links';
 
 type Props = {
-  onMenuToggle: () => void;
-  className?: string;
+  readonly onMenuToggle: () => void;
+  readonly className?: string;
 };
 
 export function Nav({ onMenuToggle, className }: Props) {

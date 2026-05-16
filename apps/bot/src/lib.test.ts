@@ -1,7 +1,6 @@
 import type { TwitterApi } from 'twitter-api-v2';
 import { vi } from 'vitest';
 import {
-  type err,
   fetchFormattedPoem,
   initializeTwitterClient,
   ok,
@@ -41,7 +40,8 @@ describe('withRetry', () => {
     const op = vi.fn().mockRejectedValue('status 429 from server');
     const result = await withRetry(op, 'test');
     expect(result.ok).toBe(false);
-    expect((result as ReturnType<typeof err>).error.message).toBe('Rate limit hit. Aborting.');
+    if (result.ok) throw new Error('expected err');
+    expect(result.error.message).toBe('Rate limit hit. Aborting.');
   });
 
   it('returns err immediately on TerminalError without retrying', async () => {
@@ -55,7 +55,8 @@ describe('withRetry', () => {
     const op = vi.fn().mockRejectedValue(new Error('status 429'));
     const result = await withRetry(op, 'test');
     expect(result.ok).toBe(false);
-    expect((result as ReturnType<typeof err>).error.message).toContain('Rate limit');
+    if (result.ok) throw new Error('expected err');
+    expect(result.error.message).toContain('Rate limit');
     expect(op).toHaveBeenCalledTimes(1);
   });
 
@@ -87,7 +88,8 @@ describe('withRetry', () => {
     const result = await promise;
 
     expect(result.ok).toBe(false);
-    expect((result as ReturnType<typeof err>).error.message).toBe('always fails');
+    if (result.ok) throw new Error('expected err');
+    expect(result.error.message).toBe('always fails');
     expect(op).toHaveBeenCalledTimes(3);
   });
 });
@@ -123,7 +125,8 @@ describe('fetchFormattedPoem', () => {
     const result = await promise;
 
     expect(result.ok).toBe(false);
-    expect((result as ReturnType<typeof err>).error).toBeInstanceOf(TerminalError);
+    if (result.ok) throw new Error('expected err');
+    expect(result.error).toBeInstanceOf(TerminalError);
   });
 
   it('returns TerminalError when poem exceeds 280 chars', async () => {
@@ -135,7 +138,8 @@ describe('fetchFormattedPoem', () => {
     const result = await promise;
 
     expect(result.ok).toBe(false);
-    expect((result as ReturnType<typeof err>).error).toBeInstanceOf(TerminalError);
+    if (result.ok) throw new Error('expected err');
+    expect(result.error).toBeInstanceOf(TerminalError);
   });
 
   it('retries then fails when API always returns non-ok status', async () => {
@@ -159,6 +163,7 @@ describe('postTweet', () => {
   });
 
   it('returns tweet id on successful post', async () => {
+    // test-only: minimal TwitterApi shape for the v2.tweet code path
     const client = {
       v2: { tweet: vi.fn().mockResolvedValue({ data: { id: '12345' } }) },
     } as unknown as TwitterApi;
@@ -169,6 +174,7 @@ describe('postTweet', () => {
 
   it('retries and fails when tweet response has no id', async () => {
     vi.useFakeTimers();
+    // test-only: minimal TwitterApi shape for the v2.tweet code path
     const client = {
       v2: { tweet: vi.fn().mockResolvedValue({ data: {} }) },
     } as unknown as TwitterApi;

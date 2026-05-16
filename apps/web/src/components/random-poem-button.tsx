@@ -1,10 +1,12 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
+import { match } from 'ts-pattern';
 import { useRandomPoem } from '@/hooks/use-random-poem';
 
 export function RandomPoemButton() {
-  const { handleClick, isLoading, isError } = useRandomPoem();
+  const { handleClick, status } = useRandomPoem();
+  const isLoading = status.kind === 'loading';
 
   return (
     <button
@@ -14,13 +16,15 @@ export function RandomPoemButton() {
       aria-busy={isLoading}
       aria-label="قصيدة عشوائية"
     >
-      {isError && <p className="text-red-400">حدث خطأ أثناء تحميل القصيدة</p>}
-      {!isError && isLoading && (
-        <p>
-          <Loader2 className="animate-spin h-4 w-4" aria-hidden="true" />
-        </p>
-      )}
-      {!(isError || isLoading) && <p>قصيدة عشوائية</p>}
+      {match(status)
+        .with({ kind: 'error' }, () => <p className="text-red-400">حدث خطأ أثناء تحميل القصيدة</p>)
+        .with({ kind: 'loading' }, () => (
+          <p>
+            <Loader2 className="animate-spin h-4 w-4" aria-hidden="true" />
+          </p>
+        ))
+        .with({ kind: 'idle' }, () => <p>قصيدة عشوائية</p>)
+        .exhaustive()}
     </button>
   );
 }

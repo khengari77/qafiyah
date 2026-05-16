@@ -6,17 +6,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 type Option = {
-  value: string;
-  label: string;
+  readonly value: string;
+  readonly label: string;
 };
 
 type Props = {
-  options: Option[];
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-  disabled?: boolean;
-  className?: string;
+  readonly options: readonly Option[];
+  readonly value: string;
+  readonly onChange: (value: string) => void;
+  readonly placeholder?: string;
+  readonly disabled?: boolean;
+  readonly className?: string;
 };
 
 export function SelectSingle({

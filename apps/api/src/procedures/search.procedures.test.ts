@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockDb, createTestClient } from '@/test-utils';
+import { searchBodySchema } from '@/test-schemas';
+import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const searchPoemsMock = vi.fn();
@@ -61,12 +62,6 @@ const samplePoetRow = {
   relevance: 0,
 };
 
-type SearchBody = {
-  searchType: 'poems' | 'poets';
-  data: Array<{ type: string; slug?: string }>;
-  pagination: { totalItems: number; page: number };
-};
-
 describe('search procedure', () => {
   beforeEach(() => {
     searchPoemsMock.mockReset();
@@ -95,7 +90,7 @@ describe('search procedure', () => {
     expect(res.status).toBe(200);
     expect(searchPoemsMock).toHaveBeenCalledTimes(1);
     expect(listPoemsByFiltersMock).not.toHaveBeenCalled();
-    const body = (await res.json()) as SearchBody;
+    const body = await parseJson(res, searchBodySchema);
     expect(body.searchType).toBe('poems');
     expect(body.pagination.totalItems).toBe(1);
     expect(body.data).toHaveLength(1);
@@ -134,7 +129,7 @@ describe('search procedure', () => {
     expect(res.status).toBe(200);
     expect(listPoetsByFiltersMock).toHaveBeenCalledTimes(1);
     expect(searchPoetsMock).not.toHaveBeenCalled();
-    const body = (await res.json()) as SearchBody;
+    const body = await parseJson(res, searchBodySchema);
     expect(body.searchType).toBe('poets');
     expect(body.data[0]?.type).toBe('poet');
   });

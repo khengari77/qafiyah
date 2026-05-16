@@ -1,21 +1,22 @@
+import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
 import type { poemsQueries, searchQueries } from '@qafiyah/db';
 
 type PoemRow = {
-  title: string;
-  slug: string;
-  poetName: string;
-  poetSlug: string;
-  meterName: string;
-  meterSlug: string;
+  readonly title: string;
+  readonly slug: PoemSlug;
+  readonly poetName: string;
+  readonly poetSlug: PoetSlug;
+  readonly meterName: string;
+  readonly meterSlug: MeterSlug;
 };
 
-type SubRef = { name: string; slug: string };
+type SubRef<TSlug> = { readonly name: string; readonly slug: TSlug };
 
 type PoemListItem = {
-  title: string;
-  slug: string;
-  poet: SubRef;
-  meter: SubRef;
+  readonly title: string;
+  readonly slug: PoemSlug;
+  readonly poet: SubRef<PoetSlug>;
+  readonly meter: SubRef<MeterSlug>;
 };
 
 export function toPoemListItem(row: PoemRow): PoemListItem {
@@ -27,25 +28,29 @@ export function toPoemListItem(row: PoemRow): PoemListItem {
   };
 }
 
+// @WARN: PoemResource is the wire output shape — `verses` and `relatedPoems` are
+//   mutable arrays because the oRPC contract (Valibot InferOutput) does not preserve
+//   readonly. Internally readonly data from @qafiyah/db is copied into a mutable
+//   shape only at this boundary.
 type PoemResource = {
-  title: string;
-  slug: string;
-  verses: [string, string][];
-  verseCount: number;
-  sample: string;
-  keywords: string;
-  poet: SubRef;
-  era: SubRef;
-  meter: SubRef;
-  theme: SubRef;
-  relatedPoems: PoemListItem[];
+  readonly title: string;
+  readonly slug: PoemSlug;
+  readonly verses: [string, string][];
+  readonly verseCount: number;
+  readonly sample: string;
+  readonly keywords: string;
+  readonly poet: SubRef<PoetSlug>;
+  readonly era: SubRef<EraSlug>;
+  readonly meter: SubRef<MeterSlug>;
+  readonly theme: SubRef<ThemeSlug>;
+  readonly relatedPoems: PoemListItem[];
 };
 
-export function toPoemResource(slug: string, data: poemsQueries.PoemResourceData): PoemResource {
+export function toPoemResource(slug: PoemSlug, data: poemsQueries.PoemResourceData): PoemResource {
   return {
     title: data.clearTitle,
     slug,
-    verses: data.processedContent.verses,
+    verses: data.processedContent.verses.map((v) => [v[0], v[1]] as [string, string]),
     verseCount: data.processedContent.verseCount,
     sample: data.processedContent.sample,
     keywords: data.processedContent.keywords,
@@ -58,14 +63,14 @@ export function toPoemResource(slug: string, data: poemsQueries.PoemResourceData
 }
 
 type PoemSearchResult = {
-  type: 'poem';
-  title: string;
-  slug: string;
-  snippet: string;
-  poet: SubRef;
-  meter: SubRef;
-  era: SubRef;
-  relevance: number;
+  readonly type: 'poem';
+  readonly title: string;
+  readonly slug: PoemSlug;
+  readonly snippet: string;
+  readonly poet: SubRef<PoetSlug>;
+  readonly meter: SubRef<MeterSlug>;
+  readonly era: SubRef<EraSlug>;
+  readonly relevance: number;
 };
 
 export function toPoemSearchResult(row: searchQueries.PoemsSearchRow): PoemSearchResult {
@@ -82,12 +87,12 @@ export function toPoemSearchResult(row: searchQueries.PoemsSearchRow): PoemSearc
 }
 
 type PoetSearchResult = {
-  type: 'poet';
-  name: string;
-  slug: string;
-  bio: string;
-  era: SubRef;
-  relevance: number;
+  readonly type: 'poet';
+  readonly name: string;
+  readonly slug: PoetSlug;
+  readonly bio: string;
+  readonly era: SubRef<EraSlug>;
+  readonly relevance: number;
 };
 
 export function toPoetSearchResult(row: searchQueries.PoetsSearchRow): PoetSearchResult {

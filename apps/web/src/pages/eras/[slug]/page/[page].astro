@@ -1,5 +1,6 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
+import type { EraSlug } from '@qafiyah/contracts';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import { fetchEraPoemPage, fetchErasWithPoemCount, generatePageNumbers } from '@/lib/api/static';
@@ -38,7 +39,8 @@ if (!(slug && Number.isFinite(pageNumber)) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
 
-const response = await fetchEraPoemPage(slug as string, page as string);
+// URL parameter boundary: brand the bare-string slug as an EraSlug for the typed API.
+const response = await fetchEraPoemPage(slug as EraSlug, page as string);
 if (!response) {
   return Astro.redirect('/404');
 }

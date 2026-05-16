@@ -6,6 +6,14 @@
 
 import { ORPCError } from '@orpc/client';
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
+import type {
+  EraSlug,
+  MeterSlug,
+  PoemSlug,
+  PoetSlug,
+  RhymeSlug,
+  ThemeSlug,
+} from '@qafiyah/contracts';
 import { apiServer } from './rpc';
 import type {
   Era,
@@ -22,6 +30,10 @@ import type {
   ThemePoemsResponse,
 } from './types';
 
+// @WARN: cached promise is keyed by string and stored as `Promise<unknown>`. The
+//   dedup helper trusts that callers use a stable key→type mapping (e.g. always
+//   pair 'eras:list' with `Era[]`). The cast at the call site documents the
+//   key→type contract that TypeScript cannot infer through a string map.
 const memo = new Map<string, Promise<unknown>>();
 function dedup<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const hit = memo.get(key);
@@ -39,12 +51,12 @@ function isNotFound(err: unknown): boolean {
 // Poems
 // ============================================================================
 
-export async function fetchAllPoemSlugs(): Promise<string[]> {
+export async function fetchAllPoemSlugs(): Promise<readonly PoemSlug[]> {
   const result = await apiServer.poems.listSlugs();
-  return result.data;
+  return result.data as readonly PoemSlug[];
 }
 
-export async function fetchPoem(slug: string): Promise<Poem | null> {
+export async function fetchPoem(slug: PoemSlug): Promise<Poem | null> {
   try {
     const result = await apiServer.poems.getBySlug({ slug });
     return result.data;
@@ -67,7 +79,7 @@ export async function fetchPoets(page: string): Promise<PoetsResponse | null> {
   }
 }
 
-export async function fetchPoetsWithPoemCount(): Promise<Poet[]> {
+export async function fetchPoetsWithPoemCount(): Promise<readonly Poet[]> {
   const allPoets: Poet[] = [];
   let page = 1;
   let hasMore = true;
@@ -94,7 +106,7 @@ export async function fetchPoetsTotalPages(): Promise<number> {
 }
 
 export async function fetchPoetPoemPage(
-  slug: string,
+  slug: PoetSlug,
   page: string
 ): Promise<PoetPoemsResponse | null> {
   try {
@@ -109,16 +121,16 @@ export async function fetchPoetPoemPage(
 // Eras
 // ============================================================================
 
-export function fetchEras(): Promise<Era[]> {
+export function fetchEras(): Promise<readonly Era[]> {
   return dedup('eras:list', async () => (await apiServer.eras.list()).data);
 }
 
-export function fetchErasWithPoemCount(): Promise<Era[]> {
+export function fetchErasWithPoemCount(): Promise<readonly Era[]> {
   return fetchEras();
 }
 
 export async function fetchEraPoemPage(
-  slug: string,
+  slug: EraSlug,
   page: string
 ): Promise<EraPoemsResponse | null> {
   try {
@@ -133,16 +145,16 @@ export async function fetchEraPoemPage(
 // Meters
 // ============================================================================
 
-export function fetchMeters(): Promise<Meter[]> {
+export function fetchMeters(): Promise<readonly Meter[]> {
   return dedup('meters:list', async () => (await apiServer.meters.list()).data);
 }
 
-export function fetchMetersWithPoemCount(): Promise<Meter[]> {
+export function fetchMetersWithPoemCount(): Promise<readonly Meter[]> {
   return fetchMeters();
 }
 
 export async function fetchMeterPoemPage(
-  slug: string,
+  slug: MeterSlug,
   page: string
 ): Promise<MeterPoemsResponse | null> {
   try {
@@ -157,16 +169,16 @@ export async function fetchMeterPoemPage(
 // Rhymes
 // ============================================================================
 
-export function fetchRhymes(): Promise<Rhyme[]> {
+export function fetchRhymes(): Promise<readonly Rhyme[]> {
   return dedup('rhymes:list', async () => (await apiServer.rhymes.list()).data);
 }
 
-export function fetchRhymesWithPoemCount(): Promise<Rhyme[]> {
+export function fetchRhymesWithPoemCount(): Promise<readonly Rhyme[]> {
   return fetchRhymes();
 }
 
 export async function fetchRhymePoemPage(
-  slug: string,
+  slug: RhymeSlug,
   page: string
 ): Promise<RhymePoemsResponse | null> {
   try {
@@ -181,16 +193,16 @@ export async function fetchRhymePoemPage(
 // Themes
 // ============================================================================
 
-export function fetchThemes(): Promise<Theme[]> {
+export function fetchThemes(): Promise<readonly Theme[]> {
   return dedup('themes:list', async () => (await apiServer.themes.list()).data);
 }
 
-export function fetchThemesWithPoemCount(): Promise<Theme[]> {
+export function fetchThemesWithPoemCount(): Promise<readonly Theme[]> {
   return fetchThemes();
 }
 
 export async function fetchThemePoemPage(
-  slug: string,
+  slug: ThemeSlug,
   page: string
 ): Promise<ThemePoemsResponse | null> {
   try {
@@ -211,7 +223,7 @@ export async function fetchThemePoemPage(
 export function generatePageNumbers(
   totalCount: number,
   perPage: number = POEMS_PER_PAGE
-): number[] {
+): readonly number[] {
   if (totalCount === 0) return [];
 
   const totalPages = Math.max(1, Math.ceil(totalCount / perPage));

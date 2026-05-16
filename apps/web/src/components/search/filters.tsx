@@ -9,36 +9,34 @@ import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import { BinaryToggleButton } from '@/components/ui/toggle-button';
 
-type FilterOption = { value: string; label: string };
+type FilterOption = { readonly value: string; readonly label: string };
+
+type MultiFilter = {
+  readonly selected: readonly string[];
+  readonly options: readonly FilterOption[];
+  readonly onChange: (v: string | string[]) => void;
+};
 
 type Props = {
-  filters: {
-    searchType: {
-      value: string;
-      options: [FilterOption, FilterOption];
-      onChange: (v: string) => void;
+  readonly filters: {
+    readonly searchType: {
+      readonly value: string;
+      readonly options: readonly [FilterOption, FilterOption];
+      readonly onChange: (v: string) => void;
     };
-    matchType: { value: string; options: FilterOption[]; onChange: (v: string) => void };
-    eras: { selected: string[]; options: FilterOption[]; onChange: (v: string | string[]) => void };
-    meters: {
-      selected: string[];
-      options: FilterOption[];
-      onChange: (v: string | string[]) => void;
+    readonly matchType: {
+      readonly value: string;
+      readonly options: readonly FilterOption[];
+      readonly onChange: (v: string) => void;
     };
-    themes: {
-      selected: string[];
-      options: FilterOption[];
-      onChange: (v: string | string[]) => void;
-    };
-    rhymes: {
-      selected: string[];
-      options: FilterOption[];
-      onChange: (v: string | string[]) => void;
-    };
+    readonly eras: MultiFilter;
+    readonly meters: MultiFilter;
+    readonly themes: MultiFilter;
+    readonly rhymes: MultiFilter;
   };
-  isPoemsMode: boolean;
-  hasText: boolean;
-  hasInputText: boolean;
+  readonly isPoemsMode: boolean;
+  readonly hasText: boolean;
+  readonly hasInputText: boolean;
 };
 
 export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) {

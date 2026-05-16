@@ -13,7 +13,7 @@ function pagination(currentPage: number, totalItems: number, pageSize: number) {
   };
 }
 
-function nonEmpty<T>(arr: T[]): T[] | null {
+function nonEmpty<T>(arr: readonly T[]): readonly T[] | null {
   return arr.length > 0 ? arr : null;
 }
 

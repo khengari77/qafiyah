@@ -3,7 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
-export type DbClient = PostgresJsDatabase<Record<string, never>>;
+export type DbClient = PostgresJsDatabase<Readonly<Record<string, never>>>;
 
 export type DbMode = 'edge' | 'long-lived';
 
@@ -34,7 +34,7 @@ const PROFILES = {
   },
 } as const;
 
-export function createDb(databaseUrl: string, options?: { mode?: DbMode }): DbClient {
+export function createDb(databaseUrl: string, options?: { readonly mode?: DbMode }): DbClient {
   const url = new URL(databaseUrl);
   const port = Number.parseInt(url.port, 10);
   if (!Number.isInteger(port) || port <= 0 || port > 65535) {
@@ -61,5 +61,5 @@ export function createDb(databaseUrl: string, options?: { mode?: DbMode }): DbCl
     transform: { undefined: null },
     onnotice: () => undefined,
   });
-  return drizzle(client) as DbClient;
+  return drizzle<Readonly<Record<string, never>>>(client);
 }

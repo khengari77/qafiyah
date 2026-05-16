@@ -7,14 +7,14 @@ import type { Poem } from '@/lib/api/types';
 import { formatVerseCount } from '@/lib/arabic';
 
 type PoemProps = {
-  title: string;
-  poet: Poem['poet'];
-  era: Poem['era'];
-  meter: Poem['meter'];
-  theme: Poem['theme'];
-  verses: Poem['verses'];
-  verseCount: string | number;
-  relatedPoems: Poem['relatedPoems'] | undefined;
+  readonly title: string;
+  readonly poet: Poem['poet'];
+  readonly era: Poem['era'];
+  readonly meter: Poem['meter'];
+  readonly theme: Poem['theme'];
+  readonly verses: Poem['verses'];
+  readonly verseCount: string | number;
+  readonly relatedPoems?: Poem['relatedPoems'];
 };
 
 export function PoemDisplay({

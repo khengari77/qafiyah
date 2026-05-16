@@ -26,17 +26,13 @@ import { SearchInput } from './search-input';
 
 export function SearchContainer() {
   const {
-    isLoading,
-    isError,
-    isSuccess,
-    isFetchingNextPage,
+    status,
     filtersVisible,
     hasQuery,
     hasText,
     hasInputText,
     hasFilters,
     loadMoreRef,
-    data,
     totalResults,
     validationError,
     inputValue,
@@ -144,12 +140,8 @@ export function SearchContainer() {
         </Card>
 
         <ResultList
-          data={data}
+          status={status}
           loadMoreRef={loadMoreRef}
-          isError={isError}
-          isFetchingNextPage={isFetchingNextPage}
-          isLoading={isLoading}
-          isSuccess={isSuccess}
           hasText={hasText}
           hasFilters={hasFilters}
           searchType={searchType}

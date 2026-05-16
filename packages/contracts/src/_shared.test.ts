@@ -15,6 +15,7 @@ import {
   statRowNoPoetsCount,
   subRef,
 } from './_shared';
+import { eraSlugSchema, poetSlugSchema, themeSlugSchema } from './brands';
 
 describe('pageParam', () => {
   it('parses string "1" to integer 1', () => {
@@ -44,33 +45,38 @@ describe('pageParam', () => {
 
 describe('slugAndPageInput', () => {
   it('parses valid slug and page', () => {
-    const result = v.parse(slugAndPageInput('my-slug'), { slug: 'my-slug', page: '2' });
+    const result = v.parse(slugAndPageInput(eraSlugSchema, 'my-slug'), {
+      slug: 'my-slug',
+      page: '2',
+    });
     expect(result.slug).toBe('my-slug');
     expect(result.page).toBe(2);
   });
 
   it('defaults page to 1 when omitted', () => {
-    const result = v.parse(slugAndPageInput('my-slug'), { slug: 'my-slug' });
+    const result = v.parse(slugAndPageInput(eraSlugSchema, 'my-slug'), { slug: 'my-slug' });
     expect(result.page).toBe(1);
   });
 
   it('rejects missing slug', () => {
-    expect(() => v.parse(slugAndPageInput('my-slug'), { page: '1' })).toThrow();
+    expect(() => v.parse(slugAndPageInput(eraSlugSchema, 'my-slug'), { page: '1' })).toThrow();
   });
 
   it('rejects invalid page', () => {
-    expect(() => v.parse(slugAndPageInput('my-slug'), { slug: 'my-slug', page: '0' })).toThrow();
+    expect(() =>
+      v.parse(slugAndPageInput(eraSlugSchema, 'my-slug'), { slug: 'my-slug', page: '0' })
+    ).toThrow();
   });
 });
 
 describe('slugInput', () => {
   it('parses valid slug', () => {
-    const result = v.parse(slugInput('mutanabbi'), { slug: 'mutanabbi' });
+    const result = v.parse(slugInput(poetSlugSchema, 'mutanabbi'), { slug: 'mutanabbi' });
     expect(result.slug).toBe('mutanabbi');
   });
 
   it('rejects missing slug', () => {
-    expect(() => v.parse(slugInput('mutanabbi'), {})).toThrow();
+    expect(() => v.parse(slugInput(poetSlugSchema, 'mutanabbi'), {})).toThrow();
   });
 });
 
@@ -88,23 +94,23 @@ describe('pageQueryInput', () => {
 
 describe('subRef', () => {
   it('parses { name, slug } shape', () => {
-    const result = v.parse(subRef, { name: 'المتنبي', slug: 'al-mutanabbi' });
+    const result = v.parse(subRef(poetSlugSchema), { name: 'المتنبي', slug: 'al-mutanabbi' });
     expect(result.name).toBe('المتنبي');
     expect(result.slug).toBe('al-mutanabbi');
   });
 
   it('rejects missing slug', () => {
-    expect(() => v.parse(subRef, { name: 'x' })).toThrow();
+    expect(() => v.parse(subRef(poetSlugSchema), { name: 'x' })).toThrow();
   });
 
   it('rejects missing name', () => {
-    expect(() => v.parse(subRef, { slug: 'x' })).toThrow();
+    expect(() => v.parse(subRef(poetSlugSchema), { slug: 'x' })).toThrow();
   });
 });
 
 describe('statRow', () => {
   it('parses valid stat row', () => {
-    const result = v.parse(statRow, {
+    const result = v.parse(statRow(eraSlugSchema), {
       name: 'عباسي',
       slug: 'abbasid',
       poemsCount: 100,
@@ -115,32 +121,42 @@ describe('statRow', () => {
   });
 
   it('rejects missing poetsCount', () => {
-    expect(() => v.parse(statRow, { name: 'عباسي', slug: 'abbasid', poemsCount: 100 })).toThrow();
+    expect(() =>
+      v.parse(statRow(eraSlugSchema), { name: 'عباسي', slug: 'abbasid', poemsCount: 100 })
+    ).toThrow();
   });
 });
 
 describe('statRowNoPoetsCount', () => {
   it('parses valid row without poetsCount', () => {
-    const result = v.parse(statRowNoPoetsCount, { name: 'الغزل', slug: 'love', poemsCount: 200 });
+    const result = v.parse(statRowNoPoetsCount(themeSlugSchema), {
+      name: 'الغزل',
+      slug: 'love',
+      poemsCount: 200,
+    });
     expect(result.name).toBe('الغزل');
     expect(result.poemsCount).toBe(200);
   });
 
   it('drops extra fields on parse', () => {
     const input = { name: 'الغزل', slug: 'love', poemsCount: 200, poetsCount: 10 };
-    const result = v.parse(statRowNoPoetsCount, input);
+    const result = v.parse(statRowNoPoetsCount(themeSlugSchema), input);
     expect(result).not.toHaveProperty('poetsCount');
   });
 });
 
 describe('parentMeta', () => {
   it('parses { name, slug, poemsCount }', () => {
-    const result = v.parse(parentMeta, { name: 'عباسي', slug: 'abbasid', poemsCount: 42 });
+    const result = v.parse(parentMeta(eraSlugSchema), {
+      name: 'عباسي',
+      slug: 'abbasid',
+      poemsCount: 42,
+    });
     expect(result).toEqual({ name: 'عباسي', slug: 'abbasid', poemsCount: 42 });
   });
 
   it('rejects missing poemsCount', () => {
-    expect(() => v.parse(parentMeta, { name: 'x', slug: 'x' })).toThrow();
+    expect(() => v.parse(parentMeta(eraSlugSchema), { name: 'x', slug: 'x' })).toThrow();
   });
 });
 
@@ -187,7 +203,7 @@ describe('pagination', () => {
 
 describe('listResponse', () => {
   it('wraps items as { data, pagination }', () => {
-    const schema = listResponse(subRef);
+    const schema = listResponse(subRef(poetSlugSchema));
     const result = v.parse(schema, {
       data: [{ name: 'a', slug: 'a' }],
       pagination: { page: 1, pageSize: 30, totalPages: 1, totalItems: 1 },
@@ -197,14 +213,14 @@ describe('listResponse', () => {
   });
 
   it('rejects responses missing pagination', () => {
-    const schema = listResponse(subRef);
+    const schema = listResponse(subRef(poetSlugSchema));
     expect(() => v.parse(schema, { data: [] })).toThrow();
   });
 });
 
 describe('listResponseWithMeta', () => {
   it('wraps items as { data, pagination, meta }', () => {
-    const schema = listResponseWithMeta(subRef, parentMeta);
+    const schema = listResponseWithMeta(subRef(poetSlugSchema), parentMeta(eraSlugSchema));
     const result = v.parse(schema, {
       data: [],
       pagination: { page: 1, pageSize: 30, totalPages: 1, totalItems: 0 },
@@ -214,7 +230,7 @@ describe('listResponseWithMeta', () => {
   });
 
   it('rejects responses missing meta', () => {
-    const schema = listResponseWithMeta(subRef, parentMeta);
+    const schema = listResponseWithMeta(subRef(poetSlugSchema), parentMeta(eraSlugSchema));
     expect(() =>
       v.parse(schema, {
         data: [],
@@ -226,13 +242,13 @@ describe('listResponseWithMeta', () => {
 
 describe('resourceResponse', () => {
   it('wraps a single resource as { data }', () => {
-    const schema = resourceResponse(subRef);
+    const schema = resourceResponse(subRef(poetSlugSchema));
     const result = v.parse(schema, { data: { name: 'x', slug: 'x' } });
     expect(result.data.name).toBe('x');
   });
 
   it('rejects responses missing data', () => {
-    const schema = resourceResponse(subRef);
+    const schema = resourceResponse(subRef(poetSlugSchema));
     expect(() => v.parse(schema, {})).toThrow();
   });
 });

@@ -1,5 +1,6 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
+import type { ThemeSlug } from '@qafiyah/contracts';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
 import {
@@ -29,7 +30,8 @@ if (!(slug && Number.isFinite(pageNumber)) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
 
-const response = await fetchThemePoemPage(slug as string, page as string);
+// URL parameter boundary: brand the bare-string slug as a ThemeSlug for the typed API.
+const response = await fetchThemePoemPage(slug as ThemeSlug, page as string);
 if (!response) {
   return Astro.redirect('/404');
 }

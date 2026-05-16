@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 type Props = {
-  toggleFilters: () => void;
-  filtersVisible: boolean;
+  readonly toggleFilters: () => void;
+  readonly filtersVisible: boolean;
 };
 
 export function FiltersButton({ toggleFilters, filtersVisible }: Props) {

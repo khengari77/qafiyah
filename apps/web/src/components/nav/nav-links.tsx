@@ -5,10 +5,10 @@ import { useEffect, useState } from 'react';
 import { NavItem } from './nav-item';
 
 type Props = {
-  links: NavLink[];
-  className?: string;
-  isMobile?: boolean;
-  onLinkClick?: () => void;
+  readonly links: readonly NavLink[];
+  readonly className?: string;
+  readonly isMobile?: boolean;
+  readonly onLinkClick?: () => void;
 };
 
 export function NavLinks({ links, className = '', isMobile = false, onLinkClick }: Props) {

@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { problemDetailSchema } from '@/test-schemas';
+import { parseJson } from '@/test-utils';
 import { makeProblem, transformOrpcResponse } from './problem';
 
 describe('makeProblem', () => {
@@ -51,7 +53,10 @@ describe('makeProblem', () => {
     const errors = [{ path: 'slug', message: 'Required' }];
     const problem = makeProblem({ code: 'INPUT_VALIDATION_FAILED', status: 400, errors });
 
-    expect(problem.errors).toEqual(errors);
+    expect(problem.kind).toBe('validation');
+    if (problem.kind === 'validation') {
+      expect(problem.errors).toEqual(errors);
+    }
   });
 
   it('omits errors when not provided', () => {
@@ -105,7 +110,7 @@ describe('transformOrpcResponse', () => {
 
     expect(result.status).toBe(404);
     expect(result.headers.get('Content-Type')).toBe('application/problem+json');
-    const body = (await result.json()) as { code: string; type: string; instance: string };
+    const body = await parseJson(result, problemDetailSchema);
     expect(body.code).toBe('NOT_FOUND');
     expect(body.type).toContain('not-found');
     expect(body.instance).toBe('/v1/poems/missing');
@@ -120,7 +125,7 @@ describe('transformOrpcResponse', () => {
 
     const result = await transformOrpcResponse(response);
 
-    const body = (await result.json()) as { instance?: string };
+    const body = await parseJson(result, problemDetailSchema);
     expect(body.instance).toBeUndefined();
   });
 
@@ -140,10 +145,8 @@ describe('transformOrpcResponse', () => {
     const result = await transformOrpcResponse(response, '/v1/eras/bad/poems');
 
     expect(result.status).toBe(400);
-    const body = (await result.json()) as {
-      errors: Array<{ path: string; message: string }>;
-      instance: string;
-    };
+    const body = await parseJson(result, problemDetailSchema);
+    if (!body.errors) throw new Error('expected errors');
     expect(body.errors).toHaveLength(1);
     expect(body.errors[0]?.path).toBe('slug');
     expect(body.errors[0]?.message).toBe('Required');
@@ -186,7 +189,8 @@ describe('transformOrpcResponse', () => {
 
     const result = await transformOrpcResponse(response);
 
-    const body = (await result.json()) as { errors: Array<{ message: string }> };
+    const body = await parseJson(result, problemDetailSchema);
+    if (!body.errors) throw new Error('expected errors');
     expect(body.errors?.[0]).toEqual({ message: 'Invalid value' });
   });
 
@@ -216,7 +220,8 @@ describe('transformOrpcResponse', () => {
 
     const result = await transformOrpcResponse(response);
 
-    const body = (await result.json()) as { errors: Array<{ message: string }> };
+    const body = await parseJson(result, problemDetailSchema);
+    if (!body.errors) throw new Error('expected errors');
     expect(body.errors).toHaveLength(1);
     expect(body.errors[0]?.message).toBe('Valid issue');
   });
@@ -233,7 +238,8 @@ describe('transformOrpcResponse', () => {
 
     const result = await transformOrpcResponse(response);
 
-    const body = (await result.json()) as { errors: Array<{ message: string }> };
+    const body = await parseJson(result, problemDetailSchema);
+    if (!body.errors) throw new Error('expected errors');
     expect(body.errors?.[0]?.message).toBe('Invalid value');
   });
 
@@ -249,7 +255,8 @@ describe('transformOrpcResponse', () => {
 
     const result = await transformOrpcResponse(response);
 
-    const body = (await result.json()) as { errors: Array<{ path: string }> };
+    const body = await parseJson(result, problemDetailSchema);
+    if (!body.errors) throw new Error('expected errors');
     expect(body.errors?.[0]?.path).toBe('plain-string');
   });
 
@@ -273,7 +280,7 @@ describe('transformOrpcResponse', () => {
 
     const result = await transformOrpcResponse(response);
 
-    const body = (await result.json()) as { detail: string };
+    const body = await parseJson(result, problemDetailSchema);
     expect(body.detail).toBe('Content is malformed');
   });
 });

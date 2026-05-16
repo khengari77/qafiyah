@@ -8,28 +8,35 @@ import {
   slugInput,
   subRef,
 } from './_shared';
+import {
+  eraSlugSchema,
+  meterSlugSchema,
+  poemSlugSchema,
+  poetSlugSchema,
+  themeSlugSchema,
+} from './brands';
 
 const listSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
-  .output(listResponse(v.string()));
+  .output(listResponse(poemSlugSchema));
 
 const poemResource = v.object({
   title: v.string(),
-  slug: v.string(),
+  slug: poemSlugSchema,
   verses: v.array(v.tuple([v.string(), v.string()])),
   verseCount: v.number(),
   sample: v.string(),
   keywords: v.string(),
-  poet: subRef,
-  era: subRef,
-  meter: subRef,
-  theme: subRef,
+  poet: subRef(poetSlugSchema),
+  era: subRef(eraSlugSchema),
+  meter: subRef(meterSlugSchema),
+  theme: subRef(themeSlugSchema),
   relatedPoems: v.array(poemListItem),
 });
 
 const getBySlugContract = oc
   .route({ method: 'GET', path: '/poems/{slug}' })
-  .input(slugInput('887d1dcd-fb04-4f09-a448-d08287dface0'))
+  .input(slugInput(poemSlugSchema, '887d1dcd-fb04-4f09-a448-d08287dface0'))
   .errors({
     ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Poem not found' },

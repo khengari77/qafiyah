@@ -1,14 +1,14 @@
 import { Badge } from '@/components/ui/badge';
 
 type Props = {
-  selectedErasLength: number;
-  selectedMetersLength: number;
-  selectedRhymesLength: number;
-  selectedThemesLength: number;
-  erasCount: string;
-  metersCount: string;
-  themesCount: string;
-  rhymesCount: string;
+  readonly selectedErasLength: number;
+  readonly selectedMetersLength: number;
+  readonly selectedRhymesLength: number;
+  readonly selectedThemesLength: number;
+  readonly erasCount: string;
+  readonly metersCount: string;
+  readonly themesCount: string;
+  readonly rhymesCount: string;
 };
 
 export function FilterBadges({

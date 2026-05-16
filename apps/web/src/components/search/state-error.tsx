@@ -4,8 +4,8 @@ import { Card } from '@/components/ui/card';
 import { SITE_URL } from '@/constants/globals';
 
 type Props = {
-  errorMessage: string;
-  refreshText: string;
+  readonly errorMessage: string;
+  readonly refreshText: string;
 };
 
 export function ErrorState({ errorMessage, refreshText }: Props) {

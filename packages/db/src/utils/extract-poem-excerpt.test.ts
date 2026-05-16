@@ -1,8 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { extractPoemExcerpt, type RandomPoemLines } from './extract-poem-excerpt';
+import { extractPoemExcerpt, type PoemId, type RandomPoemLines } from './extract-poem-excerpt';
+
+// test-only: brand a literal number as a PoemId for fixture construction.
+const asPoemId = (n: number): PoemId => n as PoemId;
 
 const poem = (content: string): RandomPoemLines => ({
-  poem_id: 1,
+  poem_id: asPoemId(1),
   poet_name: 'شاعر',
   content,
 });
@@ -32,20 +35,18 @@ describe('extractPoemExcerpt', () => {
 
   it('includes the poet name in the output', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
-    const p: RandomPoemLines = { poem_id: 2, poet_name: 'المتنبي', content: 'أ*ب' };
+    const p: RandomPoemLines = { poem_id: asPoemId(2), poet_name: 'المتنبي', content: 'أ*ب' };
     expect(extractPoemExcerpt(p)).toContain('المتنبي');
   });
 
   it('uses empty string fallback when lines[randomIndex] is empty', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
-    // Content starting with '*' → lines[0] = '' (falsy) → '' fallback used
     const result = extractPoemExcerpt(poem('*شطر ثانٍ*شطر ثالث*شطر رابع'));
     expect(result).toContain('شاعر');
   });
 
   it('uses empty string fallback when lines[randomIndex + 1] is empty', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
-    // Content with empty second segment → lines[1] = '' (falsy) → '' fallback used
     const result = extractPoemExcerpt(poem('شطر أول**شطر ثالث*شطر رابع'));
     expect(result).toContain('شاعر');
   });

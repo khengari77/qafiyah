@@ -1,6 +1,6 @@
 import { API_OPENAPI_DOCS_PATH, API_OPENAPI_SPEC_PATH, API_V1_PREFIX } from '@qafiyah/constants';
 import { createMiddleware } from 'hono/factory';
-import { type LogEvent, shouldEmit } from '../lib/logger';
+import { type LogEventBuilder, shouldEmit, toLogEvent } from '../lib/logger';
 import type { AppContext } from '../types';
 
 const LOG_SKIP_PREFIX = `${API_V1_PREFIX}${API_OPENAPI_DOCS_PATH}`;
@@ -13,7 +13,9 @@ export const loggerMiddleware = createMiddleware<AppContext>(async (c, next) => 
   }
 
   const startTime = Date.now();
-  const event: Partial<LogEvent> = {
+  // @WARN: builder mutated below to record status_code / duration_ms before emit.
+  //   See LogEventBuilder docstring for the full lifecycle.
+  const event: LogEventBuilder = {
     request_id: crypto.randomUUID(),
     method: c.req.method,
     path,
@@ -31,7 +33,10 @@ export const loggerMiddleware = createMiddleware<AppContext>(async (c, next) => 
   event.duration_ms = Date.now() - startTime;
 
   if (shouldEmit(event)) {
-    // biome-ignore lint/suspicious/noConsole: intentional wide-event structured log emission
-    console.log(JSON.stringify(event));
+    const emitted = toLogEvent(event);
+    if (emitted) {
+      // biome-ignore lint/suspicious/noConsole: intentional wide-event structured log emission
+      console.log(JSON.stringify(emitted));
+    }
   }
 });

@@ -8,6 +8,7 @@ import {
   TWITTER_DESCRIPTION_TEMPLATE_AR,
   UNKNOWN_POET_NAME,
 } from '@qafiyah/constants';
+import type { PoemSlug } from '@qafiyah/contracts';
 import { SITE_URL } from '@/constants/globals';
 import { fetchPoem } from '@/lib/api/static';
 import type { Poem } from '@/lib/api/types';
@@ -21,21 +22,21 @@ function safeMetaText(value: string): string {
 }
 
 type PoemLayoutProps = {
-  title: string;
-  description: string;
-  keywords: string;
-  canonical: string;
-  ogTitle: string;
-  ogDescription: string;
-  ogUrl: string;
-  twitterTitle: string;
-  twitterDescription: string;
-  jsonLd: Record<string, unknown>;
+  readonly title: string;
+  readonly description: string;
+  readonly keywords: string;
+  readonly canonical: string;
+  readonly ogTitle: string;
+  readonly ogDescription: string;
+  readonly ogUrl: string;
+  readonly twitterTitle: string;
+  readonly twitterDescription: string;
+  readonly jsonLd: Readonly<Record<string, unknown>>;
 };
 
-export async function loadPoemPage(slug: string): Promise<{
-  poem: Poem;
-  layout: PoemLayoutProps;
+export async function loadPoemPage(slug: PoemSlug): Promise<{
+  readonly poem: Poem;
+  readonly layout: PoemLayoutProps;
 } | null> {
   const poem = await fetchPoem(slug);
   if (!poem) return null;
@@ -80,7 +81,7 @@ export async function loadPoemPage(slug: string): Promise<{
     },
   };
 
-  const layout: PoemLayoutProps = {
+  const layout = {
     title: pageTitle,
     description,
     keywords: sanitizedKeywords,
@@ -91,7 +92,7 @@ export async function loadPoemPage(slug: string): Promise<{
     twitterTitle: pageTitle,
     twitterDescription,
     jsonLd,
-  };
+  } satisfies PoemLayoutProps;
 
   return { poem, layout };
 }

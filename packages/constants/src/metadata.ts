@@ -17,7 +17,7 @@ export const SITE_KEYWORDS = [
   'أدب',
   'قصائد مشهورة',
   'شعر نبطي',
-];
+] as const;
 
 export const SITE_THEME_COLOR_HEX = '#fafafa';
 export const OPEN_GRAPH_URL_PATH = '/open-graph-white.png';
@@ -34,4 +34,4 @@ export const HTML_HEAD_METADATA = {
   author: SITE_NAME_AR,
   articleSection: SITE_ARTICLE_SECTION,
   themeColorHexCode: SITE_THEME_COLOR_HEX,
-};
+} as const;

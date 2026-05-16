@@ -1,18 +1,22 @@
 type Pagination = {
-  page: number;
-  pageSize: number;
-  totalPages: number;
-  totalItems: number;
+  readonly page: number;
+  readonly pageSize: number;
+  readonly totalPages: number;
+  readonly totalItems: number;
 };
 
+// @WARN: return types use mutable arrays to satisfy the oRPC contract's inferred
+//   output shape (Valibot's InferOutput does not preserve readonly). Internally,
+//   callers pass readonly data — the envelope copies it into a mutable wire-shape
+//   only at the boundary.
 export function listEnvelope<T>(
-  data: T[],
+  data: readonly T[],
   totalItems: number,
   page: number,
   pageSize: number
 ): { data: T[]; pagination: Pagination } {
   return {
-    data,
+    data: [...data],
     pagination: {
       page,
       pageSize,
@@ -23,7 +27,7 @@ export function listEnvelope<T>(
 }
 
 export function listEnvelopeWithMeta<T, M>(
-  data: T[],
+  data: readonly T[],
   totalItems: number,
   page: number,
   pageSize: number,

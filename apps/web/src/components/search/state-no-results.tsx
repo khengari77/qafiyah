@@ -2,7 +2,7 @@ import { SearchIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 type Props = {
-  noResultsText: string;
+  readonly noResultsText: string;
 };
 
 export function NoResultsState({ noResultsText }: Props) {

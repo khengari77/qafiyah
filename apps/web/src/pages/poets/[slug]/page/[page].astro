@@ -1,5 +1,6 @@
 ---
 import { POEMS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
+import type { PoetSlug } from '@qafiyah/contracts';
 import { formatArabicCount } from 'arabic-count-format';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
@@ -26,7 +27,8 @@ if (!(slug && Number.isFinite(pageNumber)) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
 
-const response = await fetchPoetPoemPage(slug as string, page as string);
+// URL parameter boundary: brand the bare-string slug as a PoetSlug for the typed API.
+const response = await fetchPoetPoemPage(slug as PoetSlug, page as string);
 if (!response) {
   return Astro.redirect('/404');
 }

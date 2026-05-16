@@ -4,8 +4,8 @@ import type { DbClient } from '@qafiyah/db';
 import type { DomainFields } from '../lib/logger';
 
 type AppOrpcContext = {
-  db: DbClient;
-  log?: (data: DomainFields) => void;
+  readonly db: DbClient;
+  readonly log?: (data: DomainFields) => void;
 };
 
 export const pub = implement(contract).$context<AppOrpcContext>();

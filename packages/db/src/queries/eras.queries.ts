@@ -1,42 +1,38 @@
 import { ERAS_SORT_ORDER, POEMS_PER_PAGE } from '@qafiyah/constants';
+import type { EraSlug, MeterSlug, PoemSlug, PoetSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { eraStats } from '../schema';
+import { asEraSlug } from '../utils/brand';
+import { executeAs } from '../utils/execute-as';
+import { parentRowSchema, rawPoemRowSchema } from './_row-schemas';
+
+const ERAS_SORT_INDEX = new Map<string, number>(ERAS_SORT_ORDER.map((name, i) => [name, i]));
 
 export type EraStatsRow = {
-  name: string;
-  slug: string;
-  poetsCount: number;
-  poemsCount: number;
+  readonly name: string;
+  readonly slug: EraSlug;
+  readonly poetsCount: number;
+  readonly poemsCount: number;
 };
 
 export type PoemListRow = {
-  title: string;
-  slug: string;
-  poetName: string;
-  poetSlug: string;
-  meterName: string;
-  meterSlug: string;
+  readonly title: string;
+  readonly slug: PoemSlug;
+  readonly poetName: string;
+  readonly poetSlug: PoetSlug;
+  readonly meterName: string;
+  readonly meterSlug: MeterSlug;
 };
 
 export type ListEraPoemsResult = {
-  parent: { name: string; slug: string; poemsCount: number };
-  poems: PoemListRow[];
-  total: number;
-  totalPages: number;
+  readonly parent: { readonly name: string; readonly slug: EraSlug; readonly poemsCount: number };
+  readonly poems: readonly PoemListRow[];
+  readonly total: number;
+  readonly totalPages: number;
 };
 
-type ParentRow = { name: string; poems_count: number | string };
-type RawPoemRow = {
-  title: string;
-  slug: string;
-  poet_name: string;
-  poet_slug: string;
-  meter_name: string;
-  meter_slug: string;
-};
-
-export async function listEras(db: DbClient): Promise<EraStatsRow[]> {
+export async function listEras(db: DbClient): Promise<readonly EraStatsRow[]> {
   const results = await db
     .select({
       name: eraStats.name,
@@ -45,43 +41,52 @@ export async function listEras(db: DbClient): Promise<EraStatsRow[]> {
       poemsCount: eraStats.poemsCount,
     })
     .from(eraStats);
-  return results.sort((a, b) => ERAS_SORT_ORDER.indexOf(a.name) - ERAS_SORT_ORDER.indexOf(b.name));
+  const sortIndex = (name: string): number => ERAS_SORT_INDEX.get(name) ?? Number.MAX_SAFE_INTEGER;
+  return results
+    .map((r) => ({ ...r, slug: asEraSlug(r.slug) }))
+    .sort((a, b) => sortIndex(a.name) - sortIndex(b.name));
 }
 
 export async function listEraPoems(
   db: DbClient,
-  slug: string,
+  slug: EraSlug,
   page: number
 ): Promise<ListEraPoemsResult | null> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const parentRows = (await db.execute(
-    sql`SELECT name, poems_count FROM era_stats WHERE slug = ${slug} LIMIT 1`
-  )) as unknown as ParentRow[];
+  const parentRows = await executeAs(
+    db,
+    sql`SELECT name, poems_count FROM era_stats WHERE slug = ${slug} LIMIT 1`,
+    parentRowSchema
+  );
 
   if (parentRows.length === 0 || !parentRows[0]) return null;
 
   const total = Number(parentRows[0].poems_count);
 
-  const rawPoems = (await db.execute(sql`
-    SELECT
-      p.title AS title,
-      p.slug AS slug,
-      pt.name AS poet_name,
-      pt.slug AS poet_slug,
-      m.name AS meter_name,
-      m.slug AS meter_slug
-    FROM public.poems p
-    JOIN public.poets pt ON p.poet_id = pt.id
-    JOIN public.meters m ON p.meter_id = m.id
-    JOIN public.eras e ON pt.era_id = e.id
-    WHERE e.slug = ${slug}
-    ORDER BY p.id
-    LIMIT ${limit} OFFSET ${offset}
-  `)) as unknown as RawPoemRow[];
+  const rawPoems = await executeAs(
+    db,
+    sql`
+      SELECT
+        p.title AS title,
+        p.slug AS slug,
+        pt.name AS poet_name,
+        pt.slug AS poet_slug,
+        m.name AS meter_name,
+        m.slug AS meter_slug
+      FROM public.poems p
+      JOIN public.poets pt ON p.poet_id = pt.id
+      JOIN public.meters m ON p.meter_id = m.id
+      JOIN public.eras e ON pt.era_id = e.id
+      WHERE e.slug = ${slug}
+      ORDER BY p.id
+      LIMIT ${limit} OFFSET ${offset}
+    `,
+    rawPoemRowSchema
+  );
 
-  const poems: PoemListRow[] = rawPoems.map((r) => ({
+  const poems: readonly PoemListRow[] = rawPoems.map((r) => ({
     title: r.title,
     slug: r.slug,
     poetName: r.poet_name,

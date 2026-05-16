@@ -1,7 +1,10 @@
+declare const PoemIdBrand: unique symbol;
+export type PoemId = number & { readonly [PoemIdBrand]: 'PoemId' };
+
 export type RandomPoemLines = {
-  poem_id: number;
-  poet_name: string;
-  content: string;
+  readonly poem_id: PoemId;
+  readonly poet_name: string;
+  readonly content: string;
 };
 
 export function extractPoemExcerpt(poem: RandomPoemLines): string {

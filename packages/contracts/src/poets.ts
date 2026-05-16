@@ -9,10 +9,11 @@ import {
   poemListItem,
   slugAndPageInput,
 } from './_shared';
+import { poetSlugSchema } from './brands';
 
 const poetStatRow = v.object({
   name: v.string(),
-  slug: v.string(),
+  slug: poetSlugSchema,
   poemsCount: v.number(),
 });
 
@@ -27,12 +28,12 @@ const listPoetsContract = oc
 
 const listPoetPoemsContract = oc
   .route({ method: 'GET', path: '/poets/{slug}/poems' })
-  .input(slugAndPageInput('abu-nawas'))
+  .input(slugAndPageInput(poetSlugSchema, 'abu-nawas'))
   .errors({
     ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Poet not found' },
   })
-  .output(listResponseWithMeta(poemListItem, parentMeta));
+  .output(listResponseWithMeta(poemListItem, parentMeta(poetSlugSchema)));
 
 export const poetsContract = {
   list: listPoetsContract,

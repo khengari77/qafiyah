@@ -6,7 +6,8 @@ describe('flattenVerses', () => {
   });
 
   it('returns empty string for null/undefined input', () => {
-    expect(flattenVerses(null as unknown as [string, string][])).toBe('');
+    expect(flattenVerses(null)).toBe('');
+    expect(flattenVerses(undefined)).toBe('');
   });
 
   it('formats a single verse with separator between halves', () => {
@@ -23,7 +24,7 @@ describe('flattenVerses', () => {
 
   it('stops adding verses once the 300-char limit would be exceeded', () => {
     const longHalf = 'ب'.repeat(150);
-    const verses: [string, string][] = [
+    const verses: readonly (readonly [string, string])[] = [
       [longHalf, longHalf],
       ['هذا لن يظهر', 'ولا هذا'],
     ];
@@ -56,7 +57,8 @@ describe('flattenVerses', () => {
   });
 
   it('handles null/undefined verse element defensively', () => {
-    const verses = [null] as unknown as [string, string][];
+    // test-only: simulate null verse element from untyped JS callers
+    const verses = [null] as unknown as readonly (readonly [string, string])[];
     const result = flattenVerses(verses);
     expect(result).toBe('');
   });

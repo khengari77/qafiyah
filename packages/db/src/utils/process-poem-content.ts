@@ -1,11 +1,19 @@
 import { removeTashkeel } from './remove-tashkeel';
 
-export function processPoemContent(content: string) {
+type ProcessedPoemContent = {
+  readonly verses: readonly (readonly [string, string])[];
+  readonly verseCount: number;
+  readonly sample: string;
+  readonly keywords: string;
+};
+
+export function processPoemContent(content: string): ProcessedPoemContent {
   const cleanContent = content.replace(/"/g, '');
 
   const lines = cleanContent.split('*');
   const lineCount = lines.length;
 
+  // @WARN: verses is built mutably for performance, then projected as readonly on return.
   const verses: [string, string][] = new Array(Math.ceil(lineCount / 2));
 
   for (let i = 0, j = 0; i < lineCount; i += 2, j++) {

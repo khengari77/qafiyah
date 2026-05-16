@@ -6,8 +6,8 @@ import { useEffect } from 'react';
 import { NavLinks } from './nav-links';
 
 type Props = {
-  isOpen: boolean;
-  onClose: () => void;
+  readonly isOpen: boolean;
+  readonly onClose: () => void;
 };
 
 export function MobileMenu({ isOpen, onClose }: Props) {

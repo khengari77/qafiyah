@@ -9,6 +9,8 @@ import { run } from './lib';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
+// test-only: TwitterApi is replaced by a vi.fn in vi.mock above; this re-tags
+//   the import so we can use vi.fn controls on the constructor.
 const MockTwitterApi = TwitterApi as unknown as ReturnType<typeof vi.fn>;
 
 class ExitError extends Error {

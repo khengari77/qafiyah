@@ -1,33 +1,27 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
+import type { ThemeSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { themeStats } from '../schema';
+import { asThemeSlug } from '../utils/brand';
+import { executeAs } from '../utils/execute-as';
+import { parentRowSchema, rawPoemRowSchema } from './_row-schemas';
 import type { PoemListRow } from './eras.queries';
 
 export type ThemeStatsRow = {
-  name: string;
-  slug: string;
-  poemsCount: number;
+  readonly name: string;
+  readonly slug: ThemeSlug;
+  readonly poemsCount: number;
 };
 
 export type ListThemePoemsResult = {
-  parent: { name: string; slug: string; poemsCount: number };
-  poems: PoemListRow[];
-  total: number;
-  totalPages: number;
+  readonly parent: { readonly name: string; readonly slug: ThemeSlug; readonly poemsCount: number };
+  readonly poems: readonly PoemListRow[];
+  readonly total: number;
+  readonly totalPages: number;
 };
 
-type ParentRow = { name: string; poems_count: number | string };
-type RawPoemRow = {
-  title: string;
-  slug: string;
-  poet_name: string;
-  poet_slug: string;
-  meter_name: string;
-  meter_slug: string;
-};
-
-export async function listThemes(db: DbClient): Promise<ThemeStatsRow[]> {
+export async function listThemes(db: DbClient): Promise<readonly ThemeStatsRow[]> {
   const results = await db
     .select({
       name: themeStats.name,
@@ -35,43 +29,51 @@ export async function listThemes(db: DbClient): Promise<ThemeStatsRow[]> {
       poemsCount: themeStats.poemsCount,
     })
     .from(themeStats);
-  return results.sort((a, b) => b.poemsCount - a.poemsCount);
+  return results
+    .map((r) => ({ ...r, slug: asThemeSlug(r.slug) }))
+    .sort((a, b) => b.poemsCount - a.poemsCount);
 }
 
 export async function listThemePoems(
   db: DbClient,
-  slug: string,
+  slug: ThemeSlug,
   page: number
 ): Promise<ListThemePoemsResult | null> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const parentRows = (await db.execute(
-    sql`SELECT name, poems_count FROM theme_stats WHERE slug = ${slug}::UUID LIMIT 1`
-  )) as unknown as ParentRow[];
+  const parentRows = await executeAs(
+    db,
+    sql`SELECT name, poems_count FROM theme_stats WHERE slug = ${slug}::UUID LIMIT 1`,
+    parentRowSchema
+  );
 
   if (parentRows.length === 0 || !parentRows[0]) return null;
 
   const total = Number(parentRows[0].poems_count);
 
-  const rawPoems = (await db.execute(sql`
-    SELECT
-      p.title AS title,
-      p.slug::TEXT AS slug,
-      pt.name AS poet_name,
-      pt.slug AS poet_slug,
-      m.name AS meter_name,
-      m.slug AS meter_slug
-    FROM public.poems p
-    JOIN public.poets pt ON p.poet_id = pt.id
-    JOIN public.meters m ON p.meter_id = m.id
-    JOIN public.themes th ON p.theme_id = th.id
-    WHERE th.slug = ${slug}::UUID
-    ORDER BY p.id
-    LIMIT ${limit} OFFSET ${offset}
-  `)) as unknown as RawPoemRow[];
+  const rawPoems = await executeAs(
+    db,
+    sql`
+      SELECT
+        p.title AS title,
+        p.slug::TEXT AS slug,
+        pt.name AS poet_name,
+        pt.slug AS poet_slug,
+        m.name AS meter_name,
+        m.slug AS meter_slug
+      FROM public.poems p
+      JOIN public.poets pt ON p.poet_id = pt.id
+      JOIN public.meters m ON p.meter_id = m.id
+      JOIN public.themes th ON p.theme_id = th.id
+      WHERE th.slug = ${slug}::UUID
+      ORDER BY p.id
+      LIMIT ${limit} OFFSET ${offset}
+    `,
+    rawPoemRowSchema
+  );
 
-  const poems: PoemListRow[] = rawPoems.map((r) => ({
+  const poems: readonly PoemListRow[] = rawPoems.map((r) => ({
     title: r.title,
     slug: r.slug,
     poetName: r.poet_name,

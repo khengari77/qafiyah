@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createMockDb, createTestClient } from '@/test-utils';
+import { listBodySchema } from '@/test-schemas';
+import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listErasMock = vi.fn();
@@ -45,12 +46,6 @@ const samplePoemRow = {
   meterSlug: 'taweel',
 };
 
-type ListBody = {
-  data: unknown[];
-  pagination: { page: number; pageSize: number; totalPages: number; totalItems: number };
-  meta?: { name: string; slug: string; poemsCount: number };
-};
-
 describe('eras procedures', () => {
   beforeEach(() => {
     listErasMock.mockReset();
@@ -69,7 +64,7 @@ describe('eras procedures', () => {
       const res = await client.$get('/v1/eras');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as ListBody;
+      const body = await parseJson(res, listBodySchema);
       expect(body.data).toHaveLength(1);
       expect(body.pagination.totalItems).toBe(1);
       expect(body.pagination.page).toBe(1);
@@ -83,7 +78,7 @@ describe('eras procedures', () => {
       const res = await client.$get('/v1/eras');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as ListBody;
+      const body = await parseJson(res, listBodySchema);
       expect(body.data).toHaveLength(0);
       expect(body.pagination.totalItems).toBe(0);
     });
@@ -103,7 +98,7 @@ describe('eras procedures', () => {
       const res = await client.$get('/v1/eras/abbasid/poems?page=1');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as ListBody;
+      const body = await parseJson(res, listBodySchema);
       expect(body.data).toHaveLength(1);
       expect(body.pagination.page).toBe(1);
       expect(body.meta).toEqual({ name: 'عباسي', slug: 'abbasid', poemsCount: 100 });
@@ -138,7 +133,7 @@ describe('eras procedures', () => {
       const res = await client.$get('/v1/eras/abbasid/poems');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as ListBody;
+      const body = await parseJson(res, listBodySchema);
       expect(body.pagination.page).toBe(1);
       expect(listEraPoemsMock).toHaveBeenCalledWith(expect.anything(), 'abbasid', 1);
     });
@@ -156,7 +151,7 @@ describe('eras procedures', () => {
       const res = await client.$get('/v1/eras/abbasid/poems?page=3');
 
       expect(res.status).toBe(200);
-      const body = (await res.json()) as ListBody;
+      const body = await parseJson(res, listBodySchema);
       expect(body.pagination.page).toBe(3);
       expect(listEraPoemsMock).toHaveBeenCalledWith(expect.anything(), 'abbasid', 3);
     });

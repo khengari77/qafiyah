@@ -3,22 +3,24 @@
 import { useState } from 'react';
 import { getRandomPoemSlug } from '@/lib/api/client';
 
+type RandomPoemStatus =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'error' };
+
 export function useRandomPoem() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState(false);
+  const [status, setStatus] = useState<RandomPoemStatus>({ kind: 'idle' });
 
   const handleClick = async () => {
-    if (isLoading) return;
-    setIsLoading(true);
-    setIsError(false);
+    if (status.kind === 'loading') return;
+    setStatus({ kind: 'loading' });
     try {
       const slug = await getRandomPoemSlug();
       window.location.href = `/poems/${slug}`;
     } catch {
-      setIsError(true);
-      setIsLoading(false);
+      setStatus({ kind: 'error' });
     }
   };
 
-  return { handleClick, isLoading, isError };
+  return { handleClick, status };
 }

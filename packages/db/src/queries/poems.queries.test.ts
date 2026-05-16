@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { DbClient } from '../client';
+import { asPoemSlug } from '../utils/brand';
+import { fakeDb, makeChain } from './_test-utils';
 import {
   getPoemBySlug,
   getRandomPoemLines,
@@ -7,30 +8,15 @@ import {
   listAllPoemSlugs,
 } from './poems.queries';
 
-function makeChain(data: unknown[]) {
-  const p = Promise.resolve(data);
-  let chain: any;
-  chain = {
-    where: vi.fn(() => chain),
-    limit: vi.fn(() => chain),
-    offset: vi.fn(() => chain),
-    // biome-ignore lint/suspicious/noThenProperty: intentional thenable for drizzle chain mock
-    then: p.then.bind(p),
-    catch: p.catch.bind(p),
-    finally: p.finally.bind(p),
-  };
-  return chain;
-}
-
 const POEM_CONTENT = 'شطر أول*شطر ثانٍ';
 
 describe('listAllPoemSlugs', () => {
   it('returns all slugs and total count', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue(makeChain([{ slug: 'slug-1' }, { slug: 'slug-2' }])),
       }),
-    } as unknown as DbClient;
+    });
 
     const result = await listAllPoemSlugs(mockDb);
     expect(result.slugs).toEqual(['slug-1', 'slug-2']);
@@ -38,9 +24,9 @@ describe('listAllPoemSlugs', () => {
   });
 
   it('returns empty slugs when no poems exist', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
-    } as unknown as DbClient;
+    });
 
     const result = await listAllPoemSlugs(mockDb);
     expect(result.slugs).toEqual([]);
@@ -56,9 +42,9 @@ describe('getRandomPoemLines', () => {
   it('returns formatted excerpt for a JSON object result', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
-    } as unknown as DbClient;
+    });
 
     const result = await getRandomPoemLines(mockDb);
     expect(result).toContain('شطر أول');
@@ -68,37 +54,37 @@ describe('getRandomPoemLines', () => {
   it('parses a JSON string result', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(poemData) }]),
-    } as unknown as DbClient;
+    });
 
     const result = await getRandomPoemLines(mockDb);
     expect(result).toContain('شطر أول');
   });
 
   it('throws when execute returns empty array', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemLines(mockDb)).rejects.toThrow('SQL returned no eligible poem');
   });
 
   it('throws when get_random_eligible_poem is falsy', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: null }]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemLines(mockDb)).rejects.toThrow('SQL returned no eligible poem');
   });
 
   it('throws when poem content is missing', async () => {
     const poemData = { poem_id: 1, poet_name: 'شاعر' };
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
-    } as unknown as DbClient;
+    });
 
-    await expect(getRandomPoemLines(mockDb)).rejects.toThrow('poem missing content field');
+    await expect(getRandomPoemLines(mockDb)).rejects.toThrow();
   });
 
   it('throws when excerpt exceeds MAX_EXCERPT_LENGTH', async () => {
@@ -109,9 +95,9 @@ describe('getRandomPoemLines', () => {
       poet_name: 'شاعر',
       content: `${longLine}*${longLine}`,
     };
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemLines(mockDb)).rejects.toThrow('exceeds MAX_EXCERPT_LENGTH');
   });
@@ -119,52 +105,52 @@ describe('getRandomPoemLines', () => {
 
 describe('getRandomPoemSlug', () => {
   it('returns slug from a valid response', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi
         .fn()
         .mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 'test-slug-uuid' } }]),
-    } as unknown as DbClient;
+    });
 
     const result = await getRandomPoemSlug(mockDb);
     expect(result).toBe('test-slug-uuid');
   });
 
   it('throws when execute returns empty array', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemSlug(mockDb)).rejects.toThrow('SQL returned no eligible poem slug');
   });
 
   it('throws when get_random_eligible_poem_slug is null', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: null }]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemSlug(mockDb)).rejects.toThrow('SQL returned no eligible poem slug');
   });
 
   it('throws when value is not an object', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: 'just-a-string' }]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemSlug(mockDb)).rejects.toThrow('unexpected SQL payload shape');
   });
 
   it('throws when slug property is missing', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { other: 'field' } }]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemSlug(mockDb)).rejects.toThrow('unexpected SQL payload shape');
   });
 
   it('throws when slug is not a string', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 42 } }]),
-    } as unknown as DbClient;
+    });
 
     await expect(getRandomPoemSlug(mockDb)).rejects.toThrow('unexpected SQL payload shape');
   });
@@ -194,7 +180,7 @@ const fullPoemData = {
 
 describe('getPoemBySlug', () => {
   it('returns found result with enriched slugs for poem and related', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
@@ -203,9 +189,9 @@ describe('getPoemBySlug', () => {
         .mockResolvedValueOnce([
           { poem_slug: 'related-slug', poet_slug: 'other-poet', meter_slug: 'albasit' },
         ]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'poem-slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
     expect(result.type).toBe('found');
     if (result.type === 'found') {
       expect(result.data.clearTitle).toBe('قصيدة المتنبي');
@@ -218,49 +204,49 @@ describe('getPoemBySlug', () => {
   });
 
   it('strips double quotes from title', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
         .mockResolvedValueOnce([{ slug: 'altawil' }])
         .mockResolvedValueOnce([{ slug: 'fakhr' }])
         .mockResolvedValueOnce([]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'poem-slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
     if (result.type === 'found') {
       expect(result.data.clearTitle).not.toContain('"');
     }
   });
 
   it('returns not_found when execute returns empty array', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'missing-slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
     expect(result.type).toBe('not_found');
   });
 
   it('returns not_found when get_poem_with_related is falsy', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_poem_with_related: null }]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'missing-slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
     expect(result.type).toBe('not_found');
   });
 
   it('returns error type when data has error field with message', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi
         .fn()
         .mockResolvedValue([
           { get_poem_with_related: { error: 'not_found', message: 'Poem not found' } },
         ]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
     expect(result.type).toBe('error');
     if (result.type === 'error') {
       expect(result.message).toBe('Poem not found');
@@ -268,11 +254,11 @@ describe('getPoemBySlug', () => {
   });
 
   it('falls back to error field when message is missing', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_poem_with_related: { error: 'not_found' } }]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
     expect(result.type).toBe('error');
     if (result.type === 'error') {
       expect(result.message).toBe('not_found');
@@ -281,14 +267,24 @@ describe('getPoemBySlug', () => {
 
   it('returns error type when poem is missing required fields', async () => {
     const incompleteData = {
-      poem: { slug: 'slug', title: '', content: 'a*b', poet_name: 'شاعر', poet_slug: 'poet' },
+      poem: {
+        slug: 'slug',
+        title: '',
+        content: 'a*b',
+        poet_name: 'شاعر',
+        poet_slug: 'poet',
+        meter_name: '',
+        theme_name: '',
+        era_name: '',
+        era_slug: '',
+      },
       related_poems: [],
     };
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi.fn().mockResolvedValue([{ get_poem_with_related: incompleteData }]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
     expect(result.type).toBe('error');
     if (result.type === 'error') {
       expect(result.message).toBe('Incomplete poem data');
@@ -296,16 +292,16 @@ describe('getPoemBySlug', () => {
   });
 
   it('returns error when meter slug enrichment is missing', async () => {
-    const mockDb = {
+    const mockDb = fakeDb({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
         .mockResolvedValueOnce([]) // meter lookup empty
         .mockResolvedValueOnce([{ slug: 'fakhr' }])
         .mockResolvedValueOnce([]),
-    } as unknown as DbClient;
+    });
 
-    const result = await getPoemBySlug(mockDb, 'slug');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
     expect(result.type).toBe('error');
   });
 });

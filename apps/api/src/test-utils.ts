@@ -6,32 +6,24 @@
 import type { DbClient } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
+import * as v from 'valibot';
 import { vi } from 'vitest';
 import type { AppContext, Bindings } from '@/types';
 
 /**
  * Creates a chainable query builder mock that handles Drizzle's query patterns
- * Drizzle supports:
- * - db.select().from(table) -> Promise
- * - db.select().from(table).limit(n).offset(n) -> Promise
- * - db.select({...}).from(table).where(...).limit(1) -> Promise
  */
-function createQueryBuilder(mockData: unknown[] = []) {
-  // Create a flexible limit function
+function createQueryBuilder(mockData: readonly unknown[] = []) {
   const limitFn = vi.fn();
-  // Default: limit() returns an object with offset()
   limitFn.mockReturnValue({
     offset: vi.fn().mockResolvedValue(mockData),
   });
-  // But can also be called directly and return a promise
   limitFn.mockResolvedValue(mockData);
 
-  // Create where that returns a builder with limit
   const whereFn = vi.fn().mockReturnValue({
     limit: limitFn,
   });
 
-  // Create a builder
   const builder = {
     from: vi.fn().mockResolvedValue(mockData),
     where: whereFn,
@@ -42,31 +34,33 @@ function createQueryBuilder(mockData: unknown[] = []) {
   return builder;
 }
 
+// test-only: returns a DbClient-shaped object that only implements the subset of
+// the interface actually used by the procedure under test.
+function fakeDb<T extends object>(partial: T): DbClient {
+  return partial as unknown as DbClient;
+}
+
 /**
  * Creates a mock database instance
- * In a real scenario, you might want to use a test database or a more sophisticated mock
  */
-export function createMockDb(defaultData: unknown[] = []): DbClient {
-  // This is a basic mock - in production tests, you might want to use
-  // a real test database or a more sophisticated mocking library
+export function createMockDb(defaultData: readonly unknown[] = []): DbClient {
   const defaultBuilder = createQueryBuilder(defaultData);
 
-  return {
+  return fakeDb({
     select: vi.fn().mockReturnValue(defaultBuilder),
     insert: vi.fn(),
     update: vi.fn(),
     delete: vi.fn(),
     execute: vi.fn().mockResolvedValue([]),
     $count: vi.fn().mockResolvedValue(0),
-  } as unknown as DbClient;
+  });
 }
 
 /**
  * Test client type with $get helper
  */
 type TestClientWithGet = {
-  $get: (path: string, init?: RequestInit) => Promise<Response>;
-  [key: string]: unknown;
+  readonly $get: (path: string, init?: RequestInit) => Promise<Response>;
 };
 
 /**
@@ -81,36 +75,47 @@ function createDbTestMiddleware(db: DbClient) {
 
 /**
  * Creates a test client for a Hono app with mocked database and bindings
- * Returns an object with a fetch method and a $get helper for convenience
  */
 export function createTestClient<T extends Hono<AppContext>>(
   app: T,
   options?: {
-    db?: DbClient;
-    bindings?: Partial<Bindings>;
+    readonly db?: DbClient;
+    readonly bindings?: Partial<Bindings>;
   }
 ): TestClientWithGet {
   const db = options?.db ?? createMockDb();
-  const bindings: Bindings = {
+  const bindings = {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
     ...options?.bindings,
-  };
+  } satisfies Bindings;
 
-  // Create a test app with the db middleware
   const testApp = new Hono<AppContext>();
   testApp.use(createDbTestMiddleware(db));
   testApp.route('/', app);
 
-  // Return a simple object with $get helper method
   return {
-    $get: (path: string, init?: RequestInit) => {
-      return testApp.fetch(
-        new Request(`http://localhost${path}`, {
-          method: 'GET',
-          ...init,
-        }),
-        bindings
+    $get: (path: string, init?: RequestInit): Promise<Response> => {
+      return Promise.resolve(
+        testApp.fetch(
+          new Request(`http://localhost${path}`, {
+            method: 'GET',
+            ...init,
+          }),
+          bindings
+        )
       );
     },
-  } as TestClientWithGet;
+  };
+}
+
+/**
+ * Parses a JSON response body against a Valibot schema and returns the typed result.
+ * Replaces ad-hoc `(await res.json()) as MyShape` casts in tests.
+ */
+export async function parseJson<TSchema extends v.GenericSchema>(
+  res: Response,
+  schema: TSchema
+): Promise<v.InferOutput<TSchema>> {
+  const body: unknown = await res.json();
+  return v.parse(schema, body);
 }

@@ -2,15 +2,38 @@ import { PROD_DOMAIN } from '@qafiyah/constants';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
-type ProblemDetail = {
-  type: string;
-  title: string;
-  status: number;
-  code: string;
-  instance?: string;
-  detail?: string;
-  errors?: { path?: string; message: string }[];
+type ProblemCode =
+  | 'NOT_FOUND'
+  | 'POEM_PARSE_ERROR'
+  | 'INPUT_VALIDATION_FAILED'
+  | 'BAD_REQUEST'
+  | 'INTERNAL_SERVER_ERROR'
+  | 'SERVICE_UNAVAILABLE';
+
+type ValidationIssue = {
+  readonly path?: string;
+  readonly message: string;
 };
+
+type ProblemBase = {
+  readonly type: string;
+  readonly title: string;
+  readonly status: number;
+  readonly code: string;
+  readonly instance?: string;
+  readonly detail?: string;
+};
+
+type ProblemDetail =
+  | (ProblemBase & {
+      readonly kind: 'validation';
+      readonly code: 'INPUT_VALIDATION_FAILED';
+      readonly status: 400;
+      readonly errors: readonly ValidationIssue[];
+    })
+  | (ProblemBase & {
+      readonly kind: 'generic';
+    });
 
 const ERROR_BASE = `https://${PROD_DOMAIN}/errors`;
 
@@ -19,41 +42,65 @@ function codeToType(code: string): string {
   return `${ERROR_BASE}/${kebab}`;
 }
 
-const TITLES: Record<string, string> = {
+const TITLES = {
   NOT_FOUND: 'Resource not found',
   POEM_PARSE_ERROR: 'Poem data could not be parsed',
   INPUT_VALIDATION_FAILED: 'Validation failed',
   BAD_REQUEST: 'Bad request',
   INTERNAL_SERVER_ERROR: 'Internal server error',
   SERVICE_UNAVAILABLE: 'Service unavailable',
-};
+} as const satisfies Readonly<Record<ProblemCode, string>>;
 
 function titleForCode(code: string, fallback: string): string {
-  return TITLES[code] ?? fallback;
+  if (code in TITLES) {
+    return TITLES[code as ProblemCode];
+  }
+  return fallback;
+}
+
+function asStatus(n: number): ContentfulStatusCode {
+  if (n < 100 || n > 599) {
+    throw new Error(`asStatus: ${n} is not a valid HTTP status code`);
+  }
+  return n as ContentfulStatusCode;
 }
 
 export function makeProblem(args: {
-  code: string;
-  status: number;
-  detail?: string;
-  title?: string;
-  instance?: string;
-  errors?: ProblemDetail['errors'];
+  readonly code: string;
+  readonly status: number;
+  readonly detail?: string;
+  readonly title?: string;
+  readonly instance?: string;
+  readonly errors?: readonly ValidationIssue[];
 }): ProblemDetail {
-  return {
+  const base = {
     type: codeToType(args.code),
     title: args.title ?? titleForCode(args.code, args.code),
     status: args.status,
     code: args.code,
     ...(args.instance !== undefined && { instance: args.instance }),
     ...(args.detail !== undefined && { detail: args.detail }),
-    ...(args.errors !== undefined && { errors: args.errors }),
   };
+  if (args.code === 'INPUT_VALIDATION_FAILED' && args.errors !== undefined) {
+    return {
+      ...base,
+      kind: 'validation',
+      code: 'INPUT_VALIDATION_FAILED',
+      status: 400,
+      errors: args.errors,
+    };
+  }
+  return { ...base, kind: 'generic' };
+}
+
+function stripKind(problem: ProblemDetail): Omit<ProblemDetail, 'kind'> {
+  const { kind: _kind, ...rest } = problem;
+  return rest;
 }
 
 function problemResponse(problem: ProblemDetail): Response {
-  return new Response(JSON.stringify(problem), {
-    status: problem.status,
+  return new Response(JSON.stringify(stripKind(problem)), {
+    status: asStatus(problem.status),
     headers: { 'Content-Type': 'application/problem+json' },
   });
 }
@@ -61,27 +108,20 @@ function problemResponse(problem: ProblemDetail): Response {
 export function sendProblem(c: Context, problem: ProblemDetail): Response {
   const withInstance =
     problem.instance === undefined ? { ...problem, instance: c.req.path } : problem;
-  return c.body(JSON.stringify(withInstance), withInstance.status as ContentfulStatusCode, {
+  return c.body(JSON.stringify(stripKind(withInstance)), asStatus(withInstance.status), {
     'Content-Type': 'application/problem+json',
   });
 }
-
-type OrpcErrorBody = {
-  code?: string;
-  message?: string;
-  status?: number;
-  data?: unknown;
-};
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
-function extractValidationErrors(data: unknown): ProblemDetail['errors'] | undefined {
+function extractValidationErrors(data: unknown): readonly ValidationIssue[] | undefined {
   if (!isObject(data)) return undefined;
   const issues = data['issues'];
   if (!Array.isArray(issues)) return undefined;
-  return issues.flatMap((issue) => {
+  return issues.flatMap((issue): readonly ValidationIssue[] => {
     if (!isObject(issue)) {
       console.warn('extractValidationErrors: dropping non-object issue', issue);
       return [];
@@ -103,14 +143,14 @@ function orpcErrorToProblem(
   status: number,
   instance: string | undefined
 ): ProblemDetail {
-  const error = isObject(body) ? (body as OrpcErrorBody) : {};
-  const code = typeof error.code === 'string' ? error.code : 'INTERNAL_SERVER_ERROR';
-  const message = typeof error.message === 'string' ? error.message : undefined;
-  const validationErrors = extractValidationErrors(error.data);
-  const detailFromData =
-    isObject(error.data) && typeof error.data['message'] === 'string'
-      ? (error.data['message'] as string)
-      : undefined;
+  const error = isObject(body) ? body : {};
+  const rawCode = error['code'];
+  const code = typeof rawCode === 'string' ? rawCode : 'INTERNAL_SERVER_ERROR';
+  const rawMessage = error['message'];
+  const message = typeof rawMessage === 'string' ? rawMessage : undefined;
+  const validationErrors = extractValidationErrors(error['data']);
+  const dataMessage = isObject(error['data']) ? error['data']['message'] : undefined;
+  const detailFromData = typeof dataMessage === 'string' ? dataMessage : undefined;
 
   const detail = detailFromData ?? message;
   return makeProblem({

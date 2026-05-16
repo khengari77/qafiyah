@@ -7,19 +7,19 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 
 type Option = {
-  value: string;
-  label: string;
+  readonly value: string;
+  readonly label: string;
 };
 
 type Props = {
-  options: Option[];
-  value: string | string[];
-  onChange: (value: string | string[]) => void;
-  placeholderNounForms: ArabicNounForms;
-  placeholder: string;
-  disabled?: boolean;
-  className?: string;
-  multiple?: boolean;
+  readonly options: readonly Option[];
+  readonly value: string | readonly string[];
+  readonly onChange: (value: string | string[]) => void;
+  readonly placeholderNounForms: ArabicNounForms;
+  readonly placeholder: string;
+  readonly disabled?: boolean;
+  readonly className?: string;
+  readonly multiple?: boolean;
 };
 
 export function SelectMulti({
@@ -188,7 +188,7 @@ export function SelectMulti({
             overflowY: 'auto',
           }}
         >
-          {options
+          {[...options]
             .sort((a, b) => a.label.localeCompare(b.label, 'ar'))
             .map((option, index) => {
               const isSelected = selectedValues.includes(option.value);

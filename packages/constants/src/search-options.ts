@@ -1,6 +1,6 @@
-export type SearchOption = { id: number; name: string };
+export type SearchOption = { readonly id: number; readonly name: string };
 
-export const ERAS_OPTIONS: SearchOption[] = [
+export const ERAS_OPTIONS = [
   { id: 1, name: 'إسلامي' },
   { id: 2, name: 'عباسي' },
   { id: 3, name: 'متأخر' },
@@ -11,9 +11,9 @@ export const ERAS_OPTIONS: SearchOption[] = [
   { id: 8, name: 'مملوكي' },
   { id: 9, name: 'عثماني' },
   { id: 10, name: 'أيوبي' },
-];
+] as const satisfies readonly SearchOption[];
 
-export const METERS_OPTIONS: SearchOption[] = [
+export const METERS_OPTIONS = [
   { id: 1, name: 'أحذ الكامل' },
   { id: 2, name: 'مشطور الرجز' },
   { id: 3, name: 'مخلع البسيط' },
@@ -55,9 +55,9 @@ export const METERS_OPTIONS: SearchOption[] = [
   { id: 42, name: 'مجزوء' },
   { id: 43, name: 'البسيط' },
   { id: 44, name: 'مجزوء الكامل' },
-];
+] as const satisfies readonly SearchOption[];
 
-export const THEMES_OPTIONS: SearchOption[] = [
+export const THEMES_OPTIONS = [
   { id: 1, name: 'دينية' },
   { id: 2, name: 'عتاب' },
   { id: 3, name: 'عدل' },
@@ -84,9 +84,9 @@ export const THEMES_OPTIONS: SearchOption[] = [
   { id: 25, name: 'أنشودة' },
   { id: 26, name: 'صبر' },
   { id: 27, name: 'وطن' },
-];
+] as const satisfies readonly SearchOption[];
 
-export const RHYMES_OPTIONS: SearchOption[] = [
+export const RHYMES_OPTIONS = [
   { id: 1, name: 'الميم' },
   { id: 2, name: 'الهاء' },
   { id: 3, name: 'الظاء' },
@@ -116,4 +116,4 @@ export const RHYMES_OPTIONS: SearchOption[] = [
   { id: 43, name: 'الصاد' },
   { id: 44, name: 'القاف' },
   { id: 45, name: 'العين' },
-];
+] as const satisfies readonly SearchOption[];

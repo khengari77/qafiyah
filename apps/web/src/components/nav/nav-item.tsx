@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 
 type Props = {
-  isActive?: boolean;
-  isMobile?: boolean;
-  children: ReactNode;
-  href?: string;
-  external?: boolean;
-  onClick?: (e: React.MouseEvent) => void;
+  readonly isActive?: boolean;
+  readonly isMobile?: boolean;
+  readonly children: ReactNode;
+  readonly href?: string;
+  readonly external?: boolean;
+  readonly onClick?: (e: React.MouseEvent) => void;
 };
 
 export function NavItem({ isMobile = false, href, external, isActive, onClick, children }: Props) {

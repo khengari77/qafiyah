@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils';
 
 type ListCardProps = {
-  name: string;
-  title: string;
-  href: string;
-  className?: string;
+  readonly name: string;
+  readonly title: string;
+  readonly href: string;
+  readonly className?: string;
 };
 
 export function ListCard({ name, title, href, className = '' }: ListCardProps) {

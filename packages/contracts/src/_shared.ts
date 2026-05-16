@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { meterSlugSchema, poemSlugSchema, poetSlugSchema } from './brands';
 
 export const inputValidationError = {
   INPUT_VALIDATION_FAILED: { status: 400, message: 'Input validation failed' },
@@ -12,45 +13,57 @@ export const pageParam = v.pipe(
   v.minValue(1)
 );
 
-export const slugInput = (example: string) =>
-  v.object({ slug: v.pipe(v.string(), v.examples([example])) });
+export const slugInput = <TSlug extends v.GenericSchema<string, string>>(
+  slug: TSlug,
+  example: string
+) => v.object({ slug: v.pipe(slug, v.examples([example])) });
 
-export const slugAndPageInput = (example: string) =>
-  v.object({ slug: v.pipe(v.string(), v.examples([example])), page: v.optional(pageParam, '1') });
+export const slugAndPageInput = <TSlug extends v.GenericSchema<string, string>>(
+  slug: TSlug,
+  example: string
+) =>
+  v.object({
+    slug: v.pipe(slug, v.examples([example])),
+    page: v.optional(pageParam, '1'),
+  });
 
 export const pageQueryInput = v.object({
   page: v.optional(pageParam, '1'),
 });
 
-export const subRef = v.object({
-  name: v.string(),
-  slug: v.string(),
-});
+export const subRef = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
+  v.object({
+    name: v.string(),
+    slug,
+  });
 
-export const statRow = v.object({
-  name: v.string(),
-  slug: v.string(),
-  poemsCount: v.number(),
-  poetsCount: v.number(),
-});
+export const statRow = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
+  v.object({
+    name: v.string(),
+    slug,
+    poemsCount: v.number(),
+    poetsCount: v.number(),
+  });
 
-export const statRowNoPoetsCount = v.object({
-  name: v.string(),
-  slug: v.string(),
-  poemsCount: v.number(),
-});
+export const statRowNoPoetsCount = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
+  v.object({
+    name: v.string(),
+    slug,
+    poemsCount: v.number(),
+  });
 
-export const parentMeta = v.object({
-  name: v.string(),
-  slug: v.string(),
-  poemsCount: v.number(),
-});
+export const parentMeta = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
+  v.object({
+    name: v.string(),
+    slug,
+    poemsCount: v.number(),
+  });
 
 export const poemListItem = v.object({
   title: v.string(),
-  slug: v.string(),
-  poet: subRef,
-  meter: subRef,
+  slug: poemSlugSchema,
+  poet: subRef(poetSlugSchema),
+  meter: subRef(meterSlugSchema),
 });
 
 export const pagination = v.object({

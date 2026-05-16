@@ -7,14 +7,14 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 
 type Props = {
-  inputValue: string;
-  validationError: string | null;
-  searchLabel: string;
-  handleKeyDown: KeyboardEventHandler<HTMLInputElement>;
-  handleInputChange: ChangeEventHandler<HTMLInputElement>;
-  resetAllStates: () => void;
-  hasQuery: boolean;
-  placeholder: string;
+  readonly inputValue: string;
+  readonly validationError: string | null;
+  readonly searchLabel: string;
+  readonly handleKeyDown: KeyboardEventHandler<HTMLInputElement>;
+  readonly handleInputChange: ChangeEventHandler<HTMLInputElement>;
+  readonly resetAllStates: () => void;
+  readonly hasQuery: boolean;
+  readonly placeholder: string;
 };
 
 export function SearchInput({

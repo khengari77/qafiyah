@@ -12,7 +12,13 @@ export function getBadgeCount(count: number, nounForms: ArabicNounForms): string
   return formatArabicCount({ count, nounForms });
 }
 
-export function getNoResultsText({ hasText, query }: { hasText: boolean; query: string }): string {
+export function getNoResultsText({
+  hasText,
+  query,
+}: {
+  readonly hasText: boolean;
+  readonly query: string;
+}): string {
   if (!hasText) return SEARCH_TEXTS.noFilterResultsText;
   const cleaned = query.replace(NON_ARABIC_BASIC_REGEX, '').slice(0, QUERY_DISPLAY_TRUNCATE_LENGTH);
   return `لم يُعثر على نتيجة لـ "${cleaned}${query.length > QUERY_DISPLAY_TRUNCATE_LENGTH ? '...' : ''}"`;
@@ -25,11 +31,11 @@ export function getResultText({
   matchType,
   hasText,
 }: {
-  count: number;
-  query: string;
-  searchType: 'poems' | 'poets';
-  matchType: 'all' | 'any' | 'exact';
-  hasText: boolean;
+  readonly count: number;
+  readonly query: string;
+  readonly searchType: 'poems' | 'poets';
+  readonly matchType: 'all' | 'any' | 'exact';
+  readonly hasText: boolean;
 }): string {
   const searchTypeText =
     searchType === 'poems' ? SEARCH_TEXTS.poemSingular : SEARCH_TEXTS.poetSingular;
@@ -39,11 +45,11 @@ export function getResultText({
     return `عثر على ${resultsText} ${SEARCH_TEXTS.filterOnlyResultLabel} بحثًا عن «${searchTypeText}»`;
   }
 
-  const matchTypeLabels: Record<'any' | 'all' | 'exact', string> = {
+  const matchTypeLabels = {
     any: SEARCH_TEXTS.matchTypeAny,
     all: SEARCH_TEXTS.matchTypeAll,
     exact: SEARCH_TEXTS.matchTypeExact,
-  };
+  } as const satisfies Readonly<Record<'any' | 'all' | 'exact', string>>;
   const matchTypeText = matchTypeLabels[matchType];
 
   const cleanedInput = query.replace(NON_ARABIC_BASIC_REGEX, '');

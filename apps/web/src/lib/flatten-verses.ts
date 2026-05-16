@@ -1,7 +1,9 @@
 import { VERSE_DESCRIPTION_OPTIMAL_LENGTH, VERSE_SEPARATOR_DISPLAY } from '@qafiyah/constants';
 
 /** Builds a short plain-text snippet from verse halves for meta descriptions. */
-export function flattenVerses(verses: [string, string][]): string {
+export function flattenVerses(
+  verses: readonly (readonly [string, string])[] | null | undefined
+): string {
   if (!verses || verses.length === 0) return '';
   let result = '';
   for (let i = 0; i < verses.length; i++) {

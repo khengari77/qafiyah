@@ -9,7 +9,7 @@ export const ERAS_SORT_ORDER = [
   'مملوكي',
   'عثماني',
   'متأخر',
-];
+] as const;
 
 export const FORMAL_METERS = [
   'الطويل',
@@ -28,7 +28,7 @@ export const FORMAL_METERS = [
   'المجتث',
   'المتقارب',
   'المتدارك',
-];
+] as const;
 
 export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
   ['ألف', ['ا', 'أ', 'إ', 'آ', 'ء', 'الف', 'ألف', 'الالف', 'الألف']],
@@ -61,7 +61,7 @@ export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
   ['ياء', ['ي', 'ى', 'ئ', 'ياء', 'الياء']],
 ]);
 
-export const ARABIC_DIGITS_MAP: Record<string, string> = {
+export const ARABIC_DIGITS_MAP = {
   '0': '٠',
   '1': '١',
   '2': '٢',
@@ -72,7 +72,7 @@ export const ARABIC_DIGITS_MAP: Record<string, string> = {
   '7': '٧',
   '8': '٨',
   '9': '٩',
-};
+} as const satisfies Readonly<Record<string, string>>;
 
 // Allows Arabic letters and whitespace; strips everything else.
 // Covers: Basic Arabic (U+0600–U+06FF), Supplement (U+0750–U+077F), Extended-A (U+08A0–U+08FF).

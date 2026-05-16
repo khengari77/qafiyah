@@ -7,58 +7,66 @@ import {
 } from '@qafiyah/constants';
 import * as v from 'valibot';
 import { inputValidationError, pageParam, pagination, subRef } from './_shared';
+import {
+  eraSlugSchema,
+  meterSlugSchema,
+  poemSlugSchema,
+  poetSlugSchema,
+  rhymeSlugSchema,
+  themeSlugSchema,
+} from './brands';
 
-const slugArrayParam = v.optional(v.array(v.string()), []);
+const meterSlugsParam = v.optional(v.array(meterSlugSchema), []);
+const eraSlugsParam = v.optional(v.array(eraSlugSchema), []);
+const rhymeSlugsParam = v.optional(v.array(rhymeSlugSchema), []);
+const themeSlugsParam = v.optional(v.array(themeSlugSchema), []);
 
 const poemSearchResult = v.object({
   type: v.literal('poem'),
   title: v.string(),
-  slug: v.string(),
+  slug: poemSlugSchema,
   snippet: v.string(),
-  poet: subRef,
-  meter: subRef,
-  era: subRef,
+  poet: subRef(poetSlugSchema),
+  meter: subRef(meterSlugSchema),
+  era: subRef(eraSlugSchema),
   relevance: v.number(),
 });
 
 const poetSearchResult = v.object({
   type: v.literal('poet'),
   name: v.string(),
-  slug: v.string(),
+  slug: poetSlugSchema,
   bio: v.string(),
-  era: subRef,
+  era: subRef(eraSlugSchema),
   relevance: v.number(),
 });
 
+export const searchInputSchema = v.pipe(
+  v.object({
+    q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])), ''),
+    searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
+    page: v.optional(pageParam, '1'),
+    matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
+    meterSlugs: meterSlugsParam,
+    eraSlugs: eraSlugsParam,
+    rhymeSlugs: rhymeSlugsParam,
+    themeSlugs: themeSlugsParam,
+  }),
+  v.check((input) => {
+    const hasText = input.q.trim().length > 0;
+    const hasFilters =
+      input.meterSlugs.length +
+        input.eraSlugs.length +
+        input.themeSlugs.length +
+        input.rhymeSlugs.length >
+      0;
+    return hasText || hasFilters;
+  }, SEARCH_TEXTS.missingQueryOrFilterError)
+);
+
 const searchContract = oc
   .route({ method: 'GET', path: '/search' })
-  .input(
-    v.pipe(
-      v.object({
-        q: v.optional(
-          v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])),
-          ''
-        ),
-        searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
-        page: v.optional(pageParam, '1'),
-        matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
-        meterSlugs: slugArrayParam,
-        eraSlugs: slugArrayParam,
-        rhymeSlugs: slugArrayParam,
-        themeSlugs: slugArrayParam,
-      }),
-      v.check((input) => {
-        const hasText = input.q.trim().length > 0;
-        const hasFilters =
-          input.meterSlugs.length +
-            input.eraSlugs.length +
-            input.themeSlugs.length +
-            input.rhymeSlugs.length >
-          0;
-        return hasText || hasFilters;
-      }, SEARCH_TEXTS.missingQueryOrFilterError)
-    )
-  )
+  .input(searchInputSchema)
   .errors({ ...inputValidationError })
   .output(
     v.variant('searchType', [
