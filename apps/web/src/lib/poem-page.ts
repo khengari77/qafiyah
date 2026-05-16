@@ -34,39 +34,18 @@ type PoemLayoutProps = {
   readonly jsonLd: Readonly<Record<string, unknown>>;
 };
 
-export async function loadPoemPage(slug: PoemSlug): Promise<{
-  readonly poem: Poem;
-  readonly layout: PoemLayoutProps;
-} | null> {
-  const poem = await fetchPoem(slug);
-  if (!poem) return null;
-
-  const clearTitle = poem.title || POEM_DEFAULT_TITLE;
-  const poetName = poem.poet.name || UNKNOWN_POET_NAME;
-  const rawDescription = flattenVerses(poem.verses);
-  const safeClearTitle = safeMetaText(clearTitle);
-  const safePoetName = safeMetaText(poetName);
-  const description = safeMetaText(rawDescription);
-  const pageTitle = `${safeClearTitle} - ${safePoetName} - ${SITE_NAME_AR}`;
-  const pageUrl = `${SITE_URL}/poems/${slug}`;
-  const canonicalPath = `/poems/${slug}`;
-  const twitterDescription = safeMetaText(
-    TWITTER_DESCRIPTION_TEMPLATE_AR.replace('{poet}', poetName)
-  );
-  const sanitizedKeywords = safeMetaText(poem.keywords);
-
-  const jsonLd = {
+function buildJsonLd(
+  poem: Poem,
+  pageUrl: string,
+  sanitizedKeywords: string
+): Readonly<Record<string, unknown>> {
+  return {
     '@context': SCHEMA_ORG_CONTEXT,
     '@type': 'CreativeWork',
     name: safeMetaText(poem.title),
     headline: safeMetaText(`${poem.title} | ${poem.poet.name}`),
-    author: {
-      '@type': 'Person',
-      name: poem.poet.name,
-      url: poem.poet.slug,
-    },
+    author: { '@type': 'Person', name: poem.poet.name, url: poem.poet.slug },
     inLanguage: POEM_LANGUAGE,
-    datePublished: new Date().toISOString(),
     url: pageUrl,
     isPartOf: [
       { '@type': 'Collection', name: poem.poet.name, url: poem.poet.slug },
@@ -80,19 +59,37 @@ export async function loadPoemPage(slug: PoemSlug): Promise<{
       logo: { '@type': 'ImageObject', url: `${SITE_URL}${SITE_LOGO_PATH}` },
     },
   };
+}
 
-  const layout = {
+function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
+  const clearTitle = poem.title || POEM_DEFAULT_TITLE;
+  const poetName = poem.poet.name || UNKNOWN_POET_NAME;
+  const description = safeMetaText(flattenVerses(poem.verses));
+  const pageTitle = `${safeMetaText(clearTitle)} - ${safeMetaText(poetName)} - ${SITE_NAME_AR}`;
+  const pageUrl = `${SITE_URL}/poems/${slug}`;
+  const twitterDescription = safeMetaText(
+    TWITTER_DESCRIPTION_TEMPLATE_AR.replace('{poet}', poetName)
+  );
+  const sanitizedKeywords = safeMetaText(poem.keywords);
+  return {
     title: pageTitle,
     description,
     keywords: sanitizedKeywords,
-    canonical: canonicalPath,
+    canonical: `/poems/${slug}`,
     ogTitle: pageTitle,
     ogDescription: description,
     ogUrl: pageUrl,
     twitterTitle: pageTitle,
     twitterDescription,
-    jsonLd,
-  } satisfies PoemLayoutProps;
+    jsonLd: buildJsonLd(poem, pageUrl, sanitizedKeywords),
+  };
+}
 
-  return { poem, layout };
+export async function loadPoemPage(slug: PoemSlug): Promise<{
+  readonly poem: Poem;
+  readonly layout: PoemLayoutProps;
+} | null> {
+  const poem = await fetchPoem(slug);
+  if (!poem) return null;
+  return { poem, layout: buildPoemLayout(poem, slug) };
 }

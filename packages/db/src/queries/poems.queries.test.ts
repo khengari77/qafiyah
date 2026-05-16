@@ -19,8 +19,7 @@ describe('listAllPoemSlugs', () => {
     });
 
     const result = await listAllPoemSlugs(mockDb);
-    expect(result.slugs).toEqual(['slug-1', 'slug-2']);
-    expect(result.total).toBe(2);
+    expect(result).toEqual(['slug-1', 'slug-2']);
   });
 
   it('returns empty slugs when no poems exist', async () => {
@@ -29,8 +28,7 @@ describe('listAllPoemSlugs', () => {
     });
 
     const result = await listAllPoemSlugs(mockDb);
-    expect(result.slugs).toEqual([]);
-    expect(result.total).toBe(0);
+    expect(result).toEqual([]);
   });
 });
 

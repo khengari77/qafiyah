@@ -35,7 +35,3 @@ export function listEnvelopeWithMeta<T, M>(
 ): { data: T[]; pagination: Pagination; meta: M } {
   return { ...listEnvelope(data, totalItems, page, pageSize), meta };
 }
-
-export function resourceEnvelope<T>(data: T): { data: T } {
-  return { data };
-}

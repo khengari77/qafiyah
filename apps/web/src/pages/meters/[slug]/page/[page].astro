@@ -3,17 +3,13 @@ import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import type { MeterSlug } from '@qafiyah/contracts';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
-import {
-  fetchMeterPoemPage,
-  fetchMetersWithPoemCount,
-  generatePageNumbers,
-} from '@/lib/api/static';
+import { fetchMeterPoemPage, fetchMeters, generatePageNumbers } from '@/lib/api/static';
 import { toArabicDigits } from '@/lib/arabic';
 
 const stripQuotes = (s: string) => s.replace(/"/g, '');
 
 export async function getStaticPaths() {
-  const meters = await fetchMetersWithPoemCount();
+  const meters = await fetchMeters();
   const params: Array<{ params: { slug: string; page: string } }> = [];
   for (const meter of meters) {
     for (const page of generatePageNumbers(meter.poemsCount)) {

@@ -3,17 +3,13 @@ import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import type { ThemeSlug } from '@qafiyah/contracts';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
-import {
-  fetchThemePoemPage,
-  fetchThemesWithPoemCount,
-  generatePageNumbers,
-} from '@/lib/api/static';
+import { fetchThemePoemPage, fetchThemes, generatePageNumbers } from '@/lib/api/static';
 import { toArabicDigits } from '@/lib/arabic';
 
 const stripQuotes = (s: string) => s.replace(/"/g, '');
 
 export async function getStaticPaths() {
-  const themes = await fetchThemesWithPoemCount();
+  const themes = await fetchThemes();
   const params: Array<{ params: { slug: string; page: string } }> = [];
   for (const theme of themes) {
     for (const page of generatePageNumbers(theme.poemsCount)) {

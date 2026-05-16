@@ -12,7 +12,6 @@ type Props = {
   readonly loadMoreRef: Ref<HTMLDivElement>;
   readonly hasText: boolean;
   readonly hasFilters: boolean;
-  readonly searchType: string;
   readonly errorMessage: string;
   readonly refreshText: string;
   readonly noResultsText: string;

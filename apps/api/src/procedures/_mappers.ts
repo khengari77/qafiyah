@@ -1,14 +1,5 @@
 import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
-import type { poemsQueries, searchQueries } from '@qafiyah/db';
-
-type PoemRow = {
-  readonly title: string;
-  readonly slug: PoemSlug;
-  readonly poetName: string;
-  readonly poetSlug: PoetSlug;
-  readonly meterName: string;
-  readonly meterSlug: MeterSlug;
-};
+import type { erasQueries, poemsQueries, searchQueries } from '@qafiyah/db';
 
 type SubRef<TSlug> = { readonly name: string; readonly slug: TSlug };
 
@@ -19,7 +10,7 @@ type PoemListItem = {
   readonly meter: SubRef<MeterSlug>;
 };
 
-export function toPoemListItem(row: PoemRow): PoemListItem {
+export function toPoemListItem(row: erasQueries.PoemListRow): PoemListItem {
   return {
     title: row.title,
     slug: row.slug,

@@ -6,13 +6,12 @@ import {
   parentMeta,
   poemListItem,
   slugAndPageInput,
-  statRowNoPoetsCount,
 } from './_shared';
 import { themeSlugSchema } from './brands';
 
 const listThemesContract = oc
   .route({ method: 'GET', path: '/themes' })
-  .output(listResponse(statRowNoPoetsCount(themeSlugSchema)));
+  .output(listResponse(parentMeta(themeSlugSchema)));
 
 const listThemePoemsContract = oc
   .route({ method: 'GET', path: '/themes/{slug}/poems' })

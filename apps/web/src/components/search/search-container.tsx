@@ -144,7 +144,6 @@ export function SearchContainer() {
           loadMoreRef={loadMoreRef}
           hasText={hasText}
           hasFilters={hasFilters}
-          searchType={searchType}
           errorMessage={SEARCH_TEXTS.errorMessage}
           refreshText={SEARCH_TEXTS.refreshThePage}
           noResultsText={getNoResultsText({ hasText, query: searchParams.q || '' })}

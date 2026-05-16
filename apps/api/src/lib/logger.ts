@@ -56,37 +56,20 @@ type LogEvent = LogEventBase &
       }
   );
 
+type Mutable<T> = { -readonly [K in keyof T]: T[K] };
+
 // @WARN: builder is intentionally mutable, the logger middleware accumulates
 //   fields onto it during the request lifecycle (status_code/duration_ms after
 //   next(); error from onError; domain fields from enrichContext) before
-//   projecting into a readonly LogEvent at emit time. Mirror DomainFields
-//   structurally but strip the `readonly` modifier.
-export type LogEventBuilder = {
-  request_id: string;
-  method: string;
-  path: string;
-  timestamp: string;
-  service: { name: 'qafiyah-api'; environment: string };
-  status_code?: number;
-  duration_ms?: number;
-  error?: { type: string; code: string; message: string; retriable: boolean };
-  poet_id?: string;
-  era?: string;
-  result_count?: number;
-  poem_id?: string;
-  meter?: string;
-  rhyme?: string;
-  theme?: string;
-  verse_id?: string;
-  query_text?: string;
-  query_length?: number;
-  results_count?: number;
-  search_type?: 'fulltext' | 'semantic';
-  normalization_applied?: boolean;
-  page?: number;
-  page_size?: number;
-  total_pages?: number;
-};
+//   projecting into a readonly LogEvent at emit time. The mapped type derives
+//   the mutable mirror from LogEventBase + DomainFields, so adding a domain
+//   field only requires updating DomainFields above.
+export type LogEventBuilder = Mutable<LogEventBase> &
+  Mutable<DomainFields> & {
+    status_code?: number;
+    duration_ms?: number;
+    error?: ErrorInfo;
+  };
 
 export function enrichContext(c: Context<AppContext>, data: Readonly<DomainFields>): void {
   const event = c.var.logEvent;

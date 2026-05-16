@@ -34,8 +34,10 @@ function createQueryBuilder(mockData: readonly unknown[] = []) {
   return builder;
 }
 
-// test-only: returns a DbClient-shaped object that only implements the subset of
-// the interface actually used by the procedure under test.
+// test-only: tag a partial shape as DbClient for tests that only exercise a
+// subset of the interface. Local on purpose: exporting from @qafiyah/db would
+// force vi.mock factories to resolve eagerly (the package is mocked here),
+// triggering temporal-dead-zone errors on the per-test top-level vi.fn() vars.
 function fakeDb<T extends object>(partial: T): DbClient {
   return partial as unknown as DbClient;
 }

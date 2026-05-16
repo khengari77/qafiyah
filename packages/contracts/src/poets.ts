@@ -1,5 +1,4 @@
 import { oc } from '@orpc/contract';
-import * as v from 'valibot';
 import {
   inputValidationError,
   listResponse,
@@ -11,11 +10,7 @@ import {
 } from './_shared';
 import { poetSlugSchema } from './brands';
 
-const poetStatRow = v.object({
-  name: v.string(),
-  slug: poetSlugSchema,
-  poemsCount: v.number(),
-});
+const poetStatRow = parentMeta(poetSlugSchema);
 
 const listPoetsContract = oc
   .route({ method: 'GET', path: '/poets' })

@@ -45,13 +45,6 @@ export const statRow = <TSlug extends v.GenericSchema<string, string>>(slug: TSl
     poetsCount: v.number(),
   });
 
-export const statRowNoPoetsCount = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
-  v.object({
-    name: v.string(),
-    slug,
-    poemsCount: v.number(),
-  });
-
 export const parentMeta = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
   v.object({
     name: v.string(),

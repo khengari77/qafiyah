@@ -3,13 +3,13 @@ import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import type { EraSlug } from '@qafiyah/contracts';
 import { SITE_URL } from '@/constants/globals';
 import Layout from '@/layouts/Layout.astro';
-import { fetchEraPoemPage, fetchErasWithPoemCount, generatePageNumbers } from '@/lib/api/static';
+import { fetchEraPoemPage, fetchEras, generatePageNumbers } from '@/lib/api/static';
 import { toArabicDigits } from '@/lib/arabic';
 
 const stripQuotes = (s: string) => s.replace(/"/g, '');
 
 export async function getStaticPaths() {
-  const eras = await fetchErasWithPoemCount();
+  const eras = await fetchEras();
   const params: Array<{ params: { slug: string; page: string } }> = [];
   for (const era of eras) {
     for (const page of generatePageNumbers(era.poemsCount)) {

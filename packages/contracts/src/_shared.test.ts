@@ -12,7 +12,6 @@ import {
   slugAndPageInput,
   slugInput,
   statRow,
-  statRowNoPoetsCount,
   subRef,
 } from './_shared';
 import { eraSlugSchema, poetSlugSchema, themeSlugSchema } from './brands';
@@ -127,24 +126,6 @@ describe('statRow', () => {
   });
 });
 
-describe('statRowNoPoetsCount', () => {
-  it('parses valid row without poetsCount', () => {
-    const result = v.parse(statRowNoPoetsCount(themeSlugSchema), {
-      name: 'الغزل',
-      slug: 'love',
-      poemsCount: 200,
-    });
-    expect(result.name).toBe('الغزل');
-    expect(result.poemsCount).toBe(200);
-  });
-
-  it('drops extra fields on parse', () => {
-    const input = { name: 'الغزل', slug: 'love', poemsCount: 200, poetsCount: 10 };
-    const result = v.parse(statRowNoPoetsCount(themeSlugSchema), input);
-    expect(result).not.toHaveProperty('poetsCount');
-  });
-});
-
 describe('parentMeta', () => {
   it('parses { name, slug, poemsCount }', () => {
     const result = v.parse(parentMeta(eraSlugSchema), {
@@ -153,6 +134,21 @@ describe('parentMeta', () => {
       poemsCount: 42,
     });
     expect(result).toEqual({ name: 'عباسي', slug: 'abbasid', poemsCount: 42 });
+  });
+
+  it('parses themes-style row without poetsCount', () => {
+    const result = v.parse(parentMeta(themeSlugSchema), {
+      name: 'الغزل',
+      slug: 'love',
+      poemsCount: 200,
+    });
+    expect(result.poemsCount).toBe(200);
+  });
+
+  it('drops extra fields on parse', () => {
+    const input = { name: 'الغزل', slug: 'love', poemsCount: 200, poetsCount: 10 };
+    const result = v.parse(parentMeta(themeSlugSchema), input);
+    expect(result).not.toHaveProperty('poetsCount');
   });
 
   it('rejects missing poemsCount', () => {

@@ -1,12 +1,12 @@
 'use client';
 
 import {
-  type MATCH_TYPE_VALUES,
+  MATCH_TYPE_VALUES,
   MAX_QUERY_LENGTH,
   NON_ARABIC_AND_SPACE_REGEX,
   SEARCH_RESULTS_STALE_TIME_MS,
   SEARCH_TEXTS,
-  type SEARCH_TYPE_VALUES,
+  SEARCH_TYPE_VALUES,
 } from '@qafiyah/constants';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
@@ -32,8 +32,8 @@ export type FetchStatus =
     }
   | { readonly kind: 'error' };
 
-const SEARCH_TYPE_SET: ReadonlySet<SearchType> = new Set(['poems', 'poets']);
-const MATCH_TYPE_SET: ReadonlySet<MatchType> = new Set(['all', 'any', 'exact']);
+const SEARCH_TYPE_SET: ReadonlySet<SearchType> = new Set(SEARCH_TYPE_VALUES);
+const MATCH_TYPE_SET: ReadonlySet<MatchType> = new Set(MATCH_TYPE_VALUES);
 
 function isSearchType(value: string): value is SearchType {
   return SEARCH_TYPE_SET.has(value as SearchType);
@@ -78,11 +78,11 @@ export function useSearch() {
   const [query, setQuery] = useQueryState('q', { defaultValue: '' });
   const [searchType, setSearchType] = useQueryState(
     'search_type',
-    parseAsStringEnum<SearchType>(['poems', 'poets']).withDefault('poems')
+    parseAsStringEnum<SearchType>([...SEARCH_TYPE_VALUES]).withDefault('poems')
   );
   const [matchType, setMatchType] = useQueryState(
     'match_type',
-    parseAsStringEnum<MatchType>(['all', 'any', 'exact']).withDefault('all')
+    parseAsStringEnum<MatchType>([...MATCH_TYPE_VALUES]).withDefault('all')
   );
   const [eraIds, setEraIds] = useQueryState('era_ids', { defaultValue: '' });
   const [meterIds, setMeterIds] = useQueryState('meter_ids', { defaultValue: '' });

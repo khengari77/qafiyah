@@ -125,10 +125,6 @@ export function fetchEras(): Promise<readonly Era[]> {
   return dedup('eras:list', async () => (await apiServer.eras.list()).data);
 }
 
-export function fetchErasWithPoemCount(): Promise<readonly Era[]> {
-  return fetchEras();
-}
-
 export async function fetchEraPoemPage(
   slug: EraSlug,
   page: string
@@ -147,10 +143,6 @@ export async function fetchEraPoemPage(
 
 export function fetchMeters(): Promise<readonly Meter[]> {
   return dedup('meters:list', async () => (await apiServer.meters.list()).data);
-}
-
-export function fetchMetersWithPoemCount(): Promise<readonly Meter[]> {
-  return fetchMeters();
 }
 
 export async function fetchMeterPoemPage(
@@ -173,10 +165,6 @@ export function fetchRhymes(): Promise<readonly Rhyme[]> {
   return dedup('rhymes:list', async () => (await apiServer.rhymes.list()).data);
 }
 
-export function fetchRhymesWithPoemCount(): Promise<readonly Rhyme[]> {
-  return fetchRhymes();
-}
-
 export async function fetchRhymePoemPage(
   slug: RhymeSlug,
   page: string
@@ -195,10 +183,6 @@ export async function fetchRhymePoemPage(
 
 export function fetchThemes(): Promise<readonly Theme[]> {
   return dedup('themes:list', async () => (await apiServer.themes.list()).data);
-}
-
-export function fetchThemesWithPoemCount(): Promise<readonly Theme[]> {
-  return fetchThemes();
 }
 
 export async function fetchThemePoemPage(

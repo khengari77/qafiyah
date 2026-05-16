@@ -77,7 +77,7 @@ describe('poems procedures', () => {
 
   describe('listSlugs', () => {
     it('returns slugs list wrapped in envelope', async () => {
-      listAllPoemSlugsMock.mockResolvedValue({ slugs: ['poem-1', 'poem-2'], total: 2 });
+      listAllPoemSlugsMock.mockResolvedValue(['poem-1', 'poem-2']);
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -90,7 +90,7 @@ describe('poems procedures', () => {
     });
 
     it('returns empty list when no poems exist', async () => {
-      listAllPoemSlugsMock.mockResolvedValue({ slugs: [], total: 0 });
+      listAllPoemSlugsMock.mockResolvedValue([]);
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

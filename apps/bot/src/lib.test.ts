@@ -16,8 +16,13 @@ vi.stubGlobal('fetch', mockFetch);
 // initializeTwitterClient
 // ---------------------------------------------------------------------------
 describe('initializeTwitterClient', () => {
-  it('returns ok when all four env vars are present', () => {
-    const result = initializeTwitterClient();
+  it('returns ok when valid creds are passed', () => {
+    const result = initializeTwitterClient({
+      appKey: 'k',
+      appSecret: 's',
+      accessToken: 't',
+      accessSecret: 's',
+    });
     expect(result.ok).toBe(true);
   });
 });

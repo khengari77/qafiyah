@@ -27,18 +27,28 @@ export class TerminalError extends Error {
   }
 }
 
-export function initializeTwitterClient(): Result<TwitterApi> {
+type TwitterCreds = {
+  readonly appKey: string;
+  readonly appSecret: string;
+  readonly accessToken: string;
+  readonly accessSecret: string;
+};
+
+export function initializeTwitterClient(creds: TwitterCreds): Result<TwitterApi> {
   try {
-    const client = new TwitterApi({
-      appKey: env.TWITTER_APP_KEY,
-      appSecret: env.TWITTER_APP_SECRET,
-      accessToken: env.TWITTER_ACCESS_TOKEN,
-      accessSecret: env.TWITTER_ACCESS_SECRET,
-    });
-    return ok(client);
+    return ok(new TwitterApi(creds));
   } catch (error) {
     return err(error instanceof Error ? error : new Error('Failed to initialize Twitter client'));
   }
+}
+
+type RetryClassification = 'terminal' | 'rate-limit' | 'transient';
+
+function classifyRetry(error: Error): RetryClassification {
+  if (error instanceof TerminalError) return 'terminal';
+  const message = error.message.toLowerCase();
+  if (message.includes('429') || message.includes('too many requests')) return 'rate-limit';
+  return 'transient';
 }
 
 export async function withRetry<T>(
@@ -52,20 +62,18 @@ export async function withRetry<T>(
         console.log(`${operationName} succeeded on attempt ${attempt}`);
       }
       return ok(result);
-    } catch (error) {
-      const errorObj = error instanceof Error ? error : new Error(String(error));
+    } catch (raw) {
+      const error = raw instanceof Error ? raw : new Error(String(raw));
+      const kind = classifyRetry(error);
 
-      if (errorObj instanceof TerminalError) {
-        console.log(`${operationName}: Terminal error, ${errorObj.message}`);
-        return err(errorObj);
+      if (kind === 'terminal') {
+        console.log(`${operationName}: Terminal error, ${error.message}`);
+        return err(error);
       }
-
-      const message = errorObj.message.toLowerCase();
-      if (message.includes('429') || message.includes('too many requests')) {
+      if (kind === 'rate-limit') {
         console.log(`${operationName}: Rate limited`);
         return err(new Error('Rate limit hit. Aborting.'));
       }
-
       if (attempt < MAX_RETRY_ATTEMPTS) {
         const delay = INITIAL_RETRY_DELAY_MS * 2 ** (attempt - 1);
         console.log(
@@ -74,7 +82,7 @@ export async function withRetry<T>(
         await new Promise((resolve) => setTimeout(resolve, delay));
       } else {
         console.log(`${operationName}: All ${MAX_RETRY_ATTEMPTS} attempts failed`);
-        return err(errorObj);
+        return err(error);
       }
     }
   }
@@ -120,7 +128,12 @@ export async function postTweet(
 export async function run(): Promise<void> {
   console.log('Starting poem bot...');
 
-  const clientResult = initializeTwitterClient();
+  const clientResult = initializeTwitterClient({
+    appKey: env.TWITTER_APP_KEY,
+    appSecret: env.TWITTER_APP_SECRET,
+    accessToken: env.TWITTER_ACCESS_TOKEN,
+    accessSecret: env.TWITTER_ACCESS_SECRET,
+  });
   if (!clientResult.ok) {
     console.error(`Setup failed: ${clientResult.error.message}`);
     process.exit(1);

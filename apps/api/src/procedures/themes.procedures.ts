@@ -18,7 +18,7 @@ export const listThemePoems = pub.themes.listPoems.handler(async ({ context, inp
     result_count: result.total,
     page: input.page,
     page_size: POEMS_PER_PAGE,
-    total_pages: Math.max(1, Math.ceil(result.total / POEMS_PER_PAGE)),
+    total_pages: result.totalPages,
   });
   return listEnvelopeWithMeta(
     result.poems.map(toPoemListItem),

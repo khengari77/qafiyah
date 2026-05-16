@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { API_URL } from '@/constants/globals';
 import { getRandomPoemSlug } from '@/lib/api/client';
 
 type RandomPoemStatus =
@@ -15,7 +16,7 @@ export function useRandomPoem() {
     if (status.kind === 'loading') return;
     setStatus({ kind: 'loading' });
     try {
-      const slug = await getRandomPoemSlug();
+      const slug = await getRandomPoemSlug(API_URL);
       window.location.href = `/poems/${slug}`;
     } catch {
       setStatus({ kind: 'error' });

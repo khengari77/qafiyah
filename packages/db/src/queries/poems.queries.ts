@@ -62,15 +62,9 @@ const poemWithRelatedPayloadSchema = v.union([
 ]);
 export type PoemWithRelatedResponse = v.InferOutput<typeof poemWithRelatedPayloadSchema>;
 
-export type ListAllPoemSlugsResult = {
-  readonly slugs: readonly PoemSlug[];
-  readonly total: number;
-};
-
-export async function listAllPoemSlugs(db: DbClient): Promise<ListAllPoemSlugsResult> {
+export async function listAllPoemSlugs(db: DbClient): Promise<readonly PoemSlug[]> {
   const rows = await db.select({ slug: poemsFullData.slug }).from(poemsFullData);
-  const slugs = rows.map((r) => asPoemSlug(r.slug));
-  return { slugs, total: slugs.length };
+  return rows.map((r) => asPoemSlug(r.slug));
 }
 
 const randomPoemPayloadSchema = v.object({
@@ -81,6 +75,12 @@ const randomPoemPayloadSchema = v.object({
   poet_name: v.string(),
   content: v.string(),
 });
+
+function pickExcerptStartIndex(content: string): number {
+  const lineCount = content.split('*').length;
+  const maxStartIndex = Math.max(0, lineCount - 2);
+  return Math.floor(Math.random() * (maxStartIndex / 2)) * 2;
+}
 
 export async function getRandomPoemLines(db: DbClient): Promise<string> {
   const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
@@ -97,7 +97,7 @@ export async function getRandomPoemLines(db: DbClient): Promise<string> {
     throw new Error('getRandomPoemLines: poem missing content field');
   }
 
-  const content = extractPoemExcerpt(poem);
+  const content = extractPoemExcerpt(poem, pickExcerptStartIndex(poem.content));
 
   if (content.length > MAX_EXCERPT_LENGTH) {
     throw new Error(
@@ -172,39 +172,42 @@ function textArrayLiteral(values: readonly string[]): string {
   return `{${escaped.join(',')}}`;
 }
 
-export async function getPoemBySlug(db: DbClient, slug: PoemSlug): Promise<GetPoemResult> {
+type RelatedEnrichmentRow = v.InferOutput<typeof relatedEnrichmentRowSchema>;
+type Enrichment = {
+  readonly meterSlug: MeterSlug;
+  readonly themeSlug: ThemeSlug;
+  readonly enrichmentMap: ReadonlyMap<PoemSlug, RelatedEnrichmentRow>;
+};
+
+const REQUIRED_POEM_FIELDS = [
+  'title',
+  'content',
+  'poet_name',
+  'poet_slug',
+  'meter_name',
+  'theme_name',
+  'era_name',
+  'era_slug',
+] as const satisfies readonly (keyof RawPoemData)[];
+
+function hasRequiredFields(poem: RawPoemData): boolean {
+  return REQUIRED_POEM_FIELDS.every((k) => Boolean(poem[k]));
+}
+
+async function loadPoemPayload(
+  db: DbClient,
+  slug: PoemSlug
+): Promise<PoemWithRelatedResponse | null> {
   const result = await db.execute(sql`SELECT get_poem_with_related(${slug})`);
+  if (!result || result.length === 0 || !result[0]?.['get_poem_with_related']) return null;
+  return v.parse(poemWithRelatedPayloadSchema, result[0]['get_poem_with_related']);
+}
 
-  if (!result || result.length === 0 || !result[0]?.['get_poem_with_related']) {
-    return { type: 'not_found' };
-  }
-
-  const payload = v.parse(poemWithRelatedPayloadSchema, result[0]['get_poem_with_related']);
-
-  if (payload.kind === 'error') {
-    return { type: 'error', message: payload.message || payload.error };
-  }
-
-  const { poem, related_poems } = payload;
-
-  if (
-    !(
-      poem.title &&
-      poem.content &&
-      poem.poet_name &&
-      poem.poet_slug &&
-      poem.meter_name &&
-      poem.theme_name &&
-      poem.era_name &&
-      poem.era_slug
-    )
-  ) {
-    console.error(`Incomplete poem data for slug: ${slug}`);
-    return { type: 'error', message: 'Incomplete poem data' };
-  }
-
-  const relatedSlugs = related_poems.map((r) => r.poem_slug);
-
+async function loadEnrichment(
+  db: DbClient,
+  poem: RawPoemData,
+  relatedSlugs: readonly PoemSlug[]
+): Promise<Enrichment | null> {
   const [meterLookup, themeLookup, relatedEnrichment] = await Promise.all([
     executeAs(
       db,
@@ -217,7 +220,7 @@ export async function getPoemBySlug(db: DbClient, slug: PoemSlug): Promise<GetPo
       themeLookupRowSchema
     ),
     relatedSlugs.length === 0
-      ? Promise.resolve([] as readonly v.InferOutput<typeof relatedEnrichmentRowSchema>[])
+      ? Promise.resolve([] as readonly RelatedEnrichmentRow[])
       : executeAs(
           db,
           sql`
@@ -236,17 +239,21 @@ export async function getPoemBySlug(db: DbClient, slug: PoemSlug): Promise<GetPo
 
   const meterSlug = meterLookup[0]?.slug;
   const themeSlug = themeLookup[0]?.slug;
+  if (!(meterSlug && themeSlug)) return null;
 
-  if (!(meterSlug && themeSlug)) {
-    console.error(`Missing meter or theme slug for poem ${slug}`);
-    return { type: 'error', message: 'Incomplete poem data' };
-  }
+  return {
+    meterSlug,
+    themeSlug,
+    enrichmentMap: new Map(relatedEnrichment.map((r) => [r.poem_slug, r])),
+  };
+}
 
-  const enrichmentMap = new Map(relatedEnrichment.map((r) => [r.poem_slug, r]));
-
-  const clearTitle = poem.title.replace(/"/g, '');
-  const processedContent = processPoemContent(poem.content);
-
+function buildResource(
+  poem: RawPoemData,
+  related_poems: readonly RawRelatedPoem[],
+  enrichment: Enrichment
+): PoemResourceData {
+  const { meterSlug, themeSlug, enrichmentMap } = enrichment;
   const relatedPoems: readonly RelatedPoem[] = related_poems.map((r) => {
     const enriched = enrichmentMap.get(r.poem_slug);
     return {
@@ -258,23 +265,37 @@ export async function getPoemBySlug(db: DbClient, slug: PoemSlug): Promise<GetPo
       meterSlug: enriched?.meter_slug ?? asMeterSlug(''),
     };
   });
-
   return {
-    type: 'found',
-    data: {
-      metadata: {
-        poetName: poem.poet_name,
-        poetSlug: poem.poet_slug,
-        eraName: poem.era_name,
-        eraSlug: poem.era_slug,
-        meterName: poem.meter_name,
-        meterSlug,
-        themeName: poem.theme_name,
-        themeSlug,
-      },
-      clearTitle,
-      processedContent,
-      relatedPoems,
+    metadata: {
+      poetName: poem.poet_name,
+      poetSlug: poem.poet_slug,
+      eraName: poem.era_name,
+      eraSlug: poem.era_slug,
+      meterName: poem.meter_name,
+      meterSlug,
+      themeName: poem.theme_name,
+      themeSlug,
     },
+    clearTitle: poem.title.replace(/"/g, ''),
+    processedContent: processPoemContent(poem.content),
+    relatedPoems,
   };
+}
+
+export async function getPoemBySlug(db: DbClient, slug: PoemSlug): Promise<GetPoemResult> {
+  const payload = await loadPoemPayload(db, slug);
+  if (!payload) return { type: 'not_found' };
+  if (payload.kind === 'error') {
+    return { type: 'error', message: payload.message || payload.error };
+  }
+  const { poem, related_poems } = payload;
+  if (!hasRequiredFields(poem)) {
+    return { type: 'error', message: 'Incomplete poem data' };
+  }
+  const relatedSlugs = related_poems.map((r) => r.poem_slug);
+  const enrichment = await loadEnrichment(db, poem, relatedSlugs);
+  if (!enrichment) {
+    return { type: 'error', message: 'Incomplete poem data' };
+  }
+  return { type: 'found', data: buildResource(poem, related_poems, enrichment) };
 }

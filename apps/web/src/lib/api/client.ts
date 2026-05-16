@@ -1,6 +1,5 @@
 import { API_RANDOM_POEM_PATH } from '@qafiyah/constants';
 import type { PoemSlug } from '@qafiyah/contracts';
-import { API_URL } from '@/constants/globals';
 import { apiBrowser } from './rpc';
 import type { PoemsSearchEnvelope, PoetsSearchEnvelope } from './types';
 
@@ -30,8 +29,8 @@ export function search(args: SearchArgs): Promise<SearchResult> {
   });
 }
 
-export async function getRandomPoemSlug(): Promise<PoemSlug> {
-  const response = await fetch(`${API_URL}${API_RANDOM_POEM_PATH}?option=slug`);
+export async function getRandomPoemSlug(baseUrl: string): Promise<PoemSlug> {
+  const response = await fetch(`${baseUrl}${API_RANDOM_POEM_PATH}?option=slug`);
   if (!response.ok) {
     throw new Error(`Random poem request failed: ${response.status}`);
   }
