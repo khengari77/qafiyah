@@ -8,8 +8,7 @@ If this is your first time contributing to an open source project, the [How to C
 
 ## Prerequisites
 
-- bun ≥ 1.3.14 (enforced via the `packageManager` field; npm, yarn, and pnpm are blocked by a preinstall hook)
-- Node.js ≥ 20
+- Bun ≥ 1.3.14 (enforced via the `packageManager` field; npm, yarn, and pnpm are blocked by a preinstall hook)
 - Docker (required for `bun run db:setup`, which spins up a Postgres 17 container on port 5433)
 - Git
 
