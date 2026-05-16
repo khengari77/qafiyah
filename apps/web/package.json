@@ -28,7 +28,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "envin": "^1.2.0",
-    "lucide-react": "^0.487.0",
+    "lucide-react": "^1.16.0",
     "nuqs": "^2.4.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
