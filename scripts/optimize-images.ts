@@ -324,7 +324,11 @@ async function processOne(absPath: string, cfg: CliConfig): Promise<FileResult> 
     const { bytesOut } = await encodeToWebP(absPath, outPath, strategy, cfg.maxWidth);
 
     if (cfg.replace) {
-      Bun.spawnSync(['rm', '-f', absPath]);
+      try {
+        await Bun.file(absPath).delete();
+      } catch {
+        // best-effort, match `rm -f` semantics
+      }
     }
     return { ok: true, src: absPath, out: outPath, bytesIn, bytesOut };
   } catch (err) {
