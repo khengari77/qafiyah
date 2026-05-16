@@ -6,12 +6,20 @@ import { toPoemListItem } from './_mappers';
 
 export const listEras = pub.eras.list.handler(async ({ context }) => {
   const eras = await erasQueries.listEras(context.db);
+  context.log?.({ result_count: eras.length });
   return listEnvelope(eras, eras.length, 1, eras.length || 1);
 });
 
 export const listEraPoems = pub.eras.listPoems.handler(async ({ context, input, errors }) => {
   const result = await erasQueries.listEraPoems(context.db, input.slug, input.page);
   if (!result) throw errors.NOT_FOUND();
+  context.log?.({
+    era: input.slug,
+    result_count: result.total,
+    page: input.page,
+    page_size: POEMS_PER_PAGE,
+    total_pages: Math.max(1, Math.ceil(result.total / POEMS_PER_PAGE)),
+  });
   return listEnvelopeWithMeta(
     result.poems.map(toPoemListItem),
     result.total,

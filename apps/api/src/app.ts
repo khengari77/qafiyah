@@ -19,9 +19,11 @@ import {
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { enrichContext } from './lib/logger';
 import { makeProblem, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
 import serveEmojiFavicon from './middlewares/favicon.middleware';
+import { loggerMiddleware } from './middlewares/logger.middleware';
 import { router, routerNamespaces } from './router';
 import index from './routes/index.routes';
 import llms from './routes/llms.routes';
@@ -40,6 +42,7 @@ app.use(
   })
 );
 app.use(serveEmojiFavicon(FAVICON_EMOJI));
+app.use(loggerMiddleware);
 
 for (const ns of routerNamespaces) {
   app.use(`${API_V1_PREFIX}/${ns}/*`, dbMiddleware);
@@ -68,7 +71,7 @@ const orpcHandler = new OpenAPIHandler(router, {
 app.use(`${API_V1_PREFIX}/*`, async (c, next) => {
   if (ORPC_BYPASS_PATHS.has(c.req.path)) return next();
   const result = await orpcHandler.handle(c.req.raw, {
-    context: { db: c.get('db') },
+    context: { db: c.get('db'), log: (data) => enrichContext(c, data) },
     prefix: API_V1_PREFIX,
   });
   if (!result.matched) return next();
@@ -91,22 +94,29 @@ app
     )
   )
   .onError((error, c) => {
-    console.error({
-      message: 'Global error handler caught an error',
-      path: c.req.path,
-      method: c.req.method,
-      error: error instanceof Error ? error.message : String(error),
-    });
+    const isHttp = error instanceof HTTPException;
+    const status = isHttp ? error.status : HTTP_INTERNAL_SERVER_ERROR;
+    let code: string;
+    if (!isHttp) {
+      code = 'INTERNAL_SERVER_ERROR';
+    } else if (status === HTTP_NOT_FOUND) {
+      code = 'NOT_FOUND';
+    } else {
+      code = 'BAD_REQUEST';
+    }
 
-    if (error instanceof HTTPException) {
-      return sendProblem(
-        c,
-        makeProblem({
-          code: error.status === HTTP_NOT_FOUND ? 'NOT_FOUND' : 'BAD_REQUEST',
-          status: error.status,
-          detail: error.message,
-        })
-      );
+    const event = c.var.logEvent;
+    if (event) {
+      event.error = {
+        type: error.constructor.name,
+        code,
+        message: error.message,
+        retriable: status >= 500,
+      };
+    }
+
+    if (isHttp) {
+      return sendProblem(c, makeProblem({ code, status, detail: error.message }));
     }
 
     return sendProblem(

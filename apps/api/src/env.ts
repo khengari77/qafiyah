@@ -2,6 +2,7 @@ import * as v from 'valibot';
 
 const schema = v.object({
   DATABASE_URL: v.pipe(v.string(), v.url()),
+  ENVIRONMENT: v.optional(v.string()),
 });
 
 export type Bindings = v.InferOutput<typeof schema>;
