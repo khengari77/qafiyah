@@ -26,7 +26,7 @@ export type ListRhymePoemsResult = {
 export async function listRhymes(db: DbClient): Promise<readonly RhymeLetterGroup[]> {
   const results = await db.select().from(rhymeStats);
 
-  // @WARN: groupedRhymes is intentionally mutable — letters are accumulated across
+  // @WARN: groupedRhymes is intentionally mutable, letters are accumulated across
   //   iterations of the result loop before being projected into the readonly output.
   const groupedRhymes = new Map<
     string,

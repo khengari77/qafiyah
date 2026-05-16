@@ -28,7 +28,7 @@ export function toPoemListItem(row: PoemRow): PoemListItem {
   };
 }
 
-// @WARN: PoemResource is the wire output shape — `verses` and `relatedPoems` are
+// @WARN: PoemResource is the wire output shape, `verses` and `relatedPoems` are
 //   mutable arrays because the oRPC contract (Valibot InferOutput) does not preserve
 //   readonly. Internally readonly data from @qafiyah/db is copied into a mutable
 //   shape only at this boundary.

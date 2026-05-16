@@ -56,7 +56,7 @@ type LogEvent = LogEventBase &
       }
   );
 
-// @WARN: builder is intentionally mutable — the logger middleware accumulates
+// @WARN: builder is intentionally mutable, the logger middleware accumulates
 //   fields onto it during the request lifecycle (status_code/duration_ms after
 //   next(); error from onError; domain fields from enrichContext) before
 //   projecting into a readonly LogEvent at emit time. Mirror DomainFields
@@ -91,7 +91,7 @@ export type LogEventBuilder = {
 export function enrichContext(c: Context<AppContext>, data: Readonly<DomainFields>): void {
   const event = c.var.logEvent;
   if (!event) return;
-  // @WARN: builder mutation — see LogEventBuilder docstring.
+  // @WARN: builder mutation, see LogEventBuilder docstring.
   Object.assign(event, data);
 }
 

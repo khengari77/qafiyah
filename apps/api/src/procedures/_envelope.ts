@@ -7,7 +7,7 @@ type Pagination = {
 
 // @WARN: return types use mutable arrays to satisfy the oRPC contract's inferred
 //   output shape (Valibot's InferOutput does not preserve readonly). Internally,
-//   callers pass readonly data — the envelope copies it into a mutable wire-shape
+//   callers pass readonly data, the envelope copies it into a mutable wire-shape
 //   only at the boundary.
 export function listEnvelope<T>(
   data: readonly T[],
