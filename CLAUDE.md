@@ -3,17 +3,19 @@
 **Qafiyah** — Arabic poetry monorepo (Bun + Turborepo).
 
 ## Packages
-| Package | Stack |
-|---|---|
-| `apps/web` | Astro 6 static, React 19 islands, TailwindCSS, TanStack Query |
-| `apps/api` | Hono + oRPC + Valibot, Cloudflare Workers, OpenAPI |
-| `apps/bot` | X/Twitter bot via `twitter-api-v2`, GitHub Actions cron |
-| `packages/db` | Drizzle ORM + PostgreSQL FTS (API-only) |
-| `packages/contracts` | Shared oRPC contracts (Valibot) |
-| `packages/constants` | Brand/URLs/ports |
-| `packages/typescript` | Shared tsconfigs |
+
+| Package               | Stack                                                         |
+| --------------------- | ------------------------------------------------------------- |
+| `apps/web`            | Astro 6 static, React 19 islands, TailwindCSS, TanStack Query |
+| `apps/api`            | Hono + oRPC + Valibot, Cloudflare Workers, OpenAPI            |
+| `apps/bot`            | X/Twitter bot via `twitter-api-v2`, GitHub Actions cron       |
+| `packages/db`         | Drizzle ORM + PostgreSQL FTS (API-only)                       |
+| `packages/contracts`  | Shared oRPC contracts (Valibot)                               |
+| `packages/constants`  | Brand/URLs/ports                                              |
+| `packages/typescript` | Shared tsconfigs                                              |
 
 ## Commands
+
 ```bash
 bun run dev / build / lint / format / types / test
 bun run db:setup        # Docker Postgres :5433, restored from latest dump
@@ -25,6 +27,7 @@ vitest run path/to/file.test.ts
 ```
 
 ## Tooling
+
 - **Biome**: JS/TS lint + format — 2-space, 100-char, single quotes, es5 commas
 - **Prettier**: `.md`/`.mdx` only
 - **Commitlint**: Conventional Commits (`feat`, `fix`, `refactor`, …)
@@ -46,34 +49,40 @@ vitest run path/to/file.test.ts
 **`packages/constants`** — Always update brand strings, URLs, and ports here (`DEV_WEB_PORT=4321`, `DEV_API_PORT=8787`), never in app code.
 
 ## CI Workflows
+
 - `ci.yml` — format, lint, types, test, knip, madge, audit
 - `post-poem.yml` — bot cron
 - `gitleaks.yml` — secret scanning on push/PR
 
 ## Session Discipline
+
 - **One mission per session.**
 - Port conflicts → `bun run clean:dev`, restart.
 - DB dumps in `dumps/` (newest = latest). See `dumps/MAINTAINERS_GUIDE.md`.
 - **Web build is ~2 hours.** To verify quickly: run build, kill after ~20s (enough for Wrangler + first `getStaticPaths` errors), then `bun run clean:dev`.
 
 ## Quality Checklist (TRUST 5)
-| | Criterion | Gate |
-|---|---|---|
-| **T** | Tested | `bun run test` passes; new logic has coverage |
-| **R** | Readable | 0 lint errors; self-explanatory names |
-| **U** | Unified | Biome config + Conventional Commits |
-| **S** | Secured | No secrets in code; inputs validated at boundaries |
-| **T** | Trackable | Commit message explains *why* |
+
+|       | Criterion | Gate                                               |
+| ----- | --------- | -------------------------------------------------- |
+| **T** | Tested    | `bun run test` passes; new logic has coverage      |
+| **R** | Readable  | 0 lint errors; self-explanatory names              |
+| **U** | Unified   | Biome config + Conventional Commits                |
+| **S** | Secured   | No secrets in code; inputs validated at boundaries |
+| **T** | Trackable | Commit message explains _why_                      |
 
 ## Code Annotations
+
 ```ts
 // @ANCHOR: <why>   — 3+ callers depend on this contract
 // @WARN: <danger>  — async side-effect, global mutation
 // @NOTE: <context> — magic constant, workaround
 ```
+
 Use sparingly.
 
 ## Known Bug
+
 `@astrojs/compiler` older releases crash on `"` inside `${}` in Astro templates. Now on `4.0.0` via `astro@6.3.3`. Workaround: use helper functions instead of inline quoted strings. Remove this section if no longer reproducible.
 
 > See `AGENTS.md` for per-file coding standards (TypeScript dialect, logic, naming, errors, testing).
