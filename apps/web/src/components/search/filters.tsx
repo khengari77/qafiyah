@@ -1,3 +1,6 @@
+import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import { BinaryToggleButton } from '@/components/ui/toggle-button';
@@ -8,6 +11,7 @@ import {
   SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
 } from '@/constants';
+import { cn } from '@/lib/utils';
 
 type FilterOption = { readonly value: string; readonly label: string };
 
@@ -116,6 +120,84 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
         )}
       </div>
       <p className="text-center text-xs sm:text-sm text-zinc-600">{SEARCH_TEXTS.searchFootnote}</p>
+    </div>
+  );
+}
+
+type FiltersButtonProps = {
+  readonly toggleFilters: () => void;
+  readonly filtersVisible: boolean;
+};
+
+export function FiltersButton({ toggleFilters, filtersVisible }: FiltersButtonProps) {
+  return (
+    <Button
+      type="button"
+      tabIndex={0}
+      variant="default"
+      onClick={toggleFilters}
+      className={cn(
+        'text-base font-normal h-12 rounded-xl flex justify-between gap-6 items-center px-4 transition-none duration-0 shadow-none ring-1 border-0 outline-none',
+        filtersVisible
+          ? 'text-zinc-600/80 hover:text-zinc-500 duration-200 bg-white hover:bg-white focus-visible:ring-zinc-800/40 ring-zinc-300/40'
+          : 'text-zinc-50 hover:text-zinc-50 bg-zinc-800 hover:bg-zinc-800 ring-zinc-800'
+      )}
+      aria-label={filtersVisible ? 'Collapse filters' : 'Expand filters'}
+    >
+      <Filter tabIndex={-1} className="h-2 w-2" />
+      {filtersVisible ? (
+        <ChevronUp tabIndex={-1} className="h-2 w-2" />
+      ) : (
+        <ChevronDown tabIndex={-1} className="h-2 w-2" />
+      )}
+    </Button>
+  );
+}
+
+type FilterBadgesProps = {
+  readonly selectedErasLength: number;
+  readonly selectedMetersLength: number;
+  readonly selectedRhymesLength: number;
+  readonly selectedThemesLength: number;
+  readonly erasCount: string;
+  readonly metersCount: string;
+  readonly themesCount: string;
+  readonly rhymesCount: string;
+};
+
+export function FilterBadges({
+  selectedErasLength,
+  selectedMetersLength,
+  selectedRhymesLength,
+  selectedThemesLength,
+  erasCount,
+  metersCount,
+  themesCount,
+  rhymesCount,
+}: FilterBadgesProps) {
+  const badgeClassname = 'text-xs md:text-sm font-normal text-zinc-600 border-zinc-300/50 bg-white';
+  return (
+    <div tabIndex={-1} className="flex flex-wrap gap-1 justify-end">
+      {selectedErasLength > 0 && (
+        <Badge variant="outline" className={badgeClassname}>
+          {erasCount}
+        </Badge>
+      )}
+      {selectedMetersLength > 0 && (
+        <Badge variant="outline" className={badgeClassname}>
+          {metersCount}
+        </Badge>
+      )}
+      {selectedThemesLength > 0 && (
+        <Badge variant="outline" className={badgeClassname}>
+          {themesCount}
+        </Badge>
+      )}
+      {selectedRhymesLength > 0 && (
+        <Badge variant="outline" className={badgeClassname}>
+          {rhymesCount}
+        </Badge>
+      )}
     </div>
   );
 }

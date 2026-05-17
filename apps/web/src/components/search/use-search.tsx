@@ -9,11 +9,10 @@ import {
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
-import { useEffect, useState } from 'react';
-import { SEARCH_RESULTS_STALE_TIME_MS, SEARCH_TEXTS } from '@/constants';
+import { useEffect, useRef, useState } from 'react';
+import { INFINITE_SCROLL_THRESHOLD, SEARCH_RESULTS_STALE_TIME_MS, SEARCH_TEXTS } from '@/constants';
 import { search } from '@/lib/api/client';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
-import { useInfiniteScroll } from './use-infinite-scroll';
 
 type SearchType = (typeof SEARCH_TYPE_VALUES)[number];
 type MatchType = (typeof MATCH_TYPE_VALUES)[number];
@@ -71,6 +70,38 @@ function makeFilterSetter(setter: (v: string | null) => void) {
       : value.trim();
     setter(joined || null);
   };
+}
+
+function useInfiniteScroll(
+  fetchNextPage: () => void,
+  hasNextPage: boolean | undefined,
+  isFetchingNextPage: boolean
+) {
+  const observer = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (loadMoreRef.current) {
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        },
+        { threshold: INFINITE_SCROLL_THRESHOLD }
+      );
+
+      observer.current.observe(loadMoreRef.current);
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
+      }
+    };
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  return { loadMoreRef };
 }
 
 export function useSearch() {

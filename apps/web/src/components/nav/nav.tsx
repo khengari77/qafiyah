@@ -4,7 +4,6 @@ import { Menu } from 'lucide-react';
 import { useState } from 'react';
 import { NAV_LINKS, RESPONSIVE_ICON_SIZE } from '@/constants';
 import { cn } from '@/lib/utils';
-import { Logo } from './logo';
 import { MobileMenu } from './mobile-menu';
 import { NavLinks } from './nav-links';
 
@@ -21,7 +20,15 @@ export function NavWithMenu({ className }: Props) {
       <nav className={cn('w-full z-10', className)}>
         <div className="w-full">
           <div className="flex justify-between items-center gap-8">
-            <Logo />
+            <a href="/" className="flex items-center">
+              <img
+                src="/logo-48x48.svg"
+                height="48"
+                width="48"
+                alt="Logo"
+                className={cn('size-10', 'md:size-12', 'xl:size-14', '2xl:size-16', '4xl:size-20')}
+              />
+            </a>
             <button
               type="button"
               id="menu-toggle"

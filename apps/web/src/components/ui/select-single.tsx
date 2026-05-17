@@ -3,8 +3,8 @@
 import { Check, ChevronDown } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import type { SelectOption } from '@/constants';
 import { cn } from '@/lib/utils';
-import type { SelectOption } from './select-option';
 
 type Props = {
   readonly options: readonly SelectOption[];

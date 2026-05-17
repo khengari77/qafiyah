@@ -1,7 +1,7 @@
 'use client';
 
+import type { SelectOption } from '@/constants';
 import { cn } from '@/lib/utils';
-import type { SelectOption } from './select-option';
 
 type Props = {
   readonly options: readonly [SelectOption, SelectOption];

@@ -1,7 +1,11 @@
 import { PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
-import type { SelectOption } from '@/components/ui/select-option';
 import { env } from '@/env';
 import { toArabicDigits } from '@/lib/arabic';
+
+export type SelectOption = {
+  readonly value: string;
+  readonly label: string;
+};
 
 // Same range as NON_ARABIC_AND_SPACE_REGEX but Basic Arabic block only; used in pure display contexts.
 export const NON_ARABIC_BASIC_REGEX = /[^؀-ۿ\s]/g;

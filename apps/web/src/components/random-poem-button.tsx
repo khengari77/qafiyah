@@ -1,8 +1,32 @@
 'use client';
 
 import { Loader2 } from 'lucide-react';
+import { useState } from 'react';
 import { match } from 'ts-pattern';
-import { useRandomPoem } from '@/hooks/use-random-poem';
+import { API_URL } from '@/constants';
+import { getRandomPoemSlug } from '@/lib/api/client';
+
+type RandomPoemStatus =
+  | { readonly kind: 'idle' }
+  | { readonly kind: 'loading' }
+  | { readonly kind: 'error' };
+
+function useRandomPoem() {
+  const [status, setStatus] = useState<RandomPoemStatus>({ kind: 'idle' });
+
+  const handleClick = async () => {
+    if (status.kind === 'loading') return;
+    setStatus({ kind: 'loading' });
+    try {
+      const slug = await getRandomPoemSlug(API_URL);
+      window.location.href = `/poems/${slug}`;
+    } catch {
+      setStatus({ kind: 'error' });
+    }
+  };
+
+  return { handleClick, status };
+}
 
 export function RandomPoemButton() {
   const { handleClick, status } = useRandomPoem();

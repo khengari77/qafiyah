@@ -3,9 +3,9 @@ import { meterSlugSchema } from '@qafiyah/contracts';
 import * as v from 'valibot';
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchMeterPoemPage, fetchMeters } from '@/lib/api/static/meters';
-import { generatePageNumbers } from '@/lib/api/static/page-numbers';
+import { fetchMeterPoemPage, fetchMeters } from '@/lib/api/static/collections';
 import { toArabicDigits } from '@/lib/arabic';
+import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {

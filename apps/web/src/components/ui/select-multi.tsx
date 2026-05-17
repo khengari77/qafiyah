@@ -4,8 +4,8 @@ import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import { Check, ChevronDown, X } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { SelectOption } from '@/constants';
 import { cn } from '@/lib/utils';
-import type { SelectOption } from './select-option';
 
 type Props = {
   readonly options: readonly SelectOption[];

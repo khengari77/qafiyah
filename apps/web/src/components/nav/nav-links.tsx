@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import type { NavLink } from '@/constants';
-import { NavItem } from './nav-item';
+import { cn } from '@/lib/utils';
 
 type Props = {
   readonly links: readonly NavLink[];
@@ -38,18 +38,31 @@ export function NavLinks({ links, className = '', isMobile = false, onLinkClick 
             : 'flex flex-row gap-4 text-base lg:text-lg 2xl:text-xl'
         }
       >
-        {links.map((link) => (
-          <NavItem
-            key={link.href}
-            href={link.href}
-            external={link.external}
-            isActive={isActive(link.href)}
-            isMobile={isMobile}
-            onClick={handleLinkClick}
-          >
-            {link.name}
-          </NavItem>
-        ))}
+        {links.map((link) => {
+          const active = isActive(link.href);
+          return (
+            <li
+              key={link.href}
+              className={cn(isMobile && 'w-full text-right border-b border-zinc-300/30 pb-2')}
+            >
+              <a
+                tabIndex={isMobile ? -1 : 0}
+                href={link.href}
+                target={link.external ? '_blank' : undefined}
+                className={cn(
+                  isMobile
+                    ? 'block py-2 hover:text-zinc-600'
+                    : 'hover:underline underline-offset-2 duration-200 hover:text-zinc-600',
+                  active &&
+                    (isMobile ? 'text-zinc-900 font-bold underline' : 'text-zinc-900 underline')
+                )}
+                onClick={handleLinkClick}
+              >
+                {link.name}
+              </a>
+            </li>
+          );
+        })}
       </ul>
     </nav>
   );

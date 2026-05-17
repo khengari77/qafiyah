@@ -16,9 +16,7 @@ import {
   THEMES_NOUN_FORMS,
   themesOptions,
 } from '@/constants';
-import { Filters } from './filters';
-import { FilterBadges } from './filters-badges';
-import { FiltersButton } from './filters-button';
+import { FilterBadges, Filters, FiltersButton } from './filters';
 import { ResultList } from './result-list';
 import { SearchInput } from './search-input';
 
