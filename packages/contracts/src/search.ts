@@ -1,10 +1,5 @@
 import { oc } from '@orpc/contract';
-import {
-  MATCH_TYPE_VALUES,
-  MAX_QUERY_LENGTH,
-  SEARCH_TEXTS,
-  SEARCH_TYPE_VALUES,
-} from '@qafiyah/constants';
+import { MATCH_TYPE_VALUES, MAX_QUERY_LENGTH, SEARCH_TYPE_VALUES } from '@qafiyah/constants';
 import * as v from 'valibot';
 import { eraSlugSchema } from './brands/era-slug';
 import { meterSlugSchema } from './brands/meter-slug';
@@ -71,7 +66,7 @@ export const searchInputSchema = v.pipe(
         input.rhymeSlugs.length >
       0;
     return hasText || hasFilters;
-  }, SEARCH_TEXTS.missingQueryOrFilterError)
+  }, 'أدخل كلمة بحث أو اختر فلترًا واحدًا على الأقل')
 );
 
 const searchContract = oc

@@ -1,7 +1,7 @@
 import { OpenAPIHandler } from '@orpc/openapi/fetch';
 import { OpenAPIReferencePlugin } from '@orpc/openapi/plugins';
 import { experimental_ValibotToJsonSchemaConverter as ValibotToJsonSchemaConverter } from '@orpc/valibot';
-import { API_V1_PREFIX, GITHUB_REPO_URL, HTTP_NOT_FOUND, SITE_NAME_EN } from '@qafiyah/constants';
+import { API_V1_PREFIX, GITHUB_REPO_URL } from '@qafiyah/constants';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
@@ -10,7 +10,9 @@ import {
   API_OPENAPI_SPEC_PATH,
   CORS_MAX_AGE_SECONDS,
   HTTP_INTERNAL_SERVER_ERROR,
+  HTTP_NOT_FOUND,
   ORPC_BYPASS_PATHS,
+  SITE_NAME_EN,
 } from './constants';
 import { enrichContext, recordError } from './lib/logger/builder';
 import type { DomainFields } from './lib/logger/types';

@@ -1,6 +1,6 @@
-import { DEV_WEB_PORT, PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
+import { PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
 
-const DEV_WEB_URL = `http://localhost:${DEV_WEB_PORT}`;
+const DEV_WEB_URL = `http://localhost:4321`;
 
 import { env } from '@/env';
 

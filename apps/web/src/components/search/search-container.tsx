@@ -1,6 +1,5 @@
 'use client';
 
-import { SEARCH_TEXTS } from '@qafiyah/constants';
 import { useSearch } from '@/components/search/hooks/use-search';
 import { getBadgeCount, getNoResultsText, getResultText } from '@/components/search/search-format';
 import {
@@ -16,6 +15,7 @@ import {
   ERAS_NOUN_FORMS,
   METERS_NOUN_FORMS,
   RHYMES_NOUN_FORMS,
+  SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
 } from '@/constants/search-texts';
 import { Filters } from './filters';

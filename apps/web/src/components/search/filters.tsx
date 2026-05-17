@@ -1,4 +1,3 @@
-import { SEARCH_TEXTS } from '@qafiyah/constants';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import { BinaryToggleButton } from '@/components/ui/toggle-button';
@@ -6,6 +5,7 @@ import {
   ERAS_NOUN_FORMS,
   METERS_NOUN_FORMS,
   RHYMES_NOUN_FORMS,
+  SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
 } from '@/constants/search-texts';
 
