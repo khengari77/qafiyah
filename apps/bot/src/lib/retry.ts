@@ -1,4 +1,4 @@
-import { INITIAL_RETRY_DELAY_MS, MAX_RETRY_ATTEMPTS } from '../constants';
+import { HTTP_RATE_LIMIT_STATUS, HTTP_RATE_LIMIT_TEXT, INITIAL_RETRY_DELAY_MS, MAX_RETRY_ATTEMPTS } from '../constants';
 import { err, ok, type Result, TerminalError } from './result';
 
 type RetryClassification = 'terminal' | 'rate-limit' | 'transient';
@@ -6,7 +6,7 @@ type RetryClassification = 'terminal' | 'rate-limit' | 'transient';
 function classifyRetry(error: Error): RetryClassification {
   if (error instanceof TerminalError) return 'terminal';
   const message = error.message.toLowerCase();
-  if (message.includes('429') || message.includes('too many requests')) return 'rate-limit';
+  if (message.includes(HTTP_RATE_LIMIT_STATUS) || message.includes(HTTP_RATE_LIMIT_TEXT)) return 'rate-limit';
   return 'transient';
 }
 

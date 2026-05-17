@@ -1,10 +1,11 @@
 import { API_RANDOM_POEM_PATH, MAX_TWEET_LENGTH, PROD_API_URL } from '@qafiyah/constants';
+import { POEM_FORMAT_OPTION } from '../constants';
 import { type Result, TerminalError } from './result';
 import { withRetry } from './retry';
 
 export async function fetchFormattedPoem(): Promise<Result<string>> {
   return await withRetry(async () => {
-    const res = await fetch(`${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=lines`);
+    const res = await fetch(`${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=${POEM_FORMAT_OPTION}`);
     if (!res.ok) {
       throw new Error(`API returned status ${res.status}`);
     }
