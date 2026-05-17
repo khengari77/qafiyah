@@ -11,9 +11,10 @@
     "lint": "biome check --write .",
     "format": "biome format --write . && prettier --write \"**/*.{md,mdx}\"",
     "test": "turbo run test",
+    "smoke": "bun scripts/smoke-test.ts",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
-    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge && bun audit",
+    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge && bun audit && bun run smoke",
     "optimize:images": "bun scripts/optimize-images.ts"
   },
   "devDependencies": {

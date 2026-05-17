@@ -108,10 +108,9 @@ describe('shouldEmit', () => {
     expect(shouldEmit(handle)).toBe(false);
   });
 
-  it('emits empty-result responses in production', () => {
+  it('emits empty-result responses in production', async () => {
     const handle = makeHandle('production');
     recordResponse(handle, 200, 50);
-    // Use enrichContext indirectly via a fake context to set results_count=0.
     const app = new Hono<AppContext>();
     app.use(async (c, next) => {
       c.set('logEvent', handle);
@@ -121,13 +120,12 @@ describe('shouldEmit', () => {
       enrichContext(c, { results_count: 0 });
       return c.json({});
     });
-    return Promise.resolve(app.fetch(new Request('http://localhost/x'))).then(() => {
-      vi.spyOn(Math, 'random').mockReturnValue(0.99);
-      expect(shouldEmit(handle)).toBe(true);
-    });
+    await app.fetch(new Request('http://localhost/x'));
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    expect(shouldEmit(handle)).toBe(true);
   });
 
-  it('samples at 5% in production for ordinary responses', () => {
+  it('samples at 5% in production for ordinary responses', async () => {
     const handle = makeHandle('production');
     recordResponse(handle, 200, 10);
     const app = new Hono<AppContext>();
@@ -139,16 +137,15 @@ describe('shouldEmit', () => {
       enrichContext(c, { results_count: 3 });
       return c.json({});
     });
-    return Promise.resolve(app.fetch(new Request('http://localhost/x'))).then(() => {
-      vi.spyOn(Math, 'random').mockReturnValue(0.049);
-      expect(shouldEmit(handle)).toBe(true);
+    await app.fetch(new Request('http://localhost/x'));
+    vi.spyOn(Math, 'random').mockReturnValue(0.049);
+    expect(shouldEmit(handle)).toBe(true);
 
-      vi.spyOn(Math, 'random').mockReturnValue(0.05);
-      expect(shouldEmit(handle)).toBe(false);
+    vi.spyOn(Math, 'random').mockReturnValue(0.05);
+    expect(shouldEmit(handle)).toBe(false);
 
-      vi.spyOn(Math, 'random').mockReturnValue(0.9);
-      expect(shouldEmit(handle)).toBe(false);
-    });
+    vi.spyOn(Math, 'random').mockReturnValue(0.9);
+    expect(shouldEmit(handle)).toBe(false);
   });
 
   it('defaults missing status_code/duration_ms to passing thresholds in production', () => {
@@ -164,7 +161,7 @@ describe('toLogEvent', () => {
     expect(toLogEvent(handle)).toBeNull();
   });
 
-  it('projects a completed event without error', () => {
+  it('projects a completed event without error', async () => {
     const handle = makeHandle();
     recordResponse(handle, 200, 42);
     const app = new Hono<AppContext>();
@@ -176,19 +173,18 @@ describe('toLogEvent', () => {
       enrichContext(c, { poet_id: 'p1', results_count: 7 });
       return c.json({});
     });
-    return Promise.resolve(app.fetch(new Request('http://localhost/x'))).then(() => {
-      expect(toLogEvent(handle)).toEqual({
-        request_id: 'req-1',
-        method: 'GET',
-        path: '/v1/poets',
-        timestamp: '2026-05-16T00:00:00.000Z',
-        service: { name: 'qafiyah-api', environment: 'development' },
-        kind: 'completed',
-        status_code: 200,
-        duration_ms: 42,
-        poet_id: 'p1',
-        results_count: 7,
-      });
+    await app.fetch(new Request('http://localhost/x'));
+    expect(toLogEvent(handle)).toEqual({
+      request_id: 'req-1',
+      method: 'GET',
+      path: '/v1/poets',
+      timestamp: '2026-05-16T00:00:00.000Z',
+      service: { name: 'qafiyah-api', environment: 'development' },
+      kind: 'completed',
+      status_code: 200,
+      duration_ms: 42,
+      poet_id: 'p1',
+      results_count: 7,
     });
   });
 
