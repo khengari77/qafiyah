@@ -19,7 +19,7 @@ import '../styles/globals.css';
 interface Props {
   title?: string;
   description?: string;
-  keywords?: string | string[];
+  keywords?: string | readonly string[];
   canonical?: string;
   ogTitle?: string;
   ogDescription?: string;
@@ -48,7 +48,7 @@ const resolvedOgTitle = ogTitle ?? title;
 const resolvedOgDescription = ogDescription ?? description;
 const resolvedTwitterTitle = twitterTitle ?? title;
 const resolvedTwitterDescription = twitterDescription ?? description;
-const keywordsStr = Array.isArray(keywords) ? keywords.join(', ') : keywords;
+const keywordsStr = typeof keywords === 'string' ? keywords : keywords.join(', ');
 const robotsContent = robotsIndex ? 'index, follow' : 'noindex, nofollow';
 const htmlClass = isDev ? 'debug-screens' : '';
 ---

@@ -115,7 +115,7 @@ export function PoemDisplay({
           </div>
         </header>
 
-        <div className="relative flex flex-col justify-between items-center bg-white gap-4 py-10 md:py-8 lg:py-16 px-4 rounded-2xl w-full md:w-10/12 xl:w-9/12 shadow-[inset_0px_0px_0px_1px_rgba(0,_0,_0,_0.09)]">
+        <div className="relative flex flex-col justify-between items-center bg-white gap-4 py-10 md:py-8 lg:py-16 px-4 rounded-2xl w-full md:w-10/12 xl:w-9/12 shadow-[inset_0px_0px_0px_1px_rgba(0,0,0,0.09)]">
           <div className="flex items-center gap-4 border rounded-md border-zinc-300/50 bg-zinc-50/30">
             <button
               type="button"
