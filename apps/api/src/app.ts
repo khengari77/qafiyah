@@ -18,8 +18,7 @@ import {
   ORPC_BYPASS_PATHS,
   SITE_NAME_EN,
 } from './constants';
-import { enrichContext, recordError } from './lib/logger/builder';
-import type { DomainFields } from './lib/logger/types';
+import { type DomainFields, enrichContext, recordError } from './lib/logger';
 import { makeProblem, type ProblemCode, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
 import { serveEmojiFavicon } from './middlewares/favicon.middleware';

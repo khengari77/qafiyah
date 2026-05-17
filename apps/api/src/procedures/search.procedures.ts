@@ -1,10 +1,55 @@
 import { SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '@qafiyah/constants';
+import type { EraSlug, MeterSlug, PoemSlug, PoetSlug } from '@qafiyah/contracts';
 import { searchQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
 import { pub } from './base';
 import { buildPagination } from './envelope';
-import { toPoemSearchResult } from './mappers/poem-search-result';
-import { toPoetSearchResult } from './mappers/poet-search-result';
+
+type SubRef<TSlug> = { readonly name: string; readonly slug: TSlug };
+
+type PoemSearchResult = {
+  readonly type: 'poem';
+  readonly title: string;
+  readonly slug: PoemSlug;
+  readonly snippet: string;
+  readonly poet: SubRef<PoetSlug>;
+  readonly meter: SubRef<MeterSlug>;
+  readonly era: SubRef<EraSlug>;
+  readonly relevance: number;
+};
+
+type PoetSearchResult = {
+  readonly type: 'poet';
+  readonly name: string;
+  readonly slug: PoetSlug;
+  readonly bio: string;
+  readonly era: SubRef<EraSlug>;
+  readonly relevance: number;
+};
+
+function toPoemSearchResult(row: searchQueries.PoemsSearchRow): PoemSearchResult {
+  return {
+    type: 'poem',
+    title: row.poemTitle,
+    slug: row.poemSlug,
+    snippet: row.poemSnippet,
+    poet: { name: row.poetName, slug: row.poetSlug },
+    meter: { name: row.poemMeter, slug: row.poemMeterSlug },
+    era: { name: row.poetEra, slug: row.poetEraSlug },
+    relevance: row.relevance,
+  };
+}
+
+function toPoetSearchResult(row: searchQueries.PoetsSearchRow): PoetSearchResult {
+  return {
+    type: 'poet',
+    name: row.poetName,
+    slug: row.poetSlug,
+    bio: row.poetBio,
+    era: { name: row.poetEra, slug: row.poetEraSlug },
+    relevance: row.relevance,
+  };
+}
 
 function nonEmpty<T>(arr: readonly T[]): readonly T[] | null {
   return arr.length > 0 ? arr : null;

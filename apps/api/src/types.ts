@@ -1,6 +1,6 @@
 import type { DbClient } from '@qafiyah/db';
 import type { Bindings } from '@/env';
-import type { LogHandle } from '@/lib/logger/builder';
+import type { LogHandle } from '@/lib/logger';
 
 export type { Bindings };
 

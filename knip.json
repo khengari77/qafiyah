@@ -3,7 +3,7 @@
   "tags": ["-lintignore"],
   "ignoreWorkspaces": ["packages/typescript"],
   "ignoreBinaries": ["pkill"],
-  "ignoreFiles": ["apps/web/worker-configuration.d.ts", "apps/web/src/env.d.ts"],
+  "ignoreFiles": ["apps/web/worker-configuration.d.ts"],
   "workspaces": {
     ".": {}
   }

@@ -2,7 +2,7 @@ import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { themesQueries } from '@qafiyah/db';
 import { pub } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
-import { toPoemListItem } from './mappers/poem-list-item';
+import { toPoemListItem } from './list-item.mapper';
 
 export const listThemes = pub.themes.list.handler(async ({ context }) => {
   const themes = await themesQueries.listThemes(context.db);

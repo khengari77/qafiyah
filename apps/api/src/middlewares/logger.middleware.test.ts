@@ -1,7 +1,7 @@
 import { API_V1_PREFIX } from '@qafiyah/constants';
 import { Hono } from 'hono';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { enrichContext } from '@/lib/logger/builder';
+import { enrichContext } from '@/lib/logger';
 import type { AppContext } from '@/types';
 import { API_OPENAPI_DOCS_PATH, API_OPENAPI_SPEC_PATH } from '../constants';
 import { loggerMiddleware } from './logger.middleware';

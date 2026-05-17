@@ -7,8 +7,9 @@ import {
   type LogHandle,
   recordError,
   recordResponse,
-} from './builder';
-import { shouldEmit, toLogEvent } from './emit';
+  shouldEmit,
+  toLogEvent,
+} from './logger';
 
 function makeHandle(env = 'development'): LogHandle {
   return createLogHandle({

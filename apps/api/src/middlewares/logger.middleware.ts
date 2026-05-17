@@ -1,8 +1,7 @@
 import { API_V1_PREFIX } from '@qafiyah/constants';
 import { createMiddleware } from 'hono/factory';
 import { API_OPENAPI_DOCS_PATH, API_OPENAPI_SPEC_PATH, API_SERVICE_NAME } from '../constants';
-import { createLogHandle, recordResponse } from '../lib/logger/builder';
-import { shouldEmit, toLogEvent } from '../lib/logger/emit';
+import { createLogHandle, recordResponse, shouldEmit, toLogEvent } from '../lib/logger';
 import type { AppContext } from '../types';
 
 const LOG_SKIP_PREFIX = `${API_V1_PREFIX}${API_OPENAPI_DOCS_PATH}`;

@@ -2,7 +2,7 @@ import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { poetsQueries } from '@qafiyah/db';
 import { pub } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
-import { toPoemListItem } from './mappers/poem-list-item';
+import { toPoemListItem } from './list-item.mapper';
 
 export const listPoets = pub.poets.list.handler(async ({ context, input, errors }) => {
   const result = await poetsQueries.listPoets(context.db, input.page);
