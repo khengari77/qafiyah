@@ -1,5 +1,5 @@
+import { SITE_NAME_AR } from '@qafiyah/constants';
 import type { PoemSlug } from '@qafiyah/contracts';
-import { SITE_NAME_AR } from '@/constants/brand';
 import { SITE_URL } from '@/constants/globals/urls';
 import {
   POEM_DEFAULT_TITLE,

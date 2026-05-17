@@ -88,7 +88,7 @@ describe('getRandomPoemLines', () => {
     await expect(getRandomPoemLines(mockDb)).rejects.toThrow();
   });
 
-  it('throws when excerpt exceeds MAX_EXCERPT_LENGTH', async () => {
+  it('throws when excerpt exceeds MAX_TWEET_LENGTH', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const longLine = 'أ'.repeat(141);
     const poemData = {
@@ -100,7 +100,7 @@ describe('getRandomPoemLines', () => {
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
     });
 
-    await expect(getRandomPoemLines(mockDb)).rejects.toThrow('exceeds MAX_EXCERPT_LENGTH');
+    await expect(getRandomPoemLines(mockDb)).rejects.toThrow('exceeds MAX_TWEET_LENGTH');
   });
 });
 

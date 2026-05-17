@@ -1,4 +1,4 @@
-import { SITE_NAME_AR } from './brand';
+import { SITE_NAME_AR } from '@qafiyah/constants';
 
 export const OPEN_GRAPH_URL_PATH = '/open-graph-white.png';
 export const TWITTER_SUMMARY_CARD_IMAGE_PATH = '/twitter-summary-card-white.png';

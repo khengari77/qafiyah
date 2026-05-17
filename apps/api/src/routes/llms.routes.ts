@@ -1,7 +1,13 @@
-import { API_V1_PREFIX, GITHUB_REPO_URL, PROD_API_URL } from '@qafiyah/constants';
+import {
+  API_V1_PREFIX,
+  GITHUB_REPO_URL,
+  PROD_API_URL,
+  PROD_SITE_URL,
+  SITE_NAME_EN,
+} from '@qafiyah/constants';
 import { Hono } from 'hono';
 import type { AppContext } from '@/types';
-import { LLMS_CACHE_CONTROL, PROD_SITE_URL, SITE_NAME_EN } from '../constants';
+import { LLMS_CACHE_CONTROL } from '../constants';
 
 const BASE = `${PROD_API_URL}${API_V1_PREFIX}`;
 

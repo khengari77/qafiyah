@@ -1,4 +1,4 @@
-import { MAX_TWEET_LENGTH } from '../constants';
+import { MAX_TWEET_LENGTH } from '@qafiyah/constants';
 import { env } from '../env';
 import { fetchFormattedPoem } from './fetch-poem';
 import { initializeTwitterClient, postTweet } from './twitter';
