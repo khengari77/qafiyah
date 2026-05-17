@@ -5,7 +5,7 @@
 import { Hono } from 'hono';
 import { describe, expect, it } from 'vitest';
 import type { AppContext } from '@/types';
-import serveEmojiFavicon from './favicon.middleware';
+import { serveEmojiFavicon } from './favicon.middleware';
 
 describe('favicon.middleware', () => {
   it('should serve favicon as SVG when path is /favicon.ico', async () => {

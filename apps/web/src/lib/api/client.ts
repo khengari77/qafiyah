@@ -1,5 +1,6 @@
 import { API_RANDOM_POEM_PATH } from '@qafiyah/constants';
-import type { PoemSlug } from '@qafiyah/contracts';
+import { type PoemSlug, poemSlugSchema } from '@qafiyah/contracts';
+import * as v from 'valibot';
 import { apiBrowser } from './rpc';
 import type { PoemsSearchEnvelope, PoetsSearchEnvelope } from './types';
 
@@ -38,5 +39,5 @@ export async function getRandomPoemSlug(baseUrl: string): Promise<PoemSlug> {
   if (!slug) {
     throw new Error('Random poem API returned empty slug');
   }
-  return slug as PoemSlug;
+  return v.parse(poemSlugSchema, slug);
 }

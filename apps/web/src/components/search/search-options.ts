@@ -5,8 +5,7 @@ import {
   SEARCH_TEXTS,
   THEMES_OPTIONS,
 } from '@qafiyah/constants';
-
-type SelectOption = { readonly value: string; readonly label: string };
+import type { SelectOption } from '@/components/ui/select-option';
 
 export const searchTypeOptions = [
   { value: 'poems', label: SEARCH_TEXTS.poemsSearchTypeLabel },

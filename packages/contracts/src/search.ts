@@ -6,15 +6,17 @@ import {
   SEARCH_TYPE_VALUES,
 } from '@qafiyah/constants';
 import * as v from 'valibot';
-import { inputValidationError, pageParam, pagination, subRef } from './_shared';
-import {
-  eraSlugSchema,
-  meterSlugSchema,
-  poemSlugSchema,
-  poetSlugSchema,
-  rhymeSlugSchema,
-  themeSlugSchema,
-} from './brands';
+import { eraSlugSchema } from './brands/era-slug';
+import { meterSlugSchema } from './brands/meter-slug';
+import { poemSlugSchema } from './brands/poem-slug';
+import { poetSlugSchema } from './brands/poet-slug';
+import { rhymeSlugSchema } from './brands/rhyme-slug';
+import { themeSlugSchema } from './brands/theme-slug';
+import { cleanArabicQuery } from './clean-arabic-query';
+import { inputValidationError } from './shared/errors';
+import { pageParam } from './shared/inputs';
+import { subRef } from './shared/refs';
+import { pagination } from './shared/responses';
 
 const meterSlugsParam = v.optional(v.array(meterSlugSchema), []);
 const eraSlugsParam = v.optional(v.array(eraSlugSchema), []);
@@ -43,7 +45,15 @@ const poetSearchResult = v.object({
 
 export const searchInputSchema = v.pipe(
   v.object({
-    q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])), ''),
+    q: v.optional(
+      v.pipe(
+        v.string(),
+        v.maxLength(MAX_QUERY_LENGTH),
+        v.examples(['المتنبي']),
+        v.transform(cleanArabicQuery)
+      ),
+      ''
+    ),
     searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
     page: v.optional(pageParam, '1'),
     matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
@@ -53,7 +63,7 @@ export const searchInputSchema = v.pipe(
     themeSlugs: themeSlugsParam,
   }),
   v.check((input) => {
-    const hasText = input.q.trim().length > 0;
+    const hasText = input.q.length > 0;
     const hasFilters =
       input.meterSlugs.length +
         input.eraSlugs.length +

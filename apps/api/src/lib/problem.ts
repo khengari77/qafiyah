@@ -2,7 +2,7 @@ import { PROD_DOMAIN } from '@qafiyah/constants';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 
-type ProblemCode =
+export type ProblemCode =
   | 'NOT_FOUND'
   | 'POEM_PARSE_ERROR'
   | 'INPUT_VALIDATION_FAILED'
@@ -51,11 +51,13 @@ const TITLES = {
   SERVICE_UNAVAILABLE: 'Service unavailable',
 } as const satisfies Readonly<Record<ProblemCode, string>>;
 
-function titleForCode(code: string, fallback: string): string {
-  if (code in TITLES) {
-    return TITLES[code as ProblemCode];
-  }
-  return fallback;
+function titleForCode(code: ProblemCode): string {
+  return TITLES[code];
+}
+
+const PROBLEM_CODES = new Set(Object.keys(TITLES) as readonly ProblemCode[]);
+function asProblemCode(raw: string): ProblemCode {
+  return PROBLEM_CODES.has(raw as ProblemCode) ? (raw as ProblemCode) : 'INTERNAL_SERVER_ERROR';
 }
 
 function asStatus(n: number): ContentfulStatusCode {
@@ -66,7 +68,7 @@ function asStatus(n: number): ContentfulStatusCode {
 }
 
 export function makeProblem(args: {
-  readonly code: string;
+  readonly code: ProblemCode;
   readonly status: number;
   readonly detail?: string;
   readonly title?: string;
@@ -75,7 +77,7 @@ export function makeProblem(args: {
 }): ProblemDetail {
   const base = {
     type: codeToType(args.code),
-    title: args.title ?? titleForCode(args.code, args.code),
+    title: args.title ?? titleForCode(args.code),
     status: args.status,
     code: args.code,
     ...(args.instance !== undefined && { instance: args.instance }),
@@ -142,7 +144,7 @@ function orpcErrorToProblem(
 ): ProblemDetail {
   const error = isObject(body) ? body : {};
   const rawCode = error['code'];
-  const code = typeof rawCode === 'string' ? rawCode : 'INTERNAL_SERVER_ERROR';
+  const code = asProblemCode(typeof rawCode === 'string' ? rawCode : 'INTERNAL_SERVER_ERROR');
   const rawMessage = error['message'];
   const message = typeof rawMessage === 'string' ? rawMessage : undefined;
   const validationErrors = extractValidationErrors(error['data']);

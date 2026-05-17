@@ -1,4 +1,4 @@
-import { pub } from './procedures/_base';
+import { pub } from './procedures/base';
 import { listEraPoems, listEras } from './procedures/eras.procedures';
 import { listMeterPoems, listMeters } from './procedures/meters.procedures';
 import { getBySlug, listSlugs } from './procedures/poems.procedures';

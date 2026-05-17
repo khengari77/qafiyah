@@ -1,4 +1,4 @@
-import { HTTP_SERVICE_UNAVAILABLE } from '@qafiyah/constants';
+import { HTTP_INTERNAL_SERVER_ERROR, HTTP_SERVICE_UNAVAILABLE } from '@qafiyah/constants';
 import { createDb } from '@qafiyah/db';
 import { createMiddleware } from 'hono/factory';
 import { parseBindings } from '@/env';
@@ -6,13 +6,26 @@ import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
 
 export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
+  let db: ReturnType<typeof createDb>;
   try {
     const { DATABASE_URL } = parseBindings(c.env);
-    const db = createDb(DATABASE_URL);
+    db = createDb(DATABASE_URL);
+  } catch (error) {
+    console.error('DB middleware: invalid configuration:', error);
+    return sendProblem(
+      c,
+      makeProblem({
+        code: 'INTERNAL_SERVER_ERROR',
+        status: HTTP_INTERNAL_SERVER_ERROR,
+        detail: 'Server misconfigured',
+      })
+    );
+  }
+  try {
     c.set('db', db);
     return await next();
   } catch (error) {
-    console.error('Database error:', error);
+    console.error('DB middleware: connection error:', error);
     return sendProblem(
       c,
       makeProblem({

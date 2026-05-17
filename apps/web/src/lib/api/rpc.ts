@@ -3,7 +3,7 @@ import type { ContractRouterClient, InferContractRouterOutputs } from '@orpc/con
 import { OpenAPILink } from '@orpc/openapi-client/fetch';
 import { API_V1_PREFIX } from '@qafiyah/constants';
 import { type AppContract, contract } from '@qafiyah/contracts';
-import { API_URL } from '@/constants/globals';
+import { API_URL } from '@/constants/globals/urls';
 import { env } from '@/env';
 
 const SSR_BASE_URL = `${env.BUILD_API_URL ?? API_URL}${API_V1_PREFIX}`;

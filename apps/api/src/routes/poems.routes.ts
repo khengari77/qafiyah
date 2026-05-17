@@ -1,29 +1,37 @@
 import {
+  HTTP_BAD_REQUEST,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_NOT_FOUND,
   NO_STORE_CACHE_CONTROL,
 } from '@qafiyah/constants';
-import { poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import * as v from 'valibot';
 import { makeProblem, sendProblem } from '@/lib/problem';
+import { getRandomPoemText } from '@/services/random-poem';
 import type { AppContext } from '@/types';
+
+const optionSchema = v.optional(v.picklist(['slug', 'lines'] as const), 'slug');
 
 const app = new Hono<AppContext>()
   .get('/random', async (c) => {
-    const option = c.req.query('option') ?? 'slug';
-    const db = c.get('db');
+    const parsed = v.safeParse(optionSchema, c.req.query('option'));
+    if (!parsed.success) {
+      return sendProblem(
+        c,
+        makeProblem({
+          code: 'BAD_REQUEST',
+          status: HTTP_BAD_REQUEST,
+          detail: `Invalid ?option value (expected 'slug' or 'lines')`,
+        })
+      );
+    }
 
     c.header('Cache-Control', NO_STORE_CACHE_CONTROL);
     c.header('Content-Type', 'text/plain; charset=utf-8');
 
-    if (option === 'lines') {
-      const content = await poemsQueries.getRandomPoemLines(db);
-      return c.text(content);
-    }
-
-    const slug = await poemsQueries.getRandomPoemSlug(db);
-    return c.text(slug);
+    const body = await getRandomPoemText(c.get('db'), parsed.output);
+    return c.text(body);
   })
   .onError((error, c) => {
     if (error instanceof HTTPException) {

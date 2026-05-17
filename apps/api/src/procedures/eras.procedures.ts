@@ -1,13 +1,18 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { erasQueries } from '@qafiyah/db';
-import { pub } from './_base';
-import { listEnvelope, listEnvelopeWithMeta } from './_envelope';
-import { toPoemListItem } from './_mappers';
+import { pub } from './base';
+import { listEnvelope, listEnvelopeWithMeta } from './envelope';
+import { toPoemListItem } from './mappers/poem-list-item';
 
 export const listEras = pub.eras.list.handler(async ({ context }) => {
   const eras = await erasQueries.listEras(context.db);
   context.log?.({ result_count: eras.length });
-  return listEnvelope(eras, eras.length, 1, eras.length || 1);
+  return listEnvelope({
+    data: eras,
+    totalItems: eras.length,
+    page: 1,
+    pageSize: eras.length || 1,
+  });
 });
 
 export const listEraPoems = pub.eras.listPoems.handler(async ({ context, input, errors }) => {
@@ -20,11 +25,11 @@ export const listEraPoems = pub.eras.listPoems.handler(async ({ context, input, 
     page_size: POEMS_PER_PAGE,
     total_pages: result.totalPages,
   });
-  return listEnvelopeWithMeta(
-    result.poems.map(toPoemListItem),
-    result.total,
-    input.page,
-    POEMS_PER_PAGE,
-    result.parent
-  );
+  return listEnvelopeWithMeta({
+    data: result.poems.map(toPoemListItem),
+    totalItems: result.total,
+    page: input.page,
+    pageSize: POEMS_PER_PAGE,
+    meta: result.parent,
+  });
 });

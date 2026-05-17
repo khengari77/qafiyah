@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asEraSlug } from '../utils/brand';
-import { fakeDb, makeChain } from './_test-utils';
 import { listEraPoems, listEras } from './eras.queries';
+import { fakeDb, makeChain } from './test-utils';
 
 describe('listEras', () => {
   it('returns rows sorted by ERAS_SORT_ORDER', async () => {

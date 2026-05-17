@@ -1,14 +1,9 @@
 import { oc } from '@orpc/contract';
-import {
-  inputValidationError,
-  listResponse,
-  listResponseWithMeta,
-  parentMeta,
-  poemListItem,
-  slugAndPageInput,
-  statRow,
-} from './_shared';
-import { eraSlugSchema } from './brands';
+import { eraSlugSchema } from './brands/era-slug';
+import { inputValidationError } from './shared/errors';
+import { slugAndPageInput } from './shared/inputs';
+import { parentMeta, poemListItem, statRow } from './shared/refs';
+import { listResponse, listResponseWithMeta } from './shared/responses';
 
 const listErasContract = oc
   .route({ method: 'GET', path: '/eras' })

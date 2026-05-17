@@ -9,8 +9,8 @@ import {
   UNKNOWN_POET_NAME,
 } from '@qafiyah/constants';
 import type { PoemSlug } from '@qafiyah/contracts';
-import { SITE_URL } from '@/constants/globals';
-import { fetchPoem } from '@/lib/api/static';
+import { SITE_URL } from '@/constants/globals/urls';
+import { fetchPoem } from '@/lib/api/static/poems';
 import type { Poem } from '@/lib/api/types';
 import { flattenVerses } from '@/lib/flatten-verses';
 

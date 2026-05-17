@@ -5,14 +5,10 @@ import { Check, ChevronDown, X } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-
-type Option = {
-  readonly value: string;
-  readonly label: string;
-};
+import type { SelectOption } from './select-option';
 
 type Props = {
-  readonly options: readonly Option[];
+  readonly options: readonly SelectOption[];
   readonly value: string | readonly string[];
   readonly onChange: (value: string | string[]) => void;
   readonly placeholderNounForms: ArabicNounForms;
@@ -46,7 +42,7 @@ export function SelectMulti({
   };
 
   const toggleOption = useCallback(
-    (option: Option) => {
+    (option: SelectOption) => {
       if (multiple) {
         if (selectedValues.includes(option.value)) {
           onChange(selectedValues.filter((v) => v !== option.value));

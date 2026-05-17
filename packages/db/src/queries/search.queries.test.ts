@@ -6,13 +6,20 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createDb, type DbClient } from '../client';
 import { asEraSlug, asMeterSlug, asRhymeSlug, asThemeSlug } from '../utils/brand';
-import { fakeDb } from './_test-utils';
 import { listPoemsByFilters, listPoetsByFilters, searchPoems, searchPoets } from './search.queries';
+import { fakeDb } from './test-utils';
 
 const TEST_DATABASE_URL = process.env['TEST_DATABASE_URL'] ?? '';
 const UUID_REGEX = /^[0-9a-f-]{36}$/;
 const skip = TEST_DATABASE_URL === '';
 const describeIfDb = skip ? describe.skip : describe;
+
+const EMPTY_FILTERS = {
+  meterSlugs: null,
+  eraSlugs: null,
+  themeSlugs: null,
+  rhymeSlugs: null,
+} as const;
 
 describeIfDb('filter-only search queries (integration)', () => {
   let db: DbClient;
@@ -26,7 +33,11 @@ describeIfDb('filter-only search queries (integration)', () => {
   });
 
   it('listPoemsByFilters: by era slug returns rows + non-zero total', async () => {
-    const result = await listPoemsByFilters(db, 1, null, [asEraSlug('abbasid')], null, null);
+    const result = await listPoemsByFilters({
+      db,
+      page: 1,
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
+    });
     expect(result.totalCount).toBeGreaterThan(0);
     expect(result.rows.length).toBeGreaterThan(0);
     expect(result.rows.length).toBeLessThanOrEqual(5);
@@ -40,39 +51,53 @@ describeIfDb('filter-only search queries (integration)', () => {
   });
 
   it('listPoemsByFilters: numeric ID-string is also accepted as a slug', async () => {
-    const bySlug = await listPoemsByFilters(db, 1, null, [asEraSlug('abbasid')], null, null);
-    const byId = await listPoemsByFilters(db, 1, null, [asEraSlug('2')], null, null);
+    const bySlug = await listPoemsByFilters({
+      db,
+      page: 1,
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
+    });
+    const byId = await listPoemsByFilters({
+      db,
+      page: 1,
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('2')] },
+    });
     expect(byId.totalCount).toBe(bySlug.totalCount);
   });
 
   it('listPoemsByFilters: combining filters narrows results', async () => {
-    const eraOnly = await listPoemsByFilters(db, 1, null, [asEraSlug('abbasid')], null, null);
-    const eraAndMeter = await listPoemsByFilters(
+    const eraOnly = await listPoemsByFilters({
       db,
-      1,
-      [asMeterSlug('alkamil')],
-      [asEraSlug('abbasid')],
-      null,
-      null
-    );
+      page: 1,
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
+    });
+    const eraAndMeter = await listPoemsByFilters({
+      db,
+      page: 1,
+      filters: {
+        ...EMPTY_FILTERS,
+        meterSlugs: [asMeterSlug('alkamil')],
+        eraSlugs: [asEraSlug('abbasid')],
+      },
+    });
     expect(eraAndMeter.totalCount).toBeLessThanOrEqual(eraOnly.totalCount);
   });
 
   it('listPoemsByFilters: unknown filter yields zero results', async () => {
-    const result = await listPoemsByFilters(
+    const result = await listPoemsByFilters({
       db,
-      1,
-      null,
-      [asEraSlug('__nonexistent__')],
-      null,
-      null
-    );
+      page: 1,
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('__nonexistent__')] },
+    });
     expect(result.totalCount).toBe(0);
     expect(result.rows).toEqual([]);
   });
 
   it('listPoetsByFilters: by era slug returns rows', async () => {
-    const result = await listPoetsByFilters(db, 1, [asEraSlug('abbasid')]);
+    const result = await listPoetsByFilters({
+      db,
+      page: 1,
+      eraSlugs: [asEraSlug('abbasid')],
+    });
     expect(result.totalCount).toBeGreaterThan(0);
     expect(result.rows.length).toBeGreaterThan(0);
     expect(result.rows.length).toBeLessThanOrEqual(10);
@@ -84,14 +109,26 @@ describeIfDb('filter-only search queries (integration)', () => {
   });
 
   it('listPoetsByFilters: no filter returns all poets', async () => {
-    const all = await listPoetsByFilters(db, 1, null);
-    const filtered = await listPoetsByFilters(db, 1, [asEraSlug('abbasid')]);
+    const all = await listPoetsByFilters({ db, page: 1, eraSlugs: null });
+    const filtered = await listPoetsByFilters({
+      db,
+      page: 1,
+      eraSlugs: [asEraSlug('abbasid')],
+    });
     expect(all.totalCount).toBeGreaterThanOrEqual(filtered.totalCount);
   });
 
   it('listPoemsByFilters: pagination', async () => {
-    const page1 = await listPoemsByFilters(db, 1, null, [asEraSlug('abbasid')], null, null);
-    const page2 = await listPoemsByFilters(db, 2, null, [asEraSlug('abbasid')], null, null);
+    const page1 = await listPoemsByFilters({
+      db,
+      page: 1,
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
+    });
+    const page2 = await listPoemsByFilters({
+      db,
+      page: 2,
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
+    });
     if (page1.totalCount > 5) {
       expect(page2.rows.length).toBeGreaterThan(0);
       const page1Slugs = new Set(page1.rows.map((r) => r.poemSlug));
@@ -136,7 +173,13 @@ describe('searchPoems (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([POEMS_ROW]),
     });
 
-    const result = await searchPoems(mockDb, 'قصيدة', 1, 'all', null, null, null, null);
+    const result = await searchPoems({
+      db: mockDb,
+      query: 'قصيدة',
+      page: 1,
+      matchType: 'all',
+      filters: EMPTY_FILTERS,
+    });
     expect(result.totalCount).toBe(5);
     expect(result.rows[0]?.poetName).toBe('المتنبي');
     expect(result.rows[0]?.poemMeter).toBe('الطويل');
@@ -155,16 +198,18 @@ describe('searchPoems (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce(lookupRows).mockResolvedValueOnce([POEMS_ROW]),
     });
 
-    const result = await searchPoems(
-      mockDb,
-      'test',
-      1,
-      'all',
-      [asMeterSlug('الطويل')],
-      [asEraSlug('abbasid')],
-      [asThemeSlug('فخر')],
-      [asRhymeSlug('meem')]
-    );
+    const result = await searchPoems({
+      db: mockDb,
+      query: 'test',
+      page: 1,
+      matchType: 'all',
+      filters: {
+        meterSlugs: [asMeterSlug('الطويل')],
+        eraSlugs: [asEraSlug('abbasid')],
+        themeSlugs: [asThemeSlug('فخر')],
+        rhymeSlugs: [asRhymeSlug('meem')],
+      },
+    });
     expect(result.totalCount).toBe(5);
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
@@ -174,7 +219,13 @@ describe('searchPoems (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([POEMS_ROW]),
     });
 
-    await searchPoems(mockDb, 'test', 1, 'all', [], [], [], []);
+    await searchPoems({
+      db: mockDb,
+      query: 'test',
+      page: 1,
+      matchType: 'all',
+      filters: { meterSlugs: [], eraSlugs: [], themeSlugs: [], rhymeSlugs: [] },
+    });
     expect(mockDb.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -186,7 +237,13 @@ describe('searchPoems (mock)', () => {
         .mockResolvedValueOnce([POEMS_ROW]),
     });
 
-    await searchPoems(mockDb, 'test', 1, 'all', null, [asEraSlug('abbasid')], null, null);
+    await searchPoems({
+      db: mockDb,
+      query: 'test',
+      page: 1,
+      matchType: 'all',
+      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
+    });
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
 
@@ -198,16 +255,13 @@ describe('searchPoems (mock)', () => {
         .mockResolvedValueOnce([POEMS_ROW]),
     });
 
-    const result = await searchPoems(
-      mockDb,
-      'test',
-      1,
-      'all',
-      [asMeterSlug('الطويل')],
-      null,
-      null,
-      null
-    );
+    const result = await searchPoems({
+      db: mockDb,
+      query: 'test',
+      page: 1,
+      matchType: 'all',
+      filters: { ...EMPTY_FILTERS, meterSlugs: [asMeterSlug('الطويل')] },
+    });
     expect(result.totalCount).toBe(5);
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
@@ -217,7 +271,13 @@ describe('searchPoems (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
-    const result = await searchPoems(mockDb, 'قصيدة', 1, 'all', null, null, null, null);
+    const result = await searchPoems({
+      db: mockDb,
+      query: 'قصيدة',
+      page: 1,
+      matchType: 'all',
+      filters: EMPTY_FILTERS,
+    });
     expect(result).toEqual({ rows: [], totalCount: 0 });
   });
 
@@ -226,9 +286,15 @@ describe('searchPoems (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([{ ...POEMS_ROW, total_count: undefined }]),
     });
 
-    await expect(searchPoems(mockDb, 'test', 1, 'all', null, null, null, null)).rejects.toThrow(
-      'missing total_count'
-    );
+    await expect(
+      searchPoems({
+        db: mockDb,
+        query: 'test',
+        page: 1,
+        matchType: 'all',
+        filters: EMPTY_FILTERS,
+      })
+    ).rejects.toThrow('missing total_count');
   });
 
   it('throws when total_count is not finite', async () => {
@@ -236,9 +302,15 @@ describe('searchPoems (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([{ ...POEMS_ROW, total_count: 'NaN' }]),
     });
 
-    await expect(searchPoems(mockDb, 'test', 1, 'all', null, null, null, null)).rejects.toThrow(
-      'not a finite number'
-    );
+    await expect(
+      searchPoems({
+        db: mockDb,
+        query: 'test',
+        page: 1,
+        matchType: 'all',
+        filters: EMPTY_FILTERS,
+      })
+    ).rejects.toThrow('not a finite number');
   });
 });
 
@@ -248,7 +320,13 @@ describe('searchPoets (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([POETS_ROW]),
     });
 
-    const result = await searchPoets(mockDb, 'شاعر', 1, 'all', null);
+    const result = await searchPoets({
+      db: mockDb,
+      query: 'شاعر',
+      page: 1,
+      matchType: 'all',
+      eraSlugs: null,
+    });
     expect(result.totalCount).toBe(3);
     expect(result.rows[0]?.poetName).toBe('المتنبي');
     expect(result.rows[0]?.poetBio).toBe('شاعر عباسي');
@@ -263,7 +341,13 @@ describe('searchPoets (mock)', () => {
         .mockResolvedValueOnce([POETS_ROW]),
     });
 
-    const result = await searchPoets(mockDb, 'test', 1, 'all', [asEraSlug('abbasid')]);
+    const result = await searchPoets({
+      db: mockDb,
+      query: 'test',
+      page: 1,
+      matchType: 'all',
+      eraSlugs: [asEraSlug('abbasid')],
+    });
     expect(result.totalCount).toBe(3);
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
@@ -273,7 +357,7 @@ describe('searchPoets (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([POETS_ROW]),
     });
 
-    await searchPoets(mockDb, 'test', 1, 'all', []);
+    await searchPoets({ db: mockDb, query: 'test', page: 1, matchType: 'all', eraSlugs: [] });
     expect(mockDb.execute).toHaveBeenCalledTimes(1);
   });
 
@@ -282,7 +366,13 @@ describe('searchPoets (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
-    const result = await searchPoets(mockDb, 'شاعر', 1, 'all', null);
+    const result = await searchPoets({
+      db: mockDb,
+      query: 'شاعر',
+      page: 1,
+      matchType: 'all',
+      eraSlugs: null,
+    });
     expect(result).toEqual({ rows: [], totalCount: 0 });
   });
 
@@ -291,7 +381,9 @@ describe('searchPoets (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([{ ...POETS_ROW, total_count: null }]),
     });
 
-    await expect(searchPoets(mockDb, 'test', 1, 'all', null)).rejects.toThrow();
+    await expect(
+      searchPoets({ db: mockDb, query: 'test', page: 1, matchType: 'all', eraSlugs: null })
+    ).rejects.toThrow();
   });
 
   it('throws when total_count is not finite', async () => {
@@ -299,9 +391,9 @@ describe('searchPoets (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([{ ...POETS_ROW, total_count: 'bad' }]),
     });
 
-    await expect(searchPoets(mockDb, 'test', 1, 'all', null)).rejects.toThrow(
-      'not a finite number'
-    );
+    await expect(
+      searchPoets({ db: mockDb, query: 'test', page: 1, matchType: 'all', eraSlugs: null })
+    ).rejects.toThrow('not a finite number');
   });
 });
 
@@ -336,7 +428,7 @@ describe('listPoemsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoemsByFilters(mockDb, 1, null, null, null, null);
+    const result = await listPoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS });
     expect(result.totalCount).toBe(1);
     expect(result.rows[0]?.poetName).toBe('شاعر');
     expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
@@ -353,14 +445,16 @@ describe('listPoemsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoemsByFilters(
-      mockDb,
-      1,
-      [asMeterSlug('الطويل')],
-      [asEraSlug('abbasid')],
-      [asThemeSlug('فخر')],
-      [asRhymeSlug('meem')]
-    );
+    const result = await listPoemsByFilters({
+      db: mockDb,
+      page: 1,
+      filters: {
+        meterSlugs: [asMeterSlug('الطويل')],
+        eraSlugs: [asEraSlug('abbasid')],
+        themeSlugs: [asThemeSlug('فخر')],
+        rhymeSlugs: [asRhymeSlug('meem')],
+      },
+    });
     expect(result.totalCount).toBe(1);
   });
 
@@ -369,9 +463,9 @@ describe('listPoemsByFilters (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([FILTER_POEMS_ROW]).mockResolvedValueOnce([]),
     });
 
-    await expect(listPoemsByFilters(mockDb, 1, null, null, null, null)).rejects.toThrow(
-      'SQL row missing total'
-    );
+    await expect(
+      listPoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS })
+    ).rejects.toThrow('SQL row missing total');
   });
 
   it('throws when total is not finite', async () => {
@@ -382,9 +476,9 @@ describe('listPoemsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 'NaN' }]),
     });
 
-    await expect(listPoemsByFilters(mockDb, 1, null, null, null, null)).rejects.toThrow(
-      'total is not finite'
-    );
+    await expect(
+      listPoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS })
+    ).rejects.toThrow('total is not finite');
   });
 });
 
@@ -397,7 +491,7 @@ describe('listPoetsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoetsByFilters(mockDb, 1, null);
+    const result = await listPoetsByFilters({ db: mockDb, page: 1, eraSlugs: null });
     expect(result.totalCount).toBe(1);
     expect(result.rows[0]?.poetName).toBe('شاعر');
     expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
@@ -412,7 +506,11 @@ describe('listPoetsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoetsByFilters(mockDb, 1, [asEraSlug('abbasid')]);
+    const result = await listPoetsByFilters({
+      db: mockDb,
+      page: 1,
+      eraSlugs: [asEraSlug('abbasid')],
+    });
     expect(result.totalCount).toBe(1);
     expect(mockDb.execute).toHaveBeenCalledTimes(3);
   });
@@ -425,7 +523,7 @@ describe('listPoetsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    await listPoetsByFilters(mockDb, 1, []);
+    await listPoetsByFilters({ db: mockDb, page: 1, eraSlugs: [] });
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
 
@@ -434,6 +532,6 @@ describe('listPoetsByFilters (mock)', () => {
       execute: vi.fn().mockResolvedValueOnce([FILTER_POETS_ROW]).mockResolvedValueOnce(null),
     });
 
-    await expect(listPoetsByFilters(mockDb, 1, null)).rejects.toThrow();
+    await expect(listPoetsByFilters({ db: mockDb, page: 1, eraSlugs: null })).rejects.toThrow();
   });
 });

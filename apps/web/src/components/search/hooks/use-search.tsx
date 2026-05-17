@@ -239,38 +239,43 @@ export function useSearch() {
   const hasQuery = status.kind !== 'loading' && (Boolean(inputValue.trim()) || hasFilters);
 
   return {
-    status,
-    filtersVisible,
-    hasQuery,
-    hasText,
-    hasInputText,
-    hasFilters,
-
-    loadMoreRef,
-
-    totalResults,
-    validationError,
-    inputValue,
-    searchParams,
-    searchType,
-    matchType,
-    selectedMeters,
-    selectedThemes,
-    selectedEras,
-    selectedRhymes,
-
-    toggleFilters,
-    resetAllStates,
-
-    handleMatchTypeChange,
-    handleInputChange,
-    handleKeyDown,
-    handleSearch: commitTextQuery,
-    handleSearchTypeChange,
-
-    handleRhymesChange,
-    handleErasChange,
-    handleMetersChange,
-    handleThemesChange,
+    state: {
+      status,
+      totalResults,
+      validationError,
+      inputValue,
+      searchParams,
+      searchType,
+      matchType,
+    },
+    flags: {
+      filtersVisible,
+      hasQuery,
+      hasText,
+      hasInputText,
+      hasFilters,
+    },
+    selection: {
+      meters: selectedMeters,
+      themes: selectedThemes,
+      eras: selectedEras,
+      rhymes: selectedRhymes,
+    },
+    handlers: {
+      onMatchTypeChange: handleMatchTypeChange,
+      onInputChange: handleInputChange,
+      onKeyDown: handleKeyDown,
+      onSearch: commitTextQuery,
+      onSearchTypeChange: handleSearchTypeChange,
+      onRhymesChange: handleRhymesChange,
+      onErasChange: handleErasChange,
+      onMetersChange: handleMetersChange,
+      onThemesChange: handleThemesChange,
+      toggleFilters,
+      resetAll: resetAllStates,
+    },
+    refs: {
+      loadMore: loadMoreRef,
+    },
   };
 }

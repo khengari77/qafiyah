@@ -4,14 +4,10 @@ import { Check, ChevronDown } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
-
-type Option = {
-  readonly value: string;
-  readonly label: string;
-};
+import type { SelectOption } from './select-option';
 
 type Props = {
-  readonly options: readonly Option[];
+  readonly options: readonly SelectOption[];
   readonly value: string;
   readonly onChange: (value: string) => void;
   readonly placeholder?: string;
@@ -41,7 +37,7 @@ export function SelectSingle({
   };
 
   const selectOption = useCallback(
-    (option: Option) => {
+    (option: SelectOption) => {
       if (option.value !== value) {
         onChange(option.value);
       }

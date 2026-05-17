@@ -1,17 +1,12 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
-import { SITE_URL } from '@/constants/globals';
-import Layout from '@/layouts/Layout.astro';
-import { fetchRhymes } from '@/lib/api/static';
+import { SITE_URL } from '@/constants/globals/urls';
+import Layout from '@/layouts/layout.astro';
+import { fetchRhymes } from '@/lib/api/static/rhymes';
 import { toArabicDigits } from '@/lib/arabic';
+import { stripQuotes } from '@/lib/strip-quotes';
 
-let rhymes: Awaited<ReturnType<typeof fetchRhymes>> = [];
-try {
-  rhymes = await fetchRhymes();
-} catch {
-  rhymes = [];
-}
-const stripQuotes = (s: string) => s.replace(/"/g, '');
+const rhymes = await fetchRhymes();
 
 const title = `${SITE_NAME_AR} | تصفح حسب القوافي`;
 const jsonLd = {

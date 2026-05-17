@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { problemDetailSchema } from '@/test-schemas';
 import { parseJson } from '@/test-utils';
-import { makeProblem, transformOrpcResponse } from './problem';
+import { makeProblem, type ProblemCode, transformOrpcResponse } from './problem';
 
 describe('makeProblem', () => {
   it('builds a problem detail with known error code', () => {
@@ -13,10 +13,17 @@ describe('makeProblem', () => {
     expect(problem.type).toContain('not-found');
   });
 
-  it('uses code as title fallback for unknown codes', () => {
-    const problem = makeProblem({ code: 'SOME_UNKNOWN_CODE', status: 400 });
+  it('routes unknown codes through transformOrpcResponse to INTERNAL_SERVER_ERROR', async () => {
+    const response = new Response(JSON.stringify({ code: 'SOME_UNKNOWN_CODE' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
 
-    expect(problem.title).toBe('SOME_UNKNOWN_CODE');
+    const result = await transformOrpcResponse(response);
+
+    const body = await parseJson(result, problemDetailSchema);
+    expect(body.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(body.title).toBe('Internal server error');
   });
 
   it('uses explicit title when provided', () => {
@@ -72,7 +79,7 @@ describe('makeProblem', () => {
   });
 
   it('maps all known error codes to human-readable titles', () => {
-    const cases: [string, string][] = [
+    const cases: [ProblemCode, string][] = [
       ['NOT_FOUND', 'Resource not found'],
       ['POEM_PARSE_ERROR', 'Poem data could not be parsed'],
       ['INPUT_VALIDATION_FAILED', 'Validation failed'],

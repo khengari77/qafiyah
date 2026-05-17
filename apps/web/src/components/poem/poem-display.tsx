@@ -13,7 +13,7 @@ type PoemProps = {
   readonly meter: Poem['meter'];
   readonly theme: Poem['theme'];
   readonly verses: Poem['verses'];
-  readonly verseCount: string | number;
+  readonly verseCount: number;
   readonly relatedPoems?: Poem['relatedPoems'];
 };
 
@@ -34,10 +34,6 @@ export function PoemDisplay({
       '_blank',
       'noopener,noreferrer'
     );
-  const verseCountNum = Number.parseInt(String(verseCount), 10);
-  if (!Number.isFinite(verseCountNum)) {
-    throw new Error(`PoemDisplay: verseCount is not a valid number (got "${String(verseCount)}")`);
-  }
 
   return (
     <div className="w-full flex justify-center items-start my-14 xs:my-20 lg:my-28">
@@ -71,7 +67,7 @@ export function PoemDisplay({
           <div className="flex w-full md:w-8/12 border border-zinc-300/80 px-2.5 md:px-8 lg:px-16 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl justify-between items-center text-zinc-600 rounded-full">
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">{meter.name || ''}</p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">
-              {formatVerseCount(verseCountNum) || ''}
+              {formatVerseCount(verseCount) || ''}
             </p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{theme.name || ''}</p>
           </div>

@@ -1,4 +1,8 @@
-import { SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '@qafiyah/constants';
+import {
+  type MATCH_TYPE_VALUES,
+  SEARCH_POEMS_PER_PAGE,
+  SEARCH_POETS_PER_PAGE,
+} from '@qafiyah/constants';
 import type {
   EraSlug,
   MeterSlug,
@@ -12,6 +16,15 @@ import { type SQL, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import type { DbClient } from '../client';
 import { executeAs } from '../utils/execute-as';
+
+export type MatchType = (typeof MATCH_TYPE_VALUES)[number];
+
+export type SearchFilters = {
+  readonly meterSlugs: readonly MeterSlug[] | null;
+  readonly eraSlugs: readonly EraSlug[] | null;
+  readonly themeSlugs: readonly ThemeSlug[] | null;
+  readonly rhymeSlugs: readonly RhymeSlug[] | null;
+};
 
 export type PoemsSearchRow = {
   readonly poetName: string;
@@ -198,22 +211,20 @@ function mapPoetRow(r: Omit<RawPoetsSearchRow, 'total_count'>): PoetsSearchRow {
   };
 }
 
-export async function searchPoems(
-  db: DbClient,
-  query: string,
-  page: number,
-  matchType: string,
-  meterSlugs: readonly MeterSlug[] | null,
-  eraSlugs: readonly EraSlug[] | null,
-  themeSlugs: readonly ThemeSlug[] | null,
-  rhymeSlugs: readonly RhymeSlug[] | null
-): Promise<SearchPage<PoemsSearchRow>> {
+export async function searchPoems(args: {
+  readonly db: DbClient;
+  readonly query: string;
+  readonly page: number;
+  readonly matchType: MatchType;
+  readonly filters: SearchFilters;
+}): Promise<SearchPage<PoemsSearchRow>> {
+  const { db, query, page, matchType, filters } = args;
   const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
     db,
-    meterSlugs,
-    eraSlugs,
-    themeSlugs,
-    rhymeSlugs
+    filters.meterSlugs,
+    filters.eraSlugs,
+    filters.themeSlugs,
+    filters.rhymeSlugs
   );
 
   const raw = await executeAs(
@@ -254,13 +265,14 @@ export async function searchPoems(
   return { rows: raw.map(mapPoemRow), totalCount };
 }
 
-export async function searchPoets(
-  db: DbClient,
-  query: string,
-  page: number,
-  matchType: string,
-  eraSlugs: readonly EraSlug[] | null
-): Promise<SearchPage<PoetsSearchRow>> {
+export async function searchPoets(args: {
+  readonly db: DbClient;
+  readonly query: string;
+  readonly page: number;
+  readonly matchType: MatchType;
+  readonly eraSlugs: readonly EraSlug[] | null;
+}): Promise<SearchPage<PoetsSearchRow>> {
+  const { db, query, page, matchType, eraSlugs } = args;
   const eraIds = await lookupEraIdsOnly(db, eraSlugs);
 
   const raw = await executeAs(
@@ -308,20 +320,18 @@ function readTotalCount(
   return n;
 }
 
-export async function listPoemsByFilters(
-  db: DbClient,
-  page: number,
-  meterSlugs: readonly MeterSlug[] | null,
-  eraSlugs: readonly EraSlug[] | null,
-  themeSlugs: readonly ThemeSlug[] | null,
-  rhymeSlugs: readonly RhymeSlug[] | null
-): Promise<SearchPage<PoemsSearchRow>> {
+export async function listPoemsByFilters(args: {
+  readonly db: DbClient;
+  readonly page: number;
+  readonly filters: SearchFilters;
+}): Promise<SearchPage<PoemsSearchRow>> {
+  const { db, page, filters } = args;
   const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
     db,
-    meterSlugs,
-    eraSlugs,
-    themeSlugs,
-    rhymeSlugs
+    filters.meterSlugs,
+    filters.eraSlugs,
+    filters.themeSlugs,
+    filters.rhymeSlugs
   );
 
   const meterParam = intArrayParam(meterIds);
@@ -383,11 +393,12 @@ export async function listPoemsByFilters(
   };
 }
 
-export async function listPoetsByFilters(
-  db: DbClient,
-  page: number,
-  eraSlugs: readonly EraSlug[] | null
-): Promise<SearchPage<PoetsSearchRow>> {
+export async function listPoetsByFilters(args: {
+  readonly db: DbClient;
+  readonly page: number;
+  readonly eraSlugs: readonly EraSlug[] | null;
+}): Promise<SearchPage<PoetsSearchRow>> {
+  const { db, page, eraSlugs } = args;
   const eraIds = await lookupEraIdsOnly(db, eraSlugs);
   const eraParam = intArrayParam(eraIds);
   const offset = (page - 1) * SEARCH_POETS_PER_PAGE;

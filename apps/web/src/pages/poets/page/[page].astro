@@ -1,13 +1,12 @@
 ---
 import { POEMS_PER_PAGE, SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
-import { SITE_URL } from '@/constants/globals';
-import Layout from '@/layouts/Layout.astro';
-import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static';
+import { SITE_URL } from '@/constants/globals/urls';
+import Layout from '@/layouts/layout.astro';
+import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static/poets';
 import { toArabicDigits } from '@/lib/arabic';
+import { stripQuotes } from '@/lib/strip-quotes';
 
-const DOUBLE_QUOTE_REGEX = /"/g;
 const CAT_POET_PREFIX_REGEX = /^cat-poet-/;
-const stripQuotes = (s: string) => s.replace(DOUBLE_QUOTE_REGEX, '');
 
 export async function getStaticPaths() {
   const totalPages = await fetchPoetsTotalPages();
@@ -16,14 +15,13 @@ export async function getStaticPaths() {
   }));
 }
 
-const { page } = Astro.params;
-const pageNumber = Number.parseInt(page as string, 10);
-
+const pageNumber = Number.parseInt(Astro.params.page ?? '', 10);
 if (!Number.isFinite(pageNumber) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
+const page = pageNumber.toString();
 
-const response = await fetchPoets(page as string);
+const response = await fetchPoets(pageNumber);
 
 if (!response || response.data.length === 0) {
   return Astro.redirect('/404');
@@ -75,7 +73,7 @@ const jsonLd = {
       </h3>
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {poets.length > 0 ? poets.map((poet) => {
-          const poetSlug = String(poet.slug ?? '').toLowerCase().replace(/^cat-poet-/, '');
+          const poetSlug = String(poet.slug ?? '').toLowerCase().replace(CAT_POET_PREFIX_REGEX, '');
           return (
             <a
               href={`/poets/${poetSlug}/page/1`}

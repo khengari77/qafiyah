@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asRhymeSlug } from '../utils/brand';
-import { fakeDb, makeChain } from './_test-utils';
 import { listRhymePoems, listRhymes } from './rhymes.queries';
+import { fakeDb, makeChain } from './test-utils';
 
 describe('listRhymes', () => {
   it('groups rhymes by Arabic letter and sums counts', async () => {

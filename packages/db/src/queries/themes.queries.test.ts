@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asThemeSlug } from '../utils/brand';
-import { fakeDb, makeChain } from './_test-utils';
+import { fakeDb, makeChain } from './test-utils';
 import { listThemePoems, listThemes } from './themes.queries';
 
 describe('listThemes', () => {

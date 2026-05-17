@@ -1,18 +1,13 @@
 ---
 import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { formatArabicCount } from 'arabic-count-format';
-import { SITE_URL } from '@/constants/globals';
-import Layout from '@/layouts/Layout.astro';
-import { fetchEras } from '@/lib/api/static';
+import { SITE_URL } from '@/constants/globals/urls';
+import Layout from '@/layouts/layout.astro';
+import { fetchEras } from '@/lib/api/static/eras';
 import { toArabicDigits } from '@/lib/arabic';
+import { stripQuotes } from '@/lib/strip-quotes';
 
-let eras: Awaited<ReturnType<typeof fetchEras>> = [];
-try {
-  eras = await fetchEras();
-} catch {
-  eras = [];
-}
-const stripQuotes = (s: string) => s.replace(/"/g, '');
+const eras = await fetchEras();
 
 const eraLabel = formatArabicCount({
   count: eras.length,

@@ -1,12 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { asPoemSlug } from '../utils/brand';
-import { fakeDb, makeChain } from './_test-utils';
 import {
   getPoemBySlug,
   getRandomPoemLines,
   getRandomPoemSlug,
   listAllPoemSlugs,
 } from './poems.queries';
+import { fakeDb, makeChain } from './test-utils';
 
 const POEM_CONTENT = 'شطر أول*شطر ثانٍ';
 
@@ -37,7 +37,7 @@ describe('getRandomPoemLines', () => {
     vi.restoreAllMocks();
   });
 
-  it('returns formatted excerpt for a JSON object result', async () => {
+  it('returns structured excerpt for a JSON object result', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
     const mockDb = fakeDb({
@@ -45,8 +45,11 @@ describe('getRandomPoemLines', () => {
     });
 
     const result = await getRandomPoemLines(mockDb);
-    expect(result).toContain('شطر أول');
-    expect(result).toContain('شاعر');
+    expect(result.lines[0]).toBe('شطر أول');
+    expect(result.lines[1]).toBe('شطر ثانٍ');
+    expect(result.poet).toBe('شاعر');
+    expect(result.formatted).toContain('شطر أول');
+    expect(result.formatted).toContain('شاعر');
   });
 
   it('parses a JSON string result', async () => {
@@ -57,7 +60,7 @@ describe('getRandomPoemLines', () => {
     });
 
     const result = await getRandomPoemLines(mockDb);
-    expect(result).toContain('شطر أول');
+    expect(result.formatted).toContain('شطر أول');
   });
 
   it('throws when execute returns empty array', async () => {

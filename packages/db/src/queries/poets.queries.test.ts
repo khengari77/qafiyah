@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asPoetSlug } from '../utils/brand';
-import { fakeDb, makeChain } from './_test-utils';
 import { listPoetPoems, listPoets } from './poets.queries';
+import { fakeDb, makeChain } from './test-utils';
 
 describe('listPoets', () => {
   it('returns poets with pagination info', async () => {

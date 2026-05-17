@@ -105,10 +105,10 @@ describe('search procedure', () => {
     expect(res.status).toBe(200);
     expect(listPoemsByFiltersMock).toHaveBeenCalledTimes(1);
     expect(searchPoemsMock).not.toHaveBeenCalled();
-    const [, page, meterSlugs, eraSlugs] = listPoemsByFiltersMock.mock.calls[0] ?? [];
-    expect(page).toBe(1);
-    expect(meterSlugs).toBeNull();
-    expect(eraSlugs).toEqual(['abbasid']);
+    const args = listPoemsByFiltersMock.mock.calls[0]?.[0];
+    expect(args?.page).toBe(1);
+    expect(args?.filters?.meterSlugs).toBeNull();
+    expect(args?.filters?.eraSlugs).toEqual(['abbasid']);
   });
 
   it('non-Arabic text + filter sanitizes to empty and uses filter-only path', async () => {

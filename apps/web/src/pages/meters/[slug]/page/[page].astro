@@ -1,12 +1,13 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
-import type { MeterSlug } from '@qafiyah/contracts';
-import { SITE_URL } from '@/constants/globals';
-import Layout from '@/layouts/Layout.astro';
-import { fetchMeterPoemPage, fetchMeters, generatePageNumbers } from '@/lib/api/static';
+import { meterSlugSchema } from '@qafiyah/contracts';
+import * as v from 'valibot';
+import { SITE_URL } from '@/constants/globals/urls';
+import Layout from '@/layouts/layout.astro';
+import { fetchMeterPoemPage, fetchMeters } from '@/lib/api/static/meters';
+import { generatePageNumbers } from '@/lib/api/static/page-numbers';
 import { toArabicDigits } from '@/lib/arabic';
-
-const stripQuotes = (s: string) => s.replace(/"/g, '');
+import { stripQuotes } from '@/lib/strip-quotes';
 
 export async function getStaticPaths() {
   const meters = await fetchMeters();
@@ -19,15 +20,15 @@ export async function getStaticPaths() {
   return params;
 }
 
-const { slug, page } = Astro.params;
-const pageNumber = Number.parseInt(page as string, 10);
-
-if (!(slug && Number.isFinite(pageNumber)) || pageNumber < 1) {
+const parsedSlug = v.safeParse(meterSlugSchema, Astro.params.slug);
+const pageNumber = Number.parseInt(Astro.params.page ?? '', 10);
+if (!(parsedSlug.success && Number.isFinite(pageNumber)) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
+const slug = parsedSlug.output;
+const page = pageNumber.toString();
 
-// URL parameter boundary: brand the bare-string slug as a MeterSlug for the typed API.
-const response = await fetchMeterPoemPage(slug as MeterSlug, page as string);
+const response = await fetchMeterPoemPage(slug, pageNumber);
 if (!response) {
   return Astro.redirect('/404');
 }

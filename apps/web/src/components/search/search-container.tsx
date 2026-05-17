@@ -25,35 +25,7 @@ import { ResultList } from './result-list';
 import { SearchInput } from './search-input';
 
 export function SearchContainer() {
-  const {
-    status,
-    filtersVisible,
-    hasQuery,
-    hasText,
-    hasInputText,
-    hasFilters,
-    loadMoreRef,
-    totalResults,
-    validationError,
-    inputValue,
-    searchParams,
-    searchType,
-    matchType,
-    selectedMeters,
-    selectedThemes,
-    selectedEras,
-    selectedRhymes,
-    handleMatchTypeChange,
-    handleRhymesChange,
-    handleErasChange,
-    handleMetersChange,
-    handleThemesChange,
-    handleInputChange,
-    handleKeyDown,
-    toggleFilters,
-    handleSearchTypeChange,
-    resetAllStates,
-  } = useSearch();
+  const { state, flags, selection, handlers, refs } = useSearch();
 
   return (
     <section className="w-full mx-auto max-w-2xl flex flex-col h-full flex-1 justify-start items pb-24">
@@ -69,70 +41,73 @@ export function SearchContainer() {
             <div className="flex flex-col gap-4">
               <SearchInput
                 placeholder={
-                  searchType === 'poems'
+                  state.searchType === 'poems'
                     ? SEARCH_TEXTS.poemsSearchPlaceholder
                     : SEARCH_TEXTS.poetsSearchPlaceholder
                 }
                 searchLabel={SEARCH_TEXTS.search}
-                inputValue={inputValue}
-                validationError={validationError}
-                handleKeyDown={handleKeyDown}
-                handleInputChange={handleInputChange}
-                resetAllStates={resetAllStates}
-                hasQuery={hasQuery}
+                inputValue={state.inputValue}
+                validationError={state.validationError}
+                handleKeyDown={handlers.onKeyDown}
+                handleInputChange={handlers.onInputChange}
+                resetAllStates={handlers.resetAll}
+                hasQuery={flags.hasQuery}
               />
               <div className="flex items-center justify-between">
-                <FiltersButton toggleFilters={toggleFilters} filtersVisible={filtersVisible} />
+                <FiltersButton
+                  toggleFilters={handlers.toggleFilters}
+                  filtersVisible={flags.filtersVisible}
+                />
 
                 <FilterBadges
-                  erasCount={getBadgeCount(selectedEras.length || 0, ERAS_NOUN_FORMS)}
-                  metersCount={getBadgeCount(selectedMeters.length || 0, METERS_NOUN_FORMS)}
-                  themesCount={getBadgeCount(selectedThemes.length || 0, THEMES_NOUN_FORMS)}
-                  rhymesCount={getBadgeCount(selectedRhymes.length || 0, RHYMES_NOUN_FORMS)}
-                  selectedErasLength={selectedEras.length}
-                  selectedMetersLength={selectedMeters.length}
-                  selectedRhymesLength={selectedRhymes.length}
-                  selectedThemesLength={selectedThemes.length}
+                  erasCount={getBadgeCount(selection.eras.length || 0, ERAS_NOUN_FORMS)}
+                  metersCount={getBadgeCount(selection.meters.length || 0, METERS_NOUN_FORMS)}
+                  themesCount={getBadgeCount(selection.themes.length || 0, THEMES_NOUN_FORMS)}
+                  rhymesCount={getBadgeCount(selection.rhymes.length || 0, RHYMES_NOUN_FORMS)}
+                  selectedErasLength={selection.eras.length}
+                  selectedMetersLength={selection.meters.length}
+                  selectedRhymesLength={selection.rhymes.length}
+                  selectedThemesLength={selection.themes.length}
                 />
               </div>
 
-              {filtersVisible && (
+              {flags.filtersVisible && (
                 <Filters
                   filters={{
                     searchType: {
-                      value: searchParams.search_type,
+                      value: state.searchParams.search_type,
                       options: searchTypeOptions,
-                      onChange: handleSearchTypeChange,
+                      onChange: handlers.onSearchTypeChange,
                     },
                     matchType: {
-                      value: searchParams.match_type,
+                      value: state.searchParams.match_type,
                       options: matchTypeOptions,
-                      onChange: handleMatchTypeChange,
+                      onChange: handlers.onMatchTypeChange,
                     },
                     eras: {
-                      selected: selectedEras,
+                      selected: selection.eras,
                       options: erasOptions,
-                      onChange: handleErasChange,
+                      onChange: handlers.onErasChange,
                     },
                     meters: {
-                      selected: selectedMeters,
+                      selected: selection.meters,
                       options: metersOptions,
-                      onChange: handleMetersChange,
+                      onChange: handlers.onMetersChange,
                     },
                     themes: {
-                      selected: selectedThemes,
+                      selected: selection.themes,
                       options: themesOptions,
-                      onChange: handleThemesChange,
+                      onChange: handlers.onThemesChange,
                     },
                     rhymes: {
-                      selected: selectedRhymes,
+                      selected: selection.rhymes,
                       options: rhymesOptions,
-                      onChange: handleRhymesChange,
+                      onChange: handlers.onRhymesChange,
                     },
                   }}
-                  isPoemsMode={searchType === 'poems'}
-                  hasText={hasText}
-                  hasInputText={hasInputText}
+                  isPoemsMode={state.searchType === 'poems'}
+                  hasText={flags.hasText}
+                  hasInputText={flags.hasInputText}
                 />
               )}
             </div>
@@ -140,19 +115,22 @@ export function SearchContainer() {
         </Card>
 
         <ResultList
-          status={status}
-          loadMoreRef={loadMoreRef}
-          hasText={hasText}
-          hasFilters={hasFilters}
+          status={state.status}
+          loadMoreRef={refs.loadMore}
+          hasText={flags.hasText}
+          hasFilters={flags.hasFilters}
           errorMessage={SEARCH_TEXTS.errorMessage}
           refreshText={SEARCH_TEXTS.refreshThePage}
-          noResultsText={getNoResultsText({ hasText, query: searchParams.q || '' })}
+          noResultsText={getNoResultsText({
+            hasText: flags.hasText,
+            query: state.searchParams.q || '',
+          })}
           resultText={getResultText({
-            count: totalResults,
-            query: searchParams.q || '',
-            searchType,
-            matchType,
-            hasText,
+            count: state.totalResults,
+            query: state.searchParams.q || '',
+            searchType: state.searchType,
+            matchType: state.matchType,
+            hasText: flags.hasText,
           })}
         />
       </div>

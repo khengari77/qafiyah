@@ -1,6 +1,7 @@
 import { API_OPENAPI_DOCS_PATH, API_OPENAPI_SPEC_PATH, API_V1_PREFIX } from '@qafiyah/constants';
 import { createMiddleware } from 'hono/factory';
-import { type LogEventBuilder, shouldEmit, toLogEvent } from '../lib/logger';
+import { createLogHandle, recordResponse } from '../lib/logger/builder';
+import { shouldEmit, toLogEvent } from '../lib/logger/emit';
 import type { AppContext } from '../types';
 
 const LOG_SKIP_PREFIX = `${API_V1_PREFIX}${API_OPENAPI_DOCS_PATH}`;
@@ -13,9 +14,7 @@ export const loggerMiddleware = createMiddleware<AppContext>(async (c, next) => 
   }
 
   const startTime = Date.now();
-  // @WARN: builder mutated below to record status_code / duration_ms before emit.
-  //   See LogEventBuilder docstring for the full lifecycle.
-  const event: LogEventBuilder = {
+  const handle = createLogHandle({
     request_id: crypto.randomUUID(),
     method: c.req.method,
     path,
@@ -24,16 +23,15 @@ export const loggerMiddleware = createMiddleware<AppContext>(async (c, next) => 
       name: 'qafiyah-api',
       environment: c.env.ENVIRONMENT ?? 'unknown',
     },
-  };
+  });
 
-  c.set('logEvent', event);
+  c.set('logEvent', handle);
   await next();
 
-  event.status_code = c.res.status;
-  event.duration_ms = Date.now() - startTime;
+  recordResponse(handle, c.res.status, Date.now() - startTime);
 
-  if (shouldEmit(event)) {
-    const emitted = toLogEvent(event);
+  if (shouldEmit(handle)) {
+    const emitted = toLogEvent(handle);
     if (emitted) {
       // biome-ignore lint/suspicious/noConsole: intentional wide-event structured log emission
       console.log(JSON.stringify(emitted));

@@ -11,7 +11,7 @@ import { sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import type { DbClient } from '../client';
 import { poemsFullData } from '../schema';
-import { asMeterSlug, asPoemSlug, asPoetSlug } from '../utils/brand';
+import { asPoemSlug } from '../utils/brand';
 import { executeAs } from '../utils/execute-as';
 import {
   extractPoemExcerpt,
@@ -19,6 +19,7 @@ import {
   type RandomPoemLines,
 } from '../utils/extract-poem-excerpt';
 import { processPoemContent } from '../utils/process-poem-content';
+import type { PoemListRow } from './types';
 
 const rawPoemDataSchema = v.object({
   slug: poemSlugSchema,
@@ -82,7 +83,13 @@ function pickExcerptStartIndex(content: string): number {
   return Math.floor(Math.random() * (maxStartIndex / 2)) * 2;
 }
 
-export async function getRandomPoemLines(db: DbClient): Promise<string> {
+export type RandomPoemLinesResult = {
+  readonly lines: readonly [string, string];
+  readonly poet: string;
+  readonly formatted: string;
+};
+
+export async function getRandomPoemLines(db: DbClient): Promise<RandomPoemLinesResult> {
   const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
 
   if (!result || result.length === 0 || !result[0]?.['get_random_eligible_poem']) {
@@ -97,15 +104,23 @@ export async function getRandomPoemLines(db: DbClient): Promise<string> {
     throw new Error('getRandomPoemLines: poem missing content field');
   }
 
-  const content = extractPoemExcerpt(poem, pickExcerptStartIndex(poem.content));
+  const startIndex = pickExcerptStartIndex(poem.content);
+  const allLines = poem.content.split('*');
+  const line1 = allLines[startIndex] || '';
+  const line2 = allLines[startIndex + 1] || '';
+  const formatted = extractPoemExcerpt(poem, startIndex);
 
-  if (content.length > MAX_EXCERPT_LENGTH) {
+  if (formatted.length > MAX_EXCERPT_LENGTH) {
     throw new Error(
-      `getRandomPoemLines: excerpt length ${content.length} exceeds MAX_EXCERPT_LENGTH ${MAX_EXCERPT_LENGTH}`
+      `getRandomPoemLines: excerpt length ${formatted.length} exceeds MAX_EXCERPT_LENGTH ${MAX_EXCERPT_LENGTH}`
     );
   }
 
-  return content;
+  return {
+    lines: [line1, line2] as const,
+    poet: poem.poet_name,
+    formatted,
+  };
 }
 
 export async function getRandomPoemSlug(db: DbClient): Promise<PoemSlug> {
@@ -129,15 +144,6 @@ export async function getRandomPoemSlug(db: DbClient): Promise<PoemSlug> {
   return asPoemSlug(value.slug);
 }
 
-export type RelatedPoem = {
-  readonly title: string;
-  readonly slug: PoemSlug;
-  readonly poetName: string;
-  readonly poetSlug: PoetSlug;
-  readonly meterName: string;
-  readonly meterSlug: MeterSlug;
-};
-
 export type PoemResourceData = {
   readonly metadata: {
     readonly poetName: string;
@@ -151,7 +157,7 @@ export type PoemResourceData = {
   };
   readonly clearTitle: string;
   readonly processedContent: ReturnType<typeof processPoemContent>;
-  readonly relatedPoems: readonly RelatedPoem[];
+  readonly relatedPoems: readonly PoemListRow[];
 };
 
 type GetPoemResult =
@@ -254,16 +260,19 @@ function buildResource(
   enrichment: Enrichment
 ): PoemResourceData {
   const { meterSlug, themeSlug, enrichmentMap } = enrichment;
-  const relatedPoems: readonly RelatedPoem[] = related_poems.map((r) => {
+  const relatedPoems: readonly PoemListRow[] = related_poems.flatMap((r) => {
     const enriched = enrichmentMap.get(r.poem_slug);
-    return {
-      title: r.poem_title,
-      slug: r.poem_slug,
-      poetName: r.poet_name,
-      poetSlug: enriched?.poet_slug ?? asPoetSlug(''),
-      meterName: r.meter_name,
-      meterSlug: enriched?.meter_slug ?? asMeterSlug(''),
-    };
+    if (!enriched) return [];
+    return [
+      {
+        title: r.poem_title,
+        slug: r.poem_slug,
+        poetName: r.poet_name,
+        poetSlug: enriched.poet_slug,
+        meterName: r.meter_name,
+        meterSlug: enriched.meter_slug,
+      },
+    ];
   });
   return {
     metadata: {

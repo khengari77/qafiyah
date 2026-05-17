@@ -1,7 +1,7 @@
 import { Frown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { SITE_URL } from '@/constants/globals';
+import { SITE_URL } from '@/constants/globals/urls';
 
 type Props = {
   readonly errorMessage: string;

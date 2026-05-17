@@ -6,8 +6,8 @@ import { rhymeStats } from '../schema';
 import { asRhymeSlug } from '../utils/brand';
 import { executeAs } from '../utils/execute-as';
 import { normalizeRhymePattern } from '../utils/normalize-rhyme-pattern';
-import { parentRowSchema, rawPoemRowSchema } from './_row-schemas';
-import type { PoemListRow } from './eras.queries';
+import { parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import type { PoemListRow } from './types';
 
 export type RhymeLetterGroup = {
   readonly name: string;

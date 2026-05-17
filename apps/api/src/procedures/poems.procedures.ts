@@ -1,13 +1,18 @@
 import { poemsQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
-import { pub } from './_base';
-import { listEnvelope } from './_envelope';
-import { toPoemResource } from './_mappers';
+import { pub } from './base';
+import { listEnvelope } from './envelope';
+import { toPoemResource } from './mappers/poem-resource';
 
 export const listSlugs = pub.poems.listSlugs.handler(async ({ context }) => {
   const slugs = await poemsQueries.listAllPoemSlugs(context.db);
   context.log?.({ result_count: slugs.length });
-  return listEnvelope(slugs, slugs.length, 1, slugs.length || 1);
+  return listEnvelope({
+    data: slugs,
+    totalItems: slugs.length,
+    page: 1,
+    pageSize: slugs.length || 1,
+  });
 });
 
 export const getBySlug = pub.poems.getBySlug.handler(async ({ context, input, errors }) => {

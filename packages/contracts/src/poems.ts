@@ -1,20 +1,14 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import {
-  inputValidationError,
-  listResponse,
-  poemListItem,
-  resourceResponse,
-  slugInput,
-  subRef,
-} from './_shared';
-import {
-  eraSlugSchema,
-  meterSlugSchema,
-  poemSlugSchema,
-  poetSlugSchema,
-  themeSlugSchema,
-} from './brands';
+import { eraSlugSchema } from './brands/era-slug';
+import { meterSlugSchema } from './brands/meter-slug';
+import { poemSlugSchema } from './brands/poem-slug';
+import { poetSlugSchema } from './brands/poet-slug';
+import { themeSlugSchema } from './brands/theme-slug';
+import { inputValidationError } from './shared/errors';
+import { slugInput } from './shared/inputs';
+import { poemListItem, subRef } from './shared/refs';
+import { listResponse, resourceResponse } from './shared/responses';
 
 const listSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })

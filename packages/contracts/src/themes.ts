@@ -1,13 +1,9 @@
 import { oc } from '@orpc/contract';
-import {
-  inputValidationError,
-  listResponse,
-  listResponseWithMeta,
-  parentMeta,
-  poemListItem,
-  slugAndPageInput,
-} from './_shared';
-import { themeSlugSchema } from './brands';
+import { themeSlugSchema } from './brands/theme-slug';
+import { inputValidationError } from './shared/errors';
+import { slugAndPageInput } from './shared/inputs';
+import { parentMeta, poemListItem } from './shared/refs';
+import { listResponse, listResponseWithMeta } from './shared/responses';
 
 const listThemesContract = oc
   .route({ method: 'GET', path: '/themes' })

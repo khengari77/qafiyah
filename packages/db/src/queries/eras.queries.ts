@@ -1,11 +1,12 @@
 import { ERAS_SORT_ORDER, POEMS_PER_PAGE } from '@qafiyah/constants';
-import type { EraSlug, MeterSlug, PoemSlug, PoetSlug } from '@qafiyah/contracts';
+import type { EraSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { eraStats } from '../schema';
 import { asEraSlug } from '../utils/brand';
 import { executeAs } from '../utils/execute-as';
-import { parentRowSchema, rawPoemRowSchema } from './_row-schemas';
+import { parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import type { PoemListRow } from './types';
 
 const ERAS_SORT_INDEX = new Map<string, number>(ERAS_SORT_ORDER.map((name, i) => [name, i]));
 
@@ -14,15 +15,6 @@ export type EraStatsRow = {
   readonly slug: EraSlug;
   readonly poetsCount: number;
   readonly poemsCount: number;
-};
-
-export type PoemListRow = {
-  readonly title: string;
-  readonly slug: PoemSlug;
-  readonly poetName: string;
-  readonly poetSlug: PoetSlug;
-  readonly meterName: string;
-  readonly meterSlug: MeterSlug;
 };
 
 export type ListEraPoemsResult = {

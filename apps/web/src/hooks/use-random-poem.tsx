@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { API_URL } from '@/constants/globals';
+import { API_URL } from '@/constants/globals/urls';
 import { getRandomPoemSlug } from '@/lib/api/client';
 
 type RandomPoemStatus =

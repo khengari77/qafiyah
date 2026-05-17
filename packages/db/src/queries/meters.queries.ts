@@ -5,8 +5,8 @@ import type { DbClient } from '../client';
 import { meterStats } from '../schema';
 import { asMeterSlug } from '../utils/brand';
 import { executeAs } from '../utils/execute-as';
-import { parentRowSchema, rawPoemRowSchema } from './_row-schemas';
-import type { PoemListRow } from './eras.queries';
+import { parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import type { PoemListRow } from './types';
 
 export type MeterStatsRow = {
   readonly name: string;

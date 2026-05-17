@@ -17,5 +17,7 @@ const _env = defineEnv({
 export const env = {
   PUBLIC_API_URL: _env.PUBLIC_API_URL,
   DEV: _rawEnv['DEV'] === true,
+  // @NOTE: BUILD_API_URL is a build-time-only variable; accessing it via _env
+  // would throw in the browser (envin rejects server-only vars on the client).
   BUILD_API_URL: _rawEnv['BUILD_API_URL'] as string | undefined,
 };

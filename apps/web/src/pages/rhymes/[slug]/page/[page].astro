@@ -1,12 +1,13 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
-import type { RhymeSlug } from '@qafiyah/contracts';
-import { SITE_URL } from '@/constants/globals';
-import Layout from '@/layouts/Layout.astro';
-import { fetchRhymePoemPage, fetchRhymes, generatePageNumbers } from '@/lib/api/static';
+import { rhymeSlugSchema } from '@qafiyah/contracts';
+import * as v from 'valibot';
+import { SITE_URL } from '@/constants/globals/urls';
+import Layout from '@/layouts/layout.astro';
+import { generatePageNumbers } from '@/lib/api/static/page-numbers';
+import { fetchRhymePoemPage, fetchRhymes } from '@/lib/api/static/rhymes';
 import { toArabicDigits } from '@/lib/arabic';
-
-const stripQuotes = (s: string) => s.replace(/"/g, '');
+import { stripQuotes } from '@/lib/strip-quotes';
 
 export async function getStaticPaths() {
   const rhymes = await fetchRhymes();
@@ -19,15 +20,15 @@ export async function getStaticPaths() {
   return params;
 }
 
-const { slug, page } = Astro.params;
-const pageNumber = Number.parseInt(page as string, 10);
-
-if (!(slug && Number.isFinite(pageNumber)) || pageNumber < 1) {
+const parsedSlug = v.safeParse(rhymeSlugSchema, Astro.params.slug);
+const pageNumber = Number.parseInt(Astro.params.page ?? '', 10);
+if (!(parsedSlug.success && Number.isFinite(pageNumber)) || pageNumber < 1) {
   return Astro.redirect('/404');
 }
+const slug = parsedSlug.output;
+const page = pageNumber.toString();
 
-// URL parameter boundary: brand the bare-string slug as a RhymeSlug for the typed API.
-const response = await fetchRhymePoemPage(slug as RhymeSlug, page as string);
+const response = await fetchRhymePoemPage(slug, pageNumber);
 if (!response) {
   return Astro.redirect('/404');
 }

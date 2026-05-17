@@ -1,8 +1,9 @@
 ---
-import type { PoemSlug } from '@qafiyah/contracts';
+import { poemSlugSchema } from '@qafiyah/contracts';
+import * as v from 'valibot';
 import { PoemDisplay } from '@/components/poem/poem-display';
-import Layout from '@/layouts/Layout.astro';
-import { fetchAllPoemSlugs } from '@/lib/api/static';
+import Layout from '@/layouts/layout.astro';
+import { fetchAllPoemSlugs } from '@/lib/api/static/poems';
 import { loadPoemPage } from '@/lib/poem-page';
 
 export async function getStaticPaths() {
@@ -10,9 +11,12 @@ export async function getStaticPaths() {
   return slugs.map((poemSlug) => ({ params: { slug: poemSlug } }));
 }
 
-const { slug } = Astro.params;
-// URL parameter boundary: brand the bare-string slug as a PoemSlug for the typed API.
-const pageData = await loadPoemPage(slug as PoemSlug);
+const parsed = v.safeParse(poemSlugSchema, Astro.params.slug);
+if (!parsed.success) {
+  return Astro.redirect('/404');
+}
+const slug = parsed.output;
+const pageData = await loadPoemPage(slug);
 
 if (!pageData) {
   return Astro.redirect('/404');

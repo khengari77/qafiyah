@@ -1,17 +1,12 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
-import { SITE_URL } from '@/constants/globals';
-import Layout from '@/layouts/Layout.astro';
-import { fetchMeters } from '@/lib/api/static';
+import { SITE_URL } from '@/constants/globals/urls';
+import Layout from '@/layouts/layout.astro';
+import { fetchMeters } from '@/lib/api/static/meters';
 import { toArabicDigits } from '@/lib/arabic';
+import { stripQuotes } from '@/lib/strip-quotes';
 
-let meters: Awaited<ReturnType<typeof fetchMeters>> = [];
-try {
-  meters = await fetchMeters();
-} catch {
-  meters = [];
-}
-const stripQuotes = (s: string) => s.replace(/"/g, '');
+const meters = await fetchMeters();
 
 const title = `${SITE_NAME_AR} | تصفح حسب البحور`;
 const jsonLd = {

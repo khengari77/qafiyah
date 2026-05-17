@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asMeterSlug } from '../utils/brand';
-import { fakeDb, makeChain } from './_test-utils';
 import { listMeterPoems, listMeters } from './meters.queries';
+import { fakeDb, makeChain } from './test-utils';
 
 describe('listMeters', () => {
   it('returns meters sorted alphabetically in Arabic', async () => {

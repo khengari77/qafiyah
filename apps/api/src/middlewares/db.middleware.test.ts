@@ -30,22 +30,22 @@ describe('dbMiddleware', () => {
     createDbMock.mockReturnValue({ __mock: 'db' });
   });
 
-  it('returns 503 when DATABASE_URL is missing', async () => {
+  it('returns 500 when DATABASE_URL is missing (configuration error)', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const app = appWith(await freshMiddleware());
     const res = await app.fetch(new Request('http://localhost/test'), {});
     consoleSpy.mockRestore();
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(500);
   });
 
-  it('returns 503 when DATABASE_URL is malformed', async () => {
+  it('returns 500 when DATABASE_URL is malformed (configuration error)', async () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const app = appWith(await freshMiddleware());
     const res = await app.fetch(new Request('http://localhost/test'), {
       DATABASE_URL: 'not-a-url',
     });
     consoleSpy.mockRestore();
-    expect(res.status).toBe(503);
+    expect(res.status).toBe(500);
   });
 
   it('creates a fresh db client per request for a localhost URL', async () => {

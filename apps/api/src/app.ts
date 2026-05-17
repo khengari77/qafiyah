@@ -19,10 +19,11 @@ import {
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
-import { enrichContext } from './lib/logger';
-import { makeProblem, sendProblem, transformOrpcResponse } from './lib/problem';
+import { enrichContext, recordError } from './lib/logger/builder';
+import type { DomainFields } from './lib/logger/types';
+import { makeProblem, type ProblemCode, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
-import serveEmojiFavicon from './middlewares/favicon.middleware';
+import { serveEmojiFavicon } from './middlewares/favicon.middleware';
 import { loggerMiddleware } from './middlewares/logger.middleware';
 import { router, routerNamespaces } from './router';
 import index from './routes/index.routes';
@@ -71,7 +72,7 @@ const orpcHandler = new OpenAPIHandler(router, {
 app.use(`${API_V1_PREFIX}/*`, async (c, next) => {
   if (ORPC_BYPASS_PATHS.has(c.req.path)) return next();
   const result = await orpcHandler.handle(c.req.raw, {
-    context: { db: c.get('db'), log: (data) => enrichContext(c, data) },
+    context: { db: c.get('db'), log: (data: DomainFields) => enrichContext(c, data) },
     prefix: API_V1_PREFIX,
   });
   if (!result.matched) return next();
@@ -96,7 +97,7 @@ app
   .onError((error, c) => {
     const isHttp = error instanceof HTTPException;
     const status = isHttp ? error.status : HTTP_INTERNAL_SERVER_ERROR;
-    let code: string;
+    let code: ProblemCode;
     if (!isHttp) {
       code = 'INTERNAL_SERVER_ERROR';
     } else if (status === HTTP_NOT_FOUND) {
@@ -105,14 +106,14 @@ app
       code = 'BAD_REQUEST';
     }
 
-    const event = c.var.logEvent;
-    if (event) {
-      event.error = {
+    const handle = c.var.logEvent;
+    if (handle) {
+      recordError(handle, {
         type: error.constructor.name,
         code,
         message: error.message,
         retriable: status >= 500,
-      };
+      });
     }
 
     if (isHttp) {

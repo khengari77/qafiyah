@@ -1,7 +1,7 @@
 import { FAVICON_CACHE_CONTROL, FAVICON_PATH } from '@qafiyah/constants';
 import type { MiddlewareHandler } from 'hono';
 
-const serveEmojiFavicon = (emoji: string): MiddlewareHandler => {
+export const serveEmojiFavicon = (emoji: string): MiddlewareHandler => {
   return async (c, next) => {
     if (c.req.path === FAVICON_PATH) {
       c.header('Content-Type', 'image/svg+xml');
@@ -14,5 +14,3 @@ const serveEmojiFavicon = (emoji: string): MiddlewareHandler => {
     return;
   };
 };
-
-export default serveEmojiFavicon;
