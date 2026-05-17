@@ -1,6 +1,6 @@
 import { oc } from '@orpc/contract';
 import { themeSlugSchema } from './brands/theme-slug';
-import { inputValidationError } from './shared/errors';
+import { EXAMPLE_THEME_SLUG, inputValidationError } from './constants';
 import { slugAndPageInput } from './shared/inputs';
 import { parentMeta, poemListItem } from './shared/refs';
 import { listResponse, listResponseWithMeta } from './shared/responses';
@@ -11,7 +11,7 @@ const listThemesContract = oc
 
 const listThemePoemsContract = oc
   .route({ method: 'GET', path: '/themes/{slug}/poems' })
-  .input(slugAndPageInput(themeSlugSchema, '61a2570d-9acc-493d-a05d-7dd2404c17ff'))
+  .input(slugAndPageInput(themeSlugSchema, EXAMPLE_THEME_SLUG))
   .errors({
     ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Theme not found' },

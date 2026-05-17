@@ -5,7 +5,7 @@ import { meterSlugSchema } from './brands/meter-slug';
 import { poemSlugSchema } from './brands/poem-slug';
 import { poetSlugSchema } from './brands/poet-slug';
 import { themeSlugSchema } from './brands/theme-slug';
-import { inputValidationError } from './shared/errors';
+import { EXAMPLE_POEM_SLUG, inputValidationError } from './constants';
 import { slugInput } from './shared/inputs';
 import { poemListItem, subRef } from './shared/refs';
 import { listResponse, resourceResponse } from './shared/responses';
@@ -30,7 +30,7 @@ const poemResource = v.object({
 
 const getBySlugContract = oc
   .route({ method: 'GET', path: '/poems/{slug}' })
-  .input(slugInput(poemSlugSchema, '887d1dcd-fb04-4f09-a448-d08287dface0'))
+  .input(slugInput(poemSlugSchema, EXAMPLE_POEM_SLUG))
   .errors({
     ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Poem not found' },

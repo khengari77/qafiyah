@@ -1,4 +1,5 @@
 import * as v from 'valibot';
+import { DEFAULT_PAGE } from '../constants';
 
 export const pageParam = v.pipe(
   v.string(),
@@ -19,9 +20,9 @@ export const slugAndPageInput = <TSlug extends v.GenericSchema<string, string>>(
 ) =>
   v.object({
     slug: v.pipe(slug, v.examples([example])),
-    page: v.optional(pageParam, '1'),
+    page: v.optional(pageParam, DEFAULT_PAGE),
   });
 
 export const pageQueryInput = v.object({
-  page: v.optional(pageParam, '1'),
+  page: v.optional(pageParam, DEFAULT_PAGE),
 });

@@ -1,6 +1,6 @@
 import { oc } from '@orpc/contract';
 import { eraSlugSchema } from './brands/era-slug';
-import { inputValidationError } from './shared/errors';
+import { EXAMPLE_ERA_SLUG, inputValidationError } from './constants';
 import { slugAndPageInput } from './shared/inputs';
 import { parentMeta, poemListItem, statRow } from './shared/refs';
 import { listResponse, listResponseWithMeta } from './shared/responses';
@@ -11,7 +11,7 @@ const listErasContract = oc
 
 const listEraPoemsContract = oc
   .route({ method: 'GET', path: '/eras/{slug}/poems' })
-  .input(slugAndPageInput(eraSlugSchema, 'abbasid'))
+  .input(slugAndPageInput(eraSlugSchema, EXAMPLE_ERA_SLUG))
   .errors({
     ...inputValidationError,
     NOT_FOUND: { status: 404, message: 'Era not found' },

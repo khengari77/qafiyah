@@ -8,7 +8,7 @@ import { poetSlugSchema } from './brands/poet-slug';
 import { rhymeSlugSchema } from './brands/rhyme-slug';
 import { themeSlugSchema } from './brands/theme-slug';
 import { cleanArabicQuery } from './clean-arabic-query';
-import { inputValidationError } from './shared/errors';
+import { DEFAULT_PAGE, inputValidationError, SEARCH_EMPTY_INPUT_MESSAGE } from './constants';
 import { pageParam } from './shared/inputs';
 import { subRef } from './shared/refs';
 import { pagination } from './shared/responses';
@@ -50,7 +50,7 @@ export const searchInputSchema = v.pipe(
       ''
     ),
     searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
-    page: v.optional(pageParam, '1'),
+    page: v.optional(pageParam, DEFAULT_PAGE),
     matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
     meterSlugs: meterSlugsParam,
     eraSlugs: eraSlugsParam,
@@ -66,7 +66,7 @@ export const searchInputSchema = v.pipe(
         input.rhymeSlugs.length >
       0;
     return hasText || hasFilters;
-  }, 'أدخل كلمة بحث أو اختر فلترًا واحدًا على الأقل')
+  }, SEARCH_EMPTY_INPUT_MESSAGE)
 );
 
 const searchContract = oc
