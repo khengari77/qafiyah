@@ -1,4 +1,5 @@
-import { DATABASE_DUMPS_URL, DEVELOPER_SITE_URL, GITHUB_REPO_URL } from '@qafiyah/constants';
+import { GITHUB_REPO_URL } from '@qafiyah/constants';
+import { DATABASE_DUMPS_URL, DEVELOPER_SITE_URL } from '@/constants/external';
 import { cn } from '@/lib/utils';
 import { RandomPoemButton } from './random-poem-button';
 

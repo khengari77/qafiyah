@@ -1,7 +1,8 @@
-import { ARABIC_LETTERS_MAP, POEMS_PER_PAGE } from '@qafiyah/constants';
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { RhymeSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
+import { ARABIC_LETTERS_MAP } from '../constants';
 import { rhymeStats } from '../schema';
 import { asRhymeSlug } from '../utils/brand';
 import { executeAs } from '../utils/execute-as';

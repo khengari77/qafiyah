@@ -1,7 +1,8 @@
-import { FORMAL_METERS, POEMS_PER_PAGE } from '@qafiyah/constants';
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { MeterSlug } from '@qafiyah/contracts';
 import { inArray, sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
+import { FORMAL_METERS } from '../constants';
 import { meterStats } from '../schema';
 import { asMeterSlug } from '../utils/brand';
 import { executeAs } from '../utils/execute-as';

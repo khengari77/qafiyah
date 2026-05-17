@@ -1,12 +1,12 @@
 'use client';
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type ReactNode, useState } from 'react';
 import {
   REACT_QUERY_GC_TIME_MS,
   REACT_QUERY_RETRY_COUNT,
   REACT_QUERY_STALE_TIME_MS,
-} from '@qafiyah/constants';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { type ReactNode, useState } from 'react';
+} from '@/constants/cache';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(

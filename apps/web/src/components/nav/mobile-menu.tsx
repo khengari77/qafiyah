@@ -1,8 +1,9 @@
 'use client';
 
-import { NAV_LINKS, RESPONSIVE_ICON_SIZE } from '@qafiyah/constants';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { NAV_LINKS } from '@/constants/nav';
+import { RESPONSIVE_ICON_SIZE } from '@/constants/ui';
 import { NavLinks } from './nav-links';
 
 type Props = {

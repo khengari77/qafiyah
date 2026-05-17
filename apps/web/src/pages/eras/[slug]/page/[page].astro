@@ -1,8 +1,9 @@
 ---
-import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@qafiyah/constants';
 import { eraSlugSchema } from '@qafiyah/contracts';
 import * as v from 'valibot';
+import { SITE_NAME_AR } from '@/constants/brand';
 import { SITE_URL } from '@/constants/globals/urls';
+import { SCHEMA_ORG_CONTEXT } from '@/constants/metadata';
 import Layout from '@/layouts/layout.astro';
 import { fetchEraPoemPage, fetchEras } from '@/lib/api/static/eras';
 import { generatePageNumbers } from '@/lib/api/static/page-numbers';

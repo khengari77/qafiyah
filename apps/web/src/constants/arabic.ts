@@ -10,3 +10,6 @@ export const ARABIC_DIGITS_MAP = {
   '8': '٨',
   '9': '٩',
 } as const satisfies Readonly<Record<string, string>>;
+
+// Same range as NON_ARABIC_AND_SPACE_REGEX but Basic Arabic block only; used in pure display contexts.
+export const NON_ARABIC_BASIC_REGEX = /[^؀-ۿ\s]/g;

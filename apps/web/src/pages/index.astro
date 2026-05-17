@@ -1,17 +1,17 @@
 ---
+import { GITHUB_REPO_URL } from '@qafiyah/constants';
+import { SearchWithProviders } from '@/components/search/search-with-providers';
+import { SITE_NAME_AR } from '@/constants/brand';
+import { X_HANDLE_URL } from '@/constants/external';
+import { SITE_URL } from '@/constants/globals/urls';
 import {
-  GITHUB_REPO_URL,
-  POEM_LANGUAGE,
   SCHEMA_ORG_CONTEXT,
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
   SITE_LOGO_PATH,
-  SITE_NAME_AR,
   SITE_TITLE,
-  X_HANDLE_URL,
-} from '@qafiyah/constants';
-import { SearchWithProviders } from '@/components/search/search-with-providers';
-import { SITE_URL } from '@/constants/globals/urls';
+} from '@/constants/metadata';
+import { POEM_LANGUAGE } from '@/constants/ui';
 import Layout from '@/layouts/layout.astro';
 
 const jsonLd = {

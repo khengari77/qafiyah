@@ -1,4 +1,7 @@
-import { VERSE_DESCRIPTION_OPTIMAL_LENGTH, VERSE_SEPARATOR_DISPLAY } from '@qafiyah/constants';
+import {
+  VERSE_DESCRIPTION_OPTIMAL_LENGTH,
+  VERSE_SEPARATOR_DISPLAY,
+} from '@/constants/search-limits';
 
 /** Builds a short plain-text snippet from verse halves for meta descriptions. */
 export function flattenVerses(

@@ -1,4 +1,4 @@
-import { ARABIC_DIGITS_MAP } from '@qafiyah/constants';
+import { ARABIC_DIGITS_MAP } from '@/constants/arabic';
 
 const DIGIT_LOOKUP: Readonly<Record<string, string>> = ARABIC_DIGITS_MAP;
 

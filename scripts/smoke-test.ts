@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
 
-import { DEV_WEB_PORT } from '@qafiyah/constants';
-
-const BASE = `http://localhost:${DEV_WEB_PORT}`;
+const BASE = 'http://localhost:4321';
 
 const URLS = [
   `${BASE}/`,

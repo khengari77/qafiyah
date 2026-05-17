@@ -13,9 +13,8 @@
  */
 
 import path from 'node:path';
-import { DEV_API_PORT } from '@qafiyah/constants';
 
-const PORT = DEV_API_PORT;
+const PORT = 8787;
 const HOST = '127.0.0.1';
 const READY_TIMEOUT_MS = 30_000;
 const READY_POLL_MS = 200;

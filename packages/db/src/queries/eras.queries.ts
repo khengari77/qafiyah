@@ -1,7 +1,8 @@
-import { ERAS_SORT_ORDER, POEMS_PER_PAGE } from '@qafiyah/constants';
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { EraSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
+import { ERAS_SORT_ORDER } from '../constants';
 import { eraStats } from '../schema';
 import { asEraSlug } from '../utils/brand';
 import { executeAs } from '../utils/execute-as';

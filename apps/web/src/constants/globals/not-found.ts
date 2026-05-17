@@ -1,4 +1,5 @@
-import { HTTP_NOT_FOUND, NOT_FOUND_MESSAGE_AR } from '@qafiyah/constants';
+import { HTTP_NOT_FOUND } from '@qafiyah/constants';
+import { NOT_FOUND_MESSAGE_AR } from '@/constants/ui';
 import { toArabicDigits } from '@/lib/arabic';
 
 export const NOT_FOUND_CODE = toArabicDigits(HTTP_NOT_FOUND);

@@ -1,3 +1,16 @@
+export const ERAS_SORT_ORDER = [
+  'جاهلي',
+  'مخضرم',
+  'إسلامي',
+  'أموي',
+  'عباسي',
+  'أندلسي',
+  'أيوبي',
+  'مملوكي',
+  'عثماني',
+  'متأخر',
+] as const;
+
 export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
   ['ألف', ['ا', 'أ', 'إ', 'آ', 'ء', 'الف', 'ألف', 'الالف', 'الألف']],
   ['باء', ['ب', 'باء', 'الباء']],
@@ -28,3 +41,28 @@ export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
   ['واو', ['و', 'ؤ', 'واو', 'الواو']],
   ['ياء', ['ي', 'ى', 'ئ', 'ياء', 'الياء']],
 ]);
+
+export const FORMAL_METERS = [
+  'الطويل',
+  'المديد',
+  'البسيط',
+  'الوافر',
+  'الكامل',
+  'الهزج',
+  'الرجز',
+  'الرمل',
+  'السريع',
+  'المنسرح',
+  'الخفيف',
+  'المضارع',
+  'المقتضب',
+  'المجتث',
+  'المتقارب',
+  'المتدارك',
+] as const;
+
+// Arabic diacritical marks (tashkeel):
+//   U+0610–U+061A  extended Arabic signs (sallallahou, etc.)
+//   U+064B–U+065F  vowel marks (fathatan, kasratan, fatha, damma, kasra, shadda, sukun, …)
+//   U+06D6–U+06ED  Quranic annotation marks
+export const TASHKEEL_REGEX = /[ؐ-ًؚ-ٟۖ-ۭ]/g;

@@ -1,4 +1,4 @@
-import { TASHKEEL_REGEX } from '@qafiyah/constants';
+import { TASHKEEL_REGEX } from '../constants';
 
 /**
  * Removes Arabic diacritical marks (tashkeel) from text

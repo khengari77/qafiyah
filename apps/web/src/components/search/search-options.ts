@@ -1,11 +1,11 @@
+import { SEARCH_TEXTS } from '@qafiyah/constants';
+import type { SelectOption } from '@/components/ui/select-option';
 import {
   ERAS_OPTIONS,
   METERS_OPTIONS,
   RHYMES_OPTIONS,
-  SEARCH_TEXTS,
   THEMES_OPTIONS,
-} from '@qafiyah/constants';
-import type { SelectOption } from '@/components/ui/select-option';
+} from '@/constants/search-options';
 
 export const searchTypeOptions = [
   { value: 'poems', label: SEARCH_TEXTS.poemsSearchTypeLabel },

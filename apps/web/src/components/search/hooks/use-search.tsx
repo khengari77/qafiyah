@@ -4,7 +4,6 @@ import {
   MATCH_TYPE_VALUES,
   MAX_QUERY_LENGTH,
   NON_ARABIC_AND_SPACE_REGEX,
-  SEARCH_RESULTS_STALE_TIME_MS,
   SEARCH_TEXTS,
   SEARCH_TYPE_VALUES,
 } from '@qafiyah/constants';
@@ -12,6 +11,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useState } from 'react';
+import { SEARCH_RESULTS_STALE_TIME_MS } from '@/constants/search-limits';
 import { search } from '@/lib/api/client';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
 import { useInfiniteScroll } from './use-infinite-scroll';

@@ -1,4 +1,7 @@
-import { DEV_WEB_URL, PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
+import { PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
+
+const DEV_WEB_URL = 'http://localhost:4321';
+
 import { env } from '@/env';
 
 export const isDev = env.DEV;

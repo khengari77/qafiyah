@@ -1,4 +1,10 @@
-import type { ArabicNounForms } from './noun-forms-type';
+// Mirrors arabic-count-format's `ArabicNounForms`. Declared locally to keep
+// @qafiyah/constants free of runtime dependencies.
+export type ArabicNounForms = {
+  readonly singular: string;
+  readonly dual: string;
+  readonly plural: string;
+};
 
 export const ERAS_NOUN_FORMS = {
   singular: 'عصر',
