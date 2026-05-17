@@ -1,3 +1,4 @@
+import { describe, expect, it } from 'vitest';
 import { formatVerseCount, toArabicDigits } from './arabic';
 
 describe('toArabicDigits', () => {
