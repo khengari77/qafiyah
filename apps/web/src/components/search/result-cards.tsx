@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { SITE_URL } from '@/constants';
-import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
+import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
 import { HighlightedText } from './highlighted-text';
 
 const badgeClassname =

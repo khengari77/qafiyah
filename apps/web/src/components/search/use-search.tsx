@@ -12,7 +12,7 @@ import type React from 'react';
 import { useEffect, useState } from 'react';
 import { SEARCH_RESULTS_STALE_TIME_MS, SEARCH_TEXTS } from '@/constants';
 import { search } from '@/lib/api/client';
-import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
+import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
 import { useInfiniteScroll } from './use-infinite-scroll';
 
 type SearchType = (typeof SEARCH_TYPE_VALUES)[number];

@@ -4,7 +4,7 @@ import { CAT_POET_PREFIX_REGEX, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } fro
 import Layout from '@/layouts/layout.astro';
 import { fetchPoets, fetchPoetsTotalPages } from '@/lib/api/static/poets';
 import { toArabicDigits } from '@/lib/arabic';
-import { stripQuotes } from '@/lib/strip-quotes';
+import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
   const totalPages = await fetchPoetsTotalPages();

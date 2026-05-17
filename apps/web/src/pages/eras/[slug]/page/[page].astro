@@ -6,7 +6,7 @@ import Layout from '@/layouts/layout.astro';
 import { fetchEraPoemPage, fetchEras } from '@/lib/api/static/eras';
 import { generatePageNumbers } from '@/lib/api/static/page-numbers';
 import { toArabicDigits } from '@/lib/arabic';
-import { stripQuotes } from '@/lib/strip-quotes';
+import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
   const eras = await fetchEras();

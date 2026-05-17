@@ -1,6 +1,5 @@
 import type { MeterSlug } from '@qafiyah/contracts';
-import { apiServer } from '../rpc';
-import type { Meter, MeterPoemsResponse } from '../types';
+import { apiServer, type Meter, type MeterPoemsResponse } from '../rpc';
 import { dedup, isNotFound } from './dedup';
 
 export function fetchMeters(): Promise<readonly Meter[]> {

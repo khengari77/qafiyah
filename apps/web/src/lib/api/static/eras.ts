@@ -1,6 +1,5 @@
 import type { EraSlug } from '@qafiyah/contracts';
-import { apiServer } from '../rpc';
-import type { Era, EraPoemsResponse } from '../types';
+import { apiServer, type Era, type EraPoemsResponse } from '../rpc';
 import { dedup, isNotFound } from './dedup';
 
 export function fetchEras(): Promise<readonly Era[]> {

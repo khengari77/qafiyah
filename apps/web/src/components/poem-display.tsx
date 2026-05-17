@@ -3,7 +3,7 @@
 import { Minus, Plus } from 'lucide-react';
 import { ListCard } from '@/components/ui/list-card';
 import { useFontSize } from '@/hooks/use-font-size';
-import type { Poem } from '@/lib/api/types';
+import type { Poem } from '@/lib/api/rpc';
 import { formatVerseCount } from '@/lib/arabic';
 
 type PoemProps = {

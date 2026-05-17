@@ -8,8 +8,8 @@ import {
   TWITTER_DESCRIPTION_TEMPLATE_AR,
   UNKNOWN_POET_NAME,
 } from '@/constants';
+import type { Poem } from '@/lib/api/rpc';
 import { fetchPoem } from '@/lib/api/static/poems';
-import type { Poem } from '@/lib/api/types';
 import { flattenVerses } from '@/lib/flatten-verses';
 
 function safeMetaText(value: string): string {

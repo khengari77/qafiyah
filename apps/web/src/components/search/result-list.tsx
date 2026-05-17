@@ -1,11 +1,9 @@
 import { Loader2 } from 'lucide-react';
 import type { Ref } from 'react';
 import { match } from 'ts-pattern';
-import type { FetchStatus } from './hooks/use-search';
 import { PoemCard, PoetCard } from './result-cards';
-import { ErrorState } from './state-error';
-import { LoadingState } from './state-loading';
-import { NoResultsState } from './state-no-results';
+import { ErrorState, LoadingState, NoResultsState } from './search-states';
+import type { FetchStatus } from './use-search';
 
 type Props = {
   readonly status: FetchStatus;

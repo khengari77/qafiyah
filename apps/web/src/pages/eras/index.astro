@@ -4,7 +4,7 @@ import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/c
 import Layout from '@/layouts/layout.astro';
 import { fetchEras } from '@/lib/api/static/eras';
 import { toArabicDigits } from '@/lib/arabic';
-import { stripQuotes } from '@/lib/strip-quotes';
+import { stripQuotes } from '@/lib/utils';
 
 const eras = await fetchEras();
 

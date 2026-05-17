@@ -1,8 +1,7 @@
 import { API_RANDOM_POEM_PATH } from '@qafiyah/constants';
 import { type PoemSlug, poemSlugSchema } from '@qafiyah/contracts';
 import * as v from 'valibot';
-import { apiBrowser } from './rpc';
-import type { PoemsSearchEnvelope, PoetsSearchEnvelope } from './types';
+import { apiBrowser, type PoemsSearchEnvelope, type PoetsSearchEnvelope } from './rpc';
 
 type SearchArgs = {
   readonly q: string;

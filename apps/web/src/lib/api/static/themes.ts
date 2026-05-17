@@ -1,6 +1,5 @@
 import type { ThemeSlug } from '@qafiyah/contracts';
-import { apiServer } from '../rpc';
-import type { Theme, ThemePoemsResponse } from '../types';
+import { apiServer, type Theme, type ThemePoemsResponse } from '../rpc';
 import { dedup, isNotFound } from './dedup';
 
 export function fetchThemes(): Promise<readonly Theme[]> {

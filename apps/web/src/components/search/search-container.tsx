@@ -1,7 +1,7 @@
 'use client';
 
-import { useSearch } from '@/components/search/hooks/use-search';
 import { getBadgeCount, getNoResultsText, getResultText } from '@/components/search/search-format';
+import { useSearch } from '@/components/search/use-search';
 import { Card } from '@/components/ui/card';
 import {
   ERAS_NOUN_FORMS,

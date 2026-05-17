@@ -1,6 +1,5 @@
 import type { RhymeSlug } from '@qafiyah/contracts';
-import { apiServer } from '../rpc';
-import type { Rhyme, RhymePoemsResponse } from '../types';
+import { apiServer, type Rhyme, type RhymePoemsResponse } from '../rpc';
 import { dedup, isNotFound } from './dedup';
 
 export function fetchRhymes(): Promise<readonly Rhyme[]> {

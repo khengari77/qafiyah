@@ -7,7 +7,7 @@ import Layout from '@/layouts/layout.astro';
 import { generatePageNumbers } from '@/lib/api/static/page-numbers';
 import { fetchPoetPoemPage, fetchPoetsWithPoemCount } from '@/lib/api/static/poets';
 import { toArabicDigits } from '@/lib/arabic';
-import { stripQuotes } from '@/lib/strip-quotes';
+import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
   const poets = await fetchPoetsWithPoemCount();
