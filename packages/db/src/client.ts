@@ -1,4 +1,3 @@
-import { POSTGRES_EDGE_CONFIG, POSTGRES_LONG_LIVED_CONFIG } from '@qafiyah/constants';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
@@ -15,22 +14,22 @@ export function detectDbMode(databaseUrl: string): DbMode {
 
 const PROFILES = {
   edge: {
-    max: POSTGRES_EDGE_CONFIG.POOL_MAX,
-    idle_timeout: POSTGRES_EDGE_CONFIG.IDLE_TIMEOUT_SECONDS,
-    connect_timeout: POSTGRES_EDGE_CONFIG.CONNECT_TIMEOUT_SECONDS,
-    max_lifetime: POSTGRES_EDGE_CONFIG.MAX_LIFETIME_SECONDS,
+    max: 1,
+    idle_timeout: 20,
+    connect_timeout: 5,
+    max_lifetime: 60,
     prepare: false,
     fetch_types: false,
-    application_name: POSTGRES_EDGE_CONFIG.APPLICATION_NAME,
+    application_name: 'qafiyah-edge',
   },
   'long-lived': {
-    max: POSTGRES_LONG_LIVED_CONFIG.POOL_MAX,
-    idle_timeout: POSTGRES_LONG_LIVED_CONFIG.IDLE_TIMEOUT_SECONDS,
-    connect_timeout: POSTGRES_LONG_LIVED_CONFIG.CONNECT_TIMEOUT_SECONDS,
-    max_lifetime: POSTGRES_LONG_LIVED_CONFIG.MAX_LIFETIME_SECONDS,
+    max: 20,
+    idle_timeout: 300,
+    connect_timeout: 30,
+    max_lifetime: 1_800,
     prepare: true,
     fetch_types: true,
-    application_name: POSTGRES_LONG_LIVED_CONFIG.APPLICATION_NAME,
+    application_name: 'qafiyah-long-lived',
   },
 } as const;
 

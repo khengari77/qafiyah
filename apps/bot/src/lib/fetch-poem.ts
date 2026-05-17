@@ -1,4 +1,5 @@
-import { API_RANDOM_POEM_PATH, MAX_TWEET_LENGTH, PROD_API_URL } from '@qafiyah/constants';
+import { API_RANDOM_POEM_PATH, PROD_API_URL } from '@qafiyah/constants';
+import { MAX_TWEET_LENGTH } from '../constants';
 import { type Result, TerminalError } from './result';
 import { withRetry } from './retry';
 

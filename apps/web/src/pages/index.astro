@@ -1,11 +1,13 @@
 ---
 import {
   GITHUB_REPO_URL,
-  HTML_HEAD_METADATA,
   POEM_LANGUAGE,
   SCHEMA_ORG_CONTEXT,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
   SITE_LOGO_PATH,
   SITE_NAME_AR,
+  SITE_TITLE,
   X_HANDLE_URL,
 } from '@qafiyah/constants';
 import { SearchWithProviders } from '@/components/search/search-with-providers';
@@ -15,9 +17,9 @@ import Layout from '@/layouts/layout.astro';
 const jsonLd = {
   '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'WebSite',
-  name: HTML_HEAD_METADATA.title,
+  name: SITE_TITLE,
   url: SITE_URL,
-  description: HTML_HEAD_METADATA.description,
+  description: SITE_DESCRIPTION,
   potentialAction: {
     '@type': 'SearchAction',
     target: `${SITE_URL}/?q={search_term_string}`,
@@ -39,9 +41,9 @@ const jsonLd = {
 ---
 
 <Layout
-  title={HTML_HEAD_METADATA.title}
-  description={HTML_HEAD_METADATA.description}
-  keywords={HTML_HEAD_METADATA.keywords}
+  title={SITE_TITLE}
+  description={SITE_DESCRIPTION}
+  keywords={SITE_KEYWORDS}
   canonical="/"
   jsonLd={jsonLd}
 >
@@ -50,7 +52,7 @@ const jsonLd = {
     aria-hidden="true"
     tabindex="-1"
   >
-    {HTML_HEAD_METADATA.description}
+    {SITE_DESCRIPTION}
   </p>
 
   <div class="flex-1 w-full h-full flex flex-col relative">

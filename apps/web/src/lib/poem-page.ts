@@ -2,8 +2,6 @@ import {
   POEM_DEFAULT_TITLE,
   POEM_KEYWORDS_JOIN_SEPARATOR,
   POEM_LANGUAGE,
-  SCHEMA_ORG_CONTEXT,
-  SITE_LOGO_PATH,
   SITE_NAME_AR,
   TWITTER_DESCRIPTION_TEMPLATE_AR,
   UNKNOWN_POET_NAME,
@@ -40,7 +38,7 @@ function buildJsonLd(
   sanitizedKeywords: string
 ): Readonly<Record<string, unknown>> {
   return {
-    '@context': SCHEMA_ORG_CONTEXT,
+    '@context': 'https://schema.org',
     '@type': 'CreativeWork',
     name: safeMetaText(poem.title),
     headline: safeMetaText(`${poem.title} | ${poem.poet.name}`),
@@ -56,7 +54,7 @@ function buildJsonLd(
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME_AR,
-      logo: { '@type': 'ImageObject', url: `${SITE_URL}${SITE_LOGO_PATH}` },
+      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.webp` },
     },
   };
 }

@@ -1,4 +1,3 @@
-import { MAX_EXCERPT_LENGTH } from '@qafiyah/constants';
 import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
 import {
   eraSlugSchema,
@@ -110,6 +109,7 @@ export async function getRandomPoemLines(db: DbClient): Promise<RandomPoemLinesR
   const line2 = allLines[startIndex + 1] || '';
   const formatted = extractPoemExcerpt(poem, startIndex);
 
+  const MAX_EXCERPT_LENGTH = 280;
   if (formatted.length > MAX_EXCERPT_LENGTH) {
     throw new Error(
       `getRandomPoemLines: excerpt length ${formatted.length} exceeds MAX_EXCERPT_LENGTH ${MAX_EXCERPT_LENGTH}`

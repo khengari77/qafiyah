@@ -1,4 +1,4 @@
-import { INITIAL_RETRY_DELAY_MS, MAX_RETRY_ATTEMPTS } from '@qafiyah/constants';
+import { INITIAL_RETRY_DELAY_MS, MAX_RETRY_ATTEMPTS } from '../constants';
 import { err, ok, type Result, TerminalError } from './result';
 
 type RetryClassification = 'terminal' | 'rate-limit' | 'transient';

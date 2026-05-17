@@ -21,3 +21,4 @@ export const SITE_KEYWORDS = [
 
 export const SITE_ARTICLE_SECTION = 'شعر';
 export const SITE_THEME_COLOR_HEX = '#fafafa';
+export const SCHEMA_ORG_CONTEXT = 'https://schema.org';

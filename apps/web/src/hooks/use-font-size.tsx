@@ -1,13 +1,12 @@
 'use client';
 
-import {
-  FONT_SIZE_BASE_GAP_PX,
-  FONT_SIZE_INITIAL,
-  FONT_SIZE_MAX,
-  FONT_SIZE_MIN,
-  FONT_SIZE_STEP,
-} from '@qafiyah/constants';
 import { useState } from 'react';
+
+const FONT_SIZE_MIN = 0.7;
+const FONT_SIZE_MAX = 1.5;
+const FONT_SIZE_INITIAL = 1;
+const FONT_SIZE_STEP = 0.1;
+const FONT_SIZE_BASE_GAP_PX = 16;
 
 export function useFontSize(
   minSize = FONT_SIZE_MIN,

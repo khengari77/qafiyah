@@ -1,10 +1,14 @@
 ---
 import {
-  HTML_HEAD_METADATA,
+  OPEN_GRAPH_URL_PATH,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
   SITE_NAME_AR,
   SITE_THEME_COLOR_HEX,
+  SITE_TITLE,
   TWITTER_HANDLE,
   TWITTER_ID,
+  TWITTER_SUMMARY_CARD_IMAGE_PATH,
 } from '@qafiyah/constants';
 import { Footer } from '@/components/footer';
 import { NavWithMenu } from '@/components/nav/nav-with-menu';
@@ -26,9 +30,9 @@ interface Props {
 }
 
 const {
-  title = HTML_HEAD_METADATA.title,
-  description = HTML_HEAD_METADATA.description,
-  keywords = HTML_HEAD_METADATA.keywords,
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  keywords = SITE_KEYWORDS,
   canonical = '/',
   ogTitle,
   ogDescription,
@@ -56,7 +60,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
     <title>{title}</title>
     <meta name="description" content={description} />
     {keywordsStr && <meta name="keywords" content={keywordsStr} />}
-    <meta name="author" content={HTML_HEAD_METADATA.author} />
+    <meta name="author" content={SITE_NAME_AR} />
     <meta name="robots" content={robotsContent} />
     <meta name="googlebot" content={robotsContent} />
     <meta name="google" content="notranslate" />
@@ -69,7 +73,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
     <meta property="og:url" content={ogUrl} />
     <meta property="og:title" content={resolvedOgTitle} />
     <meta property="og:description" content={resolvedOgDescription} />
-    <meta property="og:image" content={`${SITE_URL}${HTML_HEAD_METADATA.openGraphUrl}`} />
+    <meta property="og:image" content={`${SITE_URL}${OPEN_GRAPH_URL_PATH}`} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:type" content="image/png" />
@@ -81,7 +85,7 @@ const htmlClass = isDev ? 'debug-screens' : '';
     <meta name="twitter:creator:id" content={TWITTER_ID} />
     <meta name="twitter:title" content={resolvedTwitterTitle} />
     <meta name="twitter:description" content={resolvedTwitterDescription} />
-    <meta name="twitter:image" content={`${SITE_URL}${HTML_HEAD_METADATA.twitterSummaryCardImageUrl}`} />
+    <meta name="twitter:image" content={`${SITE_URL}${TWITTER_SUMMARY_CARD_IMAGE_PATH}`} />
 
     <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" />

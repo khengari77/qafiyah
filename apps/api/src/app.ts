@@ -4,12 +4,8 @@ import { experimental_ValibotToJsonSchemaConverter as ValibotToJsonSchemaConvert
 import {
   API_OPENAPI_DOCS_PATH,
   API_OPENAPI_SPEC_PATH,
-  API_SPEC_DESCRIPTION,
-  API_SPEC_LICENSE_NAME,
-  API_SPEC_VERSION,
   API_V1_PREFIX,
   CORS_MAX_AGE_SECONDS,
-  FAVICON_EMOJI,
   GITHUB_REPO_URL,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_NOT_FOUND,
@@ -42,7 +38,7 @@ app.use(
     credentials: false,
   })
 );
-app.use(serveEmojiFavicon(FAVICON_EMOJI));
+app.use(serveEmojiFavicon('📜'));
 app.use(loggerMiddleware);
 
 for (const ns of routerNamespaces) {
@@ -58,10 +54,10 @@ const orpcHandler = new OpenAPIHandler(router, {
       specGenerateOptions: ({ request }) => ({
         info: {
           title: `${SITE_NAME_EN} API`,
-          version: API_SPEC_VERSION,
-          description: API_SPEC_DESCRIPTION,
+          version: '1.0.0',
+          description: 'Public read-only API for the Qafiyah Arabic poetry catalog.',
           contact: { name: SITE_NAME_EN, url: GITHUB_REPO_URL },
-          license: { name: API_SPEC_LICENSE_NAME },
+          license: { name: 'MIT' },
         },
         servers: [{ url: `${request.url.origin}${API_V1_PREFIX}` }],
       }),
