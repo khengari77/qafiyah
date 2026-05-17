@@ -1,6 +1,6 @@
 import { API_V1_PREFIX } from '@qafiyah/constants';
 import { createMiddleware } from 'hono/factory';
-import { API_OPENAPI_DOCS_PATH, API_OPENAPI_SPEC_PATH } from '../constants';
+import { API_OPENAPI_DOCS_PATH, API_OPENAPI_SPEC_PATH, API_SERVICE_NAME } from '../constants';
 import { createLogHandle, recordResponse } from '../lib/logger/builder';
 import { shouldEmit, toLogEvent } from '../lib/logger/emit';
 import type { AppContext } from '../types';
@@ -21,7 +21,7 @@ export const loggerMiddleware = createMiddleware<AppContext>(async (c, next) => 
     path,
     timestamp: new Date().toISOString(),
     service: {
-      name: 'qafiyah-api',
+      name: API_SERVICE_NAME,
       environment: c.env.ENVIRONMENT ?? 'unknown',
     },
   });

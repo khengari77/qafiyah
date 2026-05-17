@@ -6,11 +6,15 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
 import {
+  API_DESCRIPTION,
   API_OPENAPI_DOCS_PATH,
   API_OPENAPI_SPEC_PATH,
+  API_VERSION,
   CORS_MAX_AGE_SECONDS,
+  FAVICON_EMOJI,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_NOT_FOUND,
+  LICENSE_NAME,
   ORPC_BYPASS_PATHS,
   SITE_NAME_EN,
 } from './constants';
@@ -37,7 +41,7 @@ app.use(
     credentials: false,
   })
 );
-app.use(serveEmojiFavicon('📜'));
+app.use(serveEmojiFavicon(FAVICON_EMOJI));
 app.use(loggerMiddleware);
 
 for (const ns of routerNamespaces) {
@@ -53,10 +57,10 @@ const orpcHandler = new OpenAPIHandler(router, {
       specGenerateOptions: ({ request }) => ({
         info: {
           title: `${SITE_NAME_EN} API`,
-          version: '1.0.0',
-          description: 'Public read-only API for the Qafiyah Arabic poetry catalog.',
+          version: API_VERSION,
+          description: API_DESCRIPTION,
           contact: { name: SITE_NAME_EN, url: GITHUB_REPO_URL },
-          license: { name: 'MIT' },
+          license: { name: LICENSE_NAME },
         },
         servers: [{ url: `${request.url.origin}${API_V1_PREFIX}` }],
       }),
@@ -107,7 +111,7 @@ app
         type: error.constructor.name,
         code,
         message: error.message,
-        retriable: status >= 500,
+        retriable: status >= HTTP_INTERNAL_SERVER_ERROR,
       });
     }
 

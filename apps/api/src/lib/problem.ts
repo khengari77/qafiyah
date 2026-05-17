@@ -1,6 +1,6 @@
-import { PROD_DOMAIN } from '@qafiyah/constants';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { ERROR_BASE_URL } from '../constants';
 
 export type ProblemCode =
   | 'NOT_FOUND'
@@ -35,11 +35,9 @@ type ProblemDetail =
       readonly kind: 'generic';
     });
 
-const ERROR_BASE = `https://${PROD_DOMAIN}/errors`;
-
 function codeToType(code: string): string {
   const kebab = code.toLowerCase().replace(/_/g, '-');
-  return `${ERROR_BASE}/${kebab}`;
+  return `${ERROR_BASE_URL}/${kebab}`;
 }
 
 const TITLES = {

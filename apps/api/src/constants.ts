@@ -1,3 +1,5 @@
+import { API_V1_PREFIX, PROD_API_URL } from '@qafiyah/constants';
+
 export const SITE_NAME_EN = 'Qafiyah';
 export const PROD_SITE_URL = 'https://qafiyah.com';
 
@@ -20,3 +22,22 @@ export const FAVICON_CACHE_CONTROL = 'public, max-age=2592000, immutable';
 export const LLMS_CACHE_CONTROL = 'public, max-age=3600';
 export const NO_STORE_CACHE_CONTROL = 'no-store';
 export const CORS_MAX_AGE_SECONDS = 600;
+
+// Error type URL base (RFC 9457 `type` field)
+export const ERROR_BASE_URL = `${PROD_SITE_URL}/errors`;
+
+// OpenAPI spec metadata
+export const API_VERSION = '1.0.0';
+export const API_DESCRIPTION = 'Public read-only API for the Qafiyah Arabic poetry catalog.';
+export const LICENSE_NAME = 'MIT';
+
+// Service identity
+export const API_SERVICE_NAME = 'qafiyah-api';
+export const FAVICON_EMOJI = '📜';
+
+// Composed base URL for llms.txt endpoint list
+export const PROD_API_V1_BASE = `${PROD_API_URL}${API_V1_PREFIX}`;
+
+// Logger sampling / slow-request threshold
+export const LOG_PROD_SAMPLE_RATE = 0.05;
+export const LOG_SLOW_REQUEST_MS = 2000;
