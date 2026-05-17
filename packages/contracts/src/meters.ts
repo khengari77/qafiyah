@@ -1,9 +1,14 @@
 import { oc } from '@orpc/contract';
-import { meterSlugSchema } from './brands/meter-slug';
+import { meterSlugSchema } from './brands';
 import { EXAMPLE_METER_SLUG, inputValidationError } from './constants';
-import { slugAndPageInput } from './shared/inputs';
-import { parentMeta, poemListItem, statRow } from './shared/refs';
-import { listResponse, listResponseWithMeta } from './shared/responses';
+import {
+  listResponse,
+  listResponseWithMeta,
+  parentMeta,
+  poemListItem,
+  slugAndPageInput,
+  statRow,
+} from './schemas';
 
 const listMetersContract = oc
   .route({ method: 'GET', path: '/meters' })

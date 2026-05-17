@@ -1,9 +1,14 @@
 import { oc } from '@orpc/contract';
-import { poetSlugSchema } from './brands/poet-slug';
+import { poetSlugSchema } from './brands';
 import { EXAMPLE_POET_SLUG, inputValidationError } from './constants';
-import { pageQueryInput, slugAndPageInput } from './shared/inputs';
-import { parentMeta, poemListItem } from './shared/refs';
-import { listResponse, listResponseWithMeta } from './shared/responses';
+import {
+  listResponse,
+  listResponseWithMeta,
+  pageQueryInput,
+  parentMeta,
+  poemListItem,
+  slugAndPageInput,
+} from './schemas';
 
 const poetStatRow = parentMeta(poetSlugSchema);
 

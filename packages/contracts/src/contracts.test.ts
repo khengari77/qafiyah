@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { erasContract } from './eras';
+import { contract } from './index';
 import { metersContract } from './meters';
 import { poemsContract } from './poems';
 import { poetsContract } from './poets';
 import { rhymesContract } from './rhymes';
-import { contract } from './router';
 import { searchRouterContract } from './search';
 import { themesContract } from './themes';
 

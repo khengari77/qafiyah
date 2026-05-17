@@ -1,17 +1,30 @@
 import { oc } from '@orpc/contract';
-import { MATCH_TYPE_VALUES, MAX_QUERY_LENGTH, SEARCH_TYPE_VALUES } from '@qafiyah/constants';
+import {
+  MATCH_TYPE_VALUES,
+  MAX_QUERY_LENGTH,
+  NON_ARABIC_AND_SPACE_REGEX,
+  SEARCH_TYPE_VALUES,
+} from '@qafiyah/constants';
 import * as v from 'valibot';
-import { eraSlugSchema } from './brands/era-slug';
-import { meterSlugSchema } from './brands/meter-slug';
-import { poemSlugSchema } from './brands/poem-slug';
-import { poetSlugSchema } from './brands/poet-slug';
-import { rhymeSlugSchema } from './brands/rhyme-slug';
-import { themeSlugSchema } from './brands/theme-slug';
-import { cleanArabicQuery } from './clean-arabic-query';
-import { DEFAULT_PAGE, inputValidationError, SEARCH_EMPTY_INPUT_MESSAGE } from './constants';
-import { pageParam } from './shared/inputs';
-import { subRef } from './shared/refs';
-import { pagination } from './shared/responses';
+import {
+  eraSlugSchema,
+  meterSlugSchema,
+  poemSlugSchema,
+  poetSlugSchema,
+  rhymeSlugSchema,
+  themeSlugSchema,
+} from './brands';
+import {
+  DEFAULT_PAGE,
+  inputValidationError,
+  SEARCH_EMPTY_INPUT_MESSAGE,
+  WHITESPACE_RUN_REGEX,
+} from './constants';
+import { pageParam, pagination, subRef } from './schemas';
+
+export function cleanArabicQuery(q: string): string {
+  return q.trim().replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(WHITESPACE_RUN_REGEX, ' ').trim();
+}
 
 const meterSlugsParam = v.optional(v.array(meterSlugSchema), []);
 const eraSlugsParam = v.optional(v.array(eraSlugSchema), []);

@@ -1,9 +1,14 @@
 import { oc } from '@orpc/contract';
-import { rhymeSlugSchema } from './brands/rhyme-slug';
+import { rhymeSlugSchema } from './brands';
 import { EXAMPLE_RHYME_SLUG, inputValidationError } from './constants';
-import { slugAndPageInput } from './shared/inputs';
-import { parentMeta, poemListItem, statRow } from './shared/refs';
-import { listResponse, listResponseWithMeta } from './shared/responses';
+import {
+  listResponse,
+  listResponseWithMeta,
+  parentMeta,
+  poemListItem,
+  slugAndPageInput,
+  statRow,
+} from './schemas';
 
 const listRhymesContract = oc
   .route({ method: 'GET', path: '/rhymes' })
