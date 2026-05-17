@@ -2,22 +2,20 @@
 
 import { useSearch } from '@/components/search/hooks/use-search';
 import { getBadgeCount, getNoResultsText, getResultText } from '@/components/search/search-format';
-import {
-  erasOptions,
-  matchTypeOptions,
-  metersOptions,
-  rhymesOptions,
-  searchTypeOptions,
-  themesOptions,
-} from '@/components/search/search-options';
 import { Card } from '@/components/ui/card';
 import {
   ERAS_NOUN_FORMS,
+  erasOptions,
   METERS_NOUN_FORMS,
+  matchTypeOptions,
+  metersOptions,
   RHYMES_NOUN_FORMS,
+  rhymesOptions,
   SEARCH_TEXTS,
+  searchTypeOptions,
   THEMES_NOUN_FORMS,
-} from '@/constants/search-texts';
+  themesOptions,
+} from '@/constants';
 import { Filters } from './filters';
 import { FilterBadges } from './filters-badges';
 import { FiltersButton } from './filters-button';

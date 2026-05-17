@@ -1,8 +1,7 @@
 'use client';
 
 import { Menu } from 'lucide-react';
-import { NAV_LINKS } from '@/constants/nav';
-import { RESPONSIVE_ICON_SIZE } from '@/constants/ui';
+import { NAV_LINKS, RESPONSIVE_ICON_SIZE } from '@/constants';
 import { cn } from '@/lib/utils';
 import { Logo } from './logo';
 import { NavLinks } from './nav-links';

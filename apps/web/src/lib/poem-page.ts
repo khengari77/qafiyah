@@ -1,13 +1,13 @@
 import type { PoemSlug } from '@qafiyah/contracts';
-import { SITE_URL } from '@/constants/globals/urls';
-import { SITE_NAME_AR } from '@/constants/metadata';
 import {
   POEM_DEFAULT_TITLE,
   POEM_KEYWORDS_JOIN_SEPARATOR,
   POEM_LANGUAGE,
+  SITE_NAME_AR,
+  SITE_URL,
   TWITTER_DESCRIPTION_TEMPLATE_AR,
   UNKNOWN_POET_NAME,
-} from '@/constants/ui';
+} from '@/constants';
 import { fetchPoem } from '@/lib/api/static/poems';
 import type { Poem } from '@/lib/api/types';
 import { flattenVerses } from '@/lib/flatten-verses';

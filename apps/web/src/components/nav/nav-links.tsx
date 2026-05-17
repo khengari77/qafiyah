@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { NavLink } from '@/constants/nav';
+import type { NavLink } from '@/constants';
 import { NavItem } from './nav-item';
 
 type Props = {

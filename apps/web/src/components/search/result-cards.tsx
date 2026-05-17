@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import { SITE_URL } from '@/constants/globals/urls';
+import { SITE_URL } from '@/constants';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/types';
 import { HighlightedText } from './highlighted-text';
 

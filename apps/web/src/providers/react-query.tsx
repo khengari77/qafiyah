@@ -6,7 +6,7 @@ import {
   REACT_QUERY_GC_TIME_MS,
   REACT_QUERY_RETRY_COUNT,
   REACT_QUERY_STALE_TIME_MS,
-} from '@/constants/cache';
+} from '@/constants';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(

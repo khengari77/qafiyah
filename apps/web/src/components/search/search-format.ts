@@ -1,10 +1,12 @@
 import { formatArabicCount } from 'arabic-count-format';
-import { NON_ARABIC_BASIC_REGEX } from '@/constants/arabic';
 import {
+  type ArabicNounForms,
+  NON_ARABIC_BASIC_REGEX,
   QUERY_DISPLAY_TRUNCATE_LENGTH,
   RESULT_TEXT_TRUNCATE_LENGTH,
-} from '@/constants/search-limits';
-import { type ArabicNounForms, RESULTS_NOUN_FORMS, SEARCH_TEXTS } from '@/constants/search-texts';
+  RESULTS_NOUN_FORMS,
+  SEARCH_TEXTS,
+} from '@/constants';
 
 export function getBadgeCount(count: number, nounForms: ArabicNounForms): string {
   return formatArabicCount({ count, nounForms });

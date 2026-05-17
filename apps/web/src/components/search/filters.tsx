@@ -7,7 +7,7 @@ import {
   RHYMES_NOUN_FORMS,
   SEARCH_TEXTS,
   THEMES_NOUN_FORMS,
-} from '@/constants/search-texts';
+} from '@/constants';
 
 type FilterOption = { readonly value: string; readonly label: string };
 

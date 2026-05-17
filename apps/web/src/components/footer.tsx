@@ -1,5 +1,5 @@
 import { GITHUB_REPO_URL } from '@qafiyah/constants';
-import { DATABASE_DUMPS_URL, DEVELOPER_SITE_URL } from '@/constants/external';
+import { DATABASE_DUMPS_URL, DEVELOPER_SITE_URL } from '@/constants';
 import { cn } from '@/lib/utils';
 import { RandomPoemButton } from './random-poem-button';
 

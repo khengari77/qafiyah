@@ -1,8 +1,6 @@
 ---
 import { formatArabicCount } from 'arabic-count-format';
-import { SITE_URL } from '@/constants/globals/urls';
-import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR } from '@/constants/metadata';
-import { ERAS_NOUN_FORMS } from '@/constants/search-texts';
+import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { fetchEras } from '@/lib/api/static/eras';
 import { toArabicDigits } from '@/lib/arabic';
