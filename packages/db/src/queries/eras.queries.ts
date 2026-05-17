@@ -4,10 +4,9 @@ import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { ERAS_SORT_ORDER } from '../constants';
 import { eraStats } from '../schema';
-import { asEraSlug } from '../utils/brand';
-import { executeAs } from '../utils/execute-as';
-import { parentRowSchema, rawPoemRowSchema } from './row-schemas';
-import type { PoemListRow } from './types';
+import { asEraSlug } from './brand';
+import { executeAs } from './execute-as';
+import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
 
 const ERAS_SORT_INDEX = new Map<string, number>(ERAS_SORT_ORDER.map((name, i) => [name, i]));
 

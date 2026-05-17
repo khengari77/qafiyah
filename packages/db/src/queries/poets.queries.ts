@@ -3,10 +3,9 @@ import type { PoetSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { poetStats } from '../schema';
-import { asPoetSlug } from '../utils/brand';
-import { executeAs } from '../utils/execute-as';
-import { parentRowSchema, rawPoemRowSchema } from './row-schemas';
-import type { PoemListRow } from './types';
+import { asPoetSlug } from './brand';
+import { executeAs } from './execute-as';
+import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
 
 export type PoetStatsRow = {
   readonly name: string;

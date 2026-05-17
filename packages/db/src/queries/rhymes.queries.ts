@@ -4,11 +4,16 @@ import { sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { ARABIC_LETTERS_MAP } from '../constants';
 import { rhymeStats } from '../schema';
-import { asRhymeSlug } from '../utils/brand';
-import { executeAs } from '../utils/execute-as';
-import { normalizeRhymePattern } from '../utils/normalize-rhyme-pattern';
-import { parentRowSchema, rawPoemRowSchema } from './row-schemas';
-import type { PoemListRow } from './types';
+import { asRhymeSlug } from './brand';
+import { executeAs } from './execute-as';
+import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
+
+const PARENS_REGEX = /[()]/g;
+const ARABIC_AL_PREFIX_REGEX = /^ال/;
+
+export function normalizeRhymePattern(pattern: string): string {
+  return pattern.replace(PARENS_REGEX, '').replace(ARABIC_AL_PREFIX_REGEX, '').trim();
+}
 
 export type RhymeLetterGroup = {
   readonly name: string;

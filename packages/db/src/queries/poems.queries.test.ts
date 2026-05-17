@@ -1,12 +1,165 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { asPoemSlug } from '../utils/brand';
+import { asPoemSlug } from './brand';
 import {
+  extractPoemExcerpt,
   getPoemBySlug,
   getRandomPoemLines,
   getRandomPoemSlug,
   listAllPoemSlugs,
+  type PoemId,
+  processPoemContent,
+  type RandomPoemLines,
+  removeTashkeel,
 } from './poems.queries';
 import { fakeDb, makeChain } from './test-utils';
+
+// test-only: brand a literal number as a PoemId for fixture construction.
+const asPoemId = (n: number): PoemId => n as PoemId;
+const makeRandomPoem = (content: string): RandomPoemLines => ({
+  poem_id: asPoemId(1),
+  poet_name: 'شاعر',
+  content,
+});
+
+describe('removeTashkeel', () => {
+  it('removes fatha (ـَ)', () => {
+    expect(removeTashkeel('كَتَبَ')).toBe('كتب');
+  });
+
+  it('removes kasra (ـِ)', () => {
+    expect(removeTashkeel('بِسْمِ')).toBe('بسم');
+  });
+
+  it('removes damma (ـُ)', () => {
+    expect(removeTashkeel('يَكْتُبُ')).toBe('يكتب');
+  });
+
+  it('removes shadda (ـّ)', () => {
+    expect(removeTashkeel('مُحَمَّد')).toBe('محمد');
+  });
+
+  it('removes sukun (ـْ)', () => {
+    expect(removeTashkeel('عَلْم')).toBe('علم');
+  });
+
+  it('removes tanwin fath (ـً)', () => {
+    expect(removeTashkeel('كِتَابًا')).toBe('كتابا');
+  });
+
+  it('leaves plain Arabic letters intact', () => {
+    expect(removeTashkeel('شعر')).toBe('شعر');
+  });
+
+  it('returns empty string for empty input', () => {
+    expect(removeTashkeel('')).toBe('');
+  });
+
+  it('strips all diacritics from a fully vowelled word', () => {
+    expect(removeTashkeel('الرَّحِيمِ')).toBe('الرحيم');
+  });
+
+  it('leaves non-Arabic text unchanged', () => {
+    expect(removeTashkeel('hello')).toBe('hello');
+  });
+});
+
+describe('processPoemContent', () => {
+  it('splits an even number of lines into verse pairs', () => {
+    const { verses } = processPoemContent('أ*ب*ج*د');
+    expect(verses).toEqual([
+      ['أ', 'ب'],
+      ['ج', 'د'],
+    ]);
+  });
+
+  it('handles an odd number of lines (last verse gets empty second half)', () => {
+    const { verses } = processPoemContent('أ*ب*ج');
+    expect(verses).toEqual([
+      ['أ', 'ب'],
+      ['ج', ''],
+    ]);
+  });
+
+  it('reports correct verseCount', () => {
+    const { verseCount } = processPoemContent('أ*ب*ج*د');
+    expect(verseCount).toBe(2);
+  });
+
+  it('strips double quotes from content', () => {
+    const { verses } = processPoemContent('"أ"*"ب"');
+    expect(verses).toEqual([['أ', 'ب']]);
+  });
+
+  it('builds sample from first three lines joined with " * "', () => {
+    const { sample } = processPoemContent('أول*ثاني*ثالث*رابع');
+    expect(sample).toBe('أول * ثاني * ثالث');
+  });
+
+  it('removes tashkeel from the sample', () => {
+    const { sample } = processPoemContent('كَتَبَ*قَرَأَ');
+    expect(sample).toBe('كتب * قرأ');
+  });
+
+  it('builds keywords from all lines without tashkeel', () => {
+    const { keywords } = processPoemContent('كَلِمَة*أُخرى');
+    expect(keywords).toBe('كلمة,أخرى');
+  });
+
+  it('uses empty string fallback when first half of a pair is empty', () => {
+    // Content starting with '*' → lines[0] = '' (falsy) → '' fallback used for first half
+    const { verses } = processPoemContent('*ب');
+    expect(verses).toEqual([['', 'ب']]);
+  });
+
+  it('handles a single line (one verse with empty second half)', () => {
+    const { verses, verseCount } = processPoemContent('بيت');
+    expect(verses).toEqual([['بيت', '']]);
+    expect(verseCount).toBe(1);
+  });
+});
+
+describe('extractPoemExcerpt', () => {
+  it('returns the two lines at startIndex plus the poet name', () => {
+    const result = extractPoemExcerpt(makeRandomPoem('شطر أول*شطر ثانٍ*شطر ثالث*شطر رابع'), 0);
+    expect(result).toBe('شطر أول\nشطر ثانٍ\n\nشاعر');
+  });
+
+  it('throws when poem has fewer than two lines', () => {
+    expect(() => extractPoemExcerpt(makeRandomPoem('شطر واحد'), 0)).toThrow(
+      'Poem has insufficient content for formatting'
+    );
+  });
+
+  it('strips double quotes from output', () => {
+    const result = extractPoemExcerpt(makeRandomPoem('"شطر أول"*"شطر ثانٍ"'), 0);
+    expect(result).toBe('شطر أول\nشطر ثانٍ\n\nشاعر');
+  });
+
+  it('includes the poet name in the output', () => {
+    const p: RandomPoemLines = { poem_id: asPoemId(2), poet_name: 'المتنبي', content: 'أ*ب' };
+    expect(extractPoemExcerpt(p, 0)).toContain('المتنبي');
+  });
+
+  it('uses empty string fallback when lines[startIndex] is empty', () => {
+    const result = extractPoemExcerpt(makeRandomPoem('*شطر ثانٍ*شطر ثالث*شطر رابع'), 0);
+    expect(result).toContain('شاعر');
+  });
+
+  it('uses empty string fallback when lines[startIndex + 1] is empty', () => {
+    const result = extractPoemExcerpt(makeRandomPoem('شطر أول**شطر ثالث*شطر رابع'), 0);
+    expect(result).toContain('شاعر');
+  });
+
+  it('returns a valid pair for any even startIndex in range', () => {
+    const lines = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'];
+    const content = lines.join('*');
+    for (let startIndex = 0; startIndex < lines.length - 1; startIndex += 2) {
+      const result = extractPoemExcerpt(makeRandomPoem(content), startIndex);
+      expect(result).toBeTruthy();
+      expect(result.split('\n').length).toBeGreaterThanOrEqual(2);
+    }
+  });
+});
 
 const POEM_CONTENT = 'شطر أول*شطر ثانٍ';
 

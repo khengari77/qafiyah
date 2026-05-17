@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { asPoetSlug } from '../utils/brand';
+import { asPoetSlug } from './brand';
 import { listPoetPoems, listPoets } from './poets.queries';
 import { fakeDb, makeChain } from './test-utils';
 

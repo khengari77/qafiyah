@@ -1,3 +1,4 @@
+import type { MeterSlug, PoemSlug, PoetSlug } from '@qafiyah/contracts';
 import { meterSlugSchema, poemSlugSchema, poetSlugSchema } from '@qafiyah/contracts';
 import * as v from 'valibot';
 
@@ -17,3 +18,12 @@ export const rawPoemRowSchema = v.object({
 
 // Types intentionally inferred at use sites via v.InferOutput<typeof ...Schema>;
 // keeping them un-exported avoids unused-export churn.
+
+export type PoemListRow = {
+  readonly title: string;
+  readonly slug: PoemSlug;
+  readonly poetName: string;
+  readonly poetSlug: PoetSlug;
+  readonly meterName: string;
+  readonly meterSlug: MeterSlug;
+};

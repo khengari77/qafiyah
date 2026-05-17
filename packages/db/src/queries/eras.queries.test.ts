@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { asEraSlug } from '../utils/brand';
+import { asEraSlug } from './brand';
 import { listEraPoems, listEras } from './eras.queries';
 import { fakeDb, makeChain } from './test-utils';
 

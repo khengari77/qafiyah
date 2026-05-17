@@ -10,16 +10,70 @@ import {
 import { sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import type { DbClient } from '../client';
+import { TASHKEEL_REGEX } from '../constants';
 import { poemsFullData } from '../schema';
-import { asPoemSlug } from '../utils/brand';
-import { executeAs } from '../utils/execute-as';
-import {
-  extractPoemExcerpt,
-  type PoemId,
-  type RandomPoemLines,
-} from '../utils/extract-poem-excerpt';
-import { processPoemContent } from '../utils/process-poem-content';
-import type { PoemListRow } from './types';
+import { asPoemSlug } from './brand';
+import { executeAs } from './execute-as';
+import type { PoemListRow } from './row-schemas';
+
+declare const PoemIdBrand: unique symbol;
+export type PoemId = number & { readonly [PoemIdBrand]: 'PoemId' };
+
+export type RandomPoemLines = {
+  readonly poem_id: PoemId;
+  readonly poet_name: string;
+  readonly content: string;
+};
+
+type ProcessedPoemContent = {
+  readonly verses: readonly (readonly [string, string])[];
+  readonly verseCount: number;
+  readonly sample: string;
+  readonly keywords: string;
+};
+
+export function removeTashkeel(text: string): string {
+  return text.replace(TASHKEEL_REGEX, '');
+}
+
+export function processPoemContent(content: string): ProcessedPoemContent {
+  const cleanContent = content.replace(/"/g, '');
+
+  const lines = cleanContent.split('*');
+  const lineCount = lines.length;
+
+  // @WARN: verses is built mutably for performance, then projected as readonly on return.
+  const verses: [string, string][] = new Array(Math.ceil(lineCount / 2));
+
+  for (let i = 0, j = 0; i < lineCount; i += 2, j++) {
+    verses[j] = [lines[i] || '', lines[i + 1] || ''];
+  }
+
+  const verseCount = verses.length;
+
+  const firstThreeLines = lines.slice(0, 3).join(' * ');
+  const sample = removeTashkeel(firstThreeLines);
+
+  const allText = lines.join(' ');
+  const keywords = removeTashkeel(allText.split(' ').join(','));
+
+  return {
+    verses,
+    verseCount,
+    sample,
+    keywords,
+  };
+}
+
+export function extractPoemExcerpt(poem: RandomPoemLines, startIndex: number): string {
+  const lines = poem.content.split('*');
+  if (lines.length < 2) {
+    throw new Error('Poem has insufficient content for formatting');
+  }
+  const line1 = lines[startIndex] || '';
+  const line2 = lines[startIndex + 1] || '';
+  return `${line1}\n${line2}\n\n${poem.poet_name}`.replace(/"/g, '').trim();
+}
 
 const rawPoemDataSchema = v.object({
   slug: poemSlugSchema,

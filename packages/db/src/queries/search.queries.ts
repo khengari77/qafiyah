@@ -15,7 +15,7 @@ import { eraSlugSchema, meterSlugSchema, poemSlugSchema, poetSlugSchema } from '
 import { type SQL, sql } from 'drizzle-orm';
 import * as v from 'valibot';
 import type { DbClient } from '../client';
-import { executeAs } from '../utils/execute-as';
+import { executeAs } from './execute-as';
 
 export type MatchType = (typeof MATCH_TYPE_VALUES)[number];
 

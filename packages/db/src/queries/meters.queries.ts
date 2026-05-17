@@ -4,10 +4,9 @@ import { inArray, sql } from 'drizzle-orm';
 import type { DbClient } from '../client';
 import { FORMAL_METERS } from '../constants';
 import { meterStats } from '../schema';
-import { asMeterSlug } from '../utils/brand';
-import { executeAs } from '../utils/execute-as';
-import { parentRowSchema, rawPoemRowSchema } from './row-schemas';
-import type { PoemListRow } from './types';
+import { asMeterSlug } from './brand';
+import { executeAs } from './execute-as';
+import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
 
 export type MeterStatsRow = {
   readonly name: string;

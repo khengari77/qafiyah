@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { asMeterSlug } from '../utils/brand';
+import { asMeterSlug } from './brand';
 import { listMeterPoems, listMeters } from './meters.queries';
 import { fakeDb, makeChain } from './test-utils';
 

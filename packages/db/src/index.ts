@@ -5,6 +5,6 @@ export * as metersQueries from './queries/meters.queries';
 export * as poemsQueries from './queries/poems.queries';
 export * as poetsQueries from './queries/poets.queries';
 export * as rhymesQueries from './queries/rhymes.queries';
+export type { PoemListRow } from './queries/row-schemas';
 export * as searchQueries from './queries/search.queries';
 export * as themesQueries from './queries/themes.queries';
-export type { PoemListRow } from './queries/types';
