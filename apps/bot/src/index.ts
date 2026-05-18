@@ -1,32 +1,100 @@
 import { API_RANDOM_POEM_PATH, MAX_TWEET_LENGTH, PROD_API_URL } from '@qafiyah/constants';
+import { err, ok, type Result } from 'neverthrow';
 import { TwitterApi } from 'twitter-api-v2';
 import { env } from './env';
-import { TerminalError, withRetry } from './retry';
+import { withRetry } from './retry';
 
 const POEM_RESPONSE_FORMAT = 'lines';
 
-async function fetchPoem(): Promise<string> {
-  const response = await fetch(
-    `${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=${POEM_RESPONSE_FORMAT}`
-  );
-  if (response.status === 429) throw new TerminalError('Rate limited by API');
-  if (!response.ok) throw new Error(`API returned status ${response.status}`);
+type FetchPoemError =
+  | {
+      readonly kind: 'network';
+      readonly url: string;
+      readonly message: string;
+      readonly retryable: true;
+    }
+  | { readonly kind: 'rate_limited'; readonly url: string; readonly retryable: false }
+  | {
+      readonly kind: 'http_error';
+      readonly url: string;
+      readonly status: number;
+      readonly retryable: true;
+    }
+  | { readonly kind: 'empty_response'; readonly url: string; readonly retryable: false }
+  | {
+      readonly kind: 'too_long';
+      readonly url: string;
+      readonly length: number;
+      readonly max: number;
+      readonly retryable: false;
+    };
 
-  const poem = (await response.text()).trim();
-  if (!poem) throw new TerminalError('Empty poem returned from API');
-  if (poem.length > MAX_TWEET_LENGTH) {
-    throw new TerminalError(`Poem too long for Twitter (${poem.length}/${MAX_TWEET_LENGTH})`);
+type PostTweetError =
+  | { readonly kind: 'network'; readonly message: string; readonly retryable: true }
+  | {
+      readonly kind: 'invalid_response';
+      readonly contentLength: number;
+      readonly responseShape: string;
+      readonly retryable: true;
+    };
+
+async function fetchPoem(): Promise<Result<string, FetchPoemError>> {
+  const url = `${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=${POEM_RESPONSE_FORMAT}`;
+  let response: Response;
+  try {
+    response = await fetch(url);
+  } catch (cause) {
+    return err({
+      kind: 'network',
+      url,
+      message: cause instanceof Error ? cause.message : String(cause),
+      retryable: true,
+    });
   }
-  return poem;
+  if (response.status === 429) return err({ kind: 'rate_limited', url, retryable: false });
+  if (!response.ok) {
+    return err({ kind: 'http_error', url, status: response.status, retryable: true });
+  }
+  const poem = (await response.text()).trim();
+  if (!poem) return err({ kind: 'empty_response', url, retryable: false });
+  if (poem.length > MAX_TWEET_LENGTH) {
+    return err({
+      kind: 'too_long',
+      url,
+      length: poem.length,
+      max: MAX_TWEET_LENGTH,
+      retryable: false,
+    });
+  }
+  return ok(poem);
 }
 
-async function postTweet(client: TwitterApi, content: string): Promise<string> {
-  const response = await client.v2.tweet(content);
-  if (!response?.data?.id) throw new Error('Invalid response from Twitter API');
-  return response.data.id;
+async function postTweet(
+  client: TwitterApi,
+  content: string
+): Promise<Result<string, PostTweetError>> {
+  let response: Awaited<ReturnType<typeof client.v2.tweet>>;
+  try {
+    response = await client.v2.tweet(content);
+  } catch (cause) {
+    return err({
+      kind: 'network',
+      message: cause instanceof Error ? cause.message : String(cause),
+      retryable: true,
+    });
+  }
+  if (!response?.data?.id) {
+    return err({
+      kind: 'invalid_response',
+      contentLength: content.length,
+      responseShape: JSON.stringify(response ?? null),
+      retryable: true,
+    });
+  }
+  return ok(response.data.id);
 }
 
-async function main(): Promise<void> {
+async function main(): Promise<number> {
   console.log('Starting poem bot...');
 
   const client = new TwitterApi({
@@ -36,14 +104,40 @@ async function main(): Promise<void> {
     accessSecret: env.TWITTER_ACCESS_SECRET,
   });
 
-  const poem = await withRetry(fetchPoem, 'Fetch poem');
+  const poemResult = await withRetry(fetchPoem, 'Fetch poem');
+  if (poemResult.isErr()) {
+    console.error(JSON.stringify({ source: 'bot', stage: 'fetch_poem', error: poemResult.error }));
+    return 1;
+  }
+  const poem = poemResult.value;
   console.log(`Poem ready (${poem.length}/${MAX_TWEET_LENGTH} chars)`);
 
-  const id = await withRetry(() => postTweet(client, poem), 'Post tweet');
-  console.log(`Successfully tweeted! ID: ${id}`);
+  const tweetResult = await withRetry(() => postTweet(client, poem), 'Post tweet');
+  if (tweetResult.isErr()) {
+    console.error(
+      JSON.stringify({
+        source: 'bot',
+        stage: 'post_tweet',
+        poemLength: poem.length,
+        error: tweetResult.error,
+      })
+    );
+    return 1;
+  }
+  console.log(`Successfully tweeted! ID: ${tweetResult.value}`);
+  return 0;
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
-});
+main()
+  .then((exitCode) => process.exit(exitCode))
+  .catch((cause) => {
+    console.error(
+      JSON.stringify({
+        source: 'bot',
+        stage: 'main',
+        message: cause instanceof Error ? cause.message : String(cause),
+        name: cause instanceof Error ? cause.name : undefined,
+      })
+    );
+    process.exit(1);
+  });

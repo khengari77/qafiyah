@@ -37,7 +37,7 @@ function arrayOrNull<T>(arr: readonly T[]): readonly T[] | null {
   return arr.length > 0 ? arr : null;
 }
 
-export const search = publicProcedure.search.search.handler(({ context, input }) => {
+export const search = publicProcedure.search.search.handler(({ context, input, errors }) => {
   const query = input.q;
   const hasText = query.length > 0;
 
@@ -48,7 +48,7 @@ export const search = publicProcedure.search.search.handler(({ context, input })
 
   return match(input.searchType)
     .with('poems', async () => {
-      const { rows, totalCount } = hasText
+      const queryResult = hasText
         ? await searchQueries.searchPoems({
             db: context.db,
             query,
@@ -61,6 +61,17 @@ export const search = publicProcedure.search.search.handler(({ context, input })
             page: input.page,
             filters: { meterSlugs, eraSlugs, themeSlugs, rhymeSlugs },
           });
+      if (queryResult.isErr()) {
+        console.error(
+          JSON.stringify({
+            source: 'search.procedures',
+            stage: hasText ? 'searchPoems' : 'browsePoemsByFilters',
+            error: queryResult.error,
+          })
+        );
+        throw errors.INTERNAL_SERVER_ERROR();
+      }
+      const { rows, totalCount } = queryResult.value;
       context.log?.({
         query_text: query || undefined,
         query_length: hasText ? query.length : undefined,
@@ -81,7 +92,7 @@ export const search = publicProcedure.search.search.handler(({ context, input })
       };
     })
     .with('poets', async () => {
-      const { rows, totalCount } = hasText
+      const queryResult = hasText
         ? await searchQueries.searchPoets({
             db: context.db,
             query,
@@ -94,6 +105,17 @@ export const search = publicProcedure.search.search.handler(({ context, input })
             page: input.page,
             eraSlugs,
           });
+      if (queryResult.isErr()) {
+        console.error(
+          JSON.stringify({
+            source: 'search.procedures',
+            stage: hasText ? 'searchPoets' : 'browsePoetsByFilters',
+            error: queryResult.error,
+          })
+        );
+        throw errors.INTERNAL_SERVER_ERROR();
+      }
+      const { rows, totalCount } = queryResult.value;
       context.log?.({
         query_text: query || undefined,
         query_length: hasText ? query.length : undefined,

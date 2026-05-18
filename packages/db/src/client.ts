@@ -1,10 +1,17 @@
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { err, ok, type Result } from 'neverthrow';
 import postgres from 'postgres';
 
 export type DbClient = PostgresJsDatabase<Readonly<Record<string, never>>>;
 
 export type DbMode = 'edge' | 'long-lived';
+
+export type CreateDbError = {
+  readonly kind: 'invalid_port';
+  readonly rawPort: string;
+  readonly databaseUrlHost: string;
+};
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', 'host.docker.internal']);
 
@@ -33,13 +40,18 @@ const PROFILES = {
   },
 } as const;
 
-export function createDb(databaseUrl: string, options?: { readonly mode?: DbMode }): DbClient {
+export function createDb(
+  databaseUrl: string,
+  options?: { readonly mode?: DbMode }
+): Result<DbClient, CreateDbError> {
   const url = new URL(databaseUrl);
   const port = Number.parseInt(url.port, 10);
   if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-    throw new Error(
-      `createDb: DATABASE_URL must include an explicit valid port (got "${url.port || '<empty>'}")`
-    );
+    return err({
+      kind: 'invalid_port',
+      rawPort: url.port,
+      databaseUrlHost: url.hostname,
+    });
   }
   const mode = options?.mode ?? detectDbMode(databaseUrl);
   const profile = PROFILES[mode];
@@ -60,5 +72,5 @@ export function createDb(databaseUrl: string, options?: { readonly mode?: DbMode
     transform: { undefined: null },
     onnotice: () => undefined,
   });
-  return drizzle<Readonly<Record<string, never>>>(client);
+  return ok(drizzle<Readonly<Record<string, never>>>(client));
 }

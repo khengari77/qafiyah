@@ -9,6 +9,7 @@ import type {
 } from '@qafiyah/contracts';
 import { eraSlugSchema, meterSlugSchema, poemSlugSchema, poetSlugSchema } from '@qafiyah/contracts';
 import { type SQL, sql } from 'drizzle-orm';
+import { err, ok, type Result } from 'neverthrow';
 import * as v from 'valibot';
 import type { DbClient } from './client';
 import { executeAs } from './execute-as';
@@ -48,6 +49,19 @@ export type SearchPage<T> = {
   readonly rows: readonly T[];
   readonly totalCount: number;
 };
+
+export type SearchTotalError =
+  | {
+      readonly kind: 'missing_total';
+      readonly source: string;
+      readonly inputs: Readonly<Record<string, unknown>>;
+    }
+  | {
+      readonly kind: 'non_finite_total';
+      readonly source: string;
+      readonly raw: unknown;
+      readonly inputs: Readonly<Record<string, unknown>>;
+    };
 
 const rawPoemSearchRowSchema = v.object({
   poet_name: v.string(),
@@ -213,7 +227,7 @@ export async function searchPoems(args: {
   readonly page: number;
   readonly matchType: MatchType;
   readonly filters: SearchFilters;
-}): Promise<SearchPage<PoemSearchRow>> {
+}): Promise<Result<SearchPage<PoemSearchRow>, SearchTotalError>> {
   const { db, query, page, matchType, filters } = args;
   const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
     db,
@@ -248,17 +262,12 @@ export async function searchPoems(args: {
     rawPoemSearchRowSchema
   );
 
-  if (raw.length === 0) return { rows: [], totalCount: 0 };
+  if (raw.length === 0) return ok({ rows: [], totalCount: 0 });
 
-  const rawTotal = raw[0]?.total_count;
-  if (rawTotal === undefined || rawTotal === null) {
-    throw new Error('searchPoems: SQL row missing total_count');
-  }
-  const totalCount = Number(rawTotal);
-  if (!Number.isFinite(totalCount)) {
-    throw new Error(`searchPoems: total_count is not a finite number (got ${String(rawTotal)})`);
-  }
-  return { rows: raw.map(toPoemSearchRow), totalCount };
+  const inputs = { query, page, matchType, filters } as const;
+  const totalResult = parseRawTotalCount(raw[0]?.total_count, 'searchPoems', inputs);
+  if (totalResult.isErr()) return err(totalResult.error);
+  return ok({ rows: raw.map(toPoemSearchRow), totalCount: totalResult.value });
 }
 
 export async function searchPoets(args: {
@@ -267,7 +276,7 @@ export async function searchPoets(args: {
   readonly page: number;
   readonly matchType: MatchType;
   readonly eraSlugs: readonly EraSlug[] | null;
-}): Promise<SearchPage<PoetSearchRow>> {
+}): Promise<Result<SearchPage<PoetSearchRow>, SearchTotalError>> {
   const { db, query, page, matchType, eraSlugs } = args;
   const eraIds = await lookupEraIds(db, eraSlugs);
 
@@ -291,37 +300,42 @@ export async function searchPoets(args: {
     rawPoetSearchRowSchema
   );
 
-  if (raw.length === 0) return { rows: [], totalCount: 0 };
+  if (raw.length === 0) return ok({ rows: [], totalCount: 0 });
 
-  const rawTotal = raw[0]?.total_count;
-  if (rawTotal === undefined || rawTotal === null) {
-    throw new Error('searchPoets: SQL row missing total_count');
+  const inputs = { query, page, matchType, eraSlugs } as const;
+  const totalResult = parseRawTotalCount(raw[0]?.total_count, 'searchPoets', inputs);
+  if (totalResult.isErr()) return err(totalResult.error);
+  return ok({ rows: raw.map(toPoetSearchRow), totalCount: totalResult.value });
+}
+
+function parseRawTotalCount(
+  raw: unknown,
+  source: string,
+  inputs: Readonly<Record<string, unknown>>
+): Result<number, SearchTotalError> {
+  if (raw === undefined || raw === null) {
+    return err({ kind: 'missing_total', source, inputs });
   }
-  const totalCount = Number(rawTotal);
-  if (!Number.isFinite(totalCount)) {
-    throw new Error(`searchPoets: total_count is not a finite number (got ${String(rawTotal)})`);
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    return err({ kind: 'non_finite_total', source, raw, inputs });
   }
-  return { rows: raw.map(toPoetSearchRow), totalCount };
+  return ok(parsed);
 }
 
 function parseTotalCountRow(
   rows: readonly v.InferOutput<typeof countRowSchema>[],
-  label: string
-): number {
-  const row = rows[0];
-  const raw = row?.total;
-  if (raw === undefined || raw === null) throw new Error(`${label}: SQL row missing total`);
-  const parsed = Number(raw);
-  if (!Number.isFinite(parsed))
-    throw new Error(`${label}: total is not finite (got ${String(raw)})`);
-  return parsed;
+  source: string,
+  inputs: Readonly<Record<string, unknown>>
+): Result<number, SearchTotalError> {
+  return parseRawTotalCount(rows[0]?.total, source, inputs);
 }
 
 export async function browsePoemsByFilters(args: {
   readonly db: DbClient;
   readonly page: number;
   readonly filters: SearchFilters;
-}): Promise<SearchPage<PoemSearchRow>> {
+}): Promise<Result<SearchPage<PoemSearchRow>, SearchTotalError>> {
   const { db, page, filters } = args;
   const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
     db,
@@ -384,17 +398,17 @@ export async function browsePoemsByFilters(args: {
 
   const [rows, count] = await Promise.all([rowsPromise, countPromise]);
 
-  return {
-    rows: rows.map(toPoemSearchRow),
-    totalCount: parseTotalCountRow(count, 'browsePoemsByFilters'),
-  };
+  const inputs = { page, filters } as const;
+  const totalResult = parseTotalCountRow(count, 'browsePoemsByFilters', inputs);
+  if (totalResult.isErr()) return err(totalResult.error);
+  return ok({ rows: rows.map(toPoemSearchRow), totalCount: totalResult.value });
 }
 
 export async function browsePoetsByFilters(args: {
   readonly db: DbClient;
   readonly page: number;
   readonly eraSlugs: readonly EraSlug[] | null;
-}): Promise<SearchPage<PoetSearchRow>> {
+}): Promise<Result<SearchPage<PoetSearchRow>, SearchTotalError>> {
   const { db, page, eraSlugs } = args;
   const eraIds = await lookupEraIds(db, eraSlugs);
   const eraParam = toPgIntArrayParam(eraIds);
@@ -434,8 +448,8 @@ export async function browsePoetsByFilters(args: {
 
   const [rows, count] = await Promise.all([rowsPromise, countPromise]);
 
-  return {
-    rows: rows.map(toPoetSearchRow),
-    totalCount: parseTotalCountRow(count, 'browsePoetsByFilters'),
-  };
+  const inputs = { page, eraSlugs } as const;
+  const totalResult = parseTotalCountRow(count, 'browsePoetsByFilters', inputs);
+  if (totalResult.isErr()) return err(totalResult.error);
+  return ok({ rows: rows.map(toPoetSearchRow), totalCount: totalResult.value });
 }

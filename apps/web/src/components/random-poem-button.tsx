@@ -17,12 +17,13 @@ function useRandomPoemNavigation() {
   const handleClick = async () => {
     if (status.kind === 'loading') return;
     setStatus({ kind: 'loading' });
-    try {
-      const slug = await fetchRandomPoemSlug(API_URL);
-      window.location.href = `/poems/${slug}`;
-    } catch {
+    const result = await fetchRandomPoemSlug(API_URL);
+    if (result.isErr()) {
+      console.error('fetchRandomPoemSlug failed', result.error);
       setStatus({ kind: 'error' });
+      return;
     }
+    window.location.href = `/poems/${result.value}`;
   };
 
   return { handleClick, status };

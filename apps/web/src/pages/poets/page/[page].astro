@@ -9,7 +9,11 @@ import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const totalPages = await fetchPoetsTotalPages();
+  const totalPagesResult = await fetchPoetsTotalPages();
+  if (totalPagesResult.isErr()) {
+    throw new Error(`fetchPoetsTotalPages failed: ${JSON.stringify(totalPagesResult.error)}`);
+  }
+  const totalPages = totalPagesResult.value;
   return Array.from({ length: totalPages }, (_, i) => ({
     params: { page: (i + 1).toString() },
   }));
@@ -21,9 +25,14 @@ if (!Number.isFinite(pageNumber) || pageNumber < 1) {
 }
 const page = pageNumber.toString();
 
-const response = await fetchPoetsPage(pageNumber);
+const responseResult = await fetchPoetsPage(pageNumber);
 
-if (!response || response.data.length === 0) {
+if (responseResult.isErr()) {
+  if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
+  throw new Error(`fetchPoetsPage failed: ${JSON.stringify(responseResult.error)}`);
+}
+const response = responseResult.value;
+if (response.data.length === 0) {
   return Astro.redirect('/404');
 }
 

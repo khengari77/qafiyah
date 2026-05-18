@@ -1,5 +1,3 @@
-import { ORPCError } from '@orpc/client';
-
 // @WARN: cached promise is keyed by string and stored as `Promise<unknown>`. The
 //   sharePromise helper trusts that callers use a stable key→type mapping (e.g.
 //   always pair 'eras:list' with `Era[]`). The cast at the call site documents
@@ -12,8 +10,4 @@ export function sharePromise<T>(key: string, fn: () => Promise<T>): Promise<T> {
   const promise = fn();
   pendingByKey.set(key, promise);
   return promise;
-}
-
-export function isNotFound(err: unknown): boolean {
-  return err instanceof ORPCError && err.code === 'NOT_FOUND';
 }

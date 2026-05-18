@@ -1,6 +1,7 @@
 import { type DbClient, poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
+import { err, ok, type Result } from 'neverthrow';
 import * as v from 'valibot';
 import {
   HTTP_BAD_REQUEST,
@@ -13,12 +14,22 @@ import type { AppContext } from '@/types';
 
 type RandomPoemFormat = 'slug' | 'lines';
 
-async function fetchRandomPoemBody(db: DbClient, format: RandomPoemFormat): Promise<string> {
+type RandomPoemError =
+  | { readonly kind: 'excerpt_error'; readonly cause: poemsQueries.GetRandomPoemExcerptError }
+  | { readonly kind: 'slug_error'; readonly cause: poemsQueries.GetRandomPoemSlugError };
+
+async function fetchRandomPoemBody(
+  db: DbClient,
+  format: RandomPoemFormat
+): Promise<Result<string, RandomPoemError>> {
   if (format === 'lines') {
     const result = await poemsQueries.getRandomPoemExcerpt(db);
-    return result.excerpt;
+    if (result.isErr()) return err({ kind: 'excerpt_error', cause: result.error });
+    return ok(result.value.excerpt);
   }
-  return poemsQueries.getRandomPoemSlug(db);
+  const slugResult = await poemsQueries.getRandomPoemSlug(db);
+  if (slugResult.isErr()) return err({ kind: 'slug_error', cause: slugResult.error });
+  return ok(slugResult.value);
 }
 
 const optionSchema = v.optional(v.picklist(['slug', 'lines'] as const), 'slug');
@@ -37,11 +48,31 @@ const app = new Hono<AppContext>()
       );
     }
 
+    const bodyResult = await fetchRandomPoemBody(c.get('db'), parsed.output);
+    if (bodyResult.isErr()) {
+      console.error(
+        JSON.stringify({
+          source: 'poems.routes',
+          stage: 'fetchRandomPoemBody',
+          method: c.req.method,
+          path: c.req.path,
+          option: parsed.output,
+          error: bodyResult.error,
+        })
+      );
+      return sendProblem(
+        c,
+        makeProblem({
+          code: 'INTERNAL_SERVER_ERROR',
+          status: HTTP_INTERNAL_SERVER_ERROR,
+          detail: 'Failed to fetch random poem',
+        })
+      );
+    }
+
     c.header('Cache-Control', NO_STORE_CACHE_CONTROL);
     c.header('Content-Type', 'text/plain; charset=utf-8');
-
-    const body = await fetchRandomPoemBody(c.get('db'), parsed.output);
-    return c.text(body);
+    return c.text(bodyResult.value);
   })
   .onError((error, c) => {
     if (error instanceof HTTPException) {
@@ -54,7 +85,17 @@ const app = new Hono<AppContext>()
         })
       );
     }
-    console.error(error);
+    console.error(
+      JSON.stringify({
+        source: 'poems.routes',
+        stage: 'onError',
+        method: c.req.method,
+        path: c.req.path,
+        query: c.req.query(),
+        message: error instanceof Error ? error.message : String(error),
+        name: error instanceof Error ? error.name : undefined,
+      })
+    );
     return sendProblem(
       c,
       makeProblem({

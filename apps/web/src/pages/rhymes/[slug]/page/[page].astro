@@ -29,10 +29,12 @@ if (!(parsedSlug.success && Number.isFinite(pageNumber)) || pageNumber < 1) {
 const slug = parsedSlug.output;
 const page = pageNumber.toString();
 
-const response = await fetchRhymePoemPage(slug, pageNumber);
-if (!response) {
-  return Astro.redirect('/404');
+const responseResult = await fetchRhymePoemPage(slug, pageNumber);
+if (responseResult.isErr()) {
+  if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
+  throw new Error(`fetchRhymePoemPage failed: ${JSON.stringify(responseResult.error)}`);
 }
+const response = responseResult.value;
 
 const poems = response.data;
 const rhyme = response.meta;

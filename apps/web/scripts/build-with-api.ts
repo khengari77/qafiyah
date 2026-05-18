@@ -14,6 +14,7 @@
 
 import path from 'node:path';
 import { DEV_API_PORT } from '@qafiyah/constants';
+import { err, ok, type Result } from 'neverthrow';
 
 const HOST = '127.0.0.1';
 const READY_TIMEOUT_MS = 30_000;
@@ -21,6 +22,28 @@ const READY_POLL_MS = 200;
 
 const webDir = path.resolve(import.meta.dir, '..');
 const repoRoot = path.resolve(webDir, '..', '..');
+
+type BuildStage =
+  | 'probe_port'
+  | 'start_api'
+  | 'wait_for_port'
+  | 'spawn_build'
+  | 'await_build_exit'
+  | 'kill_api';
+
+type WaitForPortError = {
+  readonly kind: 'port_timeout';
+  readonly hostname: string;
+  readonly port: number;
+  readonly timeoutMs: number;
+  readonly pollIntervalMs: number;
+  readonly hints: readonly string[];
+};
+
+type BuildError = {
+  readonly stage: BuildStage;
+  readonly cause: WaitForPortError | { readonly kind: 'unknown'; readonly message: string };
+};
 
 async function probePort(port: number, hostname: string): Promise<boolean> {
   try {
@@ -32,22 +55,31 @@ async function probePort(port: number, hostname: string): Promise<boolean> {
   }
 }
 
-async function waitForPort(port: number, hostname: string, timeoutMs: number): Promise<void> {
+async function waitForPort(
+  port: number,
+  hostname: string,
+  timeoutMs: number
+): Promise<Result<void, WaitForPortError>> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    if (await probePort(port, hostname)) return;
+    if (await probePort(port, hostname)) return ok(undefined);
     await Bun.sleep(READY_POLL_MS);
   }
-  throw new Error(
-    `[build-with-api] API failed to listen on ${hostname}:${port} within ${timeoutMs}ms.\n` +
-      `Hints:\n` +
-      `  - Did 'bun db:setup' succeed?\n` +
-      `  - Is DATABASE_URL set in apps/api/.dev.vars?\n` +
-      `  - Try running 'bun --filter @qafiyah/api dev' manually to see errors.`
-  );
+  return err({
+    kind: 'port_timeout',
+    hostname,
+    port,
+    timeoutMs,
+    pollIntervalMs: READY_POLL_MS,
+    hints: [
+      `Did 'bun db:setup' succeed?`,
+      `Is DATABASE_URL set in apps/api/.dev.vars?`,
+      `Try running 'bun --filter @qafiyah/api dev' manually to see errors.`,
+    ],
+  });
 }
 
-async function main(): Promise<void> {
+async function main(): Promise<Result<number, BuildError>> {
   const alreadyUp = await probePort(DEV_API_PORT, HOST);
   let api: Bun.Subprocess | null = null;
 
@@ -62,12 +94,24 @@ async function main(): Promise<void> {
       stderr: 'inherit',
       onExit(proc, exitCode) {
         if (exitCode !== null && exitCode !== 0 && proc.signalCode !== 'SIGTERM') {
-          console.error(`[build-with-api] API exited with code ${exitCode}`);
+          console.error(
+            JSON.stringify({
+              source: 'build-with-api',
+              stage: 'api_subprocess_exit',
+              exitCode,
+              signalCode: proc.signalCode,
+            })
+          );
           process.exit(exitCode);
         }
       },
     });
-    await waitForPort(DEV_API_PORT, HOST, READY_TIMEOUT_MS);
+    const ready = await waitForPort(DEV_API_PORT, HOST, READY_TIMEOUT_MS);
+    if (ready.isErr()) {
+      api.kill('SIGTERM');
+      await Bun.sleep(500);
+      return err({ stage: 'wait_for_port', cause: ready.error });
+    }
     console.log('[build-with-api] API is ready, starting astro build...');
   }
 
@@ -89,10 +133,33 @@ async function main(): Promise<void> {
     await Bun.sleep(500);
   }
 
-  process.exit(buildExitCode);
+  return ok(buildExitCode);
 }
 
-main().catch((err) => {
-  console.error(err);
+const result = await main().catch(
+  (cause): Result<number, BuildError> =>
+    err({
+      stage: 'await_build_exit',
+      cause: {
+        kind: 'unknown',
+        message: cause instanceof Error ? cause.message : String(cause),
+      },
+    })
+);
+
+if (result.isErr()) {
+  console.error(
+    JSON.stringify({
+      source: 'build-with-api',
+      stage: result.error.stage,
+      host: HOST,
+      port: DEV_API_PORT,
+      webDir,
+      repoRoot,
+      error: result.error.cause,
+    })
+  );
   process.exit(1);
-});
+}
+
+process.exit(result.value);

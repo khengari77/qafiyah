@@ -8,6 +8,7 @@ import {
   themeSlugSchema,
 } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
+import { err, ok, type Result } from 'neverthrow';
 import * as v from 'valibot';
 import { asPoemSlug } from './brand';
 import type { DbClient } from './client';
@@ -67,14 +68,23 @@ export function parsePoemContent(content: string): ParsedPoemContent {
   };
 }
 
-export function extractPoemExcerpt(poem: RandomPoemLines, startIndex: number): string {
+export type ExtractExcerptError = {
+  readonly kind: 'insufficient_content';
+  readonly poemId: PoemId;
+  readonly lineCount: number;
+};
+
+export function extractPoemExcerpt(
+  poem: RandomPoemLines,
+  startIndex: number
+): Result<string, ExtractExcerptError> {
   const lines = poem.content.split('*');
   if (lines.length < 2) {
-    throw new Error('Poem has insufficient content for formatting');
+    return err({ kind: 'insufficient_content', poemId: poem.poemId, lineCount: lines.length });
   }
   const line1 = lines[startIndex] || '';
   const line2 = lines[startIndex + 1] || '';
-  return `${line1}\n${line2}\n\n${poem.poetName}`.replace(DOUBLE_QUOTE_REGEX, '').trim();
+  return ok(`${line1}\n${line2}\n\n${poem.poetName}`.replace(DOUBLE_QUOTE_REGEX, '').trim());
 }
 
 const rawPoemRowSchema = v.object({
@@ -154,11 +164,24 @@ export type RandomPoemExcerpt = {
   readonly excerpt: string;
 };
 
-export async function getRandomPoemExcerpt(db: DbClient): Promise<RandomPoemExcerpt> {
+export type GetRandomPoemExcerptError =
+  | { readonly kind: 'no_eligible_poem' }
+  | { readonly kind: 'missing_content_field'; readonly poemId: PoemId }
+  | ExtractExcerptError
+  | {
+      readonly kind: 'excerpt_too_long';
+      readonly poemId: PoemId;
+      readonly length: number;
+      readonly max: number;
+    };
+
+export async function getRandomPoemExcerpt(
+  db: DbClient
+): Promise<Result<RandomPoemExcerpt, GetRandomPoemExcerptError>> {
   const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
 
   if (!result || result.length === 0 || !result[0]?.['get_random_eligible_poem']) {
-    throw new Error('getRandomPoemExcerpt: SQL returned no eligible poem');
+    return err({ kind: 'no_eligible_poem' });
   }
 
   const poemJson = result[0]['get_random_eligible_poem'];
@@ -166,34 +189,45 @@ export async function getRandomPoemExcerpt(db: DbClient): Promise<RandomPoemExce
   const poem: RandomPoemLines = v.parse(randomPoemPayloadSchema, parsed);
 
   if (!poem.content) {
-    throw new Error('getRandomPoemExcerpt: poem missing content field');
+    return err({ kind: 'missing_content_field', poemId: poem.poemId });
   }
 
   const startIndex = pickExcerptStartIndex(poem.content);
   const allLines = poem.content.split('*');
   const line1 = allLines[startIndex] || '';
   const line2 = allLines[startIndex + 1] || '';
-  const excerpt = extractPoemExcerpt(poem, startIndex);
+  const excerptResult = extractPoemExcerpt(poem, startIndex);
+  if (excerptResult.isErr()) return err(excerptResult.error);
+  const excerpt = excerptResult.value;
 
   if (excerpt.length > MAX_TWEET_LENGTH) {
-    throw new Error(
-      `getRandomPoemExcerpt: excerpt length ${excerpt.length} exceeds MAX_TWEET_LENGTH ${MAX_TWEET_LENGTH}`
-    );
+    return err({
+      kind: 'excerpt_too_long',
+      poemId: poem.poemId,
+      length: excerpt.length,
+      max: MAX_TWEET_LENGTH,
+    });
   }
 
-  return {
+  return ok({
     lines: [line1, line2] as const,
     poetName: poem.poetName,
     excerpt,
-  };
+  });
 }
 
-export async function getRandomPoemSlug(db: DbClient): Promise<PoemSlug> {
+export type GetRandomPoemSlugError =
+  | { readonly kind: 'no_eligible_poem_slug' }
+  | { readonly kind: 'invalid_payload_shape'; readonly raw: unknown };
+
+export async function getRandomPoemSlug(
+  db: DbClient
+): Promise<Result<PoemSlug, GetRandomPoemSlugError>> {
   const result = await db.execute(sql`SELECT get_random_eligible_poem_slug()`);
   const row = result?.[0];
 
   if (!row?.['get_random_eligible_poem_slug']) {
-    throw new Error('getRandomPoemSlug: SQL returned no eligible poem slug');
+    return err({ kind: 'no_eligible_poem_slug' });
   }
 
   const value = row['get_random_eligible_poem_slug'];
@@ -203,10 +237,10 @@ export async function getRandomPoemSlug(db: DbClient): Promise<PoemSlug> {
     !('slug' in value) ||
     typeof value.slug !== 'string'
   ) {
-    throw new Error('getRandomPoemSlug: unexpected SQL payload shape');
+    return err({ kind: 'invalid_payload_shape', raw: value });
   }
 
-  return asPoemSlug(value.slug);
+  return ok(asPoemSlug(value.slug));
 }
 
 export type PoemDetail = {

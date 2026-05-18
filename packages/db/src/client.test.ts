@@ -11,17 +11,25 @@ describe('createDb', () => {
     postgresMock.mockClear();
   });
 
-  it('returns a db instance for a valid URL', () => {
-    const db = createDb('postgres://user:pass@localhost:5432/dbname');
-    expect(db).toBeDefined();
+  it('returns ok with a db instance for a valid URL', () => {
+    const result = createDb('postgres://user:pass@localhost:5432/dbname');
+    expect(result.isOk()).toBe(true);
+    expect(result._unsafeUnwrap()).toBeDefined();
   });
 
-  it('throws when URL has no port', () => {
-    expect(() => createDb('postgres://user:pass@localhost/db')).toThrow('explicit valid port');
+  it('returns invalid_port error when URL has no port', () => {
+    const result = createDb('postgres://user:pass@localhost/db');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('invalid_port');
+    expect(error.rawPort).toBe('');
+    expect(error.databaseUrlHost).toBe('localhost');
   });
 
-  it('throws when port is 0', () => {
-    expect(() => createDb('postgres://user:pass@localhost:0/db')).toThrow('explicit valid port');
+  it('returns invalid_port error when port is 0', () => {
+    const result = createDb('postgres://user:pass@localhost:0/db');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('invalid_port');
+    expect(error.rawPort).toBe('0');
   });
 
   it('applies the long-lived profile for a localhost URL', () => {

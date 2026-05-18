@@ -7,8 +7,11 @@ import { fetchAllPoemSlugs } from '@/lib/api/static/poems';
 import { loadPoemPage } from '@/lib/poem-page';
 
 export async function getStaticPaths() {
-  const slugs = await fetchAllPoemSlugs();
-  return slugs.map((poemSlug) => ({ params: { slug: poemSlug } }));
+  const slugsResult = await fetchAllPoemSlugs();
+  if (slugsResult.isErr()) {
+    throw new Error(`fetchAllPoemSlugs failed: ${JSON.stringify(slugsResult.error)}`);
+  }
+  return slugsResult.value.map((poemSlug) => ({ params: { slug: poemSlug } }));
 }
 
 const parsed = v.safeParse(poemSlugSchema, Astro.params.slug);
@@ -16,13 +19,14 @@ if (!parsed.success) {
   return Astro.redirect('/404');
 }
 const slug = parsed.output;
-const pageData = await loadPoemPage(slug);
+const pageDataResult = await loadPoemPage(slug);
 
-if (!pageData) {
-  return Astro.redirect('/404');
+if (pageDataResult.isErr()) {
+  if (pageDataResult.error.kind === 'not_found') return Astro.redirect('/404');
+  throw new Error(`loadPoemPage failed: ${JSON.stringify(pageDataResult.error)}`);
 }
 
-const { poem, layout: seo } = pageData;
+const { poem, layout: seo } = pageDataResult.value;
 ---
 
 <Layout

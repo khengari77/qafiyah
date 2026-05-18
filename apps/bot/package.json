@@ -13,6 +13,7 @@
   "dependencies": {
     "@qafiyah/constants": "workspace:*",
     "envin": "^1.2.0",
+    "neverthrow": "^8.2.0",
     "twitter-api-v2": "^1.29.0",
     "valibot": "^1.4.0"
   },

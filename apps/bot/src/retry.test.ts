@@ -1,32 +1,42 @@
+import { err, ok } from 'neverthrow';
 import { describe, expect, it, vi } from 'vitest';
-import { TerminalError, withRetry } from './retry';
+import { withRetry } from './retry';
 
 describe('withRetry', () => {
   it('returns the value on first success', async () => {
-    const operation = vi.fn().mockResolvedValue('poem');
-    await expect(withRetry(operation, 'fetch')).resolves.toBe('poem');
+    const operation = vi.fn().mockResolvedValue(ok('poem'));
+    const result = await withRetry(operation, 'fetch');
+    expect(result._unsafeUnwrap()).toBe('poem');
     expect(operation).toHaveBeenCalledTimes(1);
   });
 
-  it('retries transient failures until success', async () => {
+  it('retries retryable failures until success', async () => {
     const operation = vi
       .fn()
-      .mockRejectedValueOnce(new Error('boom'))
-      .mockRejectedValueOnce(new Error('boom'))
-      .mockResolvedValue('poem');
-    await expect(withRetry(operation, 'fetch')).resolves.toBe('poem');
+      .mockResolvedValueOnce(err({ kind: 'boom', retryable: true }))
+      .mockResolvedValueOnce(err({ kind: 'boom', retryable: true }))
+      .mockResolvedValue(ok('poem'));
+    const result = await withRetry(operation, 'fetch');
+    expect(result._unsafeUnwrap()).toBe('poem');
     expect(operation).toHaveBeenCalledTimes(3);
   }, 10_000);
 
-  it('throws immediately on TerminalError without retrying', async () => {
-    const operation = vi.fn().mockRejectedValue(new TerminalError('stop'));
-    await expect(withRetry(operation, 'fetch')).rejects.toBeInstanceOf(TerminalError);
+  it('returns terminal error immediately without retrying when retryable is false', async () => {
+    const operation = vi.fn().mockResolvedValue(err({ kind: 'stop', retryable: false }));
+    const result = await withRetry(operation, 'fetch');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('terminal');
+    expect(error.attempts).toBe(1);
+    expect(error.operationName).toBe('fetch');
     expect(operation).toHaveBeenCalledTimes(1);
   });
 
-  it('throws after exhausting attempts on transient failure', async () => {
-    const operation = vi.fn().mockRejectedValue(new Error('boom'));
-    await expect(withRetry(operation, 'fetch')).rejects.toThrow('boom');
+  it('returns retry_exhausted after MAX_ATTEMPTS on retryable failures', async () => {
+    const operation = vi.fn().mockResolvedValue(err({ kind: 'boom', retryable: true }));
+    const result = await withRetry(operation, 'fetch');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('retry_exhausted');
+    expect(error.attempts).toBe(3);
     expect(operation).toHaveBeenCalledTimes(3);
   }, 10_000);
 });

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { searchBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
@@ -81,7 +82,7 @@ describe('search procedure', () => {
   });
 
   it('returns matching poems for a text-only Arabic query', async () => {
-    searchPoemsMock.mockResolvedValue({ rows: [samplePoemRow], totalCount: 1 });
+    searchPoemsMock.mockResolvedValue(ok({ rows: [samplePoemRow], totalCount: 1 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poems&q=%D9%82%D8%B5%D9%8A%D8%AF%D8%A9');
@@ -94,7 +95,7 @@ describe('search procedure', () => {
   });
 
   it('returns poems for a filter-only request', async () => {
-    browsePoemsByFiltersMock.mockResolvedValue({ rows: [samplePoemRow], totalCount: 1 });
+    browsePoemsByFiltersMock.mockResolvedValue(ok({ rows: [samplePoemRow], totalCount: 1 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poems&eraSlugs%5B0%5D=abbasid');
@@ -106,7 +107,7 @@ describe('search procedure', () => {
   });
 
   it('accepts non-Arabic text with a filter (treats q as empty)', async () => {
-    browsePoemsByFiltersMock.mockResolvedValue({ rows: [], totalCount: 0 });
+    browsePoemsByFiltersMock.mockResolvedValue(ok({ rows: [], totalCount: 0 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poems&q=hello&eraSlugs%5B0%5D=abbasid');
@@ -116,7 +117,7 @@ describe('search procedure', () => {
   });
 
   it('returns poets for a filter-only request', async () => {
-    browsePoetsByFiltersMock.mockResolvedValue({ rows: [samplePoetRow], totalCount: 1 });
+    browsePoetsByFiltersMock.mockResolvedValue(ok({ rows: [samplePoetRow], totalCount: 1 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poets&eraSlugs%5B0%5D=abbasid');
@@ -127,7 +128,7 @@ describe('search procedure', () => {
   });
 
   it('returns matching poets for a text query', async () => {
-    searchPoetsMock.mockResolvedValue({ rows: [samplePoetRow], totalCount: 1 });
+    searchPoetsMock.mockResolvedValue(ok({ rows: [samplePoetRow], totalCount: 1 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poets&q=%D9%82%D8%B5%D9%8A%D8%AF%D8%A9');

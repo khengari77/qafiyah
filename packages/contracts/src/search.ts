@@ -16,7 +16,7 @@ import {
   rhymeSlugSchema,
   themeSlugSchema,
 } from './brands';
-import { DEFAULT_PAGE, inputValidationErrorMap } from './constants';
+import { DEFAULT_PAGE, inputValidationErrorMap, internalServerErrorMap } from './constants';
 import { namedSlugRef, pageParam, pagination } from './schemas';
 
 export function cleanArabicQuery(query: string): string {
@@ -87,7 +87,7 @@ export const searchContract = {
   search: oc
     .route({ method: 'GET', path: '/search' })
     .input(searchInputSchema)
-    .errors({ ...inputValidationErrorMap })
+    .errors({ ...inputValidationErrorMap, ...internalServerErrorMap })
     .output(
       v.variant('searchType', [
         v.object({

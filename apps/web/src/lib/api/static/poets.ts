@@ -1,50 +1,51 @@
 import type { PoetSlug } from '@qafiyah/contracts';
+import { err, ok, type Result } from 'neverthrow';
 import { apiServer, type Poet, type PoetPoemsResponse, type PoetsResponse } from '@/lib/api/rpc';
-import { isNotFound } from './dedup';
+import { type ApiFetchError, callApi } from './result';
 
-export async function fetchPoetsPage(page: number): Promise<PoetsResponse | null> {
-  try {
-    return await apiServer.poets.list({ page: page.toString() });
-  } catch (err) {
-    if (isNotFound(err)) return null;
-    throw err;
-  }
+export function fetchPoetsPage(page: number): Promise<Result<PoetsResponse, ApiFetchError>> {
+  return callApi('poets.list', { page }, () => apiServer.poets.list({ page: page.toString() }));
 }
 
-export async function fetchAllPoets(): Promise<readonly Poet[]> {
+export async function fetchAllPoets(): Promise<Result<readonly Poet[], ApiFetchError>> {
   const allPoets: Poet[] = [];
   let page = 1;
   let hasMore = true;
 
   while (hasMore) {
     const response = await fetchPoetsPage(page);
-    if (!response || response.data.length === 0) break;
+    if (response.isErr()) {
+      if (response.error.kind === 'not_found') break;
+      return err(response.error);
+    }
+    if (response.value.data.length === 0) break;
 
-    allPoets.push(...response.data);
+    allPoets.push(...response.value.data);
 
-    if (page >= response.pagination.totalPages) {
+    if (page >= response.value.pagination.totalPages) {
       hasMore = false;
     } else {
       page++;
     }
   }
 
-  return allPoets;
+  return ok(allPoets);
 }
 
-export async function fetchPoetsTotalPages(): Promise<number> {
+export async function fetchPoetsTotalPages(): Promise<Result<number, ApiFetchError>> {
   const response = await fetchPoetsPage(1);
-  return response?.pagination.totalPages ?? 1;
+  if (response.isErr()) {
+    if (response.error.kind === 'not_found') return ok(1);
+    return err(response.error);
+  }
+  return ok(response.value.pagination.totalPages);
 }
 
-export async function fetchPoetPoemPage(
+export function fetchPoetPoemPage(
   slug: PoetSlug,
   page: number
-): Promise<PoetPoemsResponse | null> {
-  try {
-    return await apiServer.poets.listPoems({ slug, page: page.toString() });
-  } catch (err) {
-    if (isNotFound(err)) return null;
-    throw err;
-  }
+): Promise<Result<PoetPoemsResponse, ApiFetchError>> {
+  return callApi('poets.listPoems', { slug, page }, () =>
+    apiServer.poets.listPoems({ slug, page: page.toString() })
+  );
 }

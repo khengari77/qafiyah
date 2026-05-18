@@ -19,6 +19,7 @@
     "@qafiyah/db": "workspace:*",
     "@qafiyah/typescript": "workspace:*",
     "hono": "^4.12.19",
+    "neverthrow": "^8.2.0",
     "ts-pattern": "^5.9.0",
     "valibot": "^1.4.0"
   },

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { ok } from 'neverthrow';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { AppContext } from '@/types';
 
@@ -27,7 +28,7 @@ function buildAppWithMiddleware(middleware: Awaited<ReturnType<typeof reimportMi
 describe('dbMiddleware', () => {
   beforeEach(() => {
     createMockDbFactory.mockReset();
-    createMockDbFactory.mockReturnValue({ __mock: 'db' });
+    createMockDbFactory.mockReturnValue(ok({ __mock: 'db' }));
   });
 
   it('returns 500 when DATABASE_URL is missing (configuration error)', async () => {

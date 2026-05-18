@@ -12,9 +12,12 @@ import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const poets = await fetchAllPoets();
+  const poetsResult = await fetchAllPoets();
+  if (poetsResult.isErr()) {
+    throw new Error(`fetchAllPoets failed: ${JSON.stringify(poetsResult.error)}`);
+  }
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const poet of poets) {
+  for (const poet of poetsResult.value) {
     for (const page of generatePageNumbers(poet.poemsCount)) {
       params.push({ params: { slug: poet.slug, page: page.toString() } });
     }
@@ -30,10 +33,12 @@ if (!(parsedSlug.success && Number.isFinite(pageNumber)) || pageNumber < 1) {
 const slug = parsedSlug.output;
 const page = pageNumber.toString();
 
-const response = await fetchPoetPoemPage(slug, pageNumber);
-if (!response) {
-  return Astro.redirect('/404');
+const responseResult = await fetchPoetPoemPage(slug, pageNumber);
+if (responseResult.isErr()) {
+  if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
+  throw new Error(`fetchPoetPoemPage failed: ${JSON.stringify(responseResult.error)}`);
 }
+const response = responseResult.value;
 
 const poems = response.data;
 const poet = response.meta;

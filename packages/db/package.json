@@ -17,6 +17,7 @@
     "@qafiyah/constants": "workspace:*",
     "@qafiyah/contracts": "workspace:*",
     "drizzle-orm": "^0.45.2",
+    "neverthrow": "^8.2.0",
     "postgres": "^3.4.9",
     "valibot": "^1.4.0"
   },

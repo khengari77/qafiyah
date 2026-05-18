@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "envin": "^1.2.0",
     "lucide-react": "^1.16.0",
+    "neverthrow": "^8.2.0",
     "nuqs": "^2.8.9",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",

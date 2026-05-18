@@ -10,3 +10,7 @@ export const EXAMPLE_THEME_SLUG = '61a2570d-9acc-493d-a05d-7dd2404c17ff';
 export const inputValidationErrorMap = {
   INPUT_VALIDATION_FAILED: { status: 400, message: 'Input validation failed' },
 } as const;
+
+export const internalServerErrorMap = {
+  INTERNAL_SERVER_ERROR: { status: 500, message: 'Internal server error' },
+} as const;
