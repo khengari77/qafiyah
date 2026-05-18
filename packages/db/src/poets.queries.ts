@@ -4,7 +4,7 @@ import { sql } from 'drizzle-orm';
 import { asPoetSlug } from './brand';
 import type { DbClient } from './client';
 import { executeAs } from './execute-as';
-import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { poetStats } from './schema';
 
 export type PoetStatsRow = {
@@ -45,7 +45,7 @@ export async function listPoets(db: DbClient, page: number): Promise<ListPoetsRe
   const totalPages = Math.ceil(total / limit);
 
   return {
-    poets: poets.map((r) => ({ ...r, slug: asPoetSlug(r.slug) })),
+    poets: poets.map((row) => ({ ...row, slug: asPoetSlug(row.slug) })),
     total,
     totalPages,
   };
@@ -62,7 +62,7 @@ export async function listPoetPoems(
   const parentRows = await executeAs(
     db,
     sql`SELECT name, poems_count FROM poet_stats WHERE slug = ${slug} LIMIT 1`,
-    parentRowSchema
+    parentStatsRowSchema
   );
 
   if (parentRows.length === 0 || !parentRows[0]) return null;
@@ -89,13 +89,13 @@ export async function listPoetPoems(
     rawPoemRowSchema
   );
 
-  const poems: readonly PoemListRow[] = rawPoems.map((r) => ({
-    title: r.title,
-    slug: r.slug,
-    poetName: r.poet_name,
-    poetSlug: r.poet_slug,
-    meterName: r.meter_name,
-    meterSlug: r.meter_slug,
+  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    poetName: row.poet_name,
+    poetSlug: row.poet_slug,
+    meterName: row.meter_name,
+    meterSlug: row.meter_slug,
   }));
 
   return {

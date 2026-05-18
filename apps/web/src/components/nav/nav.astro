@@ -54,8 +54,8 @@ const isActiveLink = (href: string): boolean => {
           <li>
             <a
               href={link.href}
-              target={link.external ? '_blank' : undefined}
-              rel={link.external ? 'noopener noreferrer' : undefined}
+              target={link.isExternal ? '_blank' : undefined}
+              rel={link.isExternal ? 'noopener noreferrer' : undefined}
               class:list={[
                 'underline-offset-2 duration-200 hover:text-zinc-600 hover:underline',
                 isActiveLink(link.href) && 'text-zinc-900 underline',
@@ -84,8 +84,8 @@ const isActiveLink = (href: string): boolean => {
             tabindex="-1"
             data-mobile-link
             href={link.href}
-            target={link.external ? '_blank' : undefined}
-            rel={link.external ? 'noopener noreferrer' : undefined}
+            target={link.isExternal ? '_blank' : undefined}
+            rel={link.isExternal ? 'noopener noreferrer' : undefined}
             class:list={[
               'block py-2 hover:text-zinc-600',
               isActiveLink(link.href) && 'font-bold text-zinc-900 underline',

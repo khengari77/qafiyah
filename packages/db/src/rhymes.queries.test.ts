@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asRhymeSlug } from './brand';
 import { listRhymePoems, listRhymes, normalizeRhymePattern } from './rhymes.queries';
-import { fakeDb, makeChain } from './test-utils';
+import { castPartialAsDbClient, makeChain } from './test-utils';
 
 describe('normalizeRhymePattern', () => {
   it('strips surrounding parentheses', () => {
@@ -39,7 +39,7 @@ describe('listRhymes', () => {
       { pattern: 'ب', slug: 'rhyme-b-slug', poemsCount: 10, poetsCount: 5 },
       { pattern: 'باء', slug: 'rhyme-ba-slug', poemsCount: 20, poetsCount: 8 },
     ];
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
@@ -51,7 +51,7 @@ describe('listRhymes', () => {
   });
 
   it('returns empty array when no rhymes exist', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
@@ -61,7 +61,7 @@ describe('listRhymes', () => {
 
   it('ignores rhymes whose pattern does not match any letter', async () => {
     const rows = [{ pattern: 'xyz', slug: 'rhyme-xyz-slug', poemsCount: 5, poetsCount: 2 }];
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
@@ -81,7 +81,7 @@ describe('listRhymePoems', () => {
       meter_name: 'الطويل',
       meter_slug: 'altawil',
     };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     });
 
@@ -91,7 +91,7 @@ describe('listRhymePoems', () => {
   });
 
   it('returns null when rhyme is not found', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 

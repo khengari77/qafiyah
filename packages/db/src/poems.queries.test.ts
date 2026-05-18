@@ -3,21 +3,21 @@ import { asPoemSlug } from './brand';
 import {
   extractPoemExcerpt,
   getPoemBySlug,
-  getRandomPoemLines,
+  getRandomPoemExcerpt,
   getRandomPoemSlug,
   listAllPoemSlugs,
   type PoemId,
-  processPoemContent,
+  parsePoemContent,
   type RandomPoemLines,
   removeTashkeel,
 } from './poems.queries';
-import { fakeDb, makeChain } from './test-utils';
+import { castPartialAsDbClient, makeChain } from './test-utils';
 
 // test-only: brand a literal number as a PoemId for fixture construction.
 const asPoemId = (n: number): PoemId => n as PoemId;
 const makeRandomPoem = (content: string): RandomPoemLines => ({
-  poem_id: asPoemId(1),
-  poet_name: 'شاعر',
+  poemId: asPoemId(1),
+  poetName: 'شاعر',
   content,
 });
 
@@ -63,9 +63,9 @@ describe('removeTashkeel', () => {
   });
 });
 
-describe('processPoemContent', () => {
+describe('parsePoemContent', () => {
   it('splits an even number of lines into verse pairs', () => {
-    const { verses } = processPoemContent('أ*ب*ج*د');
+    const { verses } = parsePoemContent('أ*ب*ج*د');
     expect(verses).toEqual([
       ['أ', 'ب'],
       ['ج', 'د'],
@@ -73,7 +73,7 @@ describe('processPoemContent', () => {
   });
 
   it('handles an odd number of lines (last verse gets empty second half)', () => {
-    const { verses } = processPoemContent('أ*ب*ج');
+    const { verses } = parsePoemContent('أ*ب*ج');
     expect(verses).toEqual([
       ['أ', 'ب'],
       ['ج', ''],
@@ -81,38 +81,38 @@ describe('processPoemContent', () => {
   });
 
   it('reports correct verseCount', () => {
-    const { verseCount } = processPoemContent('أ*ب*ج*د');
+    const { verseCount } = parsePoemContent('أ*ب*ج*د');
     expect(verseCount).toBe(2);
   });
 
   it('strips double quotes from content', () => {
-    const { verses } = processPoemContent('"أ"*"ب"');
+    const { verses } = parsePoemContent('"أ"*"ب"');
     expect(verses).toEqual([['أ', 'ب']]);
   });
 
   it('builds sample from first three lines joined with " * "', () => {
-    const { sample } = processPoemContent('أول*ثاني*ثالث*رابع');
+    const { sample } = parsePoemContent('أول*ثاني*ثالث*رابع');
     expect(sample).toBe('أول * ثاني * ثالث');
   });
 
   it('removes tashkeel from the sample', () => {
-    const { sample } = processPoemContent('كَتَبَ*قَرَأَ');
+    const { sample } = parsePoemContent('كَتَبَ*قَرَأَ');
     expect(sample).toBe('كتب * قرأ');
   });
 
   it('builds keywords from all lines without tashkeel', () => {
-    const { keywords } = processPoemContent('كَلِمَة*أُخرى');
+    const { keywords } = parsePoemContent('كَلِمَة*أُخرى');
     expect(keywords).toBe('كلمة,أخرى');
   });
 
   it('uses empty string fallback when first half of a pair is empty', () => {
     // Content starting with '*' → lines[0] = '' (falsy) → '' fallback used for first half
-    const { verses } = processPoemContent('*ب');
+    const { verses } = parsePoemContent('*ب');
     expect(verses).toEqual([['', 'ب']]);
   });
 
   it('handles a single line (one verse with empty second half)', () => {
-    const { verses, verseCount } = processPoemContent('بيت');
+    const { verses, verseCount } = parsePoemContent('بيت');
     expect(verses).toEqual([['بيت', '']]);
     expect(verseCount).toBe(1);
   });
@@ -136,7 +136,7 @@ describe('extractPoemExcerpt', () => {
   });
 
   it('includes the poet name in the output', () => {
-    const p: RandomPoemLines = { poem_id: asPoemId(2), poet_name: 'المتنبي', content: 'أ*ب' };
+    const p: RandomPoemLines = { poemId: asPoemId(2), poetName: 'المتنبي', content: 'أ*ب' };
     expect(extractPoemExcerpt(p, 0)).toContain('المتنبي');
   });
 
@@ -165,7 +165,7 @@ const POEM_CONTENT = 'شطر أول*شطر ثانٍ';
 
 describe('listAllPoemSlugs', () => {
   it('returns all slugs and total count', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue(makeChain([{ slug: 'slug-1' }, { slug: 'slug-2' }])),
       }),
@@ -176,7 +176,7 @@ describe('listAllPoemSlugs', () => {
   });
 
   it('returns empty slugs when no poems exist', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
@@ -185,7 +185,7 @@ describe('listAllPoemSlugs', () => {
   });
 });
 
-describe('getRandomPoemLines', () => {
+describe('getRandomPoemExcerpt', () => {
   afterEach(() => {
     vi.restoreAllMocks();
   });
@@ -193,52 +193,52 @@ describe('getRandomPoemLines', () => {
   it('returns structured excerpt for a JSON object result', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
     });
 
-    const result = await getRandomPoemLines(mockDb);
+    const result = await getRandomPoemExcerpt(mockDb);
     expect(result.lines[0]).toBe('شطر أول');
     expect(result.lines[1]).toBe('شطر ثانٍ');
-    expect(result.poet).toBe('شاعر');
-    expect(result.formatted).toContain('شطر أول');
-    expect(result.formatted).toContain('شاعر');
+    expect(result.poetName).toBe('شاعر');
+    expect(result.excerpt).toContain('شطر أول');
+    expect(result.excerpt).toContain('شاعر');
   });
 
   it('parses a JSON string result', async () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(poemData) }]),
     });
 
-    const result = await getRandomPoemLines(mockDb);
-    expect(result.formatted).toContain('شطر أول');
+    const result = await getRandomPoemExcerpt(mockDb);
+    expect(result.excerpt).toContain('شطر أول');
   });
 
   it('throws when execute returns empty array', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([]),
     });
 
-    await expect(getRandomPoemLines(mockDb)).rejects.toThrow('SQL returned no eligible poem');
+    await expect(getRandomPoemExcerpt(mockDb)).rejects.toThrow('SQL returned no eligible poem');
   });
 
   it('throws when get_random_eligible_poem is falsy', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: null }]),
     });
 
-    await expect(getRandomPoemLines(mockDb)).rejects.toThrow('SQL returned no eligible poem');
+    await expect(getRandomPoemExcerpt(mockDb)).rejects.toThrow('SQL returned no eligible poem');
   });
 
   it('throws when poem content is missing', async () => {
     const poemData = { poem_id: 1, poet_name: 'شاعر' };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
     });
 
-    await expect(getRandomPoemLines(mockDb)).rejects.toThrow();
+    await expect(getRandomPoemExcerpt(mockDb)).rejects.toThrow();
   });
 
   it('throws when excerpt exceeds MAX_TWEET_LENGTH', async () => {
@@ -249,17 +249,17 @@ describe('getRandomPoemLines', () => {
       poet_name: 'شاعر',
       content: `${longLine}*${longLine}`,
     };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
     });
 
-    await expect(getRandomPoemLines(mockDb)).rejects.toThrow('exceeds MAX_TWEET_LENGTH');
+    await expect(getRandomPoemExcerpt(mockDb)).rejects.toThrow('exceeds MAX_TWEET_LENGTH');
   });
 });
 
 describe('getRandomPoemSlug', () => {
   it('returns slug from a valid response', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 'test-slug-uuid' } }]),
@@ -270,7 +270,7 @@ describe('getRandomPoemSlug', () => {
   });
 
   it('throws when execute returns empty array', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([]),
     });
 
@@ -278,7 +278,7 @@ describe('getRandomPoemSlug', () => {
   });
 
   it('throws when get_random_eligible_poem_slug is null', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: null }]),
     });
 
@@ -286,7 +286,7 @@ describe('getRandomPoemSlug', () => {
   });
 
   it('throws when value is not an object', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: 'just-a-string' }]),
     });
 
@@ -294,7 +294,7 @@ describe('getRandomPoemSlug', () => {
   });
 
   it('throws when slug property is missing', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { other: 'field' } }]),
     });
 
@@ -302,7 +302,7 @@ describe('getRandomPoemSlug', () => {
   });
 
   it('throws when slug is not a string', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 42 } }]),
     });
 
@@ -334,7 +334,7 @@ const fullPoemData = {
 
 describe('getPoemBySlug', () => {
   it('returns found result with enriched slugs for poem and related', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
@@ -346,9 +346,9 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
-    expect(result.type).toBe('found');
-    if (result.type === 'found') {
-      expect(result.data.clearTitle).toBe('قصيدة المتنبي');
+    expect(result.kind).toBe('found');
+    if (result.kind === 'found') {
+      expect(result.data.displayTitle).toBe('قصيدة المتنبي');
       expect(result.data.metadata.poetName).toBe('المتنبي');
       expect(result.data.metadata.meterSlug).toBe('altawil');
       expect(result.data.metadata.themeSlug).toBe('fakhr');
@@ -358,7 +358,7 @@ describe('getPoemBySlug', () => {
   });
 
   it('strips double quotes from title', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
@@ -368,31 +368,31 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
-    if (result.type === 'found') {
-      expect(result.data.clearTitle).not.toContain('"');
+    if (result.kind === 'found') {
+      expect(result.data.displayTitle).not.toContain('"');
     }
   });
 
   it('returns not_found when execute returns empty array', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([]),
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
-    expect(result.type).toBe('not_found');
+    expect(result.kind).toBe('not_found');
   });
 
   it('returns not_found when get_poem_with_related is falsy', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_poem_with_related: null }]),
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
-    expect(result.type).toBe('not_found');
+    expect(result.kind).toBe('not_found');
   });
 
-  it('returns error type when data has error field with message', async () => {
-    const mockDb = fakeDb({
+  it('returns error kind when data has error field with message', async () => {
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValue([
@@ -401,25 +401,25 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.type).toBe('error');
-    if (result.type === 'error') {
+    expect(result.kind).toBe('error');
+    if (result.kind === 'error') {
       expect(result.message).toBe('Poem not found');
     }
   });
 
   it('falls back to error field when message is missing', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_poem_with_related: { error: 'not_found' } }]),
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.type).toBe('error');
-    if (result.type === 'error') {
+    expect(result.kind).toBe('error');
+    if (result.kind === 'error') {
       expect(result.message).toBe('not_found');
     }
   });
 
-  it('returns error type when poem is missing required fields', async () => {
+  it('returns error kind when poem is missing required fields', async () => {
     const incompleteData = {
       poem: {
         slug: 'slug',
@@ -434,19 +434,19 @@ describe('getPoemBySlug', () => {
       },
       related_poems: [],
     };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_poem_with_related: incompleteData }]),
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.type).toBe('error');
-    if (result.type === 'error') {
+    expect(result.kind).toBe('error');
+    if (result.kind === 'error') {
       expect(result.message).toBe('Incomplete poem data');
     }
   });
 
   it('returns error when meter slug enrichment is missing', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
@@ -456,6 +456,6 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.type).toBe('error');
+    expect(result.kind).toBe('error');
   });
 });

@@ -3,7 +3,7 @@ import { metersContract } from './meters';
 import { poemsContract } from './poems';
 import { poetsContract } from './poets';
 import { rhymesContract } from './rhymes';
-import { searchRouterContract } from './search';
+import { searchContract } from './search';
 import { themesContract } from './themes';
 
 export const contract = {
@@ -13,7 +13,7 @@ export const contract = {
   poets: poetsContract,
   rhymes: rhymesContract,
   themes: themesContract,
-  search: searchRouterContract,
+  search: searchContract,
 };
 
 export type AppContract = typeof contract;
@@ -32,8 +32,8 @@ export {
   type ThemeSlug,
   themeSlugSchema,
 } from './brands';
-export { poemResource } from './poems';
-export { pagination, poemListItem, subRef } from './schemas';
+export { poemDetail } from './poems';
+export { namedSlugRef, pagination, poemListItem } from './schemas';
 export {
   cleanArabicQuery,
   poemSearchResult,

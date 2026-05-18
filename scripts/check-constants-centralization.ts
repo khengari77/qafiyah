@@ -20,8 +20,8 @@ const SCAN_DIRS = ['apps/web/src', 'apps/api/src', 'apps/bot/src'];
 
 const TEST_FILE_RE = /\.(test|spec)\.[tj]sx?$/;
 
-const isTestFile = (p: string): boolean =>
-  TEST_FILE_RE.test(p) || p.endsWith('test-schemas.ts') || p.endsWith('test-utils.ts');
+const isTestFile = (path: string): boolean =>
+  TEST_FILE_RE.test(path) || path.endsWith('test-schemas.ts') || path.endsWith('test-utils.ts');
 
 const RULES: ReadonlyArray<{ re: RegExp; name: string; constant: string }> = [
   {
@@ -35,12 +35,12 @@ const RULES: ReadonlyArray<{ re: RegExp; name: string; constant: string }> = [
   { re: /\bport\s*[:=]\s*8787\b/g, name: 'dev API port', constant: 'DEV_API_PORT' },
 ];
 
-function* walk(dir: string): Generator<string> {
+function* walkFiles(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
     if (IGNORED_DIRS.has(entry)) continue;
     const full = join(dir, entry);
-    const s = statSync(full);
-    if (s.isDirectory()) yield* walk(full);
+    const stat = statSync(full);
+    if (stat.isDirectory()) yield* walkFiles(full);
     else if (SOURCE_EXTS.some((ext) => entry.endsWith(ext))) yield full;
   }
 }
@@ -51,16 +51,16 @@ const violations: Violation[] = [];
 
 for (const dir of SCAN_DIRS) {
   const abs = join(ROOT, dir);
-  for (const file of walk(abs)) {
+  for (const file of walkFiles(abs)) {
     if (isTestFile(file)) continue;
     const content = readFileSync(file, 'utf8');
     for (const rule of RULES) {
-      for (const m of content.matchAll(rule.re)) {
-        const line = content.slice(0, m.index ?? 0).split('\n').length;
+      for (const match of content.matchAll(rule.re)) {
+        const line = content.slice(0, match.index ?? 0).split('\n').length;
         violations.push({
           file: relative(ROOT, file),
           line,
-          match: m[0],
+          match: match[0],
           name: rule.name,
           constant: rule.constant,
         });
@@ -71,8 +71,10 @@ for (const dir of SCAN_DIRS) {
 
 if (violations.length > 0) {
   console.error('Hardcoded constants detected:\n');
-  for (const v of violations) {
-    console.error(`  ${v.file}:${v.line}  "${v.match}", use ${v.constant} from @qafiyah/constants`);
+  for (const violation of violations) {
+    console.error(
+      `  ${violation.file}:${violation.line}  "${violation.match}", use ${violation.constant} from @qafiyah/constants`
+    );
   }
   console.error(
     [

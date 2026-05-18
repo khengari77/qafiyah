@@ -1,34 +1,34 @@
 import { oc } from '@orpc/contract';
 import { poetSlugSchema } from './brands';
-import { EXAMPLE_POET_SLUG, inputValidationError } from './constants';
+import { EXAMPLE_POET_SLUG, inputValidationErrorMap } from './constants';
 import {
   listResponse,
   listResponseWithMeta,
   pageQueryInput,
-  parentMeta,
   poemListItem,
   slugAndPageInput,
+  slugWithPoemCount,
 } from './schemas';
 
-const poetStatRow = parentMeta(poetSlugSchema);
+const poetListEntry = slugWithPoemCount(poetSlugSchema);
 
 const listPoetsContract = oc
   .route({ method: 'GET', path: '/poets' })
   .input(pageQueryInput)
   .errors({
-    ...inputValidationError,
+    ...inputValidationErrorMap,
     NOT_FOUND: { status: 404, message: 'No poets found for this page' },
   })
-  .output(listResponse(poetStatRow));
+  .output(listResponse(poetListEntry));
 
 const listPoetPoemsContract = oc
   .route({ method: 'GET', path: '/poets/{slug}/poems' })
   .input(slugAndPageInput(poetSlugSchema, EXAMPLE_POET_SLUG))
   .errors({
-    ...inputValidationError,
+    ...inputValidationErrorMap,
     NOT_FOUND: { status: 404, message: 'Poet not found' },
   })
-  .output(listResponseWithMeta(poemListItem, parentMeta(poetSlugSchema)));
+  .output(listResponseWithMeta(poemListItem, slugWithPoemCount(poetSlugSchema)));
 
 export const poetsContract = {
   list: listPoetsContract,

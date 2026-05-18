@@ -8,6 +8,6 @@ export type AppContext = {
   readonly Bindings: Bindings;
   readonly Variables: {
     readonly db: DbClient;
-    readonly logEvent?: LogHandle;
+    readonly logHandle?: LogHandle;
   };
 };

@@ -6,8 +6,13 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { asEraSlug, asMeterSlug, asRhymeSlug, asThemeSlug } from './brand';
 import { createDb, type DbClient } from './client';
-import { listPoemsByFilters, listPoetsByFilters, searchPoems, searchPoets } from './search.queries';
-import { fakeDb } from './test-utils';
+import {
+  browsePoemsByFilters,
+  browsePoetsByFilters,
+  searchPoems,
+  searchPoets,
+} from './search.queries';
+import { castPartialAsDbClient } from './test-utils';
 
 const TEST_DATABASE_URL = process.env['TEST_DATABASE_URL'] ?? '';
 const UUID_REGEX = /^[0-9a-f-]{36}$/;
@@ -32,8 +37,8 @@ describeIfDb('filter-only search queries (integration)', () => {
     // postgres-js holds open sockets; let GC clear them after this run.
   });
 
-  it('listPoemsByFilters: by era slug returns rows + non-zero total', async () => {
-    const result = await listPoemsByFilters({
+  it('browsePoemsByFilters: by era slug returns rows + non-zero total', async () => {
+    const result = await browsePoemsByFilters({
       db,
       page: 1,
       filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
@@ -50,13 +55,13 @@ describeIfDb('filter-only search queries (integration)', () => {
     }
   });
 
-  it('listPoemsByFilters: numeric ID-string is also accepted as a slug', async () => {
-    const bySlug = await listPoemsByFilters({
+  it('browsePoemsByFilters: numeric ID-string is also accepted as a slug', async () => {
+    const bySlug = await browsePoemsByFilters({
       db,
       page: 1,
       filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
     });
-    const byId = await listPoemsByFilters({
+    const byId = await browsePoemsByFilters({
       db,
       page: 1,
       filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('2')] },
@@ -64,13 +69,13 @@ describeIfDb('filter-only search queries (integration)', () => {
     expect(byId.totalCount).toBe(bySlug.totalCount);
   });
 
-  it('listPoemsByFilters: combining filters narrows results', async () => {
-    const eraOnly = await listPoemsByFilters({
+  it('browsePoemsByFilters: combining filters narrows results', async () => {
+    const eraOnly = await browsePoemsByFilters({
       db,
       page: 1,
       filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
     });
-    const eraAndMeter = await listPoemsByFilters({
+    const eraAndMeter = await browsePoemsByFilters({
       db,
       page: 1,
       filters: {
@@ -82,8 +87,8 @@ describeIfDb('filter-only search queries (integration)', () => {
     expect(eraAndMeter.totalCount).toBeLessThanOrEqual(eraOnly.totalCount);
   });
 
-  it('listPoemsByFilters: unknown filter yields zero results', async () => {
-    const result = await listPoemsByFilters({
+  it('browsePoemsByFilters: unknown filter yields zero results', async () => {
+    const result = await browsePoemsByFilters({
       db,
       page: 1,
       filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('__nonexistent__')] },
@@ -92,8 +97,8 @@ describeIfDb('filter-only search queries (integration)', () => {
     expect(result.rows).toEqual([]);
   });
 
-  it('listPoetsByFilters: by era slug returns rows', async () => {
-    const result = await listPoetsByFilters({
+  it('browsePoetsByFilters: by era slug returns rows', async () => {
+    const result = await browsePoetsByFilters({
       db,
       page: 1,
       eraSlugs: [asEraSlug('abbasid')],
@@ -108,9 +113,9 @@ describeIfDb('filter-only search queries (integration)', () => {
     }
   });
 
-  it('listPoetsByFilters: no filter returns all poets', async () => {
-    const all = await listPoetsByFilters({ db, page: 1, eraSlugs: null });
-    const filtered = await listPoetsByFilters({
+  it('browsePoetsByFilters: no filter returns all poets', async () => {
+    const all = await browsePoetsByFilters({ db, page: 1, eraSlugs: null });
+    const filtered = await browsePoetsByFilters({
       db,
       page: 1,
       eraSlugs: [asEraSlug('abbasid')],
@@ -118,20 +123,20 @@ describeIfDb('filter-only search queries (integration)', () => {
     expect(all.totalCount).toBeGreaterThanOrEqual(filtered.totalCount);
   });
 
-  it('listPoemsByFilters: pagination', async () => {
-    const page1 = await listPoemsByFilters({
+  it('browsePoemsByFilters: pagination', async () => {
+    const page1 = await browsePoemsByFilters({
       db,
       page: 1,
       filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
     });
-    const page2 = await listPoemsByFilters({
+    const page2 = await browsePoemsByFilters({
       db,
       page: 2,
       filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
     });
     if (page1.totalCount > 5) {
       expect(page2.rows.length).toBeGreaterThan(0);
-      const page1Slugs = new Set(page1.rows.map((r) => r.poemSlug));
+      const page1Slugs = new Set(page1.rows.map((row) => row.poemSlug));
       for (const row of page2.rows) {
         expect(page1Slugs.has(row.poemSlug)).toBe(false);
       }
@@ -169,7 +174,7 @@ const POETS_ROW = {
 
 describe('searchPoems (mock)', () => {
   it('returns mapped rows when no filters are provided', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([POEMS_ROW]),
     });
 
@@ -194,7 +199,7 @@ describe('searchPoems (mock)', () => {
       { kind: 'theme', id: 3 },
       { kind: 'rhyme', id: 4 },
     ];
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce(lookupRows).mockResolvedValueOnce([POEMS_ROW]),
     });
 
@@ -215,7 +220,7 @@ describe('searchPoems (mock)', () => {
   });
 
   it('treats empty slug arrays as no-filter (early return, 1 execute call)', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([POEMS_ROW]),
     });
 
@@ -229,8 +234,8 @@ describe('searchPoems (mock)', () => {
     expect(mockDb.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('covers mLit-null branch (era filter only)', async () => {
-    const mockDb = fakeDb({
+  it('covers meterLiteral-null branch (era filter only)', async () => {
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ kind: 'era', id: 2 }])
@@ -247,8 +252,8 @@ describe('searchPoems (mock)', () => {
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
 
-  it('covers eLit-null path (meter-only filter)', async () => {
-    const mockDb = fakeDb({
+  it('covers eraLiteral-null path (meter-only filter)', async () => {
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ kind: 'meter', id: 1 }])
@@ -267,7 +272,7 @@ describe('searchPoems (mock)', () => {
   });
 
   it('returns empty result when raw is empty', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
@@ -282,7 +287,7 @@ describe('searchPoems (mock)', () => {
   });
 
   it('throws when total_count is missing from row', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([{ ...POEMS_ROW, total_count: undefined }]),
     });
 
@@ -298,7 +303,7 @@ describe('searchPoems (mock)', () => {
   });
 
   it('throws when total_count is not finite', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([{ ...POEMS_ROW, total_count: 'NaN' }]),
     });
 
@@ -316,7 +321,7 @@ describe('searchPoems (mock)', () => {
 
 describe('searchPoets (mock)', () => {
   it('returns mapped rows when no era filter is provided', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([POETS_ROW]),
     });
 
@@ -334,7 +339,7 @@ describe('searchPoets (mock)', () => {
   });
 
   it('looks up era IDs then searches', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ id: 2 }])
@@ -353,7 +358,7 @@ describe('searchPoets (mock)', () => {
   });
 
   it('treats empty era slugs as no-filter (1 execute call)', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([POETS_ROW]),
     });
 
@@ -362,7 +367,7 @@ describe('searchPoets (mock)', () => {
   });
 
   it('returns empty result when raw is empty', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
@@ -377,7 +382,7 @@ describe('searchPoets (mock)', () => {
   });
 
   it('throws when total_count is missing', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([{ ...POETS_ROW, total_count: null }]),
     });
 
@@ -387,7 +392,7 @@ describe('searchPoets (mock)', () => {
   });
 
   it('throws when total_count is not finite', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([{ ...POETS_ROW, total_count: 'bad' }]),
     });
 
@@ -419,25 +424,25 @@ const FILTER_POETS_ROW = {
   relevance: 0,
 };
 
-describe('listPoemsByFilters (mock)', () => {
+describe('browsePoemsByFilters (mock)', () => {
   it('returns rows and count when no filters applied', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([FILTER_POEMS_ROW])
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS });
+    const result = await browsePoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS });
     expect(result.totalCount).toBe(1);
     expect(result.rows[0]?.poetName).toBe('شاعر');
     expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
     expect(result.rows[0]?.poemMeterSlug).toBe('altawil');
   });
 
-  it('covers intArrayParam branches: null, [], and [id]', async () => {
+  it('covers toPgIntArrayParam branches: null, [], and [id]', async () => {
     const lookupRows = [{ kind: 'meter', id: 1 }];
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce(lookupRows)
@@ -445,7 +450,7 @@ describe('listPoemsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoemsByFilters({
+    const result = await browsePoemsByFilters({
       db: mockDb,
       page: 1,
       filters: {
@@ -459,17 +464,17 @@ describe('listPoemsByFilters (mock)', () => {
   });
 
   it('throws when count row has no total', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([FILTER_POEMS_ROW]).mockResolvedValueOnce([]),
     });
 
     await expect(
-      listPoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS })
+      browsePoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS })
     ).rejects.toThrow('SQL row missing total');
   });
 
   it('throws when total is not finite', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([FILTER_POEMS_ROW])
@@ -477,28 +482,28 @@ describe('listPoemsByFilters (mock)', () => {
     });
 
     await expect(
-      listPoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS })
+      browsePoemsByFilters({ db: mockDb, page: 1, filters: EMPTY_FILTERS })
     ).rejects.toThrow('total is not finite');
   });
 });
 
-describe('listPoetsByFilters (mock)', () => {
+describe('browsePoetsByFilters (mock)', () => {
   it('returns rows and count with no era filter', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([FILTER_POETS_ROW])
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoetsByFilters({ db: mockDb, page: 1, eraSlugs: null });
+    const result = await browsePoetsByFilters({ db: mockDb, page: 1, eraSlugs: null });
     expect(result.totalCount).toBe(1);
     expect(result.rows[0]?.poetName).toBe('شاعر');
     expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
   });
 
   it('looks up era IDs when era slugs are provided', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([{ id: 2 }])
@@ -506,7 +511,7 @@ describe('listPoetsByFilters (mock)', () => {
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    const result = await listPoetsByFilters({
+    const result = await browsePoetsByFilters({
       db: mockDb,
       page: 1,
       eraSlugs: [asEraSlug('abbasid')],
@@ -516,22 +521,22 @@ describe('listPoetsByFilters (mock)', () => {
   });
 
   it('treats empty era slugs as no-filter', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
         .mockResolvedValueOnce([FILTER_POETS_ROW])
         .mockResolvedValueOnce([{ total: 1 }]),
     });
 
-    await listPoetsByFilters({ db: mockDb, page: 1, eraSlugs: [] });
+    await browsePoetsByFilters({ db: mockDb, page: 1, eraSlugs: [] });
     expect(mockDb.execute).toHaveBeenCalledTimes(2);
   });
 
   it('throws when count row has no total', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([FILTER_POETS_ROW]).mockResolvedValueOnce(null),
     });
 
-    await expect(listPoetsByFilters({ db: mockDb, page: 1, eraSlugs: null })).rejects.toThrow();
+    await expect(browsePoetsByFilters({ db: mockDb, page: 1, eraSlugs: null })).rejects.toThrow();
   });
 });

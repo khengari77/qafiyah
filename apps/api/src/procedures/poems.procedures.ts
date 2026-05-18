@@ -1,21 +1,21 @@
-import type { PoemSlug, poemResource } from '@qafiyah/contracts';
+import type { PoemSlug, poemDetail } from '@qafiyah/contracts';
 import { poemsQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
 import type * as v from 'valibot';
-import { pub } from './base';
+import { publicProcedure } from './base';
 import { listEnvelope } from './envelope';
 import { toPoemListItem } from './list-item.mapper';
 
-type PoemResource = v.InferOutput<typeof poemResource>;
+type PoemDetailDto = v.InferOutput<typeof poemDetail>;
 
-function toPoemResource(slug: PoemSlug, data: poemsQueries.PoemResourceData): PoemResource {
+function toPoemDetail(slug: PoemSlug, data: poemsQueries.PoemDetail): PoemDetailDto {
   return {
-    title: data.clearTitle,
+    title: data.displayTitle,
     slug,
-    verses: data.processedContent.verses.map((verse) => [verse[0], verse[1]] as [string, string]),
-    verseCount: data.processedContent.verseCount,
-    sample: data.processedContent.sample,
-    keywords: data.processedContent.keywords,
+    verses: data.parsedContent.verses.map((verse) => [verse[0], verse[1]] as [string, string]),
+    verseCount: data.parsedContent.verseCount,
+    sample: data.parsedContent.sample,
+    keywords: data.parsedContent.keywords,
     poet: { name: data.metadata.poetName, slug: data.metadata.poetSlug },
     era: { name: data.metadata.eraName, slug: data.metadata.eraSlug },
     meter: { name: data.metadata.meterName, slug: data.metadata.meterSlug },
@@ -24,7 +24,7 @@ function toPoemResource(slug: PoemSlug, data: poemsQueries.PoemResourceData): Po
   };
 }
 
-export const listSlugs = pub.poems.listSlugs.handler(async ({ context }) => {
+export const listPoemSlugs = publicProcedure.poems.listPoemSlugs.handler(async ({ context }) => {
   const slugs = await poemsQueries.listAllPoemSlugs(context.db);
   context.log?.({ result_count: slugs.length });
   return listEnvelope({
@@ -35,25 +35,27 @@ export const listSlugs = pub.poems.listSlugs.handler(async ({ context }) => {
   });
 });
 
-export const getBySlug = pub.poems.getBySlug.handler(async ({ context, input, errors }) => {
-  const result = await poemsQueries.getPoemBySlug(context.db, input.slug);
-  return match(result)
-    .with({ type: 'not_found' }, () => {
-      throw errors.NOT_FOUND();
-    })
-    .with({ type: 'error' }, ({ message }) => {
-      throw errors.POEM_PARSE_ERROR({ message });
-    })
-    .with({ type: 'found' }, ({ data }) => {
-      const poem = toPoemResource(input.slug, data);
-      context.log?.({
-        poem_id: input.slug,
-        poet_id: poem.poet.slug,
-        era: poem.era.slug,
-        meter: poem.meter.slug,
-        theme: poem.theme.slug,
-      });
-      return { data: poem };
-    })
-    .exhaustive();
-});
+export const getPoemBySlug = publicProcedure.poems.getPoemBySlug.handler(
+  async ({ context, input, errors }) => {
+    const result = await poemsQueries.getPoemBySlug(context.db, input.slug);
+    return match(result)
+      .with({ kind: 'not_found' }, () => {
+        throw errors.NOT_FOUND();
+      })
+      .with({ kind: 'error' }, ({ message }) => {
+        throw errors.POEM_PARSE_ERROR({ message });
+      })
+      .with({ kind: 'found' }, ({ data }) => {
+        const poem = toPoemDetail(input.slug, data);
+        context.log?.({
+          poem_id: input.slug,
+          poet_id: poem.poet.slug,
+          era: poem.era.slug,
+          meter: poem.meter.slug,
+          theme: poem.theme.slug,
+        });
+        return { data: poem };
+      })
+      .exhaustive();
+  }
+);

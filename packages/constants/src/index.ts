@@ -11,7 +11,9 @@ export const PROD_SITE_URL = `https://${PROD_DOMAIN}`;
 export const PROD_API_URL = 'https://api.qafiyah.com';
 
 export const API_V1_PREFIX = '/v1';
-export const API_RANDOM_POEM_PATH = '/v1/poems/random';
+export const API_RANDOM_POEM_PATH = `${API_V1_PREFIX}/poems/random`;
+
+export const SEARCH_EMPTY_INPUT_MESSAGE = 'أدخل كلمة بحث أو اختر فلترًا واحدًا على الأقل';
 
 export const DEV_WEB_PORT = 4321;
 export const DEV_API_PORT = 8787;

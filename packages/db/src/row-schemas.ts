@@ -2,7 +2,7 @@ import type { MeterSlug, PoemSlug, PoetSlug } from '@qafiyah/contracts';
 import { meterSlugSchema, poemSlugSchema, poetSlugSchema } from '@qafiyah/contracts';
 import * as v from 'valibot';
 
-export const parentRowSchema = v.object({
+export const parentStatsRowSchema = v.object({
   name: v.string(),
   poems_count: v.union([v.number(), v.string()]),
 });

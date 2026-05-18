@@ -35,7 +35,7 @@ type ProblemDetail =
       readonly kind: 'generic';
     });
 
-function codeToType(code: string): string {
+function problemCodeToTypeUrl(code: string): string {
   const kebab = code.toLowerCase().replace(/_/g, '-');
   return `${ERROR_BASE_URL}/${kebab}`;
 }
@@ -58,11 +58,11 @@ function asProblemCode(raw: string): ProblemCode {
   return PROBLEM_CODES.has(raw as ProblemCode) ? (raw as ProblemCode) : 'INTERNAL_SERVER_ERROR';
 }
 
-function asStatus(n: number): ContentfulStatusCode {
-  if (n < 100 || n > 599) {
-    throw new Error(`asStatus: ${n} is not a valid HTTP status code`);
+function parseHttpStatus(statusCode: number): ContentfulStatusCode {
+  if (statusCode < 100 || statusCode > 599) {
+    throw new Error(`parseHttpStatus: ${statusCode} is not a valid HTTP status code`);
   }
-  return n as ContentfulStatusCode;
+  return statusCode as ContentfulStatusCode;
 }
 
 export function makeProblem(args: {
@@ -74,7 +74,7 @@ export function makeProblem(args: {
   readonly errors?: readonly ValidationIssue[];
 }): ProblemDetail {
   const base = {
-    type: codeToType(args.code),
+    type: problemCodeToTypeUrl(args.code),
     title: args.title ?? titleForCode(args.code),
     status: args.status,
     code: args.code,
@@ -98,9 +98,9 @@ function stripKind(problem: ProblemDetail): Omit<ProblemDetail, 'kind'> {
   return rest;
 }
 
-function problemResponse(problem: ProblemDetail): Response {
+function buildProblemResponse(problem: ProblemDetail): Response {
   return new Response(JSON.stringify(stripKind(problem)), {
-    status: asStatus(problem.status),
+    status: parseHttpStatus(problem.status),
     headers: { 'Content-Type': 'application/problem+json' },
   });
 }
@@ -108,7 +108,7 @@ function problemResponse(problem: ProblemDetail): Response {
 export function sendProblem(c: Context, problem: ProblemDetail): Response {
   const withInstance =
     problem.instance === undefined ? { ...problem, instance: c.req.path } : problem;
-  return c.body(JSON.stringify(stripKind(withInstance)), asStatus(withInstance.status), {
+  return c.body(JSON.stringify(stripKind(withInstance)), parseHttpStatus(withInstance.status), {
     'Content-Type': 'application/problem+json',
   });
 }
@@ -126,8 +126,10 @@ function extractValidationErrors(data: unknown): readonly ValidationIssue[] | un
     const message = typeof issue['message'] === 'string' ? issue['message'] : 'Invalid value';
     const path = Array.isArray(issue['path'])
       ? issue['path']
-          .map((seg) =>
-            isObject(seg) && typeof seg['key'] === 'string' ? seg['key'] : String(seg)
+          .map((segment) =>
+            isObject(segment) && typeof segment['key'] === 'string'
+              ? segment['key']
+              : String(segment)
           )
           .join('.')
       : undefined;
@@ -175,5 +177,5 @@ export async function transformOrpcResponse(
   }
 
   const problem = orpcErrorToProblem(body, response.status, instance);
-  return problemResponse(problem);
+  return buildProblemResponse(problem);
 }

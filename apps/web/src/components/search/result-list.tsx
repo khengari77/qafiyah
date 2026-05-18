@@ -54,7 +54,7 @@ function ErrorState({
 type Props = {
   readonly status: FetchStatus;
   readonly loadMoreRef: Ref<HTMLDivElement>;
-  readonly hasText: boolean;
+  readonly hasCommittedQuery: boolean;
   readonly hasFilters: boolean;
   readonly errorMessage: string;
   readonly refreshText: string;
@@ -65,7 +65,7 @@ type Props = {
 export function ResultList({
   status,
   loadMoreRef,
-  hasText,
+  hasCommittedQuery,
   hasFilters,
   errorMessage,
   refreshText,
@@ -79,7 +79,7 @@ export function ResultList({
     .with({ kind: 'idle' }, () => null)
     .with({ kind: 'loading' }, () => <LoadingState />)
     .with({ kind: 'success' }, { kind: 'success-fetching-more' }, (s) => {
-      const isQuerying = hasText || hasFilters;
+      const isQuerying = hasCommittedQuery || hasFilters;
       const isFetchingMore = s.kind === 'success-fetching-more';
 
       if (isQuerying && s.data.length === 0) {

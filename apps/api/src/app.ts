@@ -104,7 +104,7 @@ app
       code = 'BAD_REQUEST';
     }
 
-    const handle = c.var.logEvent;
+    const handle = c.var.logHandle;
     if (handle) {
       recordError(handle, {
         type: error.constructor.name,

@@ -5,7 +5,7 @@ import { asMeterSlug } from './brand';
 import type { DbClient } from './client';
 import { FORMAL_METERS } from './constants';
 import { executeAs } from './execute-as';
-import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { meterStats } from './schema';
 
 export type MeterStatsRow = {
@@ -33,7 +33,7 @@ export async function listMeters(db: DbClient): Promise<readonly MeterStatsRow[]
     .from(meterStats)
     .where(inArray(meterStats.name, FORMAL_METERS));
   return results
-    .map((r) => ({ ...r, slug: asMeterSlug(r.slug) }))
+    .map((row) => ({ ...row, slug: asMeterSlug(row.slug) }))
     .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 }
 
@@ -48,7 +48,7 @@ export async function listMeterPoems(
   const parentRows = await executeAs(
     db,
     sql`SELECT name, poems_count FROM meter_stats WHERE slug = ${slug} LIMIT 1`,
-    parentRowSchema
+    parentStatsRowSchema
   );
 
   if (parentRows.length === 0 || !parentRows[0]) return null;
@@ -75,13 +75,13 @@ export async function listMeterPoems(
     rawPoemRowSchema
   );
 
-  const poems: readonly PoemListRow[] = rawPoems.map((r) => ({
-    title: r.title,
-    slug: r.slug,
-    poetName: r.poet_name,
-    poetSlug: r.poet_slug,
-    meterName: r.meter_name,
-    meterSlug: r.meter_slug,
+  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    poetName: row.poet_name,
+    poetSlug: row.poet_slug,
+    meterName: row.meter_name,
+    meterSlug: row.meter_slug,
   }));
 
   return {

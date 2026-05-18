@@ -29,7 +29,7 @@ type FileResult =
     };
 
 type CliConfig = {
-  readonly relBase: string;
+  readonly pathBaseDir: string;
   readonly scanRoots: readonly string[];
   readonly quality: number;
   readonly losslessAll: boolean;
@@ -162,7 +162,7 @@ function parseCli(): CliConfig | 'help' | 'error' {
   const excludeGlobs = excludePatterns.map((p) => new Bun.Glob(p));
 
   return {
-    relBase: rootDir,
+    pathBaseDir: rootDir,
     scanRoots,
     quality,
     losslessAll: parsed.values.lossless,
@@ -274,7 +274,7 @@ async function processOne(absPath: string, cfg: CliConfig): Promise<FileResult> 
     return { ok: true, src: absPath, skipped: 'unsupported', message: 'extension not targeted' };
   }
 
-  const rel = toPosixRelative(cfg.relBase, absPath);
+  const rel = toPosixRelative(cfg.pathBaseDir, absPath);
   if (isExcluded(rel, cfg)) {
     return { ok: true, src: absPath, skipped: 'unsupported', message: `excluded: ${rel}` };
   }
@@ -356,7 +356,7 @@ async function collectFiles(cfg: CliConfig): Promise<string[]> {
   return out;
 }
 
-async function runPool(
+async function runConcurrentPool(
   readonlyItems: readonly string[],
   concurrency: number,
   fn: (item: string) => Promise<void>
@@ -390,7 +390,7 @@ async function main(): Promise<void> {
   const actionable = candidates.filter((p) => isConvertibleExtension(extensionOf(p), cfg));
 
   const results: FileResult[] = [];
-  await runPool(actionable, cfg.concurrency, async (file) => {
+  await runConcurrentPool(actionable, cfg.concurrency, async (file) => {
     results.push(await processOne(file, cfg));
   });
 

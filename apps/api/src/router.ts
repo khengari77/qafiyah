@@ -1,7 +1,7 @@
-import { pub } from './procedures/base';
+import { publicProcedure } from './procedures/base';
 import { listEraPoems, listEras } from './procedures/eras.procedures';
 import { listMeterPoems, listMeters } from './procedures/meters.procedures';
-import { getBySlug, listSlugs } from './procedures/poems.procedures';
+import { getPoemBySlug, listPoemSlugs } from './procedures/poems.procedures';
 import { listPoetPoems, listPoets } from './procedures/poets.procedures';
 import { listRhymePoems, listRhymes } from './procedures/rhymes.procedures';
 import { search } from './procedures/search.procedures';
@@ -17,8 +17,8 @@ const routes = {
     listPoems: listMeterPoems,
   },
   poems: {
-    listSlugs,
-    getBySlug,
+    listPoemSlugs,
+    getPoemBySlug,
   },
   poets: {
     list: listPoets,
@@ -37,5 +37,5 @@ const routes = {
   },
 };
 
-export const router = pub.router(routes);
+export const router = publicProcedure.router(routes);
 export const routerNamespaces = Object.keys(routes);

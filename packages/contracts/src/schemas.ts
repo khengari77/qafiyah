@@ -2,13 +2,13 @@ import * as v from 'valibot';
 import { meterSlugSchema, poemSlugSchema, poetSlugSchema } from './brands';
 import { DEFAULT_PAGE } from './constants';
 
-export const subRef = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
+export const namedSlugRef = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
   v.object({
     name: v.string(),
     slug,
   });
 
-export const statRow = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
+export const slugWithCounts = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
   v.object({
     name: v.string(),
     slug,
@@ -16,7 +16,7 @@ export const statRow = <TSlug extends v.GenericSchema<string, string>>(slug: TSl
     poetsCount: v.number(),
   });
 
-export const parentMeta = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
+export const slugWithPoemCount = <TSlug extends v.GenericSchema<string, string>>(slug: TSlug) =>
   v.object({
     name: v.string(),
     slug,
@@ -26,8 +26,8 @@ export const parentMeta = <TSlug extends v.GenericSchema<string, string>>(slug: 
 export const poemListItem = v.object({
   title: v.string(),
   slug: poemSlugSchema,
-  poet: subRef(poetSlugSchema),
-  meter: subRef(meterSlugSchema),
+  poet: namedSlugRef(poetSlugSchema),
+  meter: namedSlugRef(meterSlugSchema),
 });
 
 export const pageParam = v.pipe(

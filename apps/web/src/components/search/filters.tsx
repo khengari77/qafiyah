@@ -48,7 +48,7 @@ export function Filters({ filters, isPoemsMode }: Props) {
         <div className="flex flex-col items-start justify-start gap-2">
           <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.searchTypeLabel}</p>
           <BinaryToggleButton
-            currentValue={filters.searchType.value}
+            value={filters.searchType.value}
             onToggle={filters.searchType.onChange}
             options={filters.searchType.options}
           />
@@ -122,17 +122,17 @@ export function Filters({ filters, isPoemsMode }: Props) {
 }
 
 type FiltersButtonProps = {
-  readonly toggleFilters: () => void;
+  readonly onToggle: () => void;
   readonly filtersVisible: boolean;
 };
 
-export function FiltersButton({ toggleFilters, filtersVisible }: FiltersButtonProps) {
+export function FiltersButton({ onToggle, filtersVisible }: FiltersButtonProps) {
   return (
     <Button
       type="button"
       tabIndex={0}
       variant="default"
-      onClick={toggleFilters}
+      onClick={onToggle}
       className={cn(
         'flex h-12 items-center justify-between gap-6 rounded-xl border-0 px-4 font-normal text-base shadow-none outline-none ring-1 transition-none duration-0',
         filtersVisible

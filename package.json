@@ -36,7 +36,7 @@
     "knip": "^6.14.1",
     "madge": "8.0.0",
     "prettier": "^3.8.3",
-    "syncpack": "15.1.2",
+    "syncpack": "15.2.0",
     "turbo": "^2.9.14",
     "typescript": "6.0.3"
   },
@@ -46,7 +46,8 @@
   },
   "workspaces": ["apps/*", "packages/*"],
   "overrides": {
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.3",
+    "ws": "^8.20.1"
   },
   "trustedDependencies": ["esbuild", "workerd"]
 }

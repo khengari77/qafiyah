@@ -1,13 +1,13 @@
 import { cn } from '@/lib/utils';
 
 type ListCardProps = {
-  readonly name: string;
   readonly title: string;
+  readonly subtitle: string;
   readonly href: string;
   readonly className?: string;
 };
 
-export function ListCard({ name, title, href, className = '' }: ListCardProps) {
+export function ListCard({ title, subtitle, href, className = '' }: ListCardProps) {
   return (
     <a
       href={href}
@@ -18,11 +18,11 @@ export function ListCard({ name, title, href, className = '' }: ListCardProps) {
     >
       <h4>
         <p className="text-wrap text-sm text-zinc-800 xs:text-2xl xxs:text-base duration-300 hover:text-zinc-500 hover:underline group-hover:text-zinc-500 group-hover:underline group-hover:underline-offset-auto sm:text-2xl lg:text-2xl 2xl:text-2xl">
-          {name.replace(/"/g, '')}
+          {title.replace(/"/g, '')}
         </p>
       </h4>
       <p className="text-wrap text-xs text-zinc-600/80 xs:text-lg duration-300 group-hover:text-zinc-500 sm:text-xl lg:text-lg">
-        {title}
+        {subtitle}
       </p>
     </a>
   );

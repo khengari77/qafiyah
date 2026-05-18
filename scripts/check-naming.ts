@@ -62,7 +62,8 @@ const ALLOWED_BASENAMES = new Set([
 const SEGMENT_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const BRACKET_RE = /^\[\.{0,3}[a-z0-9]+(?:-[a-z0-9]+)*\]$/;
 
-const isValidSegment = (s: string): boolean => SEGMENT_RE.test(s) || BRACKET_RE.test(s);
+const isValidSegment = (segment: string): boolean =>
+  SEGMENT_RE.test(segment) || BRACKET_RE.test(segment);
 
 function shouldValidateFile(name: string): boolean {
   if (IGNORED_FILES.has(name)) return false;

@@ -27,11 +27,11 @@ describe('enrichContext', () => {
     const handle = makeHandle();
 
     app.use(async (c, next) => {
-      c.set('logEvent', handle);
+      c.set('logHandle', handle);
       await next();
     });
     app.get('/test', (c) => {
-      enrichContext(c, { poet_id: 'p1', results_count: 12 });
+      enrichContext(c, { poet_id: 'p1', result_count: 12 });
       return c.json({ ok: true });
     });
 
@@ -42,11 +42,11 @@ describe('enrichContext', () => {
     // those too to inspect the merged state.
     recordResponse(handle, 200, 1);
     const final = toLogEvent(handle);
-    expect(final).toMatchObject({ poet_id: 'p1', results_count: 12 });
+    expect(final).toMatchObject({ poet_id: 'p1', result_count: 12 });
     expect(projected).toBeNull();
   });
 
-  it('is a no-op when no logEvent is set', async () => {
+  it('is a no-op when no logHandle is set', async () => {
     const app = new Hono<AppContext>();
     app.get('/test', (c) => {
       expect(() => enrichContext(c, { poet_id: 'p1' })).not.toThrow();
@@ -61,18 +61,18 @@ describe('enrichContext', () => {
     const handle = makeHandle();
     const app = new Hono<AppContext>();
     app.use(async (c, next) => {
-      c.set('logEvent', handle);
+      c.set('logHandle', handle);
       await next();
     });
     app.get('/test', (c) => {
-      enrichContext(c, { results_count: 2 });
-      enrichContext(c, { results_count: 7 });
+      enrichContext(c, { result_count: 2 });
+      enrichContext(c, { result_count: 7 });
       return c.json({ ok: true });
     });
 
     await app.fetch(new Request('http://localhost/test'));
     recordResponse(handle, 200, 1);
-    expect(toLogEvent(handle)).toMatchObject({ results_count: 7 });
+    expect(toLogEvent(handle)).toMatchObject({ result_count: 7 });
   });
 });
 
@@ -114,11 +114,11 @@ describe('shouldEmit', () => {
     recordResponse(handle, 200, 50);
     const app = new Hono<AppContext>();
     app.use(async (c, next) => {
-      c.set('logEvent', handle);
+      c.set('logHandle', handle);
       await next();
     });
     app.get('/x', (c) => {
-      enrichContext(c, { results_count: 0 });
+      enrichContext(c, { result_count: 0 });
       return c.json({});
     });
     await app.fetch(new Request('http://localhost/x'));
@@ -131,11 +131,11 @@ describe('shouldEmit', () => {
     recordResponse(handle, 200, 10);
     const app = new Hono<AppContext>();
     app.use(async (c, next) => {
-      c.set('logEvent', handle);
+      c.set('logHandle', handle);
       await next();
     });
     app.get('/x', (c) => {
-      enrichContext(c, { results_count: 3 });
+      enrichContext(c, { result_count: 3 });
       return c.json({});
     });
     await app.fetch(new Request('http://localhost/x'));
@@ -167,11 +167,11 @@ describe('toLogEvent', () => {
     recordResponse(handle, 200, 42);
     const app = new Hono<AppContext>();
     app.use(async (c, next) => {
-      c.set('logEvent', handle);
+      c.set('logHandle', handle);
       await next();
     });
     app.get('/x', (c) => {
-      enrichContext(c, { poet_id: 'p1', results_count: 7 });
+      enrichContext(c, { poet_id: 'p1', result_count: 7 });
       return c.json({});
     });
     await app.fetch(new Request('http://localhost/x'));
@@ -185,7 +185,7 @@ describe('toLogEvent', () => {
       status_code: 200,
       duration_ms: 42,
       poet_id: 'p1',
-      results_count: 7,
+      result_count: 7,
     });
   });
 

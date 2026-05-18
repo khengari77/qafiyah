@@ -5,7 +5,7 @@ import { asRhymeSlug } from './brand';
 import type { DbClient } from './client';
 import { ARABIC_LETTERS_MAP } from './constants';
 import { executeAs } from './execute-as';
-import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { rhymeStats } from './schema';
 
 const PARENS_REGEX = /[()]/g;
@@ -15,7 +15,7 @@ export function normalizeRhymePattern(pattern: string): string {
   return pattern.replace(PARENS_REGEX, '').replace(ARABIC_AL_PREFIX_REGEX, '').trim();
 }
 
-export type RhymeLetterGroup = {
+export type RhymeLetterStatsRow = {
   readonly name: string;
   readonly slug: RhymeSlug;
   readonly poemsCount: number;
@@ -29,7 +29,7 @@ export type ListRhymePoemsResult = {
   readonly totalPages: number;
 };
 
-export async function listRhymes(db: DbClient): Promise<readonly RhymeLetterGroup[]> {
+export async function listRhymes(db: DbClient): Promise<readonly RhymeLetterStatsRow[]> {
   const results = await db.select().from(rhymeStats);
 
   // @WARN: groupedRhymes is intentionally mutable, letters are accumulated across
@@ -57,7 +57,7 @@ export async function listRhymes(db: DbClient): Promise<readonly RhymeLetterGrou
     }
   }
 
-  const enrichedGroups: readonly RhymeLetterGroup[] = Array.from(groupedRhymes.entries()).map(
+  const enrichedGroups: readonly RhymeLetterStatsRow[] = Array.from(groupedRhymes.entries()).map(
     ([letter, { rhymes, totalPoemsCount, totalPoetsCount }]) => {
       const firstRhyme = rhymes[0];
       if (!firstRhyme) throw new Error('listRhymes: no first rhyme for letter');
@@ -84,7 +84,7 @@ export async function listRhymePoems(
   const parentRows = await executeAs(
     db,
     sql`SELECT pattern AS name, poems_count FROM rhyme_stats WHERE slug = ${slug}::UUID LIMIT 1`,
-    parentRowSchema
+    parentStatsRowSchema
   );
 
   if (parentRows.length === 0 || !parentRows[0]) return null;
@@ -112,13 +112,13 @@ export async function listRhymePoems(
     rawPoemRowSchema
   );
 
-  const poems: readonly PoemListRow[] = rawPoems.map((r) => ({
-    title: r.title,
-    slug: r.slug,
-    poetName: r.poet_name,
-    poetSlug: r.poet_slug,
-    meterName: r.meter_name,
-    meterSlug: r.meter_slug,
+  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    poetName: row.poet_name,
+    poetSlug: row.poet_slug,
+    meterName: row.meter_name,
+    meterSlug: row.meter_slug,
   }));
 
   return {

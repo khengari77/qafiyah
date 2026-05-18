@@ -10,10 +10,10 @@ import {
   type Theme,
   type ThemePoemsResponse,
 } from '@/lib/api/rpc';
-import { dedup, isNotFound } from './dedup';
+import { isNotFound, sharePromise } from './dedup';
 
 export function fetchEras(): Promise<readonly Era[]> {
-  return dedup('eras:list', async () => (await apiServer.eras.list()).data);
+  return sharePromise('eras:list', async () => (await apiServer.eras.list()).data);
 }
 
 export async function fetchEraPoemPage(
@@ -29,7 +29,7 @@ export async function fetchEraPoemPage(
 }
 
 export function fetchMeters(): Promise<readonly Meter[]> {
-  return dedup('meters:list', async () => (await apiServer.meters.list()).data);
+  return sharePromise('meters:list', async () => (await apiServer.meters.list()).data);
 }
 
 export async function fetchMeterPoemPage(
@@ -45,7 +45,7 @@ export async function fetchMeterPoemPage(
 }
 
 export function fetchRhymes(): Promise<readonly Rhyme[]> {
-  return dedup('rhymes:list', async () => (await apiServer.rhymes.list()).data);
+  return sharePromise('rhymes:list', async () => (await apiServer.rhymes.list()).data);
 }
 
 export async function fetchRhymePoemPage(
@@ -61,7 +61,7 @@ export async function fetchRhymePoemPage(
 }
 
 export function fetchThemes(): Promise<readonly Theme[]> {
-  return dedup('themes:list', async () => (await apiServer.themes.list()).data);
+  return sharePromise('themes:list', async () => (await apiServer.themes.list()).data);
 }
 
 export async function fetchThemePoemPage(

@@ -2,7 +2,7 @@ import type { PoetSlug } from '@qafiyah/contracts';
 import { apiServer, type Poet, type PoetPoemsResponse, type PoetsResponse } from '@/lib/api/rpc';
 import { isNotFound } from './dedup';
 
-export async function fetchPoets(page: number): Promise<PoetsResponse | null> {
+export async function fetchPoetsPage(page: number): Promise<PoetsResponse | null> {
   try {
     return await apiServer.poets.list({ page: page.toString() });
   } catch (err) {
@@ -11,13 +11,13 @@ export async function fetchPoets(page: number): Promise<PoetsResponse | null> {
   }
 }
 
-export async function fetchPoetsWithPoemCount(): Promise<readonly Poet[]> {
+export async function fetchAllPoets(): Promise<readonly Poet[]> {
   const allPoets: Poet[] = [];
   let page = 1;
   let hasMore = true;
 
   while (hasMore) {
-    const response = await fetchPoets(page);
+    const response = await fetchPoetsPage(page);
     if (!response || response.data.length === 0) break;
 
     allPoets.push(...response.data);
@@ -33,7 +33,7 @@ export async function fetchPoetsWithPoemCount(): Promise<readonly Poet[]> {
 }
 
 export async function fetchPoetsTotalPages(): Promise<number> {
-  const response = await fetchPoets(1);
+  const response = await fetchPoetsPage(1);
   return response?.pagination.totalPages ?? 1;
 }
 

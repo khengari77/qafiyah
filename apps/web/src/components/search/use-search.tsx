@@ -54,18 +54,18 @@ function validateText(input: string): string | null {
 }
 
 function splitCsvIds(value: string | readonly string[]): readonly string[] {
-  if (Array.isArray(value)) return value.filter((v) => v.trim() !== '');
+  if (Array.isArray(value)) return value.filter((entry) => entry.trim() !== '');
   return (value as string)
     .split(',')
-    .map((v) => v.trim())
+    .map((entry) => entry.trim())
     .filter(Boolean);
 }
 
-function makeFilterSetter(setter: (v: string | null) => void) {
+function createCsvFilterSetter(setter: (value: string | null) => void) {
   return (value: string | string[]) => {
     const joined = Array.isArray(value)
       ? value
-          .map((v) => v.trim())
+          .map((entry) => entry.trim())
           .filter(Boolean)
           .join(',')
       : value.trim();
@@ -138,9 +138,9 @@ export function useSearch() {
     selectedRhymes.length > 0 ||
     selectedMeters.length > 0 ||
     selectedThemes.length > 0;
-  const hasText = query.trim().length > 0;
+  const hasCommittedQuery = query.trim().length > 0;
   const hasInputText = inputValue.trim().length > 0;
-  const canSearch = hasText || hasFilters;
+  const canSearch = hasCommittedQuery || hasFilters;
 
   const searchParams = {
     q: query,
@@ -152,7 +152,7 @@ export function useSearch() {
     theme_ids: themeIds,
   };
 
-  const iq = useInfiniteQuery({
+  const infiniteQuery = useInfiniteQuery({
     queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
     queryFn: ({ pageParam = 1 }) => {
       return search({
@@ -177,32 +177,34 @@ export function useSearch() {
   });
 
   const data: readonly (PoemSearchResult | PoetSearchResult)[] =
-    iq.data?.pages.flatMap((page) => page.data as (PoemSearchResult | PoetSearchResult)[]) ?? [];
+    infiniteQuery.data?.pages.flatMap(
+      (page) => page.data as (PoemSearchResult | PoetSearchResult)[]
+    ) ?? [];
 
-  const totalResults = iq.data?.pages[0]?.pagination.totalItems ?? 0;
+  const totalResults = infiniteQuery.data?.pages[0]?.pagination.totalItems ?? 0;
 
   const status: FetchStatus = (() => {
     if (!canSearch) return { kind: 'idle' };
-    if (iq.isError) return { kind: 'error' };
-    if (iq.isLoading) return { kind: 'loading' };
-    if (iq.isFetchingNextPage) return { kind: 'success-fetching-more', data };
-    if (iq.isSuccess) return { kind: 'success', data };
+    if (infiniteQuery.isError) return { kind: 'error' };
+    if (infiniteQuery.isLoading) return { kind: 'loading' };
+    if (infiniteQuery.isFetchingNextPage) return { kind: 'success-fetching-more', data };
+    if (infiniteQuery.isSuccess) return { kind: 'success', data };
     return { kind: 'loading' };
   })();
 
   const { loadMoreRef } = useInfiniteScroll(
-    iq.fetchNextPage,
-    iq.hasNextPage,
-    iq.isFetchingNextPage
+    infiniteQuery.fetchNextPage,
+    infiniteQuery.hasNextPage,
+    infiniteQuery.isFetchingNextPage
   );
 
-  const handleErasChange = makeFilterSetter(setEraIds);
-  const handleMetersChange = makeFilterSetter(setMeterIds);
-  const handleRhymesChange = makeFilterSetter(setRhymeIds);
-  const handleThemesChange = makeFilterSetter(setThemeIds);
+  const handleErasChange = createCsvFilterSetter(setEraIds);
+  const handleMetersChange = createCsvFilterSetter(setMeterIds);
+  const handleRhymesChange = createCsvFilterSetter(setRhymeIds);
+  const handleThemesChange = createCsvFilterSetter(setThemeIds);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value;
     const sanitized = sanitizeArabicInput(raw);
     setInputValue(sanitized);
     if (raw.replace(WHITESPACE_RUN_REGEX, ' ') !== sanitized) {
@@ -244,18 +246,18 @@ export function useSearch() {
     setQuery(trimmed);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
       commitTextQuery();
     }
   };
 
-  const toggleFilters = () => {
+  const handleToggleFilters = () => {
     setFiltersVisible(!filtersVisible);
   };
 
-  const resetAllStates = () => {
+  const handleReset = () => {
     setSearchType('poems');
     setMatchType('all');
     setQuery('');
@@ -267,7 +269,7 @@ export function useSearch() {
     setValidationError(null);
   };
 
-  const hasQuery = status.kind !== 'loading' && (Boolean(inputValue.trim()) || hasFilters);
+  const hasQueryToShow = status.kind !== 'loading' && (hasInputText || hasFilters);
 
   return {
     state: {
@@ -281,8 +283,8 @@ export function useSearch() {
     },
     flags: {
       filtersVisible,
-      hasQuery,
-      hasText,
+      hasQueryToShow,
+      hasCommittedQuery,
       hasInputText,
       hasFilters,
     },
@@ -302,8 +304,8 @@ export function useSearch() {
       onErasChange: handleErasChange,
       onMetersChange: handleMetersChange,
       onThemesChange: handleThemesChange,
-      toggleFilters,
-      resetAll: resetAllStates,
+      onToggleFilters: handleToggleFilters,
+      onReset: handleReset,
     },
     refs: {
       loadMore: loadMoreRef,

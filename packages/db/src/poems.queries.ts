@@ -22,12 +22,12 @@ declare const PoemIdBrand: unique symbol;
 export type PoemId = number & { readonly [PoemIdBrand]: 'PoemId' };
 
 export type RandomPoemLines = {
-  readonly poem_id: PoemId;
-  readonly poet_name: string;
+  readonly poemId: PoemId;
+  readonly poetName: string;
   readonly content: string;
 };
 
-type ProcessedPoemContent = {
+type ParsedPoemContent = {
   readonly verses: readonly (readonly [string, string])[];
   readonly verseCount: number;
   readonly sample: string;
@@ -38,7 +38,7 @@ export function removeTashkeel(text: string): string {
   return text.replace(TASHKEEL_REGEX, '');
 }
 
-export function processPoemContent(content: string): ProcessedPoemContent {
+export function parsePoemContent(content: string): ParsedPoemContent {
   const cleanContent = content.replace(DOUBLE_QUOTE_REGEX, '');
 
   const lines = cleanContent.split('*');
@@ -74,10 +74,10 @@ export function extractPoemExcerpt(poem: RandomPoemLines, startIndex: number): s
   }
   const line1 = lines[startIndex] || '';
   const line2 = lines[startIndex + 1] || '';
-  return `${line1}\n${line2}\n\n${poem.poet_name}`.replace(DOUBLE_QUOTE_REGEX, '').trim();
+  return `${line1}\n${line2}\n\n${poem.poetName}`.replace(DOUBLE_QUOTE_REGEX, '').trim();
 }
 
-const rawPoemDataSchema = v.object({
+const rawPoemRowSchema = v.object({
   slug: poemSlugSchema,
   title: v.string(),
   content: v.string(),
@@ -88,15 +88,15 @@ const rawPoemDataSchema = v.object({
   era_name: v.string(),
   era_slug: eraSlugSchema,
 });
-export type RawPoemData = v.InferOutput<typeof rawPoemDataSchema>;
+export type RawPoemRow = v.InferOutput<typeof rawPoemRowSchema>;
 
-const rawRelatedPoemSchema = v.object({
+const rawRelatedPoemRowSchema = v.object({
   poem_slug: poemSlugSchema,
   poet_name: v.string(),
   meter_name: v.string(),
   poem_title: v.string(),
 });
-export type RawRelatedPoem = v.InferOutput<typeof rawRelatedPoemSchema>;
+export type RawRelatedPoemRow = v.InferOutput<typeof rawRelatedPoemRowSchema>;
 
 // SQL function payload variants. The function returns either { poem, related_poems }
 // on success or { error, message? } on failure. We normalize into a discriminated
@@ -104,8 +104,8 @@ export type RawRelatedPoem = v.InferOutput<typeof rawRelatedPoemSchema>;
 const poemWithRelatedPayloadSchema = v.union([
   v.pipe(
     v.object({
-      poem: rawPoemDataSchema,
-      related_poems: v.array(rawRelatedPoemSchema),
+      poem: rawPoemRowSchema,
+      related_poems: v.array(rawRelatedPoemRowSchema),
     }),
     v.transform((payload) => ({ kind: 'ok' as const, ...payload }))
   ),
@@ -117,21 +117,30 @@ const poemWithRelatedPayloadSchema = v.union([
     v.transform((payload) => ({ kind: 'error' as const, ...payload }))
   ),
 ]);
-export type PoemWithRelatedResponse = v.InferOutput<typeof poemWithRelatedPayloadSchema>;
+export type PoemWithRelatedPayload = v.InferOutput<typeof poemWithRelatedPayloadSchema>;
 
 export async function listAllPoemSlugs(db: DbClient): Promise<readonly PoemSlug[]> {
   const rows = await db.select({ slug: poemsFullData.slug }).from(poemsFullData);
-  return rows.map((r) => asPoemSlug(r.slug));
+  return rows.map((row) => asPoemSlug(row.slug));
 }
 
-const randomPoemPayloadSchema = v.object({
-  poem_id: v.pipe(
-    v.number(),
-    v.transform((n): PoemId => n as PoemId)
-  ),
-  poet_name: v.string(),
-  content: v.string(),
-});
+const randomPoemPayloadSchema = v.pipe(
+  v.object({
+    poem_id: v.pipe(
+      v.number(),
+      v.transform((n): PoemId => n as PoemId)
+    ),
+    poet_name: v.string(),
+    content: v.string(),
+  }),
+  v.transform(
+    (payload): RandomPoemLines => ({
+      poemId: payload.poem_id,
+      poetName: payload.poet_name,
+      content: payload.content,
+    })
+  )
+);
 
 function pickExcerptStartIndex(content: string): number {
   const lineCount = content.split('*').length;
@@ -139,17 +148,17 @@ function pickExcerptStartIndex(content: string): number {
   return Math.floor(Math.random() * (maxStartIndex / 2)) * 2;
 }
 
-export type RandomPoemLinesResult = {
+export type RandomPoemExcerpt = {
   readonly lines: readonly [string, string];
-  readonly poet: string;
-  readonly formatted: string;
+  readonly poetName: string;
+  readonly excerpt: string;
 };
 
-export async function getRandomPoemLines(db: DbClient): Promise<RandomPoemLinesResult> {
+export async function getRandomPoemExcerpt(db: DbClient): Promise<RandomPoemExcerpt> {
   const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
 
   if (!result || result.length === 0 || !result[0]?.['get_random_eligible_poem']) {
-    throw new Error('getRandomPoemLines: SQL returned no eligible poem');
+    throw new Error('getRandomPoemExcerpt: SQL returned no eligible poem');
   }
 
   const poemJson = result[0]['get_random_eligible_poem'];
@@ -157,25 +166,25 @@ export async function getRandomPoemLines(db: DbClient): Promise<RandomPoemLinesR
   const poem: RandomPoemLines = v.parse(randomPoemPayloadSchema, parsed);
 
   if (!poem.content) {
-    throw new Error('getRandomPoemLines: poem missing content field');
+    throw new Error('getRandomPoemExcerpt: poem missing content field');
   }
 
   const startIndex = pickExcerptStartIndex(poem.content);
   const allLines = poem.content.split('*');
   const line1 = allLines[startIndex] || '';
   const line2 = allLines[startIndex + 1] || '';
-  const formatted = extractPoemExcerpt(poem, startIndex);
+  const excerpt = extractPoemExcerpt(poem, startIndex);
 
-  if (formatted.length > MAX_TWEET_LENGTH) {
+  if (excerpt.length > MAX_TWEET_LENGTH) {
     throw new Error(
-      `getRandomPoemLines: excerpt length ${formatted.length} exceeds MAX_TWEET_LENGTH ${MAX_TWEET_LENGTH}`
+      `getRandomPoemExcerpt: excerpt length ${excerpt.length} exceeds MAX_TWEET_LENGTH ${MAX_TWEET_LENGTH}`
     );
   }
 
   return {
     lines: [line1, line2] as const,
-    poet: poem.poet_name,
-    formatted,
+    poetName: poem.poetName,
+    excerpt,
   };
 }
 
@@ -200,7 +209,7 @@ export async function getRandomPoemSlug(db: DbClient): Promise<PoemSlug> {
   return asPoemSlug(value.slug);
 }
 
-export type PoemResourceData = {
+export type PoemDetail = {
   readonly metadata: {
     readonly poetName: string;
     readonly poetSlug: PoetSlug;
@@ -211,15 +220,15 @@ export type PoemResourceData = {
     readonly themeName: string;
     readonly themeSlug: ThemeSlug;
   };
-  readonly clearTitle: string;
-  readonly processedContent: ReturnType<typeof processPoemContent>;
+  readonly displayTitle: string;
+  readonly parsedContent: ReturnType<typeof parsePoemContent>;
   readonly relatedPoems: readonly PoemListRow[];
 };
 
-type GetPoemResult =
-  | { readonly type: 'found'; readonly data: PoemResourceData }
-  | { readonly type: 'not_found' }
-  | { readonly type: 'error'; readonly message: string };
+export type GetPoemBySlugResult =
+  | { readonly kind: 'found'; readonly data: PoemDetail }
+  | { readonly kind: 'not_found' }
+  | { readonly kind: 'error'; readonly message: string };
 
 const meterLookupRowSchema = v.object({ slug: meterSlugSchema });
 const themeLookupRowSchema = v.object({ slug: themeSlugSchema });
@@ -229,13 +238,13 @@ const relatedEnrichmentRowSchema = v.object({
   meter_slug: meterSlugSchema,
 });
 
-function textArrayLiteral(values: readonly string[]): string {
-  const escaped = values.map((s) => `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+function formatPgTextArrayLiteral(values: readonly string[]): string {
+  const escaped = values.map((value) => `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
   return `{${escaped.join(',')}}`;
 }
 
 type RelatedEnrichmentRow = v.InferOutput<typeof relatedEnrichmentRowSchema>;
-type Enrichment = {
+type PoemSlugEnrichment = {
   readonly meterSlug: MeterSlug;
   readonly themeSlug: ThemeSlug;
   readonly enrichmentMap: ReadonlyMap<PoemSlug, RelatedEnrichmentRow>;
@@ -250,26 +259,26 @@ const REQUIRED_POEM_FIELDS = [
   'theme_name',
   'era_name',
   'era_slug',
-] as const satisfies readonly (keyof RawPoemData)[];
+] as const satisfies readonly (keyof RawPoemRow)[];
 
-function hasRequiredFields(poem: RawPoemData): boolean {
-  return REQUIRED_POEM_FIELDS.every((k) => Boolean(poem[k]));
+function hasRequiredFields(poem: RawPoemRow): boolean {
+  return REQUIRED_POEM_FIELDS.every((field) => Boolean(poem[field]));
 }
 
-async function loadPoemPayload(
+async function loadPoemWithRelated(
   db: DbClient,
   slug: PoemSlug
-): Promise<PoemWithRelatedResponse | null> {
+): Promise<PoemWithRelatedPayload | null> {
   const result = await db.execute(sql`SELECT get_poem_with_related(${slug})`);
   if (!result || result.length === 0 || !result[0]?.['get_poem_with_related']) return null;
   return v.parse(poemWithRelatedPayloadSchema, result[0]['get_poem_with_related']);
 }
 
-async function loadEnrichment(
+async function loadPoemSlugEnrichment(
   db: DbClient,
-  poem: RawPoemData,
+  poem: RawPoemRow,
   relatedSlugs: readonly PoemSlug[]
-): Promise<Enrichment | null> {
+): Promise<PoemSlugEnrichment | null> {
   const [meterLookup, themeLookup, relatedEnrichment] = await Promise.all([
     executeAs(
       db,
@@ -293,7 +302,7 @@ async function loadEnrichment(
             FROM public.poems p
             JOIN public.poets pt ON p.poet_id = pt.id
             JOIN public.meters m ON p.meter_id = m.id
-            WHERE p.slug::TEXT = ANY(${textArrayLiteral(relatedSlugs)}::TEXT[])
+            WHERE p.slug::TEXT = ANY(${formatPgTextArrayLiteral(relatedSlugs)}::TEXT[])
           `,
           relatedEnrichmentRowSchema
         ),
@@ -306,26 +315,26 @@ async function loadEnrichment(
   return {
     meterSlug,
     themeSlug,
-    enrichmentMap: new Map(relatedEnrichment.map((r) => [r.poem_slug, r])),
+    enrichmentMap: new Map(relatedEnrichment.map((row) => [row.poem_slug, row])),
   };
 }
 
-function buildResource(
-  poem: RawPoemData,
-  related_poems: readonly RawRelatedPoem[],
-  enrichment: Enrichment
-): PoemResourceData {
+function buildPoemResource(
+  poem: RawPoemRow,
+  related_poems: readonly RawRelatedPoemRow[],
+  enrichment: PoemSlugEnrichment
+): PoemDetail {
   const { meterSlug, themeSlug, enrichmentMap } = enrichment;
-  const relatedPoems: readonly PoemListRow[] = related_poems.flatMap((r) => {
-    const enriched = enrichmentMap.get(r.poem_slug);
+  const relatedPoems: readonly PoemListRow[] = related_poems.flatMap((row) => {
+    const enriched = enrichmentMap.get(row.poem_slug);
     if (!enriched) return [];
     return [
       {
-        title: r.poem_title,
-        slug: r.poem_slug,
-        poetName: r.poet_name,
+        title: row.poem_title,
+        slug: row.poem_slug,
+        poetName: row.poet_name,
         poetSlug: enriched.poet_slug,
-        meterName: r.meter_name,
+        meterName: row.meter_name,
         meterSlug: enriched.meter_slug,
       },
     ];
@@ -341,26 +350,26 @@ function buildResource(
       themeName: poem.theme_name,
       themeSlug,
     },
-    clearTitle: poem.title.replace(DOUBLE_QUOTE_REGEX, ''),
-    processedContent: processPoemContent(poem.content),
+    displayTitle: poem.title.replace(DOUBLE_QUOTE_REGEX, ''),
+    parsedContent: parsePoemContent(poem.content),
     relatedPoems,
   };
 }
 
-export async function getPoemBySlug(db: DbClient, slug: PoemSlug): Promise<GetPoemResult> {
-  const payload = await loadPoemPayload(db, slug);
-  if (!payload) return { type: 'not_found' };
+export async function getPoemBySlug(db: DbClient, slug: PoemSlug): Promise<GetPoemBySlugResult> {
+  const payload = await loadPoemWithRelated(db, slug);
+  if (!payload) return { kind: 'not_found' };
   if (payload.kind === 'error') {
-    return { type: 'error', message: payload.message || payload.error };
+    return { kind: 'error', message: payload.message || payload.error };
   }
   const { poem, related_poems } = payload;
   if (!hasRequiredFields(poem)) {
-    return { type: 'error', message: 'Incomplete poem data' };
+    return { kind: 'error', message: 'Incomplete poem data' };
   }
-  const relatedSlugs = related_poems.map((r) => r.poem_slug);
-  const enrichment = await loadEnrichment(db, poem, relatedSlugs);
+  const relatedSlugs = related_poems.map((row) => row.poem_slug);
+  const enrichment = await loadPoemSlugEnrichment(db, poem, relatedSlugs);
   if (!enrichment) {
-    return { type: 'error', message: 'Incomplete poem data' };
+    return { kind: 'error', message: 'Incomplete poem data' };
   }
-  return { type: 'found', data: buildResource(poem, related_poems, enrichment) };
+  return { kind: 'found', data: buildPoemResource(poem, related_poems, enrichment) };
 }

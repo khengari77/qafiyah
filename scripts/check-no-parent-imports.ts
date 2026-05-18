@@ -21,12 +21,12 @@ const IGNORED_DIRS = new Set([
 const importRe =
   /(?:^|[\s;])(?:import|export)(?:\s+[^'"`;]*?\s+from\s*)?\s*['"`]([^'"`]+)['"`]|require\s*\(\s*['"`]([^'"`]+)['"`]\s*\)/g;
 
-function* walk(dir: string): Generator<string> {
+function* walkFiles(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
     if (IGNORED_DIRS.has(entry)) continue;
     const full = join(dir, entry);
-    const s = statSync(full);
-    if (s.isDirectory()) yield* walk(full);
+    const stat = statSync(full);
+    if (stat.isDirectory()) yield* walkFiles(full);
     else if (SOURCE_EXTS.some((ext) => entry.endsWith(ext))) yield full;
   }
 }
@@ -35,15 +35,15 @@ type Violation = { file: string; line: number; spec: string };
 
 const violations: Violation[] = [];
 
-for (const top of SCAN_ROOTS) {
-  const dir = join(ROOT, top);
-  for (const file of walk(dir)) {
+for (const scanRoot of SCAN_ROOTS) {
+  const dir = join(ROOT, scanRoot);
+  for (const file of walkFiles(dir)) {
     const content = readFileSync(file, 'utf8');
-    for (const m of content.matchAll(importRe)) {
-      const spec = m[1] ?? m[2];
+    for (const match of content.matchAll(importRe)) {
+      const spec = match[1] ?? match[2];
       if (!spec) continue;
       if (!spec.startsWith('../')) continue;
-      const line = content.slice(0, m.index ?? 0).split('\n').length;
+      const line = content.slice(0, match.index ?? 0).split('\n').length;
       violations.push({ file: relative(ROOT, file), line, spec });
     }
   }
@@ -51,7 +51,8 @@ for (const top of SCAN_ROOTS) {
 
 if (violations.length > 0) {
   console.error('Parent-relative imports detected:\n');
-  for (const v of violations) console.error(`  ${v.file}:${v.line}  "${v.spec}"`);
+  for (const violation of violations)
+    console.error(`  ${violation.file}:${violation.line}  "${violation.spec}"`);
   console.error(
     [
       '',

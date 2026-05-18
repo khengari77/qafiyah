@@ -25,7 +25,7 @@ export const loggerMiddleware = createMiddleware<AppContext>(async (c, next) => 
     },
   });
 
-  c.set('logEvent', handle);
+  c.set('logHandle', handle);
   await next();
 
   recordResponse(handle, c.res.status, Date.now() - startTime);

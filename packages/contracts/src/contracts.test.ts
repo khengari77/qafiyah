@@ -5,7 +5,7 @@ import { metersContract } from './meters';
 import { poemsContract } from './poems';
 import { poetsContract } from './poets';
 import { rhymesContract } from './rhymes';
-import { searchRouterContract } from './search';
+import { searchContract } from './search';
 import { themesContract } from './themes';
 
 describe('contract structure', () => {
@@ -19,9 +19,9 @@ describe('contract structure', () => {
     expect(metersContract).toHaveProperty('listPoems');
   });
 
-  it('poemsContract has listSlugs and getBySlug', () => {
-    expect(poemsContract).toHaveProperty('listSlugs');
-    expect(poemsContract).toHaveProperty('getBySlug');
+  it('poemsContract has listPoemSlugs and getPoemBySlug', () => {
+    expect(poemsContract).toHaveProperty('listPoemSlugs');
+    expect(poemsContract).toHaveProperty('getPoemBySlug');
   });
 
   it('poetsContract has list and listPoems', () => {
@@ -39,8 +39,8 @@ describe('contract structure', () => {
     expect(themesContract).toHaveProperty('listPoems');
   });
 
-  it('searchRouterContract has search', () => {
-    expect(searchRouterContract).toHaveProperty('search');
+  it('searchContract has search', () => {
+    expect(searchContract).toHaveProperty('search');
   });
 
   it('root contract assembles all domain contracts', () => {

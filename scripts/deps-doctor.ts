@@ -53,7 +53,7 @@ type OutdatedRow = {
   update: string;
   latest: string;
   workspace: string;
-  gated: boolean; // held by --minimum-release-age
+  isGated: boolean; // held by --minimum-release-age
 };
 
 // ──────────────────────────── pkg discovery ────────────────────────────
@@ -102,7 +102,7 @@ const isWorkspaceRef = (spec: string): boolean => spec.startsWith('workspace:');
 
 function buildInventory(pkgs: readonly Pkg[]): Inventory {
   const inv: Inventory = new Map();
-  const record = (name: string, entry: Spec): void => {
+  const appendSpec = (name: string, entry: Spec): void => {
     const list = inv.get(name) ?? [];
     list.push(entry);
     inv.set(name, list);
@@ -110,11 +110,11 @@ function buildInventory(pkgs: readonly Pkg[]): Inventory {
   for (const pkg of pkgs) {
     for (const [name, spec] of Object.entries(pkg.deps)) {
       if (isWorkspaceRef(spec)) continue;
-      record(name, { workspace: pkg.workspace, dir: pkg.dir, spec, kind: 'dep' });
+      appendSpec(name, { workspace: pkg.workspace, dir: pkg.dir, spec, kind: 'dep' });
     }
     for (const [name, spec] of Object.entries(pkg.devDeps)) {
       if (isWorkspaceRef(spec)) continue;
-      record(name, { workspace: pkg.workspace, dir: pkg.dir, spec, kind: 'dev' });
+      appendSpec(name, { workspace: pkg.workspace, dir: pkg.dir, spec, kind: 'dev' });
     }
   }
   return inv;
@@ -149,42 +149,44 @@ const TRAILING_STAR_RE = /\s*\*$/;
 //   ['6.0.3', '^6', '^6.0.3', '^6']  →  '^6.0.3'
 //   ['^4.1.5', '^4.1.5', '^4.1.6']   →  '^4.1.6'
 function pickCanonical(occurrences: readonly Spec[]): string {
-  const parse = (s: string | undefined): { prefix: string; raw: string; version: number[] } => {
-    const m = (s ?? '').match(VERSION_PREFIX_RE);
-    const prefix = m?.[1] ?? '';
-    const raw = m?.[2] ?? '0';
-    const version = raw.split('.').map((p) => Number.parseInt(p, 10) || 0);
+  const parseVersionSpec = (
+    spec: string | undefined
+  ): { prefix: string; raw: string; version: number[] } => {
+    const match = (spec ?? '').match(VERSION_PREFIX_RE);
+    const prefix = match?.[1] ?? '';
+    const raw = match?.[2] ?? '0';
+    const version = raw.split('.').map((part) => Number.parseInt(part, 10) || 0);
     while (version.length < 3) version.push(0);
     return { prefix, raw, version };
   };
-  const cmp = (a: number[], b: number[]): number => {
+  const compareVersionTuples = (a: number[], b: number[]): number => {
     for (let i = 0; i < Math.max(a.length, b.length); i++) {
-      const d = (a[i] ?? 0) - (b[i] ?? 0);
-      if (d !== 0) return d;
+      const delta = (a[i] ?? 0) - (b[i] ?? 0);
+      if (delta !== 0) return delta;
     }
     return 0;
   };
 
-  let bestRaw = parse(occurrences[0]?.spec).raw;
-  let bestVer = parse(occurrences[0]?.spec).version;
-  for (const o of occurrences.slice(1)) {
-    const p = parse(o.spec);
-    if (cmp(p.version, bestVer) > 0) {
-      bestVer = p.version;
-      bestRaw = p.raw;
+  let bestRaw = parseVersionSpec(occurrences[0]?.spec).raw;
+  let bestVer = parseVersionSpec(occurrences[0]?.spec).version;
+  for (const occurrence of occurrences.slice(1)) {
+    const parsed = parseVersionSpec(occurrence.spec);
+    if (compareVersionTuples(parsed.version, bestVer) > 0) {
+      bestVer = parsed.version;
+      bestRaw = parsed.raw;
     }
   }
 
   const prefixCounts = new Map<string, number>();
-  for (const o of occurrences) {
-    const p = parse(o.spec).prefix;
-    prefixCounts.set(p, (prefixCounts.get(p) ?? 0) + 1);
+  for (const occurrence of occurrences) {
+    const prefix = parseVersionSpec(occurrence.spec).prefix;
+    prefixCounts.set(prefix, (prefixCounts.get(prefix) ?? 0) + 1);
   }
   let prefix = '^';
   let maxCount = -1;
-  for (const [p, count] of prefixCounts) {
-    if (count > maxCount || (count === maxCount && p === '^')) {
-      prefix = p;
+  for (const [prefixKey, count] of prefixCounts) {
+    if (count > maxCount || (count === maxCount && prefixKey === '^')) {
+      prefix = prefixKey;
       maxCount = count;
     }
   }
@@ -194,7 +196,7 @@ function pickCanonical(occurrences: readonly Spec[]): string {
 function findDrift(inv: Inventory): Drift[] {
   const drift: Drift[] = [];
   for (const [name, occurrences] of inv) {
-    const specs = new Set(occurrences.map((o) => o.spec));
+    const specs = new Set(occurrences.map((occurrence) => occurrence.spec));
     if (specs.size <= 1) continue;
     drift.push({ name, occurrences, canonical: pickCanonical(occurrences) });
   }
@@ -208,43 +210,45 @@ function reportDrift(entries: readonly Drift[]): void {
   }
   for (const { name, occurrences, canonical } of entries) {
     console.log(`  ${name}  →  canonical: ${canonical}`);
-    for (const o of occurrences) {
-      const marker = o.spec === canonical ? ' ' : '·';
-      console.log(`    ${marker} ${o.workspace.padEnd(28)} ${o.spec}  (${o.kind})`);
+    for (const occurrence of occurrences) {
+      const marker = occurrence.spec === canonical ? ' ' : '·';
+      console.log(
+        `    ${marker} ${occurrence.workspace.padEnd(28)} ${occurrence.spec}  (${occurrence.kind})`
+      );
     }
   }
   console.log(`\n  ${entries.length} dep(s) with mismatched specs across workspaces`);
 }
 
 function fixDrift(entries: readonly Drift[]): number {
-  type Entry = { raw: string; json: Record<string, unknown>; touched: boolean };
+  type Entry = { raw: string; json: Record<string, unknown>; isModified: boolean };
   const pkgs = new Map<string, Entry>();
-  const load = (dir: string): Entry => {
+  const loadPackageEntry = (dir: string): Entry => {
     let entry = pkgs.get(dir);
     if (!entry) {
       const raw = readFileSync(join(dir, 'package.json'), 'utf8');
-      entry = { raw, json: JSON.parse(raw) as Record<string, unknown>, touched: false };
+      entry = { raw, json: JSON.parse(raw) as Record<string, unknown>, isModified: false };
       pkgs.set(dir, entry);
     }
     return entry;
   };
 
   for (const { name, occurrences, canonical } of entries) {
-    for (const o of occurrences) {
-      if (o.spec === canonical) continue;
-      const entry = load(o.dir);
-      const field = o.kind === 'dep' ? 'dependencies' : 'devDependencies';
+    for (const occurrence of occurrences) {
+      if (occurrence.spec === canonical) continue;
+      const entry = loadPackageEntry(occurrence.dir);
+      const field = occurrence.kind === 'dep' ? 'dependencies' : 'devDependencies';
       const bucket = entry.json[field] as Record<string, string> | undefined;
-      if (!bucket || bucket[name] !== o.spec) continue;
+      if (!bucket || bucket[name] !== occurrence.spec) continue;
       bucket[name] = canonical;
-      entry.touched = true;
-      console.log(`  ${o.workspace}/${field}: ${name}  ${o.spec} → ${canonical}`);
+      entry.isModified = true;
+      console.log(`  ${occurrence.workspace}/${field}: ${name}  ${occurrence.spec} → ${canonical}`);
     }
   }
 
   let changed = 0;
   for (const [dir, entry] of pkgs) {
-    if (!entry.touched) continue;
+    if (!entry.isModified) continue;
     const trailing = entry.raw.endsWith('\n') ? '\n' : '';
     writeFileSync(join(dir, 'package.json'), `${JSON.stringify(entry.json, null, 2)}${trailing}`);
     changed += 1;
@@ -280,7 +284,7 @@ function parseOutdatedRows(text: string): OutdatedRow[] {
       update: update.replace(TRAILING_STAR_RE, ''),
       latest: latest.replace(TRAILING_STAR_RE, ''),
       workspace,
-      gated: update.endsWith('*'),
+      isGated: update.endsWith('*'),
     });
   }
   return rows;
@@ -302,8 +306,8 @@ async function runOutdated(): Promise<{
   if (code !== 0) process.exit(code);
 
   const rows = parseOutdatedRows(text);
-  const real = rows.filter((r) => !r.gated && r.current !== r.update);
-  const gated = rows.filter((r) => r.gated);
+  const real = rows.filter((row) => !row.isGated && row.current !== row.update);
+  const gated = rows.filter((row) => row.isGated);
   return { rows, real, gated };
 }
 
@@ -345,7 +349,7 @@ function runInstall(): Promise<number> {
   }).exited;
 }
 
-const fmtMs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+const formatMs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
 async function runVerify(): Promise<number> {
   for (const task of ['types', 'test'] as const) {
@@ -358,10 +362,10 @@ async function runVerify(): Promise<number> {
     }).exited;
     const ms = Date.now() - start;
     if (code !== 0) {
-      console.error(`✗ ${task} failed (${fmtMs(ms)})`);
+      console.error(`✗ ${task} failed (${formatMs(ms)})`);
       return code || 1;
     }
-    console.log(`✓ (${fmtMs(ms)})`);
+    console.log(`✓ (${formatMs(ms)})`);
   }
   return 0;
 }
@@ -442,7 +446,7 @@ if (flags.write) {
   if (!flags.interactive) {
     const after = await runOutdated();
     if (after.real.length > 0) {
-      const targets = new Set(after.real.map((r) => r.workspace));
+      const targets = new Set(after.real.map((row) => row.workspace));
       console.log(
         `\n  recursive update left ${after.real.length} package(s) outdated in ${targets.size} workspace(s); retrying per-workspace`
       );

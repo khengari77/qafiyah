@@ -13,7 +13,6 @@ export type DomainFields = {
   readonly verse_id?: string | undefined;
   readonly query_text?: string | undefined;
   readonly query_length?: number | undefined;
-  readonly results_count?: number | undefined;
   readonly search_type?: 'fulltext' | 'semantic' | undefined;
   readonly page?: number | undefined;
   readonly page_size?: number | undefined;
@@ -73,12 +72,12 @@ declare const LogHandleBrand: unique symbol;
 // the helpers in this module.
 export type LogHandle = { readonly [LogHandleBrand]: true };
 
-function asBuilder(handle: LogHandle): LogEventBuilder {
+function castHandleToBuilder(handle: LogHandle): LogEventBuilder {
   return handle as unknown as LogEventBuilder;
 }
 
 function readBuilder(handle: LogHandle): Readonly<LogEventBuilder> {
-  return asBuilder(handle);
+  return castHandleToBuilder(handle);
 }
 
 export function createLogHandle(init: {
@@ -92,19 +91,19 @@ export function createLogHandle(init: {
 }
 
 export function enrichContext(c: Context<AppContext>, data: Readonly<DomainFields>): void {
-  const handle = c.var.logEvent;
+  const handle = c.var.logHandle;
   if (!handle) return;
-  Object.assign(asBuilder(handle), data);
+  Object.assign(castHandleToBuilder(handle), data);
 }
 
 export function recordResponse(handle: LogHandle, status_code: number, duration_ms: number): void {
-  const b = asBuilder(handle);
-  b.status_code = status_code;
-  b.duration_ms = duration_ms;
+  const builder = castHandleToBuilder(handle);
+  builder.status_code = status_code;
+  builder.duration_ms = duration_ms;
 }
 
 export function recordError(handle: LogHandle, error: ErrorInfo): void {
-  asBuilder(handle).error = error;
+  castHandleToBuilder(handle).error = error;
 }
 
 export function shouldEmit(handle: LogHandle): boolean {
@@ -114,7 +113,7 @@ export function shouldEmit(handle: LogHandle): boolean {
   const duration = event.duration_ms ?? 0;
   if (status >= HTTP_INTERNAL_SERVER_ERROR) return true;
   if (duration > LOG_SLOW_REQUEST_MS) return true;
-  if (event.results_count === 0) return true;
+  if (event.result_count === 0) return true;
   return Math.random() < LOG_PROD_SAMPLE_RATE;
 }
 

@@ -5,7 +5,7 @@ import { asEraSlug } from './brand';
 import type { DbClient } from './client';
 import { ERAS_SORT_ORDER } from './constants';
 import { executeAs } from './execute-as';
-import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { eraStats } from './schema';
 
 const ERAS_SORT_INDEX = new Map<string, number>(ERAS_SORT_ORDER.map((name, i) => [name, i]));
@@ -33,10 +33,11 @@ export async function listEras(db: DbClient): Promise<readonly EraStatsRow[]> {
       poemsCount: eraStats.poemsCount,
     })
     .from(eraStats);
-  const sortIndex = (name: string): number => ERAS_SORT_INDEX.get(name) ?? Number.MAX_SAFE_INTEGER;
+  const getSortIndex = (name: string): number =>
+    ERAS_SORT_INDEX.get(name) ?? Number.MAX_SAFE_INTEGER;
   return results
-    .map((r) => ({ ...r, slug: asEraSlug(r.slug) }))
-    .sort((a, b) => sortIndex(a.name) - sortIndex(b.name));
+    .map((row) => ({ ...row, slug: asEraSlug(row.slug) }))
+    .sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name));
 }
 
 export async function listEraPoems(
@@ -50,7 +51,7 @@ export async function listEraPoems(
   const parentRows = await executeAs(
     db,
     sql`SELECT name, poems_count FROM era_stats WHERE slug = ${slug} LIMIT 1`,
-    parentRowSchema
+    parentStatsRowSchema
   );
 
   if (parentRows.length === 0 || !parentRows[0]) return null;
@@ -78,13 +79,13 @@ export async function listEraPoems(
     rawPoemRowSchema
   );
 
-  const poems: readonly PoemListRow[] = rawPoems.map((r) => ({
-    title: r.title,
-    slug: r.slug,
-    poetName: r.poet_name,
-    poetSlug: r.poet_slug,
-    meterName: r.meter_name,
-    meterSlug: r.meter_slug,
+  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    poetName: row.poet_name,
+    poetSlug: row.poet_slug,
+    meterName: row.meter_name,
+    meterSlug: row.meter_slug,
   }));
 
   return {

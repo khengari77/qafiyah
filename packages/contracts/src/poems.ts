@@ -7,38 +7,38 @@ import {
   poetSlugSchema,
   themeSlugSchema,
 } from './brands';
-import { EXAMPLE_POEM_SLUG, inputValidationError } from './constants';
-import { listResponse, poemListItem, resourceResponse, slugInput, subRef } from './schemas';
+import { EXAMPLE_POEM_SLUG, inputValidationErrorMap } from './constants';
+import { listResponse, namedSlugRef, poemListItem, resourceResponse, slugInput } from './schemas';
 
-const listSlugsContract = oc
+const listPoemSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
   .output(listResponse(poemSlugSchema));
 
-export const poemResource = v.object({
+export const poemDetail = v.object({
   title: v.string(),
   slug: poemSlugSchema,
   verses: v.array(v.tuple([v.string(), v.string()])),
   verseCount: v.number(),
   sample: v.string(),
   keywords: v.string(),
-  poet: subRef(poetSlugSchema),
-  era: subRef(eraSlugSchema),
-  meter: subRef(meterSlugSchema),
-  theme: subRef(themeSlugSchema),
+  poet: namedSlugRef(poetSlugSchema),
+  era: namedSlugRef(eraSlugSchema),
+  meter: namedSlugRef(meterSlugSchema),
+  theme: namedSlugRef(themeSlugSchema),
   relatedPoems: v.array(poemListItem),
 });
 
-const getBySlugContract = oc
+const getPoemBySlugContract = oc
   .route({ method: 'GET', path: '/poems/{slug}' })
   .input(slugInput(poemSlugSchema, EXAMPLE_POEM_SLUG))
   .errors({
-    ...inputValidationError,
+    ...inputValidationErrorMap,
     NOT_FOUND: { status: 404, message: 'Poem not found' },
     POEM_PARSE_ERROR: { status: 500, message: 'Poem data could not be parsed' },
   })
-  .output(resourceResponse(poemResource));
+  .output(resourceResponse(poemDetail));
 
 export const poemsContract = {
-  listSlugs: listSlugsContract,
-  getBySlug: getBySlugContract,
+  listPoemSlugs: listPoemSlugsContract,
+  getPoemBySlug: getPoemBySlugContract,
 };

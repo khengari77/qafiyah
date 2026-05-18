@@ -27,22 +27,22 @@ const PARALLEL: Task[] = [
   { name: 'smoke', cmd: ['bun', 'run', 'smoke'] },
 ];
 
-const fmtMs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
+const formatMs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 
 type Result = { name: string; code: number; output: string; ms: number };
 
 async function runSequential(tasks: Task[]): Promise<void> {
-  for (const t of tasks) {
+  for (const task of tasks) {
     const start = Date.now();
-    process.stdout.write(`▶ ${t.name}... `);
-    const proc = Bun.spawn(t.cmd, { cwd: ROOT, stdout: 'inherit', stderr: 'inherit' });
+    process.stdout.write(`▶ ${task.name}... `);
+    const proc = Bun.spawn(task.cmd, { cwd: ROOT, stdout: 'inherit', stderr: 'inherit' });
     const code = await proc.exited;
     const ms = Date.now() - start;
     if (code !== 0) {
-      console.error(`\n✗ ${t.name} failed (${fmtMs(ms)})`);
+      console.error(`\n✗ ${task.name} failed (${formatMs(ms)})`);
       process.exit(code || 1);
     }
-    console.log(`✓ (${fmtMs(ms)})`);
+    console.log(`✓ (${formatMs(ms)})`);
   }
 }
 
@@ -75,30 +75,32 @@ async function cleanupOrphans(): Promise<void> {
 async function runParallel(tasks: Task[]): Promise<void> {
   const procs = new Map<string, Subprocess>();
   const pending = new Map<Promise<Result>, Task>();
-  for (const t of tasks) pending.set(runOne(t, procs), t);
+  for (const task of tasks) pending.set(runOne(task, procs), task);
 
-  let failed: Result | null = null;
+  let firstFailure: Result | null = null;
 
   while (pending.size > 0) {
-    const winner = await Promise.race(
-      [...pending.keys()].map((p) => p.then((res) => [p, res] as const))
+    const firstSettled = await Promise.race(
+      [...pending.keys()].map((promise) =>
+        promise.then((settledResult) => [promise, settledResult] as const)
+      )
     );
-    pending.delete(winner[0]);
-    const r = winner[1];
-    if (r.code !== 0) {
-      failed = r;
+    pending.delete(firstSettled[0]);
+    const result = firstSettled[1];
+    if (result.code !== 0) {
+      firstFailure = result;
       for (const proc of procs.values()) proc.kill();
       break;
     }
-    console.log(`✓ ${r.name} (${fmtMs(r.ms)})`);
+    console.log(`✓ ${result.name} (${formatMs(result.ms)})`);
   }
 
-  if (failed) {
+  if (firstFailure) {
     await Promise.allSettled(pending.keys());
     await cleanupOrphans();
-    console.error(`\n✗ ${failed.name} failed (${fmtMs(failed.ms)})`);
-    if (failed.output) console.error(failed.output);
-    process.exit(failed.code || 1);
+    console.error(`\n✗ ${firstFailure.name} failed (${formatMs(firstFailure.ms)})`);
+    if (firstFailure.output) console.error(firstFailure.output);
+    process.exit(firstFailure.code || 1);
   }
 }
 
@@ -107,4 +109,4 @@ console.log('── sequential (file-mutating) ──');
 await runSequential(SEQUENTIAL);
 console.log('\n── parallel ──');
 await runParallel(PARALLEL);
-console.log(`\n✓ ci passed (${fmtMs(Date.now() - totalStart)})`);
+console.log(`\n✓ ci passed (${formatMs(Date.now() - totalStart)})`);

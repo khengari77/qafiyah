@@ -15,7 +15,7 @@ import { fetchPoem } from '@/lib/api/static/poems';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { flattenVerses } from '@/lib/flatten-verses';
 
-function safeMetaText(value: string): string {
+function sanitizeMetaText(value: string): string {
   return value
     .replace(/['"\\]/g, '')
     .replace(/\s+/g, ' ')
@@ -45,8 +45,8 @@ function buildJsonLd(
   const article = {
     '@context': SCHEMA_ORG_CONTEXT,
     '@type': 'CreativeWork',
-    name: safeMetaText(poem.title),
-    headline: safeMetaText(`${poem.title} — ${poem.poet.name}`),
+    name: sanitizeMetaText(poem.title),
+    headline: sanitizeMetaText(`${poem.title} — ${poem.poet.name}`),
     author: { '@type': 'Person', name: poem.poet.name, url: poetUrl },
     inLanguage: POEM_LANGUAGE,
     url: pageUrl,
@@ -55,7 +55,7 @@ function buildJsonLd(
       { '@type': 'Collection', name: poem.poet.name, url: poetUrl },
       { '@type': 'Collection', name: poem.era.name, url: eraUrl },
     ],
-    description: safeMetaText(poem.verses.flat().join(POEM_KEYWORDS_JOIN_SEPARATOR)),
+    description: sanitizeMetaText(poem.verses.flat().join(POEM_KEYWORDS_JOIN_SEPARATOR)),
     keywords: sanitizedKeywords,
     publisher: {
       '@type': 'Organization',
@@ -78,15 +78,15 @@ function buildJsonLd(
 }
 
 function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
-  const clearTitle = poem.title || POEM_DEFAULT_TITLE;
+  const displayTitle = poem.title || POEM_DEFAULT_TITLE;
   const poetName = poem.poet.name || UNKNOWN_POET_NAME;
-  const description = safeMetaText(flattenVerses(poem.verses));
-  const pageTitle = `${safeMetaText(clearTitle)} — ${safeMetaText(poetName)} | ${SITE_NAME_AR}`;
+  const description = sanitizeMetaText(flattenVerses(poem.verses));
+  const pageTitle = `${sanitizeMetaText(displayTitle)} — ${sanitizeMetaText(poetName)} | ${SITE_NAME_AR}`;
   const pageUrl = `${SITE_URL}/poems/${slug}`;
-  const twitterDescription = safeMetaText(
+  const twitterDescription = sanitizeMetaText(
     TWITTER_DESCRIPTION_TEMPLATE_AR.replace('{poet}', poetName)
   );
-  const sanitizedKeywords = safeMetaText(poem.keywords);
+  const sanitizedKeywords = sanitizeMetaText(poem.keywords);
   return {
     title: pageTitle,
     description,

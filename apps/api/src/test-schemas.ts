@@ -14,12 +14,12 @@ const paginationSchema = v.object({
   totalItems: v.number(),
 });
 
-const subRefSchema = v.object({
+const namedSlugRefSchema = v.object({
   name: v.string(),
   slug,
 });
 
-const parentMetaSchema = v.object({
+const slugWithPoemCountSchema = v.object({
   name: v.string(),
   slug,
   poemsCount: v.number(),
@@ -28,7 +28,7 @@ const parentMetaSchema = v.object({
 export const listBodySchema = v.object({
   data: v.array(v.unknown()),
   pagination: paginationSchema,
-  meta: v.optional(parentMetaSchema),
+  meta: v.optional(slugWithPoemCountSchema),
 });
 
 export const slugListResponseSchema = v.object({
@@ -36,20 +36,20 @@ export const slugListResponseSchema = v.object({
   pagination: paginationSchema,
 });
 
-export const poemResourceResponseSchema = v.object({
+export const poemDetailResponseSchema = v.object({
   data: v.object({
     title: v.string(),
     slug,
-    poet: subRefSchema,
-    meter: subRefSchema,
-    theme: subRefSchema,
-    era: subRefSchema,
+    poet: namedSlugRefSchema,
+    meter: namedSlugRefSchema,
+    theme: namedSlugRefSchema,
+    era: namedSlugRefSchema,
     relatedPoems: v.array(
       v.object({
         title: v.string(),
         slug,
-        poet: subRefSchema,
-        meter: subRefSchema,
+        poet: namedSlugRefSchema,
+        meter: namedSlugRefSchema,
       })
     ),
   }),

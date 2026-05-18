@@ -13,7 +13,7 @@ import type { AppContext, Bindings } from '@/types';
 /**
  * Creates a chainable query builder mock that handles Drizzle's query patterns
  */
-function createQueryBuilder(mockData: readonly unknown[] = []) {
+function createMockDrizzleQueryBuilder(mockData: readonly unknown[] = []) {
   const limitFn = vi.fn();
   limitFn.mockReturnValue({
     offset: vi.fn().mockResolvedValue(mockData),
@@ -38,7 +38,7 @@ function createQueryBuilder(mockData: readonly unknown[] = []) {
 // subset of the interface. Local on purpose: exporting from @qafiyah/db would
 // force vi.mock factories to resolve eagerly (the package is mocked here),
 // triggering temporal-dead-zone errors on the per-test top-level vi.fn() vars.
-function fakeDb<T extends object>(partial: T): DbClient {
+function castPartialAsDbClient<T extends object>(partial: T): DbClient {
   return partial as unknown as DbClient;
 }
 
@@ -46,9 +46,9 @@ function fakeDb<T extends object>(partial: T): DbClient {
  * Creates a mock database instance
  */
 export function createMockDb(defaultData: readonly unknown[] = []): DbClient {
-  const defaultBuilder = createQueryBuilder(defaultData);
+  const defaultBuilder = createMockDrizzleQueryBuilder(defaultData);
 
-  return fakeDb({
+  return castPartialAsDbClient({
     select: vi.fn().mockReturnValue(defaultBuilder),
     insert: vi.fn(),
     update: vi.fn(),

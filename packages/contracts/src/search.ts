@@ -3,6 +3,7 @@ import {
   MATCH_TYPE_VALUES,
   MAX_QUERY_LENGTH,
   NON_ARABIC_AND_SPACE_REGEX,
+  SEARCH_EMPTY_INPUT_MESSAGE,
   SEARCH_TYPE_VALUES,
   WHITESPACE_RUN_REGEX,
 } from '@qafiyah/constants';
@@ -15,26 +16,30 @@ import {
   rhymeSlugSchema,
   themeSlugSchema,
 } from './brands';
-import { DEFAULT_PAGE, inputValidationError, SEARCH_EMPTY_INPUT_MESSAGE } from './constants';
-import { pageParam, pagination, subRef } from './schemas';
+import { DEFAULT_PAGE, inputValidationErrorMap } from './constants';
+import { namedSlugRef, pageParam, pagination } from './schemas';
 
-export function cleanArabicQuery(q: string): string {
-  return q.trim().replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(WHITESPACE_RUN_REGEX, ' ').trim();
+export function cleanArabicQuery(query: string): string {
+  return query
+    .trim()
+    .replace(NON_ARABIC_AND_SPACE_REGEX, '')
+    .replace(WHITESPACE_RUN_REGEX, ' ')
+    .trim();
 }
 
-const meterSlugsParam = v.optional(v.array(meterSlugSchema), []);
-const eraSlugsParam = v.optional(v.array(eraSlugSchema), []);
-const rhymeSlugsParam = v.optional(v.array(rhymeSlugSchema), []);
-const themeSlugsParam = v.optional(v.array(themeSlugSchema), []);
+const meterSlugsSchema = v.optional(v.array(meterSlugSchema), []);
+const eraSlugsSchema = v.optional(v.array(eraSlugSchema), []);
+const rhymeSlugsSchema = v.optional(v.array(rhymeSlugSchema), []);
+const themeSlugsSchema = v.optional(v.array(themeSlugSchema), []);
 
 export const poemSearchResult = v.object({
   type: v.literal('poem'),
   title: v.string(),
   slug: poemSlugSchema,
   snippet: v.string(),
-  poet: subRef(poetSlugSchema),
-  meter: subRef(meterSlugSchema),
-  era: subRef(eraSlugSchema),
+  poet: namedSlugRef(poetSlugSchema),
+  meter: namedSlugRef(meterSlugSchema),
+  era: namedSlugRef(eraSlugSchema),
   relevance: v.number(),
 });
 
@@ -43,7 +48,7 @@ export const poetSearchResult = v.object({
   name: v.string(),
   slug: poetSlugSchema,
   bio: v.string(),
-  era: subRef(eraSlugSchema),
+  era: namedSlugRef(eraSlugSchema),
   relevance: v.number(),
 });
 
@@ -61,10 +66,10 @@ export const searchInputSchema = v.pipe(
     searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
     page: v.optional(pageParam, DEFAULT_PAGE),
     matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
-    meterSlugs: meterSlugsParam,
-    eraSlugs: eraSlugsParam,
-    rhymeSlugs: rhymeSlugsParam,
-    themeSlugs: themeSlugsParam,
+    meterSlugs: meterSlugsSchema,
+    eraSlugs: eraSlugsSchema,
+    rhymeSlugs: rhymeSlugsSchema,
+    themeSlugs: themeSlugsSchema,
   }),
   v.check((input) => {
     const hasText = input.q.length > 0;
@@ -78,25 +83,23 @@ export const searchInputSchema = v.pipe(
   }, SEARCH_EMPTY_INPUT_MESSAGE)
 );
 
-const searchContract = oc
-  .route({ method: 'GET', path: '/search' })
-  .input(searchInputSchema)
-  .errors({ ...inputValidationError })
-  .output(
-    v.variant('searchType', [
-      v.object({
-        searchType: v.literal('poems'),
-        data: v.array(poemSearchResult),
-        pagination,
-      }),
-      v.object({
-        searchType: v.literal('poets'),
-        data: v.array(poetSearchResult),
-        pagination,
-      }),
-    ])
-  );
-
-export const searchRouterContract = {
-  search: searchContract,
+export const searchContract = {
+  search: oc
+    .route({ method: 'GET', path: '/search' })
+    .input(searchInputSchema)
+    .errors({ ...inputValidationErrorMap })
+    .output(
+      v.variant('searchType', [
+        v.object({
+          searchType: v.literal('poems'),
+          data: v.array(poemSearchResult),
+          pagination,
+        }),
+        v.object({
+          searchType: v.literal('poets'),
+          data: v.array(poetSearchResult),
+          pagination,
+        }),
+      ])
+    ),
 };

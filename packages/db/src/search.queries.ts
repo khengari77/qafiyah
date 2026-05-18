@@ -22,7 +22,7 @@ export type SearchFilters = {
   readonly rhymeSlugs: readonly RhymeSlug[] | null;
 };
 
-export type PoemsSearchRow = {
+export type PoemSearchRow = {
   readonly poetName: string;
   readonly poetEra: string;
   readonly poetEraSlug: EraSlug;
@@ -35,7 +35,7 @@ export type PoemsSearchRow = {
   readonly relevance: number;
 };
 
-export type PoetsSearchRow = {
+export type PoetSearchRow = {
   readonly poetName: string;
   readonly poetEra: string;
   readonly poetEraSlug: EraSlug;
@@ -49,7 +49,7 @@ export type SearchPage<T> = {
   readonly totalCount: number;
 };
 
-const rawPoemsSearchRowSchema = v.object({
+const rawPoemSearchRowSchema = v.object({
   poet_name: v.string(),
   poet_era: v.string(),
   poet_era_slug: eraSlugSchema,
@@ -62,9 +62,9 @@ const rawPoemsSearchRowSchema = v.object({
   relevance: v.number(),
   total_count: v.optional(v.union([v.number(), v.string()])),
 });
-type RawPoemsSearchRow = v.InferOutput<typeof rawPoemsSearchRowSchema>;
+type RawPoemSearchRow = v.InferOutput<typeof rawPoemSearchRowSchema>;
 
-const rawPoetsSearchRowSchema = v.object({
+const rawPoetSearchRowSchema = v.object({
   poet_name: v.string(),
   poet_era: v.string(),
   poet_era_slug: eraSlugSchema,
@@ -73,7 +73,7 @@ const rawPoetsSearchRowSchema = v.object({
   relevance: v.number(),
   total_count: v.optional(v.union([v.number(), v.string()])),
 });
-type RawPoetsSearchRow = v.InferOutput<typeof rawPoetsSearchRowSchema>;
+type RawPoetSearchRow = v.InferOutput<typeof rawPoetSearchRowSchema>;
 
 const filterIdsRowSchema = v.object({
   kind: v.picklist(['meter', 'era', 'theme', 'rhyme'] as const),
@@ -84,14 +84,14 @@ const idRowSchema = v.object({ id: v.number() });
 
 const countRowSchema = v.object({ total: v.union([v.number(), v.string()]) });
 
-function intArrayParam(ids: readonly number[] | null): SQL {
+function toPgIntArrayParam(ids: readonly number[] | null): SQL {
   if (ids === null) return sql`NULL::INTEGER[]`;
   if (ids.length === 0) return sql`'{}'::INTEGER[]`;
   return sql`${`{${ids.join(',')}}`}::INTEGER[]`;
 }
 
-function textArrayLiteral(values: readonly string[]): string {
-  const escaped = values.map((s) => `"${s.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+function formatPgTextArrayLiteral(values: readonly string[]): string {
+  const escaped = values.map((value) => `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
   return `{${escaped.join(',')}}`;
 }
 
@@ -109,30 +109,30 @@ async function lookupFilterIds(
   themeSlugs: readonly ThemeSlug[] | null,
   rhymeSlugs: readonly RhymeSlug[] | null
 ): Promise<FilterIds> {
-  const m = meterSlugs && meterSlugs.length > 0 ? meterSlugs : null;
-  const e = eraSlugs && eraSlugs.length > 0 ? eraSlugs : null;
-  const t = themeSlugs && themeSlugs.length > 0 ? themeSlugs : null;
-  const r = rhymeSlugs && rhymeSlugs.length > 0 ? rhymeSlugs : null;
+  const meterFilter = meterSlugs && meterSlugs.length > 0 ? meterSlugs : null;
+  const eraFilter = eraSlugs && eraSlugs.length > 0 ? eraSlugs : null;
+  const themeFilter = themeSlugs && themeSlugs.length > 0 ? themeSlugs : null;
+  const rhymeFilter = rhymeSlugs && rhymeSlugs.length > 0 ? rhymeSlugs : null;
 
-  if (!(m || e || t || r)) {
+  if (!(meterFilter || eraFilter || themeFilter || rhymeFilter)) {
     return { meterIds: null, eraIds: null, themeIds: null, rhymeIds: null };
   }
 
-  const mLit = m ? textArrayLiteral(m) : null;
-  const eLit = e ? textArrayLiteral(e) : null;
-  const tLit = t ? textArrayLiteral(t) : null;
-  const rLit = r ? textArrayLiteral(r) : null;
+  const meterLiteral = meterFilter ? formatPgTextArrayLiteral(meterFilter) : null;
+  const eraLiteral = eraFilter ? formatPgTextArrayLiteral(eraFilter) : null;
+  const themeLiteral = themeFilter ? formatPgTextArrayLiteral(themeFilter) : null;
+  const rhymeLiteral = rhymeFilter ? formatPgTextArrayLiteral(rhymeFilter) : null;
 
   const rows = await executeAs(
     db,
     sql`
-      SELECT 'meter' AS kind, id FROM meter_stats WHERE ${mLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${mLit}::TEXT[]) OR slug::TEXT = ANY(${mLit}::TEXT[]))`}
+      SELECT 'meter' AS kind, id FROM meter_stats WHERE ${meterLiteral === null ? sql`FALSE` : sql`(id::TEXT = ANY(${meterLiteral}::TEXT[]) OR slug::TEXT = ANY(${meterLiteral}::TEXT[]))`}
       UNION ALL
-      SELECT 'era' AS kind, id FROM era_stats WHERE ${eLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${eLit}::TEXT[]) OR slug::TEXT = ANY(${eLit}::TEXT[]))`}
+      SELECT 'era' AS kind, id FROM era_stats WHERE ${eraLiteral === null ? sql`FALSE` : sql`(id::TEXT = ANY(${eraLiteral}::TEXT[]) OR slug::TEXT = ANY(${eraLiteral}::TEXT[]))`}
       UNION ALL
-      SELECT 'theme' AS kind, id FROM theme_stats WHERE ${tLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${tLit}::TEXT[]) OR slug::TEXT = ANY(${tLit}::TEXT[]))`}
+      SELECT 'theme' AS kind, id FROM theme_stats WHERE ${themeLiteral === null ? sql`FALSE` : sql`(id::TEXT = ANY(${themeLiteral}::TEXT[]) OR slug::TEXT = ANY(${themeLiteral}::TEXT[]))`}
       UNION ALL
-      SELECT 'rhyme' AS kind, id FROM rhyme_stats WHERE ${rLit === null ? sql`FALSE` : sql`(id::TEXT = ANY(${rLit}::TEXT[]) OR slug::TEXT = ANY(${rLit}::TEXT[]))`}
+      SELECT 'rhyme' AS kind, id FROM rhyme_stats WHERE ${rhymeLiteral === null ? sql`FALSE` : sql`(id::TEXT = ANY(${rhymeLiteral}::TEXT[]) OR slug::TEXT = ANY(${rhymeLiteral}::TEXT[]))`}
     `,
     filterIdsRowSchema
   );
@@ -160,50 +160,50 @@ async function lookupFilterIds(
     }
   }
   return {
-    meterIds: m ? meterBucket : null,
-    eraIds: e ? eraBucket : null,
-    themeIds: t ? themeBucket : null,
-    rhymeIds: r ? rhymeBucket : null,
+    meterIds: meterFilter ? meterBucket : null,
+    eraIds: eraFilter ? eraBucket : null,
+    themeIds: themeFilter ? themeBucket : null,
+    rhymeIds: rhymeFilter ? rhymeBucket : null,
   };
 }
 
-async function lookupEraIdsOnly(
+async function lookupEraIds(
   db: DbClient,
   slugs: readonly EraSlug[] | null
 ): Promise<readonly number[] | null> {
   if (!slugs || slugs.length === 0) return null;
-  const lit = textArrayLiteral(slugs);
+  const literal = formatPgTextArrayLiteral(slugs);
   const rows = await executeAs(
     db,
-    sql`SELECT id FROM era_stats WHERE id::TEXT = ANY(${lit}::TEXT[]) OR slug::TEXT = ANY(${lit}::TEXT[])`,
+    sql`SELECT id FROM era_stats WHERE id::TEXT = ANY(${literal}::TEXT[]) OR slug::TEXT = ANY(${literal}::TEXT[])`,
     idRowSchema
   );
-  return rows.map((r) => r.id);
+  return rows.map((row) => row.id);
 }
 
-function mapPoemRow(r: Omit<RawPoemsSearchRow, 'total_count'>): PoemsSearchRow {
+function toPoemSearchRow(row: Omit<RawPoemSearchRow, 'total_count'>): PoemSearchRow {
   return {
-    poetName: r.poet_name,
-    poetEra: r.poet_era,
-    poetEraSlug: r.poet_era_slug,
-    poetSlug: r.poet_slug,
-    poemTitle: r.poem_title,
-    poemSnippet: r.poem_snippet,
-    poemMeter: r.poem_meter,
-    poemMeterSlug: r.poem_meter_slug,
-    poemSlug: r.poem_slug,
-    relevance: r.relevance,
+    poetName: row.poet_name,
+    poetEra: row.poet_era,
+    poetEraSlug: row.poet_era_slug,
+    poetSlug: row.poet_slug,
+    poemTitle: row.poem_title,
+    poemSnippet: row.poem_snippet,
+    poemMeter: row.poem_meter,
+    poemMeterSlug: row.poem_meter_slug,
+    poemSlug: row.poem_slug,
+    relevance: row.relevance,
   };
 }
 
-function mapPoetRow(r: Omit<RawPoetsSearchRow, 'total_count'>): PoetsSearchRow {
+function toPoetSearchRow(row: Omit<RawPoetSearchRow, 'total_count'>): PoetSearchRow {
   return {
-    poetName: r.poet_name,
-    poetEra: r.poet_era,
-    poetEraSlug: r.poet_era_slug,
-    poetSlug: r.poet_slug,
-    poetBio: r.poet_bio,
-    relevance: r.relevance,
+    poetName: row.poet_name,
+    poetEra: row.poet_era,
+    poetEraSlug: row.poet_era_slug,
+    poetSlug: row.poet_slug,
+    poetBio: row.poet_bio,
+    relevance: row.relevance,
   };
 }
 
@@ -213,7 +213,7 @@ export async function searchPoems(args: {
   readonly page: number;
   readonly matchType: MatchType;
   readonly filters: SearchFilters;
-}): Promise<SearchPage<PoemsSearchRow>> {
+}): Promise<SearchPage<PoemSearchRow>> {
   const { db, query, page, matchType, filters } = args;
   const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
     db,
@@ -231,10 +231,10 @@ export async function searchPoems(args: {
           ${query}::TEXT,
           ${page}::INTEGER,
           ${matchType}::TEXT,
-          ${intArrayParam(meterIds)},
-          ${intArrayParam(eraIds)},
-          ${intArrayParam(themeIds)},
-          ${intArrayParam(rhymeIds)}
+          ${toPgIntArrayParam(meterIds)},
+          ${toPgIntArrayParam(eraIds)},
+          ${toPgIntArrayParam(themeIds)},
+          ${toPgIntArrayParam(rhymeIds)}
         )
       )
       SELECT
@@ -245,7 +245,7 @@ export async function searchPoems(args: {
       LEFT JOIN public.meters m ON m.name = s.poem_meter
       LEFT JOIN public.eras e ON e.name = s.poet_era
     `,
-    rawPoemsSearchRowSchema
+    rawPoemSearchRowSchema
   );
 
   if (raw.length === 0) return { rows: [], totalCount: 0 };
@@ -258,7 +258,7 @@ export async function searchPoems(args: {
   if (!Number.isFinite(totalCount)) {
     throw new Error(`searchPoems: total_count is not a finite number (got ${String(rawTotal)})`);
   }
-  return { rows: raw.map(mapPoemRow), totalCount };
+  return { rows: raw.map(toPoemSearchRow), totalCount };
 }
 
 export async function searchPoets(args: {
@@ -267,9 +267,9 @@ export async function searchPoets(args: {
   readonly page: number;
   readonly matchType: MatchType;
   readonly eraSlugs: readonly EraSlug[] | null;
-}): Promise<SearchPage<PoetsSearchRow>> {
+}): Promise<SearchPage<PoetSearchRow>> {
   const { db, query, page, matchType, eraSlugs } = args;
-  const eraIds = await lookupEraIdsOnly(db, eraSlugs);
+  const eraIds = await lookupEraIds(db, eraSlugs);
 
   const raw = await executeAs(
     db,
@@ -279,7 +279,7 @@ export async function searchPoets(args: {
           ${query}::TEXT,
           ${page}::INTEGER,
           ${matchType}::TEXT,
-          ${intArrayParam(eraIds)}
+          ${toPgIntArrayParam(eraIds)}
         )
       )
       SELECT
@@ -288,7 +288,7 @@ export async function searchPoets(args: {
       FROM s
       LEFT JOIN public.eras e ON e.name = s.poet_era
     `,
-    rawPoetsSearchRowSchema
+    rawPoetSearchRowSchema
   );
 
   if (raw.length === 0) return { rows: [], totalCount: 0 };
@@ -301,26 +301,27 @@ export async function searchPoets(args: {
   if (!Number.isFinite(totalCount)) {
     throw new Error(`searchPoets: total_count is not a finite number (got ${String(rawTotal)})`);
   }
-  return { rows: raw.map(mapPoetRow), totalCount };
+  return { rows: raw.map(toPoetSearchRow), totalCount };
 }
 
-function readTotalCount(
+function parseTotalCountRow(
   rows: readonly v.InferOutput<typeof countRowSchema>[],
   label: string
 ): number {
   const row = rows[0];
   const raw = row?.total;
   if (raw === undefined || raw === null) throw new Error(`${label}: SQL row missing total`);
-  const n = Number(raw);
-  if (!Number.isFinite(n)) throw new Error(`${label}: total is not finite (got ${String(raw)})`);
-  return n;
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed))
+    throw new Error(`${label}: total is not finite (got ${String(raw)})`);
+  return parsed;
 }
 
-export async function listPoemsByFilters(args: {
+export async function browsePoemsByFilters(args: {
   readonly db: DbClient;
   readonly page: number;
   readonly filters: SearchFilters;
-}): Promise<SearchPage<PoemsSearchRow>> {
+}): Promise<SearchPage<PoemSearchRow>> {
   const { db, page, filters } = args;
   const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
     db,
@@ -330,10 +331,10 @@ export async function listPoemsByFilters(args: {
     filters.rhymeSlugs
   );
 
-  const meterParam = intArrayParam(meterIds);
-  const eraParam = intArrayParam(eraIds);
-  const themeParam = intArrayParam(themeIds);
-  const rhymeParam = intArrayParam(rhymeIds);
+  const meterParam = toPgIntArrayParam(meterIds);
+  const eraParam = toPgIntArrayParam(eraIds);
+  const themeParam = toPgIntArrayParam(themeIds);
+  const rhymeParam = toPgIntArrayParam(rhymeIds);
 
   const offset = (page - 1) * SEARCH_POEMS_PER_PAGE;
 
@@ -367,7 +368,7 @@ export async function listPoemsByFilters(args: {
       LIMIT ${SEARCH_POEMS_PER_PAGE}
       OFFSET ${offset}
     `,
-    rawPoemsSearchRowSchema
+    rawPoemSearchRowSchema
   );
 
   const countPromise = executeAs(
@@ -384,19 +385,19 @@ export async function listPoemsByFilters(args: {
   const [rows, count] = await Promise.all([rowsPromise, countPromise]);
 
   return {
-    rows: rows.map(mapPoemRow),
-    totalCount: readTotalCount(count, 'listPoemsByFilters'),
+    rows: rows.map(toPoemSearchRow),
+    totalCount: parseTotalCountRow(count, 'browsePoemsByFilters'),
   };
 }
 
-export async function listPoetsByFilters(args: {
+export async function browsePoetsByFilters(args: {
   readonly db: DbClient;
   readonly page: number;
   readonly eraSlugs: readonly EraSlug[] | null;
-}): Promise<SearchPage<PoetsSearchRow>> {
+}): Promise<SearchPage<PoetSearchRow>> {
   const { db, page, eraSlugs } = args;
-  const eraIds = await lookupEraIdsOnly(db, eraSlugs);
-  const eraParam = intArrayParam(eraIds);
+  const eraIds = await lookupEraIds(db, eraSlugs);
+  const eraParam = toPgIntArrayParam(eraIds);
   const offset = (page - 1) * SEARCH_POETS_PER_PAGE;
 
   const filterClause = sql`(${eraParam} IS NULL OR pt.era_id = ANY(${eraParam}))`;
@@ -418,7 +419,7 @@ export async function listPoetsByFilters(args: {
       LIMIT ${SEARCH_POETS_PER_PAGE}
       OFFSET ${offset}
     `,
-    rawPoetsSearchRowSchema
+    rawPoetSearchRowSchema
   );
 
   const countPromise = executeAs(
@@ -434,7 +435,7 @@ export async function listPoetsByFilters(args: {
   const [rows, count] = await Promise.all([rowsPromise, countPromise]);
 
   return {
-    rows: rows.map(mapPoetRow),
-    totalCount: readTotalCount(count, 'listPoetsByFilters'),
+    rows: rows.map(toPoetSearchRow),
+    totalCount: parseTotalCountRow(count, 'browsePoetsByFilters'),
   };
 }

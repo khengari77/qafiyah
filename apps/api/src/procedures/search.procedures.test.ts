@@ -6,8 +6,8 @@ import type { AppContext } from '@/types';
 
 const searchPoemsMock = vi.fn();
 const searchPoetsMock = vi.fn();
-const listPoemsByFiltersMock = vi.fn();
-const listPoetsByFiltersMock = vi.fn();
+const browsePoemsByFiltersMock = vi.fn();
+const browsePoetsByFiltersMock = vi.fn();
 
 vi.mock('@qafiyah/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@qafiyah/db')>();
@@ -16,8 +16,8 @@ vi.mock('@qafiyah/db', async (importOriginal) => {
     searchQueries: {
       searchPoems: searchPoemsMock,
       searchPoets: searchPoetsMock,
-      listPoemsByFilters: listPoemsByFiltersMock,
-      listPoetsByFilters: listPoetsByFiltersMock,
+      browsePoemsByFilters: browsePoemsByFiltersMock,
+      browsePoetsByFilters: browsePoetsByFiltersMock,
     },
   };
 });
@@ -66,8 +66,8 @@ describe('search procedure', () => {
   beforeEach(() => {
     searchPoemsMock.mockReset();
     searchPoetsMock.mockReset();
-    listPoemsByFiltersMock.mockReset();
-    listPoetsByFiltersMock.mockReset();
+    browsePoemsByFiltersMock.mockReset();
+    browsePoetsByFiltersMock.mockReset();
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -79,7 +79,7 @@ describe('search procedure', () => {
     const res = await client.$get('/v1/search?searchType=poems');
     expect(res.status).toBe(400);
     expect(searchPoemsMock).not.toHaveBeenCalled();
-    expect(listPoemsByFiltersMock).not.toHaveBeenCalled();
+    expect(browsePoemsByFiltersMock).not.toHaveBeenCalled();
   });
 
   it('text-only Arabic query calls searchPoems, not the filter-only path', async () => {
@@ -89,7 +89,7 @@ describe('search procedure', () => {
     const res = await client.$get('/v1/search?searchType=poems&q=%D9%82%D8%B5%D9%8A%D8%AF%D8%A9');
     expect(res.status).toBe(200);
     expect(searchPoemsMock).toHaveBeenCalledTimes(1);
-    expect(listPoemsByFiltersMock).not.toHaveBeenCalled();
+    expect(browsePoemsByFiltersMock).not.toHaveBeenCalled();
     const body = await parseJson(res, searchBodySchema);
     expect(body.searchType).toBe('poems');
     expect(body.pagination.totalItems).toBe(1);
@@ -97,37 +97,37 @@ describe('search procedure', () => {
     expect(body.data[0]?.type).toBe('poem');
   });
 
-  it('filter-only call routes to listPoemsByFilters', async () => {
-    listPoemsByFiltersMock.mockResolvedValue({ rows: [samplePoemRow], totalCount: 1 });
+  it('filter-only call routes to browsePoemsByFilters', async () => {
+    browsePoemsByFiltersMock.mockResolvedValue({ rows: [samplePoemRow], totalCount: 1 });
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poems&eraSlugs%5B0%5D=abbasid');
     expect(res.status).toBe(200);
-    expect(listPoemsByFiltersMock).toHaveBeenCalledTimes(1);
+    expect(browsePoemsByFiltersMock).toHaveBeenCalledTimes(1);
     expect(searchPoemsMock).not.toHaveBeenCalled();
-    const args = listPoemsByFiltersMock.mock.calls[0]?.[0];
+    const args = browsePoemsByFiltersMock.mock.calls[0]?.[0];
     expect(args?.page).toBe(1);
     expect(args?.filters?.meterSlugs).toBeNull();
     expect(args?.filters?.eraSlugs).toEqual(['abbasid']);
   });
 
   it('non-Arabic text + filter sanitizes to empty and uses filter-only path', async () => {
-    listPoemsByFiltersMock.mockResolvedValue({ rows: [], totalCount: 0 });
+    browsePoemsByFiltersMock.mockResolvedValue({ rows: [], totalCount: 0 });
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poems&q=hello&eraSlugs%5B0%5D=abbasid');
     expect(res.status).toBe(200);
-    expect(listPoemsByFiltersMock).toHaveBeenCalledTimes(1);
+    expect(browsePoemsByFiltersMock).toHaveBeenCalledTimes(1);
     expect(searchPoemsMock).not.toHaveBeenCalled();
   });
 
-  it('poets filter-only routes to listPoetsByFilters', async () => {
-    listPoetsByFiltersMock.mockResolvedValue({ rows: [samplePoetRow], totalCount: 1 });
+  it('poets filter-only routes to browsePoetsByFilters', async () => {
+    browsePoetsByFiltersMock.mockResolvedValue({ rows: [samplePoetRow], totalCount: 1 });
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poets&eraSlugs%5B0%5D=abbasid');
     expect(res.status).toBe(200);
-    expect(listPoetsByFiltersMock).toHaveBeenCalledTimes(1);
+    expect(browsePoetsByFiltersMock).toHaveBeenCalledTimes(1);
     expect(searchPoetsMock).not.toHaveBeenCalled();
     const body = await parseJson(res, searchBodySchema);
     expect(body.searchType).toBe('poets');
@@ -141,6 +141,6 @@ describe('search procedure', () => {
     const res = await client.$get('/v1/search?searchType=poets&q=%D9%82%D8%B5%D9%8A%D8%AF%D8%A9');
     expect(res.status).toBe(200);
     expect(searchPoetsMock).toHaveBeenCalledTimes(1);
-    expect(listPoetsByFiltersMock).not.toHaveBeenCalled();
+    expect(browsePoetsByFiltersMock).not.toHaveBeenCalled();
   });
 });

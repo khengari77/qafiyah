@@ -16,12 +16,12 @@ const FORBIDDEN = [
 const importRe =
   /(?:^|[\s;])(?:import|export)(?:\s+[^'"`;]*?\s+from\s*)?\s*['"`]([^'"`]+)['"`]|require\s*\(\s*['"`]([^'"`]+)['"`]\s*\)/g;
 
-function* walk(dir: string): Generator<string> {
+function* walkFiles(dir: string): Generator<string> {
   for (const entry of readdirSync(dir)) {
     if (IGNORED_DIRS.has(entry)) continue;
     const full = join(dir, entry);
-    const s = statSync(full);
-    if (s.isDirectory()) yield* walk(full);
+    const stat = statSync(full);
+    if (stat.isDirectory()) yield* walkFiles(full);
     else if (SOURCE_EXTS.some((ext) => entry.endsWith(ext))) yield full;
   }
 }
@@ -30,15 +30,15 @@ type Violation = { file: string; line: number; spec: string; pkg: string };
 
 const violations: Violation[] = [];
 
-for (const file of walk(API_SRC)) {
+for (const file of walkFiles(API_SRC)) {
   const content = readFileSync(file, 'utf8');
-  for (const m of content.matchAll(importRe)) {
-    const spec = m[1] ?? m[2];
+  for (const match of content.matchAll(importRe)) {
+    const spec = match[1] ?? match[2];
     if (!spec) continue;
-    const hit = FORBIDDEN.find((f) => f.re.test(spec));
-    if (!hit) continue;
-    const line = content.slice(0, m.index ?? 0).split('\n').length;
-    violations.push({ file: relative(ROOT, file), line, spec, pkg: hit.name });
+    const forbiddenMatch = FORBIDDEN.find((forbidden) => forbidden.re.test(spec));
+    if (!forbiddenMatch) continue;
+    const line = content.slice(0, match.index ?? 0).split('\n').length;
+    violations.push({ file: relative(ROOT, file), line, spec, pkg: forbiddenMatch.name });
   }
 }
 

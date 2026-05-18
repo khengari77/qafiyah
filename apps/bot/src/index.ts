@@ -3,14 +3,16 @@ import { TwitterApi } from 'twitter-api-v2';
 import { env } from './env';
 import { TerminalError, withRetry } from './retry';
 
-const POEM_FORMAT_OPTION = 'lines';
+const POEM_RESPONSE_FORMAT = 'lines';
 
 async function fetchPoem(): Promise<string> {
-  const res = await fetch(`${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=${POEM_FORMAT_OPTION}`);
-  if (res.status === 429) throw new TerminalError('Rate limited by API');
-  if (!res.ok) throw new Error(`API returned status ${res.status}`);
+  const response = await fetch(
+    `${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=${POEM_RESPONSE_FORMAT}`
+  );
+  if (response.status === 429) throw new TerminalError('Rate limited by API');
+  if (!response.ok) throw new Error(`API returned status ${response.status}`);
 
-  const poem = (await res.text()).trim();
+  const poem = (await response.text()).trim();
   if (!poem) throw new TerminalError('Empty poem returned from API');
   if (poem.length > MAX_TWEET_LENGTH) {
     throw new TerminalError(`Poem too long for Twitter (${poem.length}/${MAX_TWEET_LENGTH})`);

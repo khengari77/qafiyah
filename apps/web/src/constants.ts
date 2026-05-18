@@ -77,16 +77,16 @@ export const SCHEMA_ORG_CONTEXT = 'https://schema.org';
 export type NavLink = {
   readonly name: string;
   readonly href: string;
-  readonly external: boolean;
+  readonly isExternal: boolean;
 };
 
 export const NAV_LINKS = [
-  { name: 'الرئيسة', href: '/', external: false },
-  { name: 'الشعراء', href: '/poets/page/1', external: false },
-  { name: 'العصور', href: '/eras', external: false },
-  { name: 'البحور', href: '/meters', external: false },
-  { name: 'القوافي', href: '/rhymes', external: false },
-  { name: 'الأغراض', href: '/themes', external: false },
+  { name: 'الرئيسة', href: '/', isExternal: false },
+  { name: 'الشعراء', href: '/poets/page/1', isExternal: false },
+  { name: 'العصور', href: '/eras', isExternal: false },
+  { name: 'البحور', href: '/meters', isExternal: false },
+  { name: 'القوافي', href: '/rhymes', isExternal: false },
+  { name: 'الأغراض', href: '/themes', isExternal: false },
 ] as const satisfies readonly NavLink[];
 
 export const SEARCH_RESULTS_STALE_TIME_MS = 5 * 60 * 1000;

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asEraSlug } from './brand';
 import { listEraPoems, listEras } from './eras.queries';
-import { fakeDb, makeChain } from './test-utils';
+import { castPartialAsDbClient, makeChain } from './test-utils';
 
 describe('listEras', () => {
   it('returns rows sorted by ERAS_SORT_ORDER', async () => {
@@ -9,7 +9,7 @@ describe('listEras', () => {
       { name: 'عباسي', slug: 'abbasid', poetsCount: 10, poemsCount: 100 },
       { name: 'جاهلي', slug: 'pre-islamic', poetsCount: 5, poemsCount: 50 },
     ];
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
@@ -19,7 +19,7 @@ describe('listEras', () => {
   });
 
   it('returns empty array when no eras exist', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
@@ -39,7 +39,7 @@ describe('listEraPoems', () => {
       meter_name: 'الطويل',
       meter_slug: 'taweel',
     };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     });
 
@@ -52,7 +52,7 @@ describe('listEraPoems', () => {
   });
 
   it('returns null when era stats lookup is empty', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
@@ -61,7 +61,7 @@ describe('listEraPoems', () => {
   });
 
   it('returns null when parent row is falsy', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([null]),
     });
 
@@ -70,7 +70,7 @@ describe('listEraPoems', () => {
 
   it('computes totalPages correctly', async () => {
     const parentRow = { name: 'العصر العباسي', poems_count: 90 };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
     });
 
@@ -80,7 +80,7 @@ describe('listEraPoems', () => {
 
   it('coerces string poems_count to number', async () => {
     const parentRow = { name: 'x', poems_count: '42' };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
     });
 

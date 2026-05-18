@@ -11,12 +11,12 @@ import {
 import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
 
-type RandomPoemOption = 'slug' | 'lines';
+type RandomPoemFormat = 'slug' | 'lines';
 
-async function getRandomPoemText(db: DbClient, option: RandomPoemOption): Promise<string> {
-  if (option === 'lines') {
-    const result = await poemsQueries.getRandomPoemLines(db);
-    return result.formatted;
+async function fetchRandomPoemBody(db: DbClient, format: RandomPoemFormat): Promise<string> {
+  if (format === 'lines') {
+    const result = await poemsQueries.getRandomPoemExcerpt(db);
+    return result.excerpt;
   }
   return poemsQueries.getRandomPoemSlug(db);
 }
@@ -40,7 +40,7 @@ const app = new Hono<AppContext>()
     c.header('Cache-Control', NO_STORE_CACHE_CONTROL);
     c.header('Content-Type', 'text/plain; charset=utf-8');
 
-    const body = await getRandomPoemText(c.get('db'), parsed.output);
+    const body = await fetchRandomPoemBody(c.get('db'), parsed.output);
     return c.text(body);
   })
   .onError((error, c) => {

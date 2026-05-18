@@ -10,10 +10,10 @@ type Props = {
   readonly inputValue: string;
   readonly validationError: string | null;
   readonly searchLabel: string;
-  readonly handleKeyDown: KeyboardEventHandler<HTMLInputElement>;
-  readonly handleInputChange: ChangeEventHandler<HTMLInputElement>;
-  readonly resetAllStates: () => void;
-  readonly hasQuery: boolean;
+  readonly onKeyDown: KeyboardEventHandler<HTMLInputElement>;
+  readonly onInputChange: ChangeEventHandler<HTMLInputElement>;
+  readonly onReset: () => void;
+  readonly hasQueryToShow: boolean;
   readonly placeholder: string;
 };
 
@@ -21,11 +21,11 @@ export function SearchInput({
   inputValue,
   validationError,
   searchLabel,
-  handleKeyDown,
-  handleInputChange,
-  resetAllStates,
+  onKeyDown,
+  onInputChange,
+  onReset,
   placeholder,
-  hasQuery,
+  hasQueryToShow,
 }: Props) {
   return (
     <div tabIndex={-1} className="w-full">
@@ -47,8 +47,8 @@ export function SearchInput({
           autoCapitalize="off"
           autoSave="off"
           spellCheck={false}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
+          onChange={onInputChange}
+          onKeyDown={onKeyDown}
           aria-label={searchLabel}
           className={cn(
             'h-12 rounded-xl border-0 bg-white pl-10 text-right shadow-none ring-1 ring-zinc-300/40 placeholder:text-zinc-800/50 focus-within:ring focus:border-0 focus:ring-0 focus-visible:ring-zinc-800/40 md:text-lg',
@@ -63,16 +63,16 @@ export function SearchInput({
           tabIndex={-1}
           className="absolute top-1/2 left-3 flex h-full -translate-y-1/2 items-center bg-white pr-2"
         >
-          {hasQuery && (
+          {hasQueryToShow && (
             <button
               type="button"
-              aria-hidden={hasQuery}
-              tabIndex={hasQuery ? 0 : -1}
-              onClick={resetAllStates}
+              aria-hidden={hasQueryToShow}
+              tabIndex={hasQueryToShow ? 0 : -1}
+              onClick={onReset}
               className="text-zinc-400 hover:text-zinc-700 focus:outline-none focus-visible:text-zinc-800"
               aria-label="Clear search"
             >
-              <CircleX aria-hidden={hasQuery} className="h-4 w-4" />
+              <CircleX aria-hidden={hasQueryToShow} className="h-4 w-4" />
             </button>
           )}
         </div>

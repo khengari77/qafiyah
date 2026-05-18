@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asMeterSlug } from './brand';
 import { listMeterPoems, listMeters } from './meters.queries';
-import { fakeDb, makeChain } from './test-utils';
+import { castPartialAsDbClient, makeChain } from './test-utils';
 
 describe('listMeters', () => {
   it('returns meters sorted alphabetically in Arabic', async () => {
@@ -9,7 +9,7 @@ describe('listMeters', () => {
       { name: 'الوافر', slug: 'alwafir', poemsCount: 20, poetsCount: 5 },
       { name: 'الطويل', slug: 'altawil', poemsCount: 100, poetsCount: 30 },
     ];
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
@@ -19,7 +19,7 @@ describe('listMeters', () => {
   });
 
   it('returns empty array when no meters exist', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
@@ -39,7 +39,7 @@ describe('listMeterPoems', () => {
       meter_name: 'الطويل',
       meter_slug: 'altawil',
     };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     });
 
@@ -49,7 +49,7 @@ describe('listMeterPoems', () => {
   });
 
   it('returns null when meter is not found', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
@@ -59,7 +59,7 @@ describe('listMeterPoems', () => {
 
   it('computes totalPages correctly', async () => {
     const parentRow = { name: 'الطويل', poems_count: 60 };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
     });
 

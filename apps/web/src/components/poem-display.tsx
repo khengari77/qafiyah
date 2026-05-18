@@ -48,7 +48,7 @@ function useFontSize(
   };
 }
 
-type PoemProps = {
+type PoemDisplayProps = {
   readonly title: string;
   readonly poet: Poem['poet'];
   readonly era: Poem['era'];
@@ -68,7 +68,7 @@ export function PoemDisplay({
   verses,
   verseCount,
   relatedPoems,
-}: PoemProps) {
+}: PoemDisplayProps) {
   const { decreaseFontSize, increaseFontSize, getVerseFontSize, getVerseGap } = useFontSize();
   const handleTwitterShare = () =>
     window.open(
@@ -183,9 +183,9 @@ export function PoemDisplay({
                 <ListCard
                   className="rounded-2xl"
                   key={`${item.slug} ${poet.slug}`}
-                  title={item.poet.name}
+                  title={item.title}
+                  subtitle={item.poet.name}
                   href={`/poems/${item.slug}`}
-                  name={item.title}
                 />
               ))
             ) : (

@@ -44,14 +44,14 @@ export function SearchContainer() {
                 searchLabel={SEARCH_TEXTS.search}
                 inputValue={state.inputValue}
                 validationError={state.validationError}
-                handleKeyDown={handlers.onKeyDown}
-                handleInputChange={handlers.onInputChange}
-                resetAllStates={handlers.resetAll}
-                hasQuery={flags.hasQuery}
+                onKeyDown={handlers.onKeyDown}
+                onInputChange={handlers.onInputChange}
+                onReset={handlers.onReset}
+                hasQueryToShow={flags.hasQueryToShow}
               />
               <div className="flex items-center justify-between">
                 <FiltersButton
-                  toggleFilters={handlers.toggleFilters}
+                  onToggle={handlers.onToggleFilters}
                   filtersVisible={flags.filtersVisible}
                 />
 
@@ -111,12 +111,12 @@ export function SearchContainer() {
         <ResultList
           status={state.status}
           loadMoreRef={refs.loadMore}
-          hasText={flags.hasText}
+          hasCommittedQuery={flags.hasCommittedQuery}
           hasFilters={flags.hasFilters}
           errorMessage={SEARCH_TEXTS.errorMessage}
           refreshText={SEARCH_TEXTS.refreshThePage}
           noResultsText={getNoResultsText({
-            hasText: flags.hasText,
+            hasCommittedQuery: flags.hasCommittedQuery,
             query: state.searchParams.q || '',
           })}
           resultText={getResultText({
@@ -124,7 +124,7 @@ export function SearchContainer() {
             query: state.searchParams.q || '',
             searchType: state.searchType,
             matchType: state.matchType,
-            hasText: flags.hasText,
+            hasCommittedQuery: flags.hasCommittedQuery,
           })}
         />
       </div>

@@ -1,11 +1,11 @@
 ---
 import { Footer } from '@/components/footer';
 import Nav from '@/components/nav/nav.astro';
-import SEO, { type Props as SEOProps } from '@/components/seo.astro';
+import SEO, { type Props as SeoProps } from '@/components/seo.astro';
 import { isDev } from '@/constants';
 import '@/styles/globals.css';
 
-interface Props extends SEOProps {}
+interface Props extends SeoProps {}
 
 const htmlClass = isDev ? 'debug-screens' : '';
 ---

@@ -8,4 +8,4 @@ type AppOrpcContext = {
   readonly log?: (data: DomainFields) => void;
 };
 
-export const pub = implement(contract).$context<AppOrpcContext>();
+export const publicProcedure = implement(contract).$context<AppOrpcContext>();

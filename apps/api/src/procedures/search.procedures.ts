@@ -3,13 +3,13 @@ import type { poemSearchResult, poetSearchResult } from '@qafiyah/contracts';
 import { searchQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
 import type * as v from 'valibot';
-import { pub } from './base';
+import { publicProcedure } from './base';
 import { buildPagination } from './envelope';
 
 type PoemSearchResult = v.InferOutput<typeof poemSearchResult>;
 type PoetSearchResult = v.InferOutput<typeof poetSearchResult>;
 
-function toPoemSearchResult(row: searchQueries.PoemsSearchRow): PoemSearchResult {
+function toPoemSearchResult(row: searchQueries.PoemSearchRow): PoemSearchResult {
   return {
     type: 'poem',
     title: row.poemTitle,
@@ -22,7 +22,7 @@ function toPoemSearchResult(row: searchQueries.PoemsSearchRow): PoemSearchResult
   };
 }
 
-function toPoetSearchResult(row: searchQueries.PoetsSearchRow): PoetSearchResult {
+function toPoetSearchResult(row: searchQueries.PoetSearchRow): PoetSearchResult {
   return {
     type: 'poet',
     name: row.poetName,
@@ -33,18 +33,18 @@ function toPoetSearchResult(row: searchQueries.PoetsSearchRow): PoetSearchResult
   };
 }
 
-function nonEmpty<T>(arr: readonly T[]): readonly T[] | null {
+function arrayOrNull<T>(arr: readonly T[]): readonly T[] | null {
   return arr.length > 0 ? arr : null;
 }
 
-export const search = pub.search.search.handler(({ context, input }) => {
+export const search = publicProcedure.search.search.handler(({ context, input }) => {
   const query = input.q;
   const hasText = query.length > 0;
 
-  const meterSlugs = nonEmpty(input.meterSlugs);
-  const eraSlugs = nonEmpty(input.eraSlugs);
-  const themeSlugs = nonEmpty(input.themeSlugs);
-  const rhymeSlugs = nonEmpty(input.rhymeSlugs);
+  const meterSlugs = arrayOrNull(input.meterSlugs);
+  const eraSlugs = arrayOrNull(input.eraSlugs);
+  const themeSlugs = arrayOrNull(input.themeSlugs);
+  const rhymeSlugs = arrayOrNull(input.rhymeSlugs);
 
   return match(input.searchType)
     .with('poems', async () => {
@@ -56,7 +56,7 @@ export const search = pub.search.search.handler(({ context, input }) => {
             matchType: input.matchType,
             filters: { meterSlugs, eraSlugs, themeSlugs, rhymeSlugs },
           })
-        : await searchQueries.listPoemsByFilters({
+        : await searchQueries.browsePoemsByFilters({
             db: context.db,
             page: input.page,
             filters: { meterSlugs, eraSlugs, themeSlugs, rhymeSlugs },
@@ -64,7 +64,7 @@ export const search = pub.search.search.handler(({ context, input }) => {
       context.log?.({
         query_text: query || undefined,
         query_length: hasText ? query.length : undefined,
-        results_count: rows.length,
+        result_count: rows.length,
         search_type: hasText ? 'fulltext' : undefined,
         page: input.page,
         page_size: SEARCH_POEMS_PER_PAGE,
@@ -89,7 +89,7 @@ export const search = pub.search.search.handler(({ context, input }) => {
             matchType: input.matchType,
             eraSlugs,
           })
-        : await searchQueries.listPoetsByFilters({
+        : await searchQueries.browsePoetsByFilters({
             db: context.db,
             page: input.page,
             eraSlugs,
@@ -97,7 +97,7 @@ export const search = pub.search.search.handler(({ context, input }) => {
       context.log?.({
         query_text: query || undefined,
         query_length: hasText ? query.length : undefined,
-        results_count: rows.length,
+        result_count: rows.length,
         search_type: hasText ? 'fulltext' : undefined,
         page: input.page,
         page_size: SEARCH_POETS_PER_PAGE,

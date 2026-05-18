@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asThemeSlug } from './brand';
-import { fakeDb, makeChain } from './test-utils';
+import { castPartialAsDbClient, makeChain } from './test-utils';
 import { listThemePoems, listThemes } from './themes.queries';
 
 describe('listThemes', () => {
@@ -9,7 +9,7 @@ describe('listThemes', () => {
       { name: 'رثاء', slug: 'ritha', poemsCount: 10 },
       { name: 'غزل', slug: 'ghazal', poemsCount: 50 },
     ];
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
@@ -19,7 +19,7 @@ describe('listThemes', () => {
   });
 
   it('returns empty array when no themes exist', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
@@ -39,7 +39,7 @@ describe('listThemePoems', () => {
       meter_name: 'الطويل',
       meter_slug: 'altawil',
     };
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
     });
 
@@ -49,7 +49,7 @@ describe('listThemePoems', () => {
   });
 
   it('returns null when theme is not found', async () => {
-    const mockDb = fakeDb({
+    const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
