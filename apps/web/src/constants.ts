@@ -1,4 +1,4 @@
-import { PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
+import { DEV_WEB_PORT, GITHUB_REPO_URL, PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
 import { env } from '@/env';
 import { toArabicDigits } from '@/lib/arabic';
 
@@ -30,13 +30,13 @@ export const ERA_NAMES = new Map([
   ['late', 'متأخر'],
 ]);
 
-export const DATABASE_DUMPS_URL = 'https://github.com/alwalxed/qafiyah/tree/main/dumps';
+export const DATABASE_DUMPS_URL = `${GITHUB_REPO_URL}/tree/main/dumps`;
 export const DEVELOPER_SITE_URL = 'https://alwalxed.com';
 export const TWITTER_HANDLE = '@qafiyahiyahdotcom';
 export const TWITTER_ID = '1570116567538475010';
 export const X_HANDLE_URL = 'https://x.com/qafiyahdotcom';
 
-const DEV_WEB_URL = `http://localhost:4321`;
+const DEV_WEB_URL = `http://localhost:${DEV_WEB_PORT}`;
 
 export const isDev = env.DEV;
 export const API_URL = env.PUBLIC_API_URL ?? PROD_API_URL;

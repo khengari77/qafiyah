@@ -1,14 +1,8 @@
-import type { MeterSlug, PoemSlug, PoetSlug } from '@qafiyah/contracts';
+import type { poemListItem } from '@qafiyah/contracts';
 import type { PoemListRow } from '@qafiyah/db';
+import type * as v from 'valibot';
 
-type SubRef<TSlug> = { readonly name: string; readonly slug: TSlug };
-
-export type PoemListItem = {
-  readonly title: string;
-  readonly slug: PoemSlug;
-  readonly poet: SubRef<PoetSlug>;
-  readonly meter: SubRef<MeterSlug>;
-};
+type PoemListItem = v.InferOutput<typeof poemListItem>;
 
 export function toPoemListItem(row: PoemListRow): PoemListItem {
   return {

@@ -7,10 +7,14 @@ export const SEARCH_POEMS_PER_PAGE = 5;
 export const SEARCH_POETS_PER_PAGE = 10;
 
 export const PROD_DOMAIN = 'qafiyah.com';
+export const PROD_SITE_URL = `https://${PROD_DOMAIN}`;
 export const PROD_API_URL = 'https://api.qafiyah.com';
 
 export const API_V1_PREFIX = '/v1';
 export const API_RANDOM_POEM_PATH = '/v1/poems/random';
+
+export const DEV_WEB_PORT = 4321;
+export const DEV_API_PORT = 8787;
 
 // Allows Arabic letters and whitespace; strips everything else.
 // Covers: Basic Arabic (U+0600–U+06FF), Supplement (U+0750–U+077F), Extended-A (U+08A0–U+08FF).

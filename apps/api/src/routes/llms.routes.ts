@@ -1,7 +1,7 @@
-import { GITHUB_REPO_URL } from '@qafiyah/constants';
+import { GITHUB_REPO_URL, PROD_SITE_URL } from '@qafiyah/constants';
 import { Hono } from 'hono';
 import type { AppContext } from '@/types';
-import { LLMS_CACHE_CONTROL, PROD_API_V1_BASE, PROD_SITE_URL, SITE_NAME_EN } from '../constants';
+import { LLMS_CACHE_CONTROL, PROD_API_V1_BASE, SITE_NAME_EN } from '../constants';
 
 const BASE = PROD_API_V1_BASE;
 

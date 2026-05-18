@@ -1,9 +1,7 @@
-type Pagination = {
-  readonly page: number;
-  readonly pageSize: number;
-  readonly totalPages: number;
-  readonly totalItems: number;
-};
+import type { pagination } from '@qafiyah/contracts';
+import type * as v from 'valibot';
+
+type Pagination = v.InferOutput<typeof pagination>;
 
 export function buildPagination(args: {
   readonly page: number;

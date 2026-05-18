@@ -1,35 +1,18 @@
-import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
+import type { PoemSlug, poemResource } from '@qafiyah/contracts';
 import { poemsQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
+import type * as v from 'valibot';
 import { pub } from './base';
 import { listEnvelope } from './envelope';
-import { type PoemListItem, toPoemListItem } from './list-item.mapper';
+import { toPoemListItem } from './list-item.mapper';
 
-type SubRef<TSlug> = { readonly name: string; readonly slug: TSlug };
-
-// @WARN: PoemResource is the wire output shape, `verses` and `relatedPoems` are
-//   mutable arrays because the oRPC contract (Valibot InferOutput) does not preserve
-//   readonly. Internally readonly data from @qafiyah/db is copied into a mutable
-//   shape only at this boundary.
-type PoemResource = {
-  readonly title: string;
-  readonly slug: PoemSlug;
-  readonly verses: [string, string][];
-  readonly verseCount: number;
-  readonly sample: string;
-  readonly keywords: string;
-  readonly poet: SubRef<PoetSlug>;
-  readonly era: SubRef<EraSlug>;
-  readonly meter: SubRef<MeterSlug>;
-  readonly theme: SubRef<ThemeSlug>;
-  readonly relatedPoems: PoemListItem[];
-};
+type PoemResource = v.InferOutput<typeof poemResource>;
 
 function toPoemResource(slug: PoemSlug, data: poemsQueries.PoemResourceData): PoemResource {
   return {
     title: data.clearTitle,
     slug,
-    verses: data.processedContent.verses.map((v) => [v[0], v[1]] as [string, string]),
+    verses: data.processedContent.verses.map((verse) => [verse[0], verse[1]] as [string, string]),
     verseCount: data.processedContent.verseCount,
     sample: data.processedContent.sample,
     keywords: data.processedContent.keywords,

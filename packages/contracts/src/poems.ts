@@ -14,7 +14,7 @@ const listSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
   .output(listResponse(poemSlugSchema));
 
-const poemResource = v.object({
+export const poemResource = v.object({
   title: v.string(),
   slug: poemSlugSchema,
   verses: v.array(v.tuple([v.string(), v.string()])),

@@ -31,7 +31,7 @@ const eraSlugsParam = v.optional(v.array(eraSlugSchema), []);
 const rhymeSlugsParam = v.optional(v.array(rhymeSlugSchema), []);
 const themeSlugsParam = v.optional(v.array(themeSlugSchema), []);
 
-const poemSearchResult = v.object({
+export const poemSearchResult = v.object({
   type: v.literal('poem'),
   title: v.string(),
   slug: poemSlugSchema,
@@ -42,7 +42,7 @@ const poemSearchResult = v.object({
   relevance: v.number(),
 });
 
-const poetSearchResult = v.object({
+export const poetSearchResult = v.object({
   type: v.literal('poet'),
   name: v.string(),
   slug: poetSlugSchema,

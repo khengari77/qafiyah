@@ -1,7 +1,6 @@
-import { API_V1_PREFIX, PROD_API_URL } from '@qafiyah/constants';
+import { API_V1_PREFIX, PROD_API_URL, PROD_SITE_URL } from '@qafiyah/constants';
 
 export const SITE_NAME_EN = 'Qafiyah';
-export const PROD_SITE_URL = 'https://qafiyah.com';
 
 // API-specific paths (not shared with other packages)
 export const API_DOCS_PATH = '/v1/docs';

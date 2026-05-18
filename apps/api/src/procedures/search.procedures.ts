@@ -1,31 +1,13 @@
 import { SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '@qafiyah/constants';
-import type { EraSlug, MeterSlug, PoemSlug, PoetSlug } from '@qafiyah/contracts';
+import type { poemSearchResult, poetSearchResult } from '@qafiyah/contracts';
 import { searchQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
+import type * as v from 'valibot';
 import { pub } from './base';
 import { buildPagination } from './envelope';
 
-type SubRef<TSlug> = { readonly name: string; readonly slug: TSlug };
-
-type PoemSearchResult = {
-  readonly type: 'poem';
-  readonly title: string;
-  readonly slug: PoemSlug;
-  readonly snippet: string;
-  readonly poet: SubRef<PoetSlug>;
-  readonly meter: SubRef<MeterSlug>;
-  readonly era: SubRef<EraSlug>;
-  readonly relevance: number;
-};
-
-type PoetSearchResult = {
-  readonly type: 'poet';
-  readonly name: string;
-  readonly slug: PoetSlug;
-  readonly bio: string;
-  readonly era: SubRef<EraSlug>;
-  readonly relevance: number;
-};
+type PoemSearchResult = v.InferOutput<typeof poemSearchResult>;
+type PoetSearchResult = v.InferOutput<typeof poetSearchResult>;
 
 function toPoemSearchResult(row: searchQueries.PoemsSearchRow): PoemSearchResult {
   return {

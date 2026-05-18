@@ -32,4 +32,11 @@ export {
   type ThemeSlug,
   themeSlugSchema,
 } from './brands';
-export { cleanArabicQuery, searchInputSchema } from './search';
+export { poemResource } from './poems';
+export { pagination, poemListItem, subRef } from './schemas';
+export {
+  cleanArabicQuery,
+  poemSearchResult,
+  poetSearchResult,
+  searchInputSchema,
+} from './search';
