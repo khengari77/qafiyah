@@ -1,6 +1,7 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { EraSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
+import { err, ok, type Result } from 'neverthrow';
 import { asEraSlug } from './brand';
 import type { DbClient } from './client';
 import { ERAS_SORT_ORDER } from './constants';
@@ -24,6 +25,8 @@ export type ListEraPoemsResult = {
   readonly totalPages: number;
 };
 
+export type ListEraPoemsError = { readonly kind: 'not_found'; readonly slug: EraSlug };
+
 export async function listEras(db: DbClient): Promise<readonly EraStatsRow[]> {
   const results = await db
     .select({
@@ -44,7 +47,7 @@ export async function listEraPoems(
   db: DbClient,
   slug: EraSlug,
   page: number
-): Promise<ListEraPoemsResult | null> {
+): Promise<Result<ListEraPoemsResult, ListEraPoemsError>> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
@@ -54,7 +57,7 @@ export async function listEraPoems(
     parentStatsRowSchema
   );
 
-  if (parentRows.length === 0 || !parentRows[0]) return null;
+  if (parentRows.length === 0 || !parentRows[0]) return err({ kind: 'not_found', slug });
 
   const total = Number(parentRows[0].poems_count);
 
@@ -88,10 +91,10 @@ export async function listEraPoems(
     meterSlug: row.meter_slug,
   }));
 
-  return {
+  return ok({
     parent: { name: parentRows[0].name, slug, poemsCount: total },
     poems,
     total,
     totalPages: Math.ceil(total / limit),
-  };
+  });
 }

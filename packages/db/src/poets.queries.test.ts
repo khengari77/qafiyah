@@ -46,17 +46,18 @@ describe('listPoetPoems', () => {
     });
 
     const result = await listPoetPoems(mockDb, asPoetSlug('al-mutanabbi'), 1);
-    expect(result?.parent.name).toBe('المتنبي');
-    expect(result?.poems[0]?.meterSlug).toBe('altawil');
+    const value = result._unsafeUnwrap();
+    expect(value.parent.name).toBe('المتنبي');
+    expect(value.poems[0]?.meterSlug).toBe('altawil');
   });
 
-  it('returns null when poet is not found', async () => {
+  it('returns not_found err when poet is not found', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
     const result = await listPoetPoems(mockDb, asPoetSlug('nonexistent'), 1);
-    expect(result).toBeNull();
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
   it('computes totalPages correctly', async () => {
@@ -66,6 +67,6 @@ describe('listPoetPoems', () => {
     });
 
     const result = await listPoetPoems(mockDb, asPoetSlug('poet-slug'), 1);
-    expect(result?.totalPages).toBe(2);
+    expect(result._unsafeUnwrap().totalPages).toBe(2);
   });
 });

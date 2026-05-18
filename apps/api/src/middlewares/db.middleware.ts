@@ -1,9 +1,16 @@
 import { createDb, type DbClient } from '@qafiyah/db';
 import { createMiddleware } from 'hono/factory';
+import { ResultAsync } from 'neverthrow';
 import { HTTP_INTERNAL_SERVER_ERROR, HTTP_SERVICE_UNAVAILABLE } from '@/constants';
 import { parseBindings } from '@/env';
 import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
+
+type NextHandlerError = {
+  readonly kind: 'next_handler_failed';
+  readonly message: string;
+  readonly name?: string;
+};
 
 export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const bindingsResult = parseBindings(c.env);
@@ -47,18 +54,24 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
     );
   }
   const db: DbClient = dbResult.value;
-  try {
-    c.set('db', db);
-    return await next();
-  } catch (error) {
+  c.set('db', db);
+  const nextResult = await ResultAsync.fromPromise(
+    next(),
+    (cause): NextHandlerError => ({
+      kind: 'next_handler_failed',
+      message: cause instanceof Error ? cause.message : String(cause),
+      ...(cause instanceof Error && cause.name ? { name: cause.name } : {}),
+    })
+  );
+  if (nextResult.isErr()) {
     console.error(
       JSON.stringify({
         source: 'db.middleware',
         stage: 'request_handler',
         path: c.req.path,
         method: c.req.method,
-        message: error instanceof Error ? error.message : String(error),
-        name: error instanceof Error ? error.name : undefined,
+        message: nextResult.error.message,
+        name: nextResult.error.name,
       })
     );
     return sendProblem(
@@ -70,4 +83,5 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
       })
     );
   }
+  return nextResult.value;
 });

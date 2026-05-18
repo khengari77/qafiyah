@@ -14,8 +14,12 @@ import {
 import { sharePromise } from './dedup';
 import { type ApiFetchError, callApi } from './result';
 
-export function fetchEras(): Promise<readonly Era[]> {
-  return sharePromise('eras:list', async () => (await apiServer.eras.list()).data);
+export function fetchEras(): Promise<Result<readonly Era[], ApiFetchError>> {
+  return sharePromise('eras:list', () =>
+    callApi('eras.list', undefined, () => apiServer.eras.list()).then((result) =>
+      result.map((res) => res.data)
+    )
+  );
 }
 
 export function fetchEraPoemPage(
@@ -27,8 +31,12 @@ export function fetchEraPoemPage(
   );
 }
 
-export function fetchMeters(): Promise<readonly Meter[]> {
-  return sharePromise('meters:list', async () => (await apiServer.meters.list()).data);
+export function fetchMeters(): Promise<Result<readonly Meter[], ApiFetchError>> {
+  return sharePromise('meters:list', () =>
+    callApi('meters.list', undefined, () => apiServer.meters.list()).then((result) =>
+      result.map((res) => res.data)
+    )
+  );
 }
 
 export function fetchMeterPoemPage(
@@ -40,8 +48,12 @@ export function fetchMeterPoemPage(
   );
 }
 
-export function fetchRhymes(): Promise<readonly Rhyme[]> {
-  return sharePromise('rhymes:list', async () => (await apiServer.rhymes.list()).data);
+export function fetchRhymes(): Promise<Result<readonly Rhyme[], ApiFetchError>> {
+  return sharePromise('rhymes:list', () =>
+    callApi('rhymes.list', undefined, () => apiServer.rhymes.list()).then((result) =>
+      result.map((res) => res.data)
+    )
+  );
 }
 
 export function fetchRhymePoemPage(
@@ -53,8 +65,12 @@ export function fetchRhymePoemPage(
   );
 }
 
-export function fetchThemes(): Promise<readonly Theme[]> {
-  return sharePromise('themes:list', async () => (await apiServer.themes.list()).data);
+export function fetchThemes(): Promise<Result<readonly Theme[], ApiFetchError>> {
+  return sharePromise('themes:list', () =>
+    callApi('themes.list', undefined, () => apiServer.themes.list()).then((result) =>
+      result.map((res) => res.data)
+    )
+  );
 }
 
 export function fetchThemePoemPage(

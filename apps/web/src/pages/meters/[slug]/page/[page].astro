@@ -11,9 +11,12 @@ import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const meters = await fetchMeters();
+  const metersResult = await fetchMeters();
+  if (metersResult.isErr()) {
+    throw new Error(`fetchMeters failed: ${JSON.stringify(metersResult.error)}`);
+  }
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const meter of meters) {
+  for (const meter of metersResult.value) {
     for (const page of generatePageNumbers(meter.poemsCount)) {
       params.push({ params: { slug: meter.slug, page: page.toString() } });
     }

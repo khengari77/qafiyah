@@ -11,9 +11,12 @@ import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const eras = await fetchEras();
+  const erasResult = await fetchEras();
+  if (erasResult.isErr()) {
+    throw new Error(`fetchEras failed: ${JSON.stringify(erasResult.error)}`);
+  }
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const era of eras) {
+  for (const era of erasResult.value) {
     for (const page of generatePageNumbers(era.poemsCount)) {
       params.push({ params: { slug: era.slug, page: page.toString() } });
     }

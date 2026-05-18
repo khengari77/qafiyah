@@ -86,16 +86,17 @@ describe('listRhymePoems', () => {
     });
 
     const result = await listRhymePoems(mockDb, asRhymeSlug('rhyme-slug'), 1);
-    expect(result?.parent.name).toBe('ب');
-    expect(result?.poems[0]?.poetSlug).toBe('poet-1');
+    const value = result._unsafeUnwrap();
+    expect(value.parent.name).toBe('ب');
+    expect(value.poems[0]?.poetSlug).toBe('poet-1');
   });
 
-  it('returns null when rhyme is not found', async () => {
+  it('returns not_found err when rhyme is not found', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
     const result = await listRhymePoems(mockDb, asRhymeSlug('nonexistent'), 1);
-    expect(result).toBeNull();
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 });

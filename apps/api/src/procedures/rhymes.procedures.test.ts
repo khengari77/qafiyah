@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { err, ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
@@ -84,12 +85,14 @@ describe('rhymes procedures', () => {
 
   describe('listRhymePoems', () => {
     it('returns rhyme poems with nested sub-resources and meta', async () => {
-      listRhymePoemsMock.mockResolvedValue({
-        parent: { name: 'م', slug: 'meem', poemsCount: 150 },
-        poems: [samplePoemRow],
-        total: 1,
-        totalPages: 1,
-      });
+      listRhymePoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'م', slug: 'meem', poemsCount: 150 },
+          poems: [samplePoemRow],
+          total: 1,
+          totalPages: 1,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -102,7 +105,7 @@ describe('rhymes procedures', () => {
     });
 
     it('returns 404 when rhyme slug not found', async () => {
-      listRhymePoemsMock.mockResolvedValue(null);
+      listRhymePoemsMock.mockResolvedValue(err({ kind: 'not_found', slug: 'unknown-rhyme' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -112,12 +115,14 @@ describe('rhymes procedures', () => {
     });
 
     it('reflects the requested slug and page in the response', async () => {
-      listRhymePoemsMock.mockResolvedValue({
-        parent: { name: 'م', slug: 'meem', poemsCount: 150 },
-        poems: [],
-        total: 150,
-        totalPages: 5,
-      });
+      listRhymePoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'م', slug: 'meem', poemsCount: 150 },
+          poems: [],
+          total: 150,
+          totalPages: 5,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

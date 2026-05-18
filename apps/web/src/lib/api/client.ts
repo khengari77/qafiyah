@@ -1,6 +1,6 @@
 import { API_RANDOM_POEM_PATH, type MatchType, type SearchType } from '@qafiyah/constants';
 import { type PoemSlug, poemSlugSchema } from '@qafiyah/contracts';
-import { err, ok, type Result } from 'neverthrow';
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import * as v from 'valibot';
 import { apiBrowser, type PoemsSearchEnvelope, type PoetsSearchEnvelope } from './rpc';
 
@@ -49,19 +49,19 @@ export async function fetchRandomPoemSlug(
   baseUrl: string
 ): Promise<Result<PoemSlug, FetchRandomPoemSlugError>> {
   const url = `${baseUrl}${API_RANDOM_POEM_PATH}?option=slug`;
-  let response: Response;
-  try {
-    response = await fetch(url);
-  } catch (cause) {
-    return err({
+  const fetchResult = await ResultAsync.fromPromise(
+    fetch(url),
+    (cause): FetchRandomPoemSlugError => ({
       kind: 'network',
       url,
       cause: {
         message: cause instanceof Error ? cause.message : String(cause),
         ...(cause instanceof Error && cause.name ? { name: cause.name } : {}),
       },
-    });
-  }
+    })
+  );
+  if (fetchResult.isErr()) return err(fetchResult.error);
+  const response = fetchResult.value;
   if (!response.ok) {
     return err({ kind: 'http_error', url, status: response.status });
   }

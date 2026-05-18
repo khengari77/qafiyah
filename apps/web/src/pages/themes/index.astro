@@ -6,7 +6,11 @@ import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const themes = await fetchThemes();
+const themesResult = await fetchThemes();
+if (themesResult.isErr()) {
+  throw new Error(`fetchThemes failed: ${JSON.stringify(themesResult.error)}`);
+}
+const themes = themesResult.value;
 
 const title = `${SITE_NAME_AR} | تصفح حسب الأغراض`;
 const description = `أغراض الشعر العربي على ${SITE_NAME_AR}: المدح والرثاء والغزل والهجاء والحكمة والوصف وغيرها — ${toArabicDigits(themes.length)} غرضًا مع إحصاءات القصائد لكل غرض.`;

@@ -6,7 +6,11 @@ import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const rhymes = await fetchRhymes();
+const rhymesResult = await fetchRhymes();
+if (rhymesResult.isErr()) {
+  throw new Error(`fetchRhymes failed: ${JSON.stringify(rhymesResult.error)}`);
+}
+const rhymes = rhymesResult.value;
 
 const title = `${SITE_NAME_AR} | تصفح حسب القوافي`;
 const description = `قوافي الشعر العربي على ${SITE_NAME_AR}: من الهمزة إلى الياء — تصفح القصائد حسب حرف الروي مع إحصاءات لكل قافية (${toArabicDigits(rhymes.length)} حرفًا).`;

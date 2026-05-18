@@ -11,9 +11,12 @@ import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const rhymes = await fetchRhymes();
+  const rhymesResult = await fetchRhymes();
+  if (rhymesResult.isErr()) {
+    throw new Error(`fetchRhymes failed: ${JSON.stringify(rhymesResult.error)}`);
+  }
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const rhyme of rhymes) {
+  for (const rhyme of rhymesResult.value) {
     for (const page of generatePageNumbers(rhyme.poemsCount)) {
       params.push({ params: { slug: rhyme.slug, page: page.toString() } });
     }

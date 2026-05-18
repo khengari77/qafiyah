@@ -1,5 +1,5 @@
 import { API_RANDOM_POEM_PATH, MAX_TWEET_LENGTH, PROD_API_URL } from '@qafiyah/constants';
-import { err, ok, type Result } from 'neverthrow';
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { TwitterApi } from 'twitter-api-v2';
 import { env } from './env';
 import { withRetry } from './retry';
@@ -40,17 +40,17 @@ type PostTweetError =
 
 async function fetchPoem(): Promise<Result<string, FetchPoemError>> {
   const url = `${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=${POEM_RESPONSE_FORMAT}`;
-  let response: Response;
-  try {
-    response = await fetch(url);
-  } catch (cause) {
-    return err({
+  const fetchResult = await ResultAsync.fromPromise(
+    fetch(url),
+    (cause): FetchPoemError => ({
       kind: 'network',
       url,
       message: cause instanceof Error ? cause.message : String(cause),
       retryable: true,
-    });
-  }
+    })
+  );
+  if (fetchResult.isErr()) return err(fetchResult.error);
+  const response = fetchResult.value;
   if (response.status === 429) return err({ kind: 'rate_limited', url, retryable: false });
   if (!response.ok) {
     return err({ kind: 'http_error', url, status: response.status, retryable: true });
@@ -73,16 +73,16 @@ async function postTweet(
   client: TwitterApi,
   content: string
 ): Promise<Result<string, PostTweetError>> {
-  let response: Awaited<ReturnType<typeof client.v2.tweet>>;
-  try {
-    response = await client.v2.tweet(content);
-  } catch (cause) {
-    return err({
+  const tweetResult = await ResultAsync.fromPromise(
+    client.v2.tweet(content),
+    (cause): PostTweetError => ({
       kind: 'network',
       message: cause instanceof Error ? cause.message : String(cause),
       retryable: true,
-    });
-  }
+    })
+  );
+  if (tweetResult.isErr()) return err(tweetResult.error);
+  const response = tweetResult.value;
   if (!response?.data?.id) {
     return err({
       kind: 'invalid_response',

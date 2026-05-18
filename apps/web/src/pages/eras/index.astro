@@ -7,7 +7,11 @@ import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const eras = await fetchEras();
+const erasResult = await fetchEras();
+if (erasResult.isErr()) {
+  throw new Error(`fetchEras failed: ${JSON.stringify(erasResult.error)}`);
+}
+const eras = erasResult.value;
 
 const eraLabel = formatArabicCount({
   count: eras.length,

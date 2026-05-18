@@ -11,9 +11,12 @@ import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const themes = await fetchThemes();
+  const themesResult = await fetchThemes();
+  if (themesResult.isErr()) {
+    throw new Error(`fetchThemes failed: ${JSON.stringify(themesResult.error)}`);
+  }
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const theme of themes) {
+  for (const theme of themesResult.value) {
     for (const page of generatePageNumbers(theme.poemsCount)) {
       params.push({ params: { slug: theme.slug, page: page.toString() } });
     }

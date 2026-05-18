@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { err, ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
@@ -86,12 +87,14 @@ describe('eras procedures', () => {
 
   describe('listEraPoems', () => {
     it('returns poems with nested sub-resources and meta', async () => {
-      listEraPoemsMock.mockResolvedValue({
-        parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 100 },
-        poems: [samplePoemRow],
-        total: 1,
-        totalPages: 1,
-      });
+      listEraPoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 100 },
+          poems: [samplePoemRow],
+          total: 1,
+          totalPages: 1,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -111,7 +114,7 @@ describe('eras procedures', () => {
     });
 
     it('returns 404 when era slug not found', async () => {
-      listEraPoemsMock.mockResolvedValue(null);
+      listEraPoemsMock.mockResolvedValue(err({ kind: 'not_found', slug: 'unknown-era' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -121,12 +124,14 @@ describe('eras procedures', () => {
     });
 
     it('defaults to page 1 when no page query is provided', async () => {
-      listEraPoemsMock.mockResolvedValue({
-        parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 200 },
-        poems: [samplePoemRow],
-        total: 200,
-        totalPages: 7,
-      });
+      listEraPoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 200 },
+          poems: [samplePoemRow],
+          total: 200,
+          totalPages: 7,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -138,12 +143,14 @@ describe('eras procedures', () => {
     });
 
     it('passes page from query string to the query', async () => {
-      listEraPoemsMock.mockResolvedValue({
-        parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 200 },
-        poems: [samplePoemRow],
-        total: 200,
-        totalPages: 7,
-      });
+      listEraPoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'عباسي', slug: 'abbasid', poemsCount: 200 },
+          poems: [samplePoemRow],
+          total: 200,
+          totalPages: 7,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

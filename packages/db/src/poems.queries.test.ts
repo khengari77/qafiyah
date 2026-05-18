@@ -240,16 +240,23 @@ describe('getRandomPoemExcerpt', () => {
     expect(result._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
   });
 
-  it('throws (valibot parse) when poem content field is missing from payload', async () => {
+  it('returns invalid_payload_shape when poem content field is missing from payload', async () => {
     const poemData = { poem_id: 1, poet_name: 'شاعر' };
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
     });
 
-    // Missing `content` violates randomPoemPayloadSchema → valibot throws,
-    // which is acceptable as an infrastructure invariant (the SQL function is supposed
-    // to always return content). The Result-returning branch covers domain failures.
-    await expect(getRandomPoemExcerpt(mockDb)).rejects.toThrow();
+    const result = await getRandomPoemExcerpt(mockDb);
+    expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
+  });
+
+  it('returns invalid_json when string payload is malformed', async () => {
+    const mockDb = castPartialAsDbClient({
+      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: '{not-json' }]),
+    });
+
+    const result = await getRandomPoemExcerpt(mockDb);
+    expect(result._unsafeUnwrapErr().kind).toBe('invalid_json');
   });
 
   it('returns excerpt_too_long when excerpt exceeds MAX_TWEET_LENGTH', async () => {
@@ -359,7 +366,7 @@ const fullPoemData = {
 };
 
 describe('getPoemBySlug', () => {
-  it('returns found result with enriched slugs for poem and related', async () => {
+  it('returns ok result with enriched slugs for poem and related', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
@@ -372,15 +379,13 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
-    expect(result.kind).toBe('found');
-    if (result.kind === 'found') {
-      expect(result.data.displayTitle).toBe('قصيدة المتنبي');
-      expect(result.data.metadata.poetName).toBe('المتنبي');
-      expect(result.data.metadata.meterSlug).toBe('altawil');
-      expect(result.data.metadata.themeSlug).toBe('fakhr');
-      expect(result.data.relatedPoems[0]?.poetSlug).toBe('other-poet');
-      expect(result.data.relatedPoems[0]?.meterSlug).toBe('albasit');
-    }
+    const data = result._unsafeUnwrap();
+    expect(data.displayTitle).toBe('قصيدة المتنبي');
+    expect(data.metadata.poetName).toBe('المتنبي');
+    expect(data.metadata.meterSlug).toBe('altawil');
+    expect(data.metadata.themeSlug).toBe('fakhr');
+    expect(data.relatedPoems[0]?.poetSlug).toBe('other-poet');
+    expect(data.relatedPoems[0]?.meterSlug).toBe('albasit');
   });
 
   it('strips double quotes from title', async () => {
@@ -394,9 +399,7 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
-    if (result.kind === 'found') {
-      expect(result.data.displayTitle).not.toContain('"');
-    }
+    expect(result._unsafeUnwrap().displayTitle).not.toContain('"');
   });
 
   it('returns not_found when execute returns empty array', async () => {
@@ -405,7 +408,7 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
-    expect(result.kind).toBe('not_found');
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
   it('returns not_found when get_poem_with_related is falsy', async () => {
@@ -414,10 +417,10 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
-    expect(result.kind).toBe('not_found');
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
-  it('returns error kind when data has error field with message', async () => {
+  it('returns sql_error when data has error field with message', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
@@ -427,9 +430,10 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.kind).toBe('error');
-    if (result.kind === 'error') {
-      expect(result.message).toBe('Poem not found');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('sql_error');
+    if (error.kind === 'sql_error') {
+      expect(error.message).toBe('Poem not found');
     }
   });
 
@@ -439,13 +443,14 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.kind).toBe('error');
-    if (result.kind === 'error') {
-      expect(result.message).toBe('not_found');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('sql_error');
+    if (error.kind === 'sql_error') {
+      expect(error.message).toBe('not_found');
     }
   });
 
-  it('returns error kind when poem is missing required fields', async () => {
+  it('returns incomplete_poem_data when poem is missing required fields', async () => {
     const incompleteData = {
       poem: {
         slug: 'slug',
@@ -465,13 +470,10 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.kind).toBe('error');
-    if (result.kind === 'error') {
-      expect(result.message).toBe('Incomplete poem data');
-    }
+    expect(result._unsafeUnwrapErr().kind).toBe('incomplete_poem_data');
   });
 
-  it('returns error when meter slug enrichment is missing', async () => {
+  it('returns incomplete_enrichment when meter slug enrichment is missing', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
@@ -482,6 +484,6 @@ describe('getPoemBySlug', () => {
     });
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result.kind).toBe('error');
+    expect(result._unsafeUnwrapErr().kind).toBe('incomplete_enrichment');
   });
 });

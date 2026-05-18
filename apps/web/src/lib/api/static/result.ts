@@ -1,5 +1,6 @@
 import { ORPCError } from '@orpc/client';
-import { err, ok, type Result } from 'neverthrow';
+import type { Result } from 'neverthrow';
+import { ResultAsync } from 'neverthrow';
 
 export type ApiFetchError =
   | {
@@ -18,31 +19,35 @@ export type ApiFetchError =
       };
     };
 
+function toApiFetchError(
+  endpoint: string,
+  args: Readonly<Record<string, unknown>> | undefined,
+  cause: unknown
+): ApiFetchError {
+  if (cause instanceof ORPCError) {
+    if (cause.code === 'NOT_FOUND') {
+      return { kind: 'not_found', endpoint, ...(args && { args }) };
+    }
+    return {
+      kind: 'transport',
+      endpoint,
+      ...(args && { args }),
+      cause: { message: cause.message, code: cause.code, status: cause.status },
+    };
+  }
+  const message = cause instanceof Error ? cause.message : String(cause);
+  return {
+    kind: 'transport',
+    endpoint,
+    ...(args && { args }),
+    cause: { message },
+  };
+}
+
 export async function callApi<T>(
   endpoint: string,
   args: Readonly<Record<string, unknown>> | undefined,
   fn: () => Promise<T>
 ): Promise<Result<T, ApiFetchError>> {
-  try {
-    return ok(await fn());
-  } catch (e) {
-    if (e instanceof ORPCError) {
-      if (e.code === 'NOT_FOUND') {
-        return err({ kind: 'not_found', endpoint, ...(args && { args }) });
-      }
-      return err({
-        kind: 'transport',
-        endpoint,
-        ...(args && { args }),
-        cause: { message: e.message, code: e.code, status: e.status },
-      });
-    }
-    const message = e instanceof Error ? e.message : String(e);
-    return err({
-      kind: 'transport',
-      endpoint,
-      ...(args && { args }),
-      cause: { message },
-    });
-  }
+  return await ResultAsync.fromPromise(fn(), (cause) => toApiFetchError(endpoint, args, cause));
 }

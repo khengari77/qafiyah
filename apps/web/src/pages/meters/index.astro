@@ -6,7 +6,11 @@ import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const meters = await fetchMeters();
+const metersResult = await fetchMeters();
+if (metersResult.isErr()) {
+  throw new Error(`fetchMeters failed: ${JSON.stringify(metersResult.error)}`);
+}
+const meters = metersResult.value;
 
 const title = `${SITE_NAME_AR} | تصفح حسب البحور`;
 const description = `بحور الشعر العربي على ${SITE_NAME_AR}: الطويل والكامل والوافر والبسيط والمتقارب والمتدارك والرمل والرجز وغيرها — ${toArabicDigits(meters.length)} بحرًا مع عدد القصائد المتوفرة لكل بحر.`;

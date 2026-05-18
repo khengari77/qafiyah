@@ -38,24 +38,29 @@ export const listPoemSlugs = publicProcedure.poems.listPoemSlugs.handler(async (
 export const getPoemBySlug = publicProcedure.poems.getPoemBySlug.handler(
   async ({ context, input, errors }) => {
     const result = await poemsQueries.getPoemBySlug(context.db, input.slug);
-    return match(result)
-      .with({ kind: 'not_found' }, () => {
-        throw errors.NOT_FOUND();
-      })
-      .with({ kind: 'error' }, ({ message }) => {
-        throw errors.POEM_PARSE_ERROR({ message });
-      })
-      .with({ kind: 'found' }, ({ data }) => {
-        const poem = toPoemDetail(input.slug, data);
-        context.log?.({
-          poem_id: input.slug,
-          poet_id: poem.poet.slug,
-          era: poem.era.slug,
-          meter: poem.meter.slug,
-          theme: poem.theme.slug,
-        });
-        return { data: poem };
-      })
-      .exhaustive();
+    if (result.isErr()) {
+      throw match(result.error)
+        .with({ kind: 'not_found' }, () => errors.NOT_FOUND())
+        .with({ kind: 'sql_error' }, ({ message }) => errors.POEM_PARSE_ERROR({ message }))
+        .with({ kind: 'invalid_payload_shape' }, ({ issues }) =>
+          errors.POEM_PARSE_ERROR({ message: issues.join('; ') })
+        )
+        .with({ kind: 'incomplete_poem_data' }, () =>
+          errors.POEM_PARSE_ERROR({ message: 'Incomplete poem data' })
+        )
+        .with({ kind: 'incomplete_enrichment' }, () =>
+          errors.POEM_PARSE_ERROR({ message: 'Incomplete poem data' })
+        )
+        .exhaustive();
+    }
+    const poem = toPoemDetail(input.slug, result.value);
+    context.log?.({
+      poem_id: input.slug,
+      poet_id: poem.poet.slug,
+      era: poem.era.slug,
+      meter: poem.meter.slug,
+      theme: poem.theme.slug,
+    });
+    return { data: poem };
   }
 );

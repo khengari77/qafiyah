@@ -44,17 +44,18 @@ describe('listMeterPoems', () => {
     });
 
     const result = await listMeterPoems(mockDb, asMeterSlug('altawil'), 1);
-    expect(result?.parent).toEqual({ name: 'الطويل', slug: 'altawil', poemsCount: 100 });
-    expect(result?.poems[0]?.poetSlug).toBe('poet-1');
+    const value = result._unsafeUnwrap();
+    expect(value.parent).toEqual({ name: 'الطويل', slug: 'altawil', poemsCount: 100 });
+    expect(value.poems[0]?.poetSlug).toBe('poet-1');
   });
 
-  it('returns null when meter is not found', async () => {
+  it('returns not_found err when meter is not found', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
     const result = await listMeterPoems(mockDb, asMeterSlug('nonexistent'), 1);
-    expect(result).toBeNull();
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
   it('computes totalPages correctly', async () => {
@@ -64,6 +65,6 @@ describe('listMeterPoems', () => {
     });
 
     const result = await listMeterPoems(mockDb, asMeterSlug('altawil'), 2);
-    expect(result?.totalPages).toBe(2);
+    expect(result._unsafeUnwrap().totalPages).toBe(2);
   });
 });

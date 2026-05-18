@@ -23,8 +23,9 @@ export const listPoets = publicProcedure.poets.list.handler(async ({ context, in
 
 export const listPoetPoems = publicProcedure.poets.listPoems.handler(
   async ({ context, input, errors }) => {
-    const result = await poetsQueries.listPoetPoems(context.db, input.slug, input.page);
-    if (!result) throw errors.NOT_FOUND();
+    const queryResult = await poetsQueries.listPoetPoems(context.db, input.slug, input.page);
+    if (queryResult.isErr()) throw errors.NOT_FOUND();
+    const result = queryResult.value;
     context.log?.({
       poet_id: input.slug,
       result_count: result.total,

@@ -17,8 +17,9 @@ export const listMeters = publicProcedure.meters.list.handler(async ({ context }
 
 export const listMeterPoems = publicProcedure.meters.listPoems.handler(
   async ({ context, input, errors }) => {
-    const result = await metersQueries.listMeterPoems(context.db, input.slug, input.page);
-    if (!result) throw errors.NOT_FOUND();
+    const queryResult = await metersQueries.listMeterPoems(context.db, input.slug, input.page);
+    if (queryResult.isErr()) throw errors.NOT_FOUND();
+    const result = queryResult.value;
     context.log?.({
       meter: input.slug,
       result_count: result.total,

@@ -17,8 +17,9 @@ export const listEras = publicProcedure.eras.list.handler(async ({ context }) =>
 
 export const listEraPoems = publicProcedure.eras.listPoems.handler(
   async ({ context, input, errors }) => {
-    const result = await erasQueries.listEraPoems(context.db, input.slug, input.page);
-    if (!result) throw errors.NOT_FOUND();
+    const queryResult = await erasQueries.listEraPoems(context.db, input.slug, input.page);
+    if (queryResult.isErr()) throw errors.NOT_FOUND();
+    const result = queryResult.value;
     context.log?.({
       era: input.slug,
       result_count: result.total,

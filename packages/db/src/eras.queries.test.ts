@@ -44,23 +44,25 @@ describe('listEraPoems', () => {
     });
 
     const result = await listEraPoems(mockDb, asEraSlug('abbasid'), 1);
-    expect(result).not.toBeNull();
-    expect(result?.parent).toEqual({ name: 'العصر العباسي', slug: 'abbasid', poemsCount: 50 });
-    expect(result?.total).toBe(50);
-    expect(result?.poems[0]?.poetSlug).toBe('al-mutanabbi');
-    expect(result?.poems[0]?.meterSlug).toBe('taweel');
+    expect(result.isOk()).toBe(true);
+    const value = result._unsafeUnwrap();
+    expect(value.parent).toEqual({ name: 'العصر العباسي', slug: 'abbasid', poemsCount: 50 });
+    expect(value.total).toBe(50);
+    expect(value.poems[0]?.poetSlug).toBe('al-mutanabbi');
+    expect(value.poems[0]?.meterSlug).toBe('taweel');
   });
 
-  it('returns null when era stats lookup is empty', async () => {
+  it('returns not_found err when era stats lookup is empty', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
     const result = await listEraPoems(mockDb, asEraSlug('nonexistent'), 1);
-    expect(result).toBeNull();
+    expect(result.isErr()).toBe(true);
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
-  it('returns null when parent row is falsy', async () => {
+  it('throws when parent row is falsy (valibot rejects null)', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([null]),
     });
@@ -75,7 +77,7 @@ describe('listEraPoems', () => {
     });
 
     const result = await listEraPoems(mockDb, asEraSlug('abbasid'), 1);
-    expect(result?.totalPages).toBe(3);
+    expect(result._unsafeUnwrap().totalPages).toBe(3);
   });
 
   it('coerces string poems_count to number', async () => {
@@ -85,6 +87,6 @@ describe('listEraPoems', () => {
     });
 
     const result = await listEraPoems(mockDb, asEraSlug('x'), 1);
-    expect(result?.total).toBe(42);
+    expect(result._unsafeUnwrap().total).toBe(42);
   });
 });

@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { err, ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { poemDetailResponseSchema, slugListResponseSchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
@@ -105,7 +106,7 @@ describe('poems procedures', () => {
 
   describe('getPoemBySlug', () => {
     it('returns poem resource wrapped in { data } envelope', async () => {
-      getPoemBySlugMock.mockResolvedValue({ kind: 'found', data: samplePoemData });
+      getPoemBySlugMock.mockResolvedValue(ok(samplePoemData));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -122,7 +123,7 @@ describe('poems procedures', () => {
     });
 
     it('returns 404 when poem not found', async () => {
-      getPoemBySlugMock.mockResolvedValue({ kind: 'not_found' });
+      getPoemBySlugMock.mockResolvedValue(err({ kind: 'not_found', slug: 'nonexistent-poem' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -132,7 +133,19 @@ describe('poems procedures', () => {
     });
 
     it('returns 500 when poem parse error occurs', async () => {
-      getPoemBySlugMock.mockResolvedValue({ kind: 'error', message: 'Invalid content' });
+      getPoemBySlugMock.mockResolvedValue(
+        err({ kind: 'sql_error', slug: 'bad-poem', message: 'Invalid content' })
+      );
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems/bad-poem');
+
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 500 when incomplete_poem_data', async () => {
+      getPoemBySlugMock.mockResolvedValue(err({ kind: 'incomplete_poem_data', slug: 'bad-poem' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

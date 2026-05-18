@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { err, ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
@@ -119,12 +120,14 @@ describe('poets procedures', () => {
 
   describe('listPoetPoems', () => {
     it('returns poet poems with nested sub-resources and meta', async () => {
-      listPoetPoemsMock.mockResolvedValue({
-        parent: { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 },
-        poems: [samplePoemRow],
-        total: 1,
-        totalPages: 1,
-      });
+      listPoetPoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 },
+          poems: [samplePoemRow],
+          total: 1,
+          totalPages: 1,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -137,7 +140,7 @@ describe('poets procedures', () => {
     });
 
     it('returns 404 when poet slug not found', async () => {
-      listPoetPoemsMock.mockResolvedValue(null);
+      listPoetPoemsMock.mockResolvedValue(err({ kind: 'not_found', slug: 'unknown-poet' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -147,12 +150,14 @@ describe('poets procedures', () => {
     });
 
     it('reflects the requested slug and page in the response', async () => {
-      listPoetPoemsMock.mockResolvedValue({
-        parent: { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 },
-        poems: [],
-        total: 300,
-        totalPages: 10,
-      });
+      listPoetPoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 },
+          poems: [],
+          total: 300,
+          totalPages: 10,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

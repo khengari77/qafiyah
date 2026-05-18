@@ -44,16 +44,17 @@ describe('listThemePoems', () => {
     });
 
     const result = await listThemePoems(mockDb, asThemeSlug('ghazal'), 1);
-    expect(result?.parent.name).toBe('غزل');
-    expect(result?.poems[0]?.meterSlug).toBe('altawil');
+    const value = result._unsafeUnwrap();
+    expect(value.parent.name).toBe('غزل');
+    expect(value.poems[0]?.meterSlug).toBe('altawil');
   });
 
-  it('returns null when theme is not found', async () => {
+  it('returns not_found err when theme is not found', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
     });
 
     const result = await listThemePoems(mockDb, asThemeSlug('nonexistent'), 1);
-    expect(result).toBeNull();
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 });

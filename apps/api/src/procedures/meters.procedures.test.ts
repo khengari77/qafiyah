@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { err, ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
@@ -84,12 +85,14 @@ describe('meters procedures', () => {
 
   describe('listMeterPoems', () => {
     it('returns meter poems with nested sub-resources and meta', async () => {
-      listMeterPoemsMock.mockResolvedValue({
-        parent: { name: 'الطويل', slug: 'tawil', poemsCount: 500 },
-        poems: [samplePoemRow],
-        total: 1,
-        totalPages: 1,
-      });
+      listMeterPoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'الطويل', slug: 'tawil', poemsCount: 500 },
+          poems: [samplePoemRow],
+          total: 1,
+          totalPages: 1,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -102,7 +105,7 @@ describe('meters procedures', () => {
     });
 
     it('returns 404 when meter slug not found', async () => {
-      listMeterPoemsMock.mockResolvedValue(null);
+      listMeterPoemsMock.mockResolvedValue(err({ kind: 'not_found', slug: 'unknown-meter' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -112,12 +115,14 @@ describe('meters procedures', () => {
     });
 
     it('reflects the requested slug and page in the response', async () => {
-      listMeterPoemsMock.mockResolvedValue({
-        parent: { name: 'الطويل', slug: 'tawil', poemsCount: 500 },
-        poems: [],
-        total: 500,
-        totalPages: 17,
-      });
+      listMeterPoemsMock.mockResolvedValue(
+        ok({
+          parent: { name: 'الطويل', slug: 'tawil', poemsCount: 500 },
+          poems: [],
+          total: 500,
+          totalPages: 17,
+        })
+      );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

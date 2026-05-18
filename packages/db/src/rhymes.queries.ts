@@ -1,6 +1,7 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { RhymeSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
+import { err, ok, type Result } from 'neverthrow';
 import { asRhymeSlug } from './brand';
 import type { DbClient } from './client';
 import { ARABIC_LETTERS_MAP } from './constants';
@@ -28,6 +29,8 @@ export type ListRhymePoemsResult = {
   readonly total: number;
   readonly totalPages: number;
 };
+
+export type ListRhymePoemsError = { readonly kind: 'not_found'; readonly slug: RhymeSlug };
 
 export async function listRhymes(db: DbClient): Promise<readonly RhymeLetterStatsRow[]> {
   const results = await db.select().from(rhymeStats);
@@ -77,7 +80,7 @@ export async function listRhymePoems(
   db: DbClient,
   slug: RhymeSlug,
   page: number
-): Promise<ListRhymePoemsResult | null> {
+): Promise<Result<ListRhymePoemsResult, ListRhymePoemsError>> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
@@ -87,7 +90,7 @@ export async function listRhymePoems(
     parentStatsRowSchema
   );
 
-  if (parentRows.length === 0 || !parentRows[0]) return null;
+  if (parentRows.length === 0 || !parentRows[0]) return err({ kind: 'not_found', slug });
 
   const total = Number(parentRows[0].poems_count);
 
@@ -121,10 +124,10 @@ export async function listRhymePoems(
     meterSlug: row.meter_slug,
   }));
 
-  return {
+  return ok({
     parent: { name: parentRows[0].name, slug, poemsCount: total },
     poems,
     total,
     totalPages: Math.ceil(total / limit),
-  };
+  });
 }
