@@ -18,7 +18,8 @@
     "check:naming": "bun scripts/check-naming.ts",
     "depcruise": "depcruise --config .dependency-cruiser.cjs apps packages",
     "ci": "bun scripts/ci.ts",
-    "optimize:images": "bun scripts/optimize-images.ts"
+    "optimize:images": "bun scripts/optimize-images.ts",
+    "deps:doctor": "bun scripts/deps-doctor.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.3.12",
