@@ -4,6 +4,7 @@ import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/c
 import Layout from '@/layouts/layout.astro';
 import { fetchEras } from '@/lib/api/static/collections';
 import { toArabicDigits } from '@/lib/arabic';
+import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
 const eras = await fetchEras();
@@ -14,7 +15,9 @@ const eraLabel = formatArabicCount({
 });
 
 const title = `${SITE_NAME_AR} | تصفح حسب العصور`;
-const jsonLd = {
+const description = `تصفح ${toArabicDigits(eras.length)} عصرًا شعريًا على ${SITE_NAME_AR}: من الجاهلي والمخضرم والإسلامي إلى الأموي والعباسي والأندلسي والأيوبي والمملوكي والعثماني والمتأخر، مع إحصاءات الشعراء والقصائد لكل عصر.`;
+
+const collectionJsonLd = {
   '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'العصور الشعرية',
@@ -33,20 +36,24 @@ const jsonLd = {
     },
   })),
 };
+
+const crumbsJsonLd = breadcrumbListJsonLd([
+  { name: SITE_NAME_AR, path: '/' },
+  { name: 'العصور', path: '/eras' },
+]);
 ---
 
 <Layout
   title={title}
+  description={description}
   canonical="/eras"
-  ogTitle={title}
-  ogUrl={`${SITE_URL}/eras`}
-  jsonLd={jsonLd}
+  jsonLd={[collectionJsonLd, crumbsJsonLd]}
 >
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
     <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
-      <h3 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
+      <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
         {`جميع العصور (${eraLabel})`}
-      </h3>
+      </h1>
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {eras.length > 0 ? eras.map(({ name, poemsCount, poetsCount, slug }) => (
           <a

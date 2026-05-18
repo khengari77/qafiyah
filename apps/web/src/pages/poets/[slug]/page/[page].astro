@@ -2,10 +2,12 @@
 import { poetSlugSchema } from '@qafiyah/contracts';
 import { formatArabicCount } from 'arabic-count-format';
 import * as v from 'valibot';
+import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { POEMS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { fetchPoetPoemPage, fetchPoetsWithPoemCount } from '@/lib/api/static/poets';
 import { toArabicDigits } from '@/lib/arabic';
+import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
@@ -47,14 +49,14 @@ const poemsLabel = formatArabicCount({
   nounForms: POEMS_NOUN_FORMS,
 });
 
-const title = `${SITE_NAME_AR}: ديوان «${poet.name}» - صفحة (${toArabicDigits(page as string)})`;
-const description = `قصائد الشاعر ${poet.name}، عدد القصائد: ${toArabicDigits(poet.poemsCount)}`;
+const title = `${SITE_NAME_AR} | ديوان «${poet.name}» | صفحة (${toArabicDigits(page as string)})`;
+const description = `ديوان الشاعر ${poet.name} على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}، عدد القصائد: ${toArabicDigits(poet.poemsCount)}.`;
 
-const jsonLd = {
+const personJsonLd = {
   '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'Person',
   name: poet.name,
-  url: `${SITE_URL}/poets/${slug}/page/${pageNumber}`,
+  url: `${SITE_URL}/poets/${slug}/page/1`,
   description: `ديوان ${poet.name} (${poemsLabel})`,
   mainEntityOfPage: {
     '@type': 'CollectionPage',
@@ -68,24 +70,33 @@ const jsonLd = {
     url: `${SITE_URL}/poems/${poem.slug}`,
   })),
 };
+
+const crumbItems = [
+  { name: SITE_NAME_AR, path: '/' },
+  { name: 'الشعراء', path: '/poets/page/1' },
+  { name: poet.name, path: `/poets/${slug}/page/1` },
+];
+const crumbsJsonLd = breadcrumbListJsonLd(crumbItems);
 ---
 
 <Layout
   title={title}
   description={description}
   canonical={`/poets/${slug}/page/${pageNumber}`}
+  prevUrl={hasPrevPage ? prevPageUrl : undefined}
+  nextUrl={hasNextPage ? nextPageUrl : undefined}
   ogTitle={`${SITE_NAME_AR} | ديوان ${poet.name}`}
   ogDescription={description}
-  ogUrl={`${SITE_URL}/poets/${slug}/page/${pageNumber}`}
   twitterTitle={`${SITE_NAME_AR} | ديوان ${poet.name}`}
   twitterDescription={description}
-  jsonLd={jsonLd}
+  jsonLd={[personJsonLd, crumbsJsonLd]}
 >
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
     <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
-      <h3 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
+      <Breadcrumbs items={crumbItems} />
+      <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
         {`${poet.name} (${toArabicDigits(poet.poemsCount)} قصيدة)`}
-      </h3>
+      </h1>
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {poems.length > 0 ? poems.map((poem) => (
           <a
@@ -104,15 +115,15 @@ const jsonLd = {
         )}
       </div>
       {totalPages > 1 && (
-        <nav class="flex flex-row-reverse w-full justify-between items-center gap-4 text-base md:text-lg mt-8">
+        <nav class="flex flex-row-reverse w-full justify-between items-center gap-4 text-base md:text-lg mt-8" aria-label="ترقيم الصفحات">
           {hasNextPage ? (
-            <a href={nextPageUrl} class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">التالي</a>
+            <a href={nextPageUrl} rel="next" class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">التالي</a>
           ) : (
             <span class="border py-0.5 px-3 rounded-md border-zinc-200 cursor-not-allowed text-zinc-500" aria-disabled="true">التالي</span>
           )}
           <p class="text-zinc-500 text-base">{headerTip}</p>
           {hasPrevPage ? (
-            <a href={prevPageUrl} class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">السابق</a>
+            <a href={prevPageUrl} rel="prev" class="border py-0.5 px-3 rounded-md border-zinc-200 text-zinc-800">السابق</a>
           ) : (
             <span class="border py-0.5 px-3 rounded-md border-zinc-200 cursor-not-allowed text-zinc-500" aria-disabled="true">السابق</span>
           )}

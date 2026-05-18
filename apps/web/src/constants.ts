@@ -52,7 +52,6 @@ export const SITE_URL = isDev ? DEV_WEB_URL : `https://${PROD_DOMAIN}`;
 export const SITE_NAME_AR = 'قافية';
 
 export const OPEN_GRAPH_URL_PATH = '/open-graph-white.png';
-export const TWITTER_SUMMARY_CARD_IMAGE_PATH = '/twitter-summary-card-white.png';
 export const SITE_LOGO_PATH = '/logo.webp';
 
 export const SITE_TITLE = `${SITE_NAME_AR}: مرجع الشعر العربي`;

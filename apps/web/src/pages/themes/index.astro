@@ -3,12 +3,15 @@ import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { fetchThemes } from '@/lib/api/static/collections';
 import { toArabicDigits } from '@/lib/arabic';
+import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
 const themes = await fetchThemes();
 
 const title = `${SITE_NAME_AR} | تصفح حسب الأغراض`;
-const jsonLd = {
+const description = `أغراض الشعر العربي على ${SITE_NAME_AR}: المدح والرثاء والغزل والهجاء والحكمة والوصف وغيرها — ${toArabicDigits(themes.length)} غرضًا مع إحصاءات القصائد لكل غرض.`;
+
+const collectionJsonLd = {
   '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'أغراض الشعر',
@@ -23,23 +26,28 @@ const jsonLd = {
       '@type': 'Collection',
       name: theme.name,
       url: `${SITE_URL}/themes/${theme.slug}/page/1`,
+      description: `قصائد من غرض ${theme.name} - ${toArabicDigits(theme.poemsCount)} قصيدة`,
     },
   })),
 };
+
+const crumbsJsonLd = breadcrumbListJsonLd([
+  { name: SITE_NAME_AR, path: '/' },
+  { name: 'الأغراض', path: '/themes' },
+]);
 ---
 
 <Layout
   title={title}
+  description={description}
   canonical="/themes"
-  ogTitle={title}
-  ogUrl={`${SITE_URL}/themes`}
-  jsonLd={jsonLd}
+  jsonLd={[collectionJsonLd, crumbsJsonLd]}
 >
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
     <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
-      <h3 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
+      <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
         {`جميع الأغراض (${toArabicDigits(themes.length)} غرض)`}
-      </h3>
+      </h1>
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {themes.length > 0 ? themes.map(({ name, poemsCount, slug }) => (
           <a

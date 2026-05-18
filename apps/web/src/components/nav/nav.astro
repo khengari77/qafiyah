@@ -1,0 +1,153 @@
+---
+import { NAV_LINKS, RESPONSIVE_ICON_SIZE } from '@/constants';
+import { cn } from '@/lib/utils';
+
+const path = Astro.url.pathname;
+
+const isActiveLink = (href: string): boolean => {
+  if (href === '/') return path === '/';
+  const firstSegment = href.split('/')[1];
+  if (!firstSegment) return false;
+  return path === `/${firstSegment}` || path.startsWith(`/${firstSegment}/`);
+};
+---
+
+<nav class="z-10 w-full" aria-label="القائمة الرئيسية">
+  <div class="w-full">
+    <div class="flex items-center justify-between gap-8">
+      <a href="/" class="flex items-center" aria-label="قافية — الرئيسة">
+        <img
+          src="/logo-48x48.svg"
+          height={48}
+          width={48}
+          alt=""
+          aria-hidden="true"
+          class={cn('size-10', 'md:size-12', 'xl:size-14', '2xl:size-16', '4xl:size-20')}
+        />
+      </a>
+      <button
+        id="qaf-menu-open"
+        type="button"
+        class="md:hidden"
+        aria-label="فتح القائمة"
+        aria-controls="qaf-mobile-menu"
+        aria-expanded="false"
+      >
+        <svg
+          class={cn(RESPONSIVE_ICON_SIZE, 'opacity-70')}
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <line x1="4" x2="20" y1="12" y2="12"></line>
+          <line x1="4" x2="20" y1="6" y2="6"></line>
+          <line x1="4" x2="20" y1="18" y2="18"></line>
+        </svg>
+      </button>
+      <ul class="hidden md:flex md:flex-row md:gap-4 text-base lg:text-lg 2xl:text-xl">
+        {NAV_LINKS.map((link) => (
+          <li>
+            <a
+              href={link.href}
+              target={link.external ? '_blank' : undefined}
+              rel={link.external ? 'noopener noreferrer' : undefined}
+              class:list={[
+                'underline-offset-2 duration-200 hover:text-zinc-600 hover:underline',
+                isActiveLink(link.href) && 'text-zinc-900 underline',
+              ]}
+            >
+              {link.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div
+  id="qaf-mobile-menu"
+  inert
+  aria-hidden="true"
+  class="fixed inset-0 z-20 transform overflow-auto bg-zinc-50 px-4 pt-20 transition-transform duration-300 ease-in-out pointer-events-none translate-x-full"
+>
+  <nav aria-label="القائمة الرئيسية (موبايل)">
+    <ul class="flex flex-col items-end gap-4 text-sm xxs:text-xl">
+      {NAV_LINKS.map((link) => (
+        <li class="w-full border-zinc-300/30 border-b pb-2 text-right">
+          <a
+            tabindex="-1"
+            data-mobile-link
+            href={link.href}
+            target={link.external ? '_blank' : undefined}
+            rel={link.external ? 'noopener noreferrer' : undefined}
+            class:list={[
+              'block py-2 hover:text-zinc-600',
+              isActiveLink(link.href) && 'font-bold text-zinc-900 underline',
+            ]}
+          >
+            {link.name}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+  <button
+    id="qaf-menu-close"
+    type="button"
+    tabindex="-1"
+    class="absolute top-4 left-4 p-2 text-zinc-500 hover:text-zinc-700"
+    aria-label="إغلاق القائمة"
+  >
+    <svg
+      class={RESPONSIVE_ICON_SIZE}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 6 6 18"></path>
+      <path d="m6 6 12 12"></path>
+    </svg>
+  </button>
+</div>
+
+<script>
+  const openBtn = document.getElementById('qaf-menu-open');
+  const closeBtn = document.getElementById('qaf-menu-close');
+  const menu = document.getElementById('qaf-mobile-menu');
+  if (openBtn && closeBtn && menu) {
+    const links = menu.querySelectorAll<HTMLAnchorElement>('a[data-mobile-link]');
+
+    const setOpen = (isOpen: boolean) => {
+      menu.classList.toggle('translate-x-full', !isOpen);
+      menu.classList.toggle('pointer-events-none', !isOpen);
+      menu.classList.toggle('translate-x-0', isOpen);
+      menu.setAttribute('aria-hidden', String(!isOpen));
+      if (isOpen) menu.removeAttribute('inert');
+      else menu.setAttribute('inert', '');
+      openBtn.setAttribute('aria-expanded', String(isOpen));
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+      for (const l of links) l.tabIndex = isOpen ? 0 : -1;
+      closeBtn.tabIndex = isOpen ? 0 : -1;
+    };
+
+    openBtn.addEventListener('click', () => setOpen(true));
+    closeBtn.addEventListener('click', () => setOpen(false));
+    for (const l of links) l.addEventListener('click', () => setOpen(false));
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && menu.getAttribute('aria-hidden') === 'false') {
+        setOpen(false);
+      }
+    });
+  }
+</script>

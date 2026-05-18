@@ -2,6 +2,7 @@
 import { GITHUB_REPO_URL } from '@qafiyah/constants';
 import { SearchWithProviders } from '@/components/search/search-with-providers';
 import {
+  API_URL,
   POEM_LANGUAGE,
   SCHEMA_ORG_CONTEXT,
   SITE_DESCRIPTION,
@@ -45,6 +46,7 @@ const jsonLd = {
   description={SITE_DESCRIPTION}
   keywords={SITE_KEYWORDS}
   canonical="/"
+  preconnect={[API_URL]}
   jsonLd={jsonLd}
 >
   <p

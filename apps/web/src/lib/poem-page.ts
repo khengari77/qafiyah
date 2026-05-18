@@ -3,6 +3,8 @@ import {
   POEM_DEFAULT_TITLE,
   POEM_KEYWORDS_JOIN_SEPARATOR,
   POEM_LANGUAGE,
+  SCHEMA_ORG_CONTEXT,
+  SITE_LOGO_PATH,
   SITE_NAME_AR,
   SITE_URL,
   TWITTER_DESCRIPTION_TEMPLATE_AR,
@@ -10,6 +12,7 @@ import {
 } from '@/constants';
 import type { Poem } from '@/lib/api/rpc';
 import { fetchPoem } from '@/lib/api/static/poems';
+import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { flattenVerses } from '@/lib/flatten-verses';
 
 function safeMetaText(value: string): string {
@@ -26,44 +29,59 @@ type PoemLayoutProps = {
   readonly canonical: string;
   readonly ogTitle: string;
   readonly ogDescription: string;
-  readonly ogUrl: string;
   readonly twitterTitle: string;
   readonly twitterDescription: string;
-  readonly jsonLd: Readonly<Record<string, unknown>>;
+  readonly jsonLd: readonly Readonly<Record<string, unknown>>[];
 };
 
 function buildJsonLd(
   poem: Poem,
+  slug: PoemSlug,
   pageUrl: string,
   sanitizedKeywords: string
-): Readonly<Record<string, unknown>> {
-  return {
-    '@context': 'https://schema.org',
+): readonly Readonly<Record<string, unknown>>[] {
+  const poetUrl = `${SITE_URL}/poets/${poem.poet.slug}/page/1`;
+  const eraUrl = `${SITE_URL}/eras/${poem.era.slug}/page/1`;
+  const article = {
+    '@context': SCHEMA_ORG_CONTEXT,
     '@type': 'CreativeWork',
     name: safeMetaText(poem.title),
-    headline: safeMetaText(`${poem.title} | ${poem.poet.name}`),
-    author: { '@type': 'Person', name: poem.poet.name, url: poem.poet.slug },
+    headline: safeMetaText(`${poem.title} — ${poem.poet.name}`),
+    author: { '@type': 'Person', name: poem.poet.name, url: poetUrl },
     inLanguage: POEM_LANGUAGE,
     url: pageUrl,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
     isPartOf: [
-      { '@type': 'Collection', name: poem.poet.name, url: poem.poet.slug },
-      { '@type': 'Collection', name: poem.era.name, url: poem.era.slug },
+      { '@type': 'Collection', name: poem.poet.name, url: poetUrl },
+      { '@type': 'Collection', name: poem.era.name, url: eraUrl },
     ],
     description: safeMetaText(poem.verses.flat().join(POEM_KEYWORDS_JOIN_SEPARATOR)),
     keywords: sanitizedKeywords,
     publisher: {
       '@type': 'Organization',
       name: SITE_NAME_AR,
-      logo: { '@type': 'ImageObject', url: `${SITE_URL}/logo.webp` },
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}${SITE_LOGO_PATH}`,
+        width: '112',
+        height: '112',
+      },
     },
   };
+  const crumbs = breadcrumbListJsonLd([
+    { name: SITE_NAME_AR, path: '/' },
+    { name: 'الشعراء', path: '/poets/page/1' },
+    { name: poem.poet.name, path: `/poets/${poem.poet.slug}/page/1` },
+    { name: poem.title || POEM_DEFAULT_TITLE, path: `/poems/${slug}` },
+  ]);
+  return [article, crumbs];
 }
 
 function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
   const clearTitle = poem.title || POEM_DEFAULT_TITLE;
   const poetName = poem.poet.name || UNKNOWN_POET_NAME;
   const description = safeMetaText(flattenVerses(poem.verses));
-  const pageTitle = `${safeMetaText(clearTitle)} - ${safeMetaText(poetName)} - ${SITE_NAME_AR}`;
+  const pageTitle = `${safeMetaText(clearTitle)} — ${safeMetaText(poetName)} | ${SITE_NAME_AR}`;
   const pageUrl = `${SITE_URL}/poems/${slug}`;
   const twitterDescription = safeMetaText(
     TWITTER_DESCRIPTION_TEMPLATE_AR.replace('{poet}', poetName)
@@ -76,10 +94,9 @@ function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
     canonical: `/poems/${slug}`,
     ogTitle: pageTitle,
     ogDescription: description,
-    ogUrl: pageUrl,
     twitterTitle: pageTitle,
     twitterDescription,
-    jsonLd: buildJsonLd(poem, pageUrl, sanitizedKeywords),
+    jsonLd: buildJsonLd(poem, slug, pageUrl, sanitizedKeywords),
   };
 }
 

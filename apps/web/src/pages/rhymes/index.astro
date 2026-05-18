@@ -3,12 +3,15 @@ import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { fetchRhymes } from '@/lib/api/static/collections';
 import { toArabicDigits } from '@/lib/arabic';
+import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
 const rhymes = await fetchRhymes();
 
 const title = `${SITE_NAME_AR} | تصفح حسب القوافي`;
-const jsonLd = {
+const description = `قوافي الشعر العربي على ${SITE_NAME_AR}: من الهمزة إلى الياء — تصفح القصائد حسب حرف الروي مع إحصاءات لكل قافية (${toArabicDigits(rhymes.length)} حرفًا).`;
+
+const collectionJsonLd = {
   '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'القوافي الشعرية',
@@ -27,20 +30,24 @@ const jsonLd = {
     },
   })),
 };
+
+const crumbsJsonLd = breadcrumbListJsonLd([
+  { name: SITE_NAME_AR, path: '/' },
+  { name: 'القوافي', path: '/rhymes' },
+]);
 ---
 
 <Layout
   title={title}
+  description={description}
   canonical="/rhymes"
-  ogTitle={title}
-  ogUrl={`${SITE_URL}/rhymes`}
-  jsonLd={jsonLd}
+  jsonLd={[collectionJsonLd, crumbsJsonLd]}
 >
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
     <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
-      <h3 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
+      <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
         {`جميع القوافي (${toArabicDigits(rhymes.length)} حرف)`}
-      </h3>
+      </h1>
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {rhymes.length > 0 ? rhymes.map(({ name, poemsCount, poetsCount, slug }) => (
           <a

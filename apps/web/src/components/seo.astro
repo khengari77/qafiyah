@@ -1,0 +1,150 @@
+---
+import { PROD_API_URL } from '@qafiyah/constants';
+import {
+  OPEN_GRAPH_URL_PATH,
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME_AR,
+  SITE_THEME_COLOR_HEX,
+  SITE_TITLE,
+  SITE_URL,
+  TWITTER_HANDLE,
+  TWITTER_ID,
+} from '@/constants';
+
+type OgType = 'website' | 'article' | 'profile' | 'book';
+type TwitterCard = 'summary' | 'summary_large_image';
+
+export interface Props {
+  title?: string | undefined;
+  description?: string | undefined;
+  keywords?: string | readonly string[] | undefined;
+  /** Path beginning with '/' or absolute URL. */
+  canonical?: string | undefined;
+  ogType?: OgType | undefined;
+  ogTitle?: string | undefined;
+  ogDescription?: string | undefined;
+  /** Path beginning with '/' or absolute URL. */
+  ogImage?: string | undefined;
+  ogImageAlt?: string | undefined;
+  twitterCard?: TwitterCard | undefined;
+  twitterTitle?: string | undefined;
+  twitterDescription?: string | undefined;
+  twitterImage?: string | undefined;
+  twitterImageAlt?: string | undefined;
+  robotsIndex?: boolean | undefined;
+  /** rel="prev" pagination hint (path or absolute URL). */
+  prevUrl?: string | undefined;
+  /** rel="next" pagination hint (path or absolute URL). */
+  nextUrl?: string | undefined;
+  /** Single object or array of JSON-LD blocks. */
+  jsonLd?:
+    | Readonly<Record<string, unknown>>
+    | readonly Readonly<Record<string, unknown>>[]
+    | undefined;
+  /** Extra origins to preconnect to in addition to the API origin. */
+  preconnect?: readonly string[] | undefined;
+}
+
+const {
+  title = SITE_TITLE,
+  description = SITE_DESCRIPTION,
+  keywords = SITE_KEYWORDS,
+  canonical = '/',
+  ogType = 'website',
+  ogTitle,
+  ogDescription,
+  ogImage = OPEN_GRAPH_URL_PATH,
+  ogImageAlt = `${SITE_NAME_AR} — ${SITE_TITLE}`,
+  twitterCard = 'summary_large_image',
+  twitterTitle,
+  twitterDescription,
+  twitterImage,
+  twitterImageAlt,
+  robotsIndex = true,
+  prevUrl,
+  nextUrl,
+  jsonLd,
+  preconnect = [],
+} = Astro.props;
+
+const absolutize = (value: string): string =>
+  value.startsWith('http') ? value : `${SITE_URL}${value}`;
+
+const canonicalUrl = absolutize(canonical);
+const resolvedOgImage = absolutize(ogImage);
+const resolvedTwitterImage = absolutize(twitterImage ?? ogImage);
+const resolvedOgTitle = ogTitle ?? title;
+const resolvedOgDescription = ogDescription ?? description;
+const resolvedTwitterTitle = twitterTitle ?? title;
+const resolvedTwitterDescription = twitterDescription ?? description;
+const resolvedTwitterImageAlt = twitterImageAlt ?? ogImageAlt;
+const keywordsStr = typeof keywords === 'string' ? keywords : keywords.join(', ');
+const robotsContent = robotsIndex ? 'index, follow' : 'noindex, nofollow';
+const jsonLdRaw = jsonLd ?? [];
+const jsonLdEntries = Array.isArray(jsonLdRaw) ? jsonLdRaw : [jsonLdRaw];
+
+// API origin is the same on every page — search hydrates on `/`, random-poem
+// button lives in the footer everywhere. Preconnecting saves a roundtrip
+// regardless of which page the user lands on.
+const defaultPreconnect: readonly string[] = [PROD_API_URL];
+const allPreconnect = [...defaultPreconnect, ...preconnect];
+---
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content={SITE_THEME_COLOR_HEX} />
+
+<title>{title}</title>
+<meta name="description" content={description} />
+{keywordsStr && <meta name="keywords" content={keywordsStr} />}
+<meta name="author" content={SITE_NAME_AR} />
+<meta name="robots" content={robotsContent} />
+<meta name="googlebot" content={robotsContent} />
+<meta name="google" content="notranslate" />
+
+<link rel="canonical" href={canonicalUrl} />
+{prevUrl && <link rel="prev" href={absolutize(prevUrl)} />}
+{nextUrl && <link rel="next" href={absolutize(nextUrl)} />}
+
+<meta property="og:type" content={ogType} />
+<meta property="og:site_name" content={SITE_NAME_AR} />
+<meta property="og:locale" content="ar_AR" />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:title" content={resolvedOgTitle} />
+<meta property="og:description" content={resolvedOgDescription} />
+<meta property="og:image" content={resolvedOgImage} />
+<meta property="og:image:secure_url" content={resolvedOgImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:alt" content={ogImageAlt} />
+
+<meta name="twitter:card" content={twitterCard} />
+<meta name="twitter:site" content={TWITTER_HANDLE} />
+<meta name="twitter:creator" content={TWITTER_HANDLE} />
+<meta name="twitter:creator:id" content={TWITTER_ID} />
+<meta name="twitter:title" content={resolvedTwitterTitle} />
+<meta name="twitter:description" content={resolvedTwitterDescription} />
+<meta name="twitter:image" content={resolvedTwitterImage} />
+<meta name="twitter:image:alt" content={resolvedTwitterImageAlt} />
+
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/svg+xml" href="/logo.svg" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.json" />
+
+<link
+  rel="preload"
+  href="/fonts/IBMPlexSansArabic-Regular-400.ttf"
+  as="font"
+  type="font/ttf"
+  crossorigin
+/>
+<link rel="dns-prefetch" href="https://static.cloudflareinsights.com" />
+{allPreconnect.map((origin) => (
+  <link rel="preconnect" href={origin} crossorigin />
+))}
+
+{jsonLdEntries.map((entry) => (
+  <script is:inline type="application/ld+json" set:html={JSON.stringify(entry)} />
+))}
