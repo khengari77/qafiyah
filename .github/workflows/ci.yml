@@ -49,6 +49,9 @@ jobs:
       - name: Cross-app boundaries
         run: bun run check:boundaries
 
+      - name: Naming convention
+        run: bun run check:naming
+
       - name: Dependency cruiser
         run: bun run depcruise
 

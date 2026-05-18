@@ -15,6 +15,7 @@
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
     "check:boundaries": "bun scripts/check-cross-app-imports.ts",
+    "check:naming": "bun scripts/check-naming.ts",
     "depcruise": "depcruise --config .dependency-cruiser.cjs apps packages",
     "ci": "bun scripts/ci.ts",
     "optimize:images": "bun scripts/optimize-images.ts"

@@ -17,6 +17,7 @@ const PARALLEL: Task[] = [
   { name: 'knip', cmd: ['bun', 'run', 'knip'] },
   { name: 'madge', cmd: ['bun', 'run', 'madge'] },
   { name: 'boundaries', cmd: ['bun', 'run', 'check:boundaries'] },
+  { name: 'naming', cmd: ['bun', 'run', 'check:naming'] },
   { name: 'depcruise', cmd: ['bun', 'run', 'depcruise'] },
   { name: 'audit', cmd: ['bun', 'audit'] },
   { name: 'smoke', cmd: ['bun', 'run', 'smoke'] },
