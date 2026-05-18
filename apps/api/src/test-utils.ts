@@ -14,20 +14,20 @@ import type { AppContext, Bindings } from '@/types';
  * Creates a chainable query builder mock that handles Drizzle's query patterns
  */
 function createMockDrizzleQueryBuilder(mockData: readonly unknown[] = []) {
-  const limitFn = vi.fn();
-  limitFn.mockReturnValue({
+  const limitMock = vi.fn();
+  limitMock.mockReturnValue({
     offset: vi.fn().mockResolvedValue(mockData),
   });
-  limitFn.mockResolvedValue(mockData);
+  limitMock.mockResolvedValue(mockData);
 
-  const whereFn = vi.fn().mockReturnValue({
-    limit: limitFn,
+  const whereMock = vi.fn().mockReturnValue({
+    limit: limitMock,
   });
 
   const builder = {
     from: vi.fn().mockResolvedValue(mockData),
-    where: whereFn,
-    limit: limitFn,
+    where: whereMock,
+    limit: limitMock,
     offset: vi.fn().mockResolvedValue(mockData),
   };
 

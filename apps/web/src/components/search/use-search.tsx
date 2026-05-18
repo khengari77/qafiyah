@@ -234,7 +234,7 @@ export function useSearch() {
     }
   };
 
-  const commitTextQuery = () => {
+  const handleSearch = () => {
     const trimmed = inputValue.trim();
     const error = validateText(trimmed);
     if (error) {
@@ -249,7 +249,7 @@ export function useSearch() {
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter') {
       event.preventDefault();
-      commitTextQuery();
+      handleSearch();
     }
   };
 
@@ -298,7 +298,7 @@ export function useSearch() {
       onMatchTypeChange: handleMatchTypeChange,
       onInputChange: handleInputChange,
       onKeyDown: handleKeyDown,
-      onSearch: commitTextQuery,
+      onSearch: handleSearch,
       onSearchTypeChange: handleSearchTypeChange,
       onRhymesChange: handleRhymesChange,
       onErasChange: handleErasChange,
