@@ -3,7 +3,7 @@
 import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import { Check, ChevronDown, X } from 'lucide-react';
 import type React from 'react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { SelectOption } from '@/constants';
 import { cn } from '@/lib/utils';
 
@@ -31,6 +31,7 @@ export function SelectMulti({
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
 
   const selectedValues = useMemo(() => (Array.isArray(value) ? value : [value]), [value]);
 
@@ -123,13 +124,13 @@ export function SelectMulti({
       role="combobox"
       aria-expanded={isOpen}
       aria-haspopup="listbox"
-      aria-controls="checkbox-select-options"
+      aria-controls={listboxId}
     >
       <div
         role="button"
         className={cn(
-          'flex text-zinc-600 items-center justify-between w-full h-12 px-3 py-2 text-base border-0 ring-1 ring-zinc-300/40 rounded-lg shadow-none focus:outline-none focus:ring-1 focus:ring-zinc-300',
-          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+          'flex h-12 w-full items-center justify-between rounded-lg border-0 px-3 py-2 text-base text-zinc-600 shadow-none ring-1 ring-zinc-300/40 focus:outline-none focus:ring-1 focus:ring-zinc-300',
+          disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
           { 'ring-2 ring-zinc-300': isOpen }
         )}
         onClick={toggleOpen}
@@ -142,7 +143,7 @@ export function SelectMulti({
         tabIndex={disabled ? -1 : 0}
         aria-label="Checkbox select input"
       >
-        <div className="flex items-center justify-between w-full">
+        <div className="flex w-full items-center justify-between">
           <span className={cn(selectedValues.length === 0 && 'text-zinc-600')}>
             {getDisplayValue()}
           </span>
@@ -151,7 +152,7 @@ export function SelectMulti({
               <button
                 type="button"
                 onClick={clearSelection}
-                className="mr-1 p-1 rounded-full hover:bg-muted"
+                className="mr-1 rounded-full p-1 hover:bg-muted"
                 aria-label="Clear selection"
               >
                 <X className="h-3 w-3" />
@@ -166,9 +167,9 @@ export function SelectMulti({
 
       {isOpen && (
         <ul
-          id="checkbox-select-options"
+          id={listboxId}
           className={cn(
-            'absolute z-50 w-full overflow-auto bg-white ring-1 ring-zinc-300 p-2 rounded-lg shadow-xs shadow-zinc-300',
+            'absolute z-50 w-full overflow-auto rounded-lg bg-white p-2 shadow-xs shadow-zinc-300 ring-1 ring-zinc-300',
             'max-h-60 focus:outline-none'
           )}
           role="listbox"
@@ -193,8 +194,8 @@ export function SelectMulti({
                   role="option"
                   aria-selected={isSelected}
                   className={cn(
-                    'px-0.5 py-2 rounded-md text-base cursor-pointer',
-                    index === highlightedIndex && 'bg-zinc-50 ring-1 ring-zinc-300/60 font-medium',
+                    'cursor-pointer rounded-md px-0.5 py-2 text-base',
+                    index === highlightedIndex && 'bg-zinc-50 font-medium ring-1 ring-zinc-300/60',
                     isSelected && 'font-medium'
                   )}
                   onClick={() => toggleOption(option)}
@@ -203,16 +204,16 @@ export function SelectMulti({
                   <div className="flex items-center gap-2">
                     <div
                       className={cn(
-                        'flex items-center justify-center bg-white w-4 h-4 mr-4 border rounded',
+                        'mr-4 flex h-4 w-4 items-center justify-center rounded border bg-white',
                         multiple ? 'rounded' : 'rounded-full',
-                        isSelected ? 'bg-zinc-900 border-zinc-950' : 'border-zinc-300'
+                        isSelected ? 'border-zinc-950 bg-zinc-900' : 'border-zinc-300'
                       )}
                     >
                       {isSelected &&
                         (multiple ? (
                           <Check className="h-3 w-3 text-primary-foreground" />
                         ) : (
-                          <div className="w-2 h-2 rounded-full bg-primary-foreground" />
+                          <div className="h-2 w-2 rounded-full bg-primary-foreground" />
                         ))}
                     </div>
                     <span>{option.label}</span>

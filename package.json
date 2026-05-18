@@ -37,15 +37,9 @@
   "engines": {
     "bun": ">=1"
   },
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": ["apps/*", "packages/*"],
   "overrides": {
     "yaml": "^2.8.3"
   },
-  "trustedDependencies": [
-    "esbuild",
-    "workerd"
-  ]
+  "trustedDependencies": ["esbuild", "workerd"]
 }

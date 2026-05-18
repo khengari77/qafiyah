@@ -2,7 +2,7 @@
 
 import { Check, ChevronDown } from 'lucide-react';
 import type React from 'react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { SelectOption } from '@/constants';
 import { cn } from '@/lib/utils';
 
@@ -26,6 +26,7 @@ export function SelectSingle({
   const [isOpen, setIsOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const listboxId = useId();
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -106,13 +107,13 @@ export function SelectSingle({
       role="combobox"
       aria-expanded={isOpen}
       aria-haspopup="listbox"
-      aria-controls="select-options"
+      aria-controls={listboxId}
       tabIndex={-1}
     >
       <div
         className={cn(
-          'flex text-zinc-600 items-center justify-between w-full h-12 px-3 py-2 text-base border-0 ring-1 ring-zinc-300/40 rounded-lg shadow-none focus:outline-none focus:ring-1 focus:ring-zinc-300',
-          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+          'flex h-12 w-full items-center justify-between rounded-lg border-0 px-3 py-2 text-base text-zinc-600 shadow-none ring-1 ring-zinc-300/40 focus:outline-none focus:ring-1 focus:ring-zinc-300',
+          disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
           { 'ring-2 ring-zinc-300': isOpen }
         )}
         onClick={toggleOpen}
@@ -136,9 +137,9 @@ export function SelectSingle({
 
       {isOpen && (
         <ul
-          id="select-options"
+          id={listboxId}
           className={cn(
-            'absolute z-50 w-full overflow-auto bg-white ring-1 p-2 ring-zinc-300 rounded-lg shadow-xs shadow-zinc-300',
+            'absolute z-50 w-full overflow-auto rounded-lg bg-white p-2 shadow-xs shadow-zinc-300 ring-1 ring-zinc-300',
             'max-h-60 focus:outline-none'
           )}
           role="listbox"
@@ -157,8 +158,8 @@ export function SelectSingle({
               key={option.value}
               id={`option-${index}`}
               className={cn(
-                'px-3 py-2 text-base rounded-md cursor-pointer flex items-center justify-between',
-                index === highlightedIndex && 'bg-zinc-50 ring-1 ring-zinc-300/60 font-medium',
+                'flex cursor-pointer items-center justify-between rounded-md px-3 py-2 text-base',
+                index === highlightedIndex && 'bg-zinc-50 font-medium ring-1 ring-zinc-300/60',
                 option.value === value && 'font-medium'
               )}
               onClick={() => selectOption(option)}

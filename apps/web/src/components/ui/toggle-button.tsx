@@ -23,7 +23,7 @@ export function BinaryToggleButton({ options, currentValue, onToggle, className 
       type="button"
       onClick={handleToggle}
       className={cn(
-        'relative w-full flex justify-evenly items-center min-w-[180px] h-12 text-base rounded-md border-0 ring-1 ring-zinc-300/40 bg-white focus:outline-none focus:ring-1 focus:ring-zinc-300/50 overflow-hidden',
+        'relative flex h-12 w-full min-w-[180px] items-center justify-evenly overflow-hidden rounded-md border-0 bg-white text-base ring-1 ring-zinc-300/40 focus:outline-none focus:ring-1 focus:ring-zinc-300/50',
         className
       )}
       aria-pressed={currentValue === option2.value}
@@ -43,8 +43,8 @@ function ToggleItem({ label, isActive }: { readonly label: string; readonly isAc
   return (
     <span
       className={cn(
-        'flex items-center justify-center w-full h-full text-zinc-600',
-        isActive ? 'text-zinc-50 bg-zinc-800' : 'text-zinc-600'
+        'flex h-full w-full items-center justify-center text-zinc-600',
+        isActive ? 'bg-zinc-800 text-zinc-50' : 'text-zinc-600'
       )}
     >
       {label}

@@ -24,9 +24,9 @@ export function HighlightedText({ text, className = '' }: Props) {
         {segments.map((segment, segIndex) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: segment order within a part is fixed by the source string
           <Fragment key={`seg-${index}-${segIndex}-${segment.slice(0, 5)}`}>
-            {segIndex > 0 && <span className="inline-block mx-1 py-1 text-zinc-400">{'—'}</span>}
+            {segIndex > 0 && <span className="mx-1 inline-block py-1 text-zinc-400">{'—'}</span>}
             {isHighlighted ? (
-              <span className="text-red-400 font-medium py-1">{segment}</span>
+              <span className="py-1 font-medium text-red-400">{segment}</span>
             ) : (
               <span className="py-1">{segment}</span>
             )}

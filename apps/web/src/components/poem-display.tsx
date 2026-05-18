@@ -78,15 +78,15 @@ export function PoemDisplay({
     );
 
   return (
-    <div className="w-full flex justify-center items-start my-14 xs:my-20 lg:my-28">
-      <div className="w-full flex flex-col gap-10 justify-center items-center">
-        <header className="flex justify-center items-center flex-col gap-4 xxs:gap-6 text-center w-full">
+    <div className="my-14 xs:my-20 flex w-full items-start justify-center lg:my-28">
+      <div className="flex w-full flex-col items-center justify-center gap-10">
+        <header className="flex w-full flex-col items-center justify-center gap-4 xxs:gap-6 text-center">
           <div className="flex flex-col gap-2 xx:gap-4">
-            <h1 className="text-lg xxs:text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-800">
+            <h1 className="font-bold text-lg text-zinc-800 xs:text-2xl xxs:text-xl sm:text-3xl md:text-4xl">
               {title}
             </h1>
 
-            <h2 className="text-sm xxs:text-base md:text-2xl text-zinc-700">
+            <h2 className="text-sm text-zinc-700 xxs:text-base md:text-2xl">
               <a href={`/poets/${poet.slug}/page/1`} className="hover:underline">
                 {poet.name}
               </a>{' '}
@@ -98,34 +98,34 @@ export function PoemDisplay({
             <button
               onClick={handleTwitterShare}
               type="button"
-              className="flex w-full justify-center items-center mt-1 sm:mt-2 cursor-pointer"
+              className="mt-1 flex w-full cursor-pointer items-center justify-center sm:mt-2"
             >
-              <div className="bg-white/5 px-2 lg:px-4 rounded-md border border-zinc-300/60 flex justify-center items-center text-zinc-600 text-[8px] xxs:text-xs md:text-base">
+              <div className="flex items-center justify-center rounded-md border border-zinc-300/60 bg-white/5 px-2 text-[8px] text-zinc-600 xxs:text-xs md:text-base lg:px-4">
                 <p>غرد</p>
               </div>
             </button>
           </div>
 
-          <div className="flex w-full md:w-8/12 border border-zinc-300/80 px-2.5 md:px-8 lg:px-16 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl justify-between items-center text-zinc-600 rounded-full">
-            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">{meter.name || ''}</p>
-            <p className="flex-1 py-0.5 md:py-1 lg:py-1.5 border-l">
+          <div className="flex w-full items-center justify-between rounded-full border border-zinc-300/80 px-2.5 text-[10px] text-zinc-600 xxs:text-xs md:w-8/12 md:px-8 md:text-sm lg:px-16 lg:text-base xl:text-lg 2xl:text-xl">
+            <p className="flex-1 border-l py-0.5 md:py-1 lg:py-1.5">{meter.name || ''}</p>
+            <p className="flex-1 border-l py-0.5 md:py-1 lg:py-1.5">
               {formatVerseCount(verseCount) || ''}
             </p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{theme.name || ''}</p>
           </div>
         </header>
 
-        <div className="relative flex flex-col justify-between items-center bg-white gap-4 py-10 md:py-8 lg:py-16 px-4 rounded-2xl w-full md:w-10/12 xl:w-9/12 shadow-[inset_0px_0px_0px_1px_rgba(0,0,0,0.09)]">
-          <div className="flex items-center gap-4 border rounded-md border-zinc-300/50 bg-zinc-50/30">
+        <div className="relative flex w-full flex-col items-center justify-between gap-4 rounded-2xl bg-white px-4 py-10 shadow-[inset_0px_0px_0px_1px_rgba(0,0,0,0.09)] md:w-10/12 md:py-8 lg:py-16 xl:w-9/12">
+          <div className="flex items-center gap-4 rounded-md border border-zinc-300/50 bg-zinc-50/30">
             <button
               type="button"
               onClick={decreaseFontSize}
               className="p-1"
               aria-label="Decrease font size"
             >
-              <Minus className="w-3 h-3 md:w-5 md:h-5 xl:w-7 xl:h-7  text-zinc-500/60" />
+              <Minus className="h-3 w-3 text-zinc-500/60 md:h-5 md:w-5 xl:h-7 xl:w-7" />
             </button>
-            <p className="text-zinc-500/90 text-[10px] xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl">
+            <p className="text-[10px] text-zinc-500/90 xxs:text-xs md:text-sm lg:text-base xl:text-lg 2xl:text-xl">
               حجم الخط
             </p>
             <button
@@ -134,16 +134,16 @@ export function PoemDisplay({
               className="p-1"
               aria-label="Increase font size"
             >
-              <Plus className="w-3 h-3 md:w-5 md:h-5 xl:w-7 xl:h-7  text-zinc-500/60" />
+              <Plus className="h-3 w-3 text-zinc-500/60 md:h-5 md:w-5 xl:h-7 xl:w-7" />
             </button>
           </div>
 
-          <article className="flex flex-col items-center w-full">
+          <article className="flex w-full flex-col items-center">
             <div className="w-full sm:w-11/12 md:w-10/12 xl:w-6/12">
               {verses.map((verse) => (
                 <div
                   key={`${verse[0] ?? ''}|${verse[1] ?? ''}`}
-                  className="py-6 md:py-8 border-b border-zinc-50 last:border-b-0 flex flex-col w-full justify-center items-center gap-4"
+                  className="flex w-full flex-col items-center justify-center gap-4 border-zinc-50 border-b py-6 last:border-b-0 md:py-8"
                   style={{ ...getVerseGap() }}
                 >
                   <p
@@ -168,16 +168,16 @@ export function PoemDisplay({
           </article>
         </div>
 
-        <div className="w-full md:w-10/12 xl:w-9/12 flex flex-col gap-6 py-6 xl:gap-8 xl:py-8">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg xxs:text-xl xs:text-2xl sm:text-3xl md:text-4xl font-bold">
+        <div className="flex w-full flex-col gap-6 py-6 md:w-10/12 xl:w-9/12 xl:gap-8 xl:py-8">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-lg xs:text-2xl xxs:text-xl sm:text-3xl md:text-4xl">
               استزد
             </h3>
-            <p className="text-xs md:text-sm xl:text-base font-normal text-zinc-600">
+            <p className="font-normal text-xs text-zinc-600 md:text-sm xl:text-base">
               عشر قصائد مشابهة
             </p>
           </div>
-          <div className="w-full grid grid-cols-1 2xl:grid-cols-2 gap-2 sm:gap-4 2xl:gap-6">
+          <div className="grid w-full grid-cols-1 gap-2 sm:gap-4 2xl:grid-cols-2 2xl:gap-6">
             {relatedPoems && relatedPoems.length > 0 ? (
               relatedPoems.map((item) => (
                 <ListCard
@@ -189,7 +189,7 @@ export function PoemDisplay({
                 />
               ))
             ) : (
-              <div className="text-red-500 text-center py-8">
+              <div className="py-8 text-center text-red-500">
                 حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.
               </div>
             )}

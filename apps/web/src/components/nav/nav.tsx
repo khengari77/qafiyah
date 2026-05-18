@@ -17,9 +17,9 @@ export function NavWithMenu({ className }: Props) {
 
   return (
     <>
-      <nav className={cn('w-full z-10', className)}>
+      <nav className={cn('z-10 w-full', className)}>
         <div className="w-full">
-          <div className="flex justify-between items-center gap-8">
+          <div className="flex items-center justify-between gap-8">
             <a href="/" className="flex items-center">
               <img
                 src="/logo-48x48.svg"
@@ -29,13 +29,7 @@ export function NavWithMenu({ className }: Props) {
                 className={cn('size-10', 'md:size-12', 'xl:size-14', '2xl:size-16', '4xl:size-20')}
               />
             </a>
-            <button
-              type="button"
-              id="menu-toggle"
-              className="md:hidden"
-              aria-label="فتح القائمة"
-              onClick={toggle}
-            >
+            <button type="button" className="md:hidden" aria-label="فتح القائمة" onClick={toggle}>
               <Menu className={cn(RESPONSIVE_ICON_SIZE, 'opacity-70')} />
             </button>
             <NavLinks links={NAV_LINKS} className="hidden md:block" />

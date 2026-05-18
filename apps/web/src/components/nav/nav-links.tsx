@@ -43,7 +43,7 @@ export function NavLinks({ links, className = '', isMobile = false, onLinkClick 
           return (
             <li
               key={link.href}
-              className={cn(isMobile && 'w-full text-right border-b border-zinc-300/30 pb-2')}
+              className={cn(isMobile && 'w-full border-zinc-300/30 border-b pb-2 text-right')}
             >
               <a
                 tabIndex={isMobile ? -1 : 0}
@@ -52,9 +52,9 @@ export function NavLinks({ links, className = '', isMobile = false, onLinkClick 
                 className={cn(
                   isMobile
                     ? 'block py-2 hover:text-zinc-600'
-                    : 'hover:underline underline-offset-2 duration-200 hover:text-zinc-600',
+                    : 'underline-offset-2 duration-200 hover:text-zinc-600 hover:underline',
                   active &&
-                    (isMobile ? 'text-zinc-900 font-bold underline' : 'text-zinc-900 underline')
+                    (isMobile ? 'font-bold text-zinc-900 underline' : 'text-zinc-900 underline')
                 )}
                 onClick={handleLinkClick}
               >

@@ -19,8 +19,8 @@ function NoResultsState({ noResultsText }: { readonly noResultsText: string }) {
   return (
     <Card className="border-zinc-300/50 bg-zinc-50 shadow-none">
       <CardContent className="flex flex-col items-center justify-center p-8 text-zinc-500/90">
-        <SearchIcon className="h-10 w-10 mb-3 text-zinc-500/90" />
-        <p className="text-base text-center">{noResultsText}</p>
+        <SearchIcon className="mb-3 h-10 w-10 text-zinc-500/90" />
+        <p className="text-center text-base">{noResultsText}</p>
       </CardContent>
     </Card>
   );
@@ -34,15 +34,15 @@ function ErrorState({
   readonly refreshText: string;
 }) {
   return (
-    <Card className="border-red-100 bg-red-50/80 shadow-none flex justify-center items-center flex-col py-8 gap-4">
-      <Frown className="w-16 h-16 text-red-600" />
-      <p className="text-red-600 text-sm md:text-base font-bold text-center w-9/12">
+    <Card className="flex flex-col items-center justify-center gap-4 border-red-100 bg-red-50/80 py-8 shadow-none">
+      <Frown className="h-16 w-16 text-red-600" />
+      <p className="w-9/12 text-center font-bold text-red-600 text-sm md:text-base">
         {errorMessage}
       </p>
       <Button
         asChild
         variant="outline"
-        className="border-red-200 mt-8 hover:bg-red-100 hover:text-red-700 text-red-600 text-xs md:text-sm"
+        className="mt-8 border-red-200 text-red-600 text-xs hover:bg-red-100 hover:text-red-700 md:text-sm"
         size="sm"
       >
         <a href={SITE_URL}>{refreshText}</a>
@@ -89,9 +89,9 @@ export function ResultList({
       return (
         <div className="space-y-3">
           {s.data.length > 0 && (
-            <div className="w-full flex justify-start items-start">
+            <div className="flex w-full items-start justify-start">
               <span className="">
-                <p className="text-sm md:text-base font-normal text-zinc-700">{resultText}</p>
+                <p className="font-normal text-sm text-zinc-700 md:text-base">{resultText}</p>
               </span>
             </div>
           )}
@@ -108,7 +108,7 @@ export function ResultList({
           )}
 
           {s.data.length > 0 && (
-            <div ref={loadMoreRef} className="h-32 flex justify-center items-center">
+            <div ref={loadMoreRef} className="flex h-32 items-center justify-center">
               {isFetchingMore && <Loader2 className="h-5 w-5 animate-spin text-zinc-400" />}
             </div>
           )}

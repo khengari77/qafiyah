@@ -29,9 +29,9 @@ export function SearchInput({
 }: Props) {
   return (
     <div tabIndex={-1} className="w-full">
-      <div tabIndex={-1} className={cn('mb-2 h-4 flex justify-between items-center')}>
+      <div tabIndex={-1} className={cn('mb-2 flex h-4 items-center justify-between')}>
         {validationError && (
-          <p tabIndex={-1} className={cn('text-red-500 text-xs md:text-base text-right')}>
+          <p tabIndex={-1} className={cn('text-right text-red-500 text-xs md:text-base')}>
             {validationError}
           </p>
         )}
@@ -51,9 +51,9 @@ export function SearchInput({
           onKeyDown={handleKeyDown}
           aria-label={searchLabel}
           className={cn(
-            'pl-10 text-right h-12 border-0 ring-1 ring-zinc-300/40 shadow-none focus:border-0 focus:ring-0 focus-visible:ring-zinc-800/40 focus-within:ring md:text-lg placeholder:text-zinc-800/50 bg-white rounded-xl',
+            'h-12 rounded-xl border-0 bg-white pl-10 text-right shadow-none ring-1 ring-zinc-300/40 placeholder:text-zinc-800/50 focus-within:ring focus:border-0 focus:ring-0 focus-visible:ring-zinc-800/40 md:text-lg',
             {
-              'ring-red-300 ring-1 focus-within:ring-red-300 focus-within:ring-1 focus-visible:ring-red-300':
+              'ring-1 ring-red-300 focus-within:ring-1 focus-within:ring-red-300 focus-visible:ring-red-300':
                 validationError,
             }
           )}
@@ -61,7 +61,7 @@ export function SearchInput({
         />
         <div
           tabIndex={-1}
-          className="bg-white pr-2 absolute left-3 top-1/2 -translate-y-1/2 flex items-center h-full"
+          className="absolute top-1/2 left-3 flex h-full -translate-y-1/2 items-center bg-white pr-2"
         >
           {hasQuery && (
             <button

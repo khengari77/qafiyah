@@ -5,6 +5,14 @@
   "editor.formatOnSaveMode": "file",
   "editor.defaultFormatter": "biomejs.biome",
 
+  "editor.codeActionsOnSave": {
+    "source.fixAll.biome": "explicit"
+  },
+
+  "editor.rulers": [80],
+  "editor.bracketPairColorization.enabled": true,
+  "editor.guides.bracketPairs": "active",
+
   // Disable built-in JS/TS formatter (Biome takes over)
   "javascript.format.enable": false,
   "typescript.format.enable": false,
@@ -32,30 +40,34 @@
     "editor.defaultFormatter": "biomejs.biome"
   },
   "[markdown]": {
-    "editor.defaultFormatter": "biomejs.biome"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[mdx]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[yaml]": {
     "editor.defaultFormatter": "redhat.vscode-yaml"
   },
+  "[astro]": {
+    "editor.defaultFormatter": "astro-build.astro-vscode"
+  },
 
   // ==================== BIOME ====================
   "biome.enabled": true,
+  "eslint.enable": false,
 
-  // ==================== SPELLING ====================
-  "cSpell.words": [
-    "alwalxed",
-    "envin",
-    "healthcheck",
-    "isready",
-    "llms",
-    "onnotice",
-    "orpc",
-    "plpgsql",
-    "Qafiyah",
-    "tashkeel"
-  ],
+  // ==================== TYPESCRIPT ====================
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "typescript.tsserver.maxTsServerMemory": 8192,
+  "typescript.preferences.importModuleSpecifier": "non-relative",
+  "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "javascript.updateImportsOnFileMove.enabled": "always",
 
-  // ==================== FILE EXCLUSIONS ====================
+  // ==================== FILES ====================
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
   "files.exclude": {
     "**/node_modules": true,
     "**/worker-configuration.d.ts": true
@@ -63,10 +75,64 @@
 
   // ==================== SEARCH EXCLUSIONS ====================
   "search.exclude": {
-    "**/node_modules": true
+    "**/node_modules": true,
+    "**/.turbo": true,
+    "**/.astro": true,
+    "**/.wrangler": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/bun.lock": true,
+    "**/dumps/**": true
   },
 
-  // ==================== TYPESCRIPT ====================
-  "typescript.tsdk": "node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  // ==================== EXPLORER ====================
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    "package.json": "bun.lock, bunfig.toml, .npmrc, turbo.json, tsconfig*.json, biome.json, knip.json, commitlint.config.*, .prettierrc*, .prettierignore, .dependency-cruiser.*",
+    "*.ts": "${capture}.test.ts, ${capture}.spec.ts",
+    "*.tsx": "${capture}.test.tsx, ${capture}.spec.tsx",
+    ".env": ".env.*",
+    "CLAUDE.md": "AGENTS.md, README.md, LICENSE"
+  },
+
+  // ==================== PACKAGE MANAGER ====================
+  "npm.packageManager": "bun",
+
+  // ==================== TAILWIND ====================
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["clsx\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
+
+  // ==================== SPELLING ====================
+  "cSpell.words": [
+    "alwalxed",
+    "arabic",
+    "astrojs",
+    "bunfig",
+    "cloudflare",
+    "commitlint",
+    "drizzle",
+    "envin",
+    "gitleaks",
+    "healthcheck",
+    "isready",
+    "knip",
+    "llms",
+    "madge",
+    "onnotice",
+    "orpc",
+    "pgsql",
+    "plpgsql",
+    "postgres",
+    "Qafiyah",
+    "tanstack",
+    "tashkeel",
+    "turborepo",
+    "valibot",
+    "workerd",
+    "wrangler"
+  ]
 }

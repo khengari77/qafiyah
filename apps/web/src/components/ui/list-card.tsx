@@ -12,16 +12,16 @@ export function ListCard({ name, title, href, className = '' }: ListCardProps) {
     <a
       href={href}
       className={cn(
-        'hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80',
+        'group flex flex-col items-start justify-start xs:gap-4 xxs:gap-2 rounded-md border border-zinc-300/50 bg-zinc-100/50 p-4 xs:p-6 hover:cursor-pointer hover:border-zinc-300/80 sm:p-8 md:p-10',
         className
       )}
     >
       <h4>
-        <p className="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">
+        <p className="text-wrap text-sm text-zinc-800 xs:text-2xl xxs:text-base duration-300 hover:text-zinc-500 hover:underline group-hover:text-zinc-500 group-hover:underline group-hover:underline-offset-auto sm:text-2xl lg:text-2xl 2xl:text-2xl">
           {name.replace(/"/g, '')}
         </p>
       </h4>
-      <p className="text-xs xs:text-lg sm:text-xl lg:text-lg text-zinc-600/80 group-hover:text-zinc-500 duration-300 text-wrap">
+      <p className="text-wrap text-xs text-zinc-600/80 xs:text-lg duration-300 group-hover:text-zinc-500 sm:text-xl lg:text-lg">
         {title}
       </p>
     </a>

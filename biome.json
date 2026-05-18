@@ -26,6 +26,7 @@
   "formatter": {
     "enabled": true,
     "formatWithErrors": false,
+    "useEditorconfig": true,
     "indentStyle": "space",
     "indentWidth": 2,
     "lineEnding": "lf",
@@ -34,6 +35,10 @@
   },
   "linter": {
     "enabled": true,
+    "domains": {
+      "react": "recommended",
+      "test": "all"
+    },
     "rules": {
       "recommended": true,
       "a11y": {
@@ -47,7 +52,9 @@
         "useValidAriaProps": "warn",
         "useAriaPropsForRole": "warn",
         "useKeyWithClickEvents": "off",
-        "useKeyWithMouseEvents": "off"
+        "useKeyWithMouseEvents": "off",
+        "noStaticElementInteractions": "error",
+        "useValidAutocomplete": "warn"
       },
       "complexity": {
         "recommended": true,
@@ -73,7 +80,7 @@
         "useFlatMap": "error",
         "useOptionalChain": "error",
         "useRegexLiterals": "error",
-        "useSimplifiedLogicExpression": "warn",
+        "useSimplifiedLogicExpression": "error",
         "useLiteralKeys": "off"
       },
       "correctness": {
@@ -99,7 +106,17 @@
         "useValidForDirection": "error",
         "useValidTypeof": "error",
         "useYield": "error",
-        "useJsonImportAttributes": "error"
+        "useJsonImportAttributes": "error",
+        "noNodejsModules": "off",
+        "useImportExtensions": "off",
+        "noUndeclaredDependencies": "off",
+        "noUnresolvedImports": "off",
+        "noNestedComponentDefinitions": "error",
+        "useUniqueElementIds": "error",
+        "noUnknownFunction": "error",
+        "noUnknownProperty": "error",
+        "noUnknownPseudoClass": "error",
+        "noUnknownUnit": "error"
       },
       "performance": {
         "recommended": true,
@@ -124,13 +141,14 @@
         "noNamespace": "error",
         "noUselessElse": "error",
         "noNegationElse": "warn",
-        "noNestedTernary": "warn",
+        "noNestedTernary": "error",
         "noShoutyConstants": "warn",
         "noSubstr": "error",
         "noParameterProperties": "error",
         "noCommonJs": "error",
         "noEnum": "off",
         "noDefaultExport": "off",
+        "noProcessEnv": "error",
         "useConst": "error",
         "useImportType": "error",
         "useExportType": "error",
@@ -151,6 +169,7 @@
         "useConsistentArrayType": { "level": "error", "options": { "syntax": "shorthand" } },
         "useConsistentBuiltinInstantiation": "error",
         "useCollapsedElseIf": "error",
+        "useNamingConvention": "off",
         "noRestrictedImports": {
           "level": "error",
           "options": {
@@ -215,6 +234,8 @@
         "noConstantBinaryExpressions": "error",
         "noApproximativeNumericConstant": "error",
         "noDocumentCookie": "error",
+        "noDuplicateProperties": "error",
+        "noShorthandPropertyOverrides": "error",
         "useAwait": "error",
         "useAdjacentOverloadSignatures": "error",
         "useDefaultSwitchClauseLast": "error",
@@ -232,16 +253,16 @@
         "noFloatingPromises": "error",
         "noMisusedPromises": "error",
         "useAwaitThenable": "error",
-        "noShadow": "warn",
+        "noShadow": "error",
         "noEqualsToNull": "error",
         "noImpliedEval": "error",
         "noDuplicateEnumValues": "error",
         "noDuplicatedSpreadProps": "error",
         "useConsistentEnumValueType": "error",
-        "useExhaustiveSwitchCases": "warn",
-        "useNullishCoalescing": "warn",
+        "useExhaustiveSwitchCases": "error",
+        "useNullishCoalescing": "error",
         "useArraySortCompare": "error",
-        "useErrorCause": "warn",
+        "useErrorCause": "error",
         "useSortedClasses": "off"
       }
     }
@@ -256,7 +277,8 @@
       "arrowParentheses": "always",
       "bracketSpacing": true,
       "bracketSameLine": false,
-      "attributePosition": "auto"
+      "attributePosition": "auto",
+      "expand": "auto"
     },
     "globals": []
   },
@@ -270,7 +292,8 @@
   },
   "json": {
     "formatter": {
-      "trailingCommas": "none"
+      "trailingCommas": "none",
+      "expand": "auto"
     }
   },
   "css": {
@@ -279,6 +302,22 @@
     }
   },
   "overrides": [
+    {
+      "includes": ["apps/web/**"],
+      "linter": {
+        "rules": {
+          "nursery": {
+            "useSortedClasses": {
+              "level": "warn",
+              "options": {
+                "attributes": ["class", "className"],
+                "functions": ["clsx", "cn", "tw"]
+              }
+            }
+          }
+        }
+      }
+    },
     {
       "includes": ["apps/web/**/*.astro"],
       "linter": {
@@ -289,7 +328,21 @@
             "noUnusedFunctionParameters": "off"
           },
           "style": {
-            "noDefaultExport": "off"
+            "noDefaultExport": "off",
+            "noProcessEnv": "off"
+          },
+          "nursery": {
+            "noFloatingPromises": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["apps/api/**"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noNodejsModules": "error"
           }
         }
       }
@@ -305,6 +358,16 @@
       }
     },
     {
+      "includes": ["**/env.ts", "**/src/env.ts", "**/vitest.setup.ts", "**/vitest.config.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noProcessEnv": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": ["**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts", "**/*.spec.tsx"],
       "linter": {
         "rules": {
@@ -313,7 +376,8 @@
             "noEmptyBlockStatements": "off"
           },
           "style": {
-            "noNonNullAssertion": "off"
+            "noNonNullAssertion": "off",
+            "noProcessEnv": "off"
           },
           "nursery": {
             "noFloatingPromises": "off"
@@ -326,10 +390,14 @@
       "linter": {
         "rules": {
           "style": {
-            "noDefaultExport": "off"
+            "noDefaultExport": "off",
+            "noProcessEnv": "off"
           },
           "suspicious": {
             "noConsole": "off"
+          },
+          "correctness": {
+            "noNodejsModules": "off"
           }
         }
       }

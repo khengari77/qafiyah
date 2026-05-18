@@ -1,1 +1,12 @@
-{ "recommendations": ["biomejs.biome"] }
+{
+  "recommendations": [
+    "biomejs.biome",
+    "astro-build.astro-vscode",
+    "bradlc.vscode-tailwindcss",
+    "esbenp.prettier-vscode",
+    "streetsidesoftware.code-spell-checker",
+    "redhat.vscode-yaml",
+    "mikestead.dotenv",
+    "ms-azuretools.vscode-docker"
+  ]
+}

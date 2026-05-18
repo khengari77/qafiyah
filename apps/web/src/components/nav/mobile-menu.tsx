@@ -20,11 +20,10 @@ export function MobileMenu({ isOpen, onClose }: Props) {
 
   return (
     <div
-      id="mobile-menu"
       inert={!isOpen || undefined}
       aria-hidden={!isOpen}
-      className={`fixed overflow-auto inset-0 bg-zinc-50 z-20 pt-20 px-4 transition-transform duration-300 ease-in-out transform ${
-        isOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+      className={`fixed inset-0 z-20 transform overflow-auto bg-zinc-50 px-4 pt-20 transition-transform duration-300 ease-in-out ${
+        isOpen ? 'translate-x-0' : 'pointer-events-none translate-x-full'
       }`}
     >
       {/* MOBILE LINKS */}
@@ -34,7 +33,6 @@ export function MobileMenu({ isOpen, onClose }: Props) {
       <button
         type="button"
         tabIndex={-1}
-        id="close-menu"
         className="absolute top-4 left-4 p-2 text-zinc-500 hover:text-zinc-700"
         aria-label="إغلاق القائمة"
         onClick={onClose}

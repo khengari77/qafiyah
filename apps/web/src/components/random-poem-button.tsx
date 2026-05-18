@@ -44,7 +44,7 @@ export function RandomPoemButton() {
         .with({ kind: 'error' }, () => <p className="text-red-400">حدث خطأ أثناء تحميل القصيدة</p>)
         .with({ kind: 'loading' }, () => (
           <p>
-            <Loader2 className="animate-spin h-4 w-4" aria-hidden="true" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           </p>
         ))
         .with({ kind: 'idle' }, () => <p>قصيدة عشوائية</p>)

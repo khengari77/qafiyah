@@ -7,11 +7,11 @@ export function Footer({ className }: { className?: string }) {
   return (
     <footer
       className={cn(
-        'relative w-full flex justify-between items-center py-4 text-xs xss:text-sm md:text-base xl:text-lg text-zinc-600 gap-4',
+        'relative flex w-full items-center justify-between gap-4 py-4 text-xs text-zinc-600 xss:text-sm md:text-base xl:text-lg',
         className
       )}
     >
-      <div className="flex md:gap-3 gap-[5px]">
+      <div className="flex gap-[5px] md:gap-3">
         {[
           { label: 'البيانات', href: DATABASE_DUMPS_URL },
           { label: 'الكود', href: GITHUB_REPO_URL },

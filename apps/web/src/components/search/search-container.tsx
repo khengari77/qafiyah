@@ -24,16 +24,16 @@ export function SearchContainer() {
   const { state, flags, selection, handlers, refs } = useSearch();
 
   return (
-    <section className="w-full mx-auto max-w-2xl flex flex-col h-full flex-1 justify-start items pb-24">
+    <section className="items mx-auto flex h-full w-full max-w-2xl flex-1 flex-col justify-start pb-24">
       {/*  */}
       <div className="h-[25svh] w-full"></div>
 
-      <div className="w-full flex flex-col gap-10 md:gap-16" dir="rtl">
-        <h1 className="font-bold text-center justify-center items-center text-2xl xxs:text-3xl xs:text-4xl md:text-5xl text-zinc-800 flex py-2">
+      <div className="flex w-full flex-col gap-10 md:gap-16" dir="rtl">
+        <h1 className="flex items-center justify-center py-2 text-center font-bold text-2xl text-zinc-800 xs:text-4xl xxs:text-3xl md:text-5xl">
           {SEARCH_TEXTS.currentHeaderTitle}
         </h1>
-        <Card className="border-0 shadow-none bg-transparent">
-          <div className="p-0 bg">
+        <Card className="border-0 bg-transparent shadow-none">
+          <div className="bg p-0">
             <div className="flex flex-col gap-4">
               <SearchInput
                 placeholder={

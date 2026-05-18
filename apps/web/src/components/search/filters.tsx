@@ -45,10 +45,10 @@ type Props = {
 
 export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) {
   return (
-    <div className="px-8 py-10 lg:px-10 lg:py-10 gap-14 bg-white rounded-xl border border-zinc-300/40 relative flex flex-between flex-col">
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 lg:gap-10 w-full h-full flex-1">
+    <div className="relative flex flex-between flex-col gap-14 rounded-xl border border-zinc-300/40 bg-white px-8 py-10 lg:px-10 lg:py-10">
+      <div className="grid h-full w-full flex-1 grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:gap-10">
         <div className="flex flex-col items-start justify-start gap-2">
-          <p className="block text-base font-bold text-zinc-700">{SEARCH_TEXTS.searchTypeLabel}</p>
+          <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.searchTypeLabel}</p>
           <BinaryToggleButton
             currentValue={filters.searchType.value}
             onToggle={filters.searchType.onChange}
@@ -57,7 +57,7 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
         </div>
 
         <div className="flex flex-col items-start justify-start gap-2">
-          <p className="block text-base font-bold text-zinc-700">{SEARCH_TEXTS.matchTypeLabel}</p>
+          <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.matchTypeLabel}</p>
           <SelectSingle
             options={filters.matchType.options}
             value={filters.matchType.value}
@@ -68,7 +68,7 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
         </div>
 
         <div className="flex flex-col items-start justify-start gap-2">
-          <p className="block text-base font-bold text-zinc-700">{SEARCH_TEXTS.erasLabel}</p>
+          <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.erasLabel}</p>
           <SelectMulti
             options={filters.eras.options}
             value={filters.eras.selected}
@@ -82,7 +82,7 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
         {isPoemsMode && (
           <>
             <div className="flex flex-col items-start justify-start gap-2">
-              <p className="block text-base font-bold text-zinc-700">{SEARCH_TEXTS.metersLabel}</p>
+              <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.metersLabel}</p>
               <SelectMulti
                 options={filters.meters.options}
                 value={filters.meters.selected}
@@ -94,7 +94,7 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
             </div>
 
             <div className="flex flex-col items-start justify-start gap-2">
-              <p className="block text-base font-bold text-zinc-700">{SEARCH_TEXTS.themesLabel}</p>
+              <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.themesLabel}</p>
               <SelectMulti
                 options={filters.themes.options}
                 value={filters.themes.selected}
@@ -106,7 +106,7 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
             </div>
 
             <div className="flex flex-col items-start justify-start gap-2">
-              <p className="block text-base font-bold text-zinc-700">{SEARCH_TEXTS.rhymesLabel}</p>
+              <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.rhymesLabel}</p>
               <SelectMulti
                 options={filters.rhymes.options}
                 value={filters.rhymes.selected}
@@ -119,7 +119,7 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
           </>
         )}
       </div>
-      <p className="text-center text-xs sm:text-sm text-zinc-600">{SEARCH_TEXTS.searchFootnote}</p>
+      <p className="text-center text-xs text-zinc-600 sm:text-sm">{SEARCH_TEXTS.searchFootnote}</p>
     </div>
   );
 }
@@ -137,10 +137,10 @@ export function FiltersButton({ toggleFilters, filtersVisible }: FiltersButtonPr
       variant="default"
       onClick={toggleFilters}
       className={cn(
-        'text-base font-normal h-12 rounded-xl flex justify-between gap-6 items-center px-4 transition-none duration-0 shadow-none ring-1 border-0 outline-none',
+        'flex h-12 items-center justify-between gap-6 rounded-xl border-0 px-4 font-normal text-base shadow-none outline-none ring-1 transition-none duration-0',
         filtersVisible
-          ? 'text-zinc-600/80 hover:text-zinc-500 duration-200 bg-white hover:bg-white focus-visible:ring-zinc-800/40 ring-zinc-300/40'
-          : 'text-zinc-50 hover:text-zinc-50 bg-zinc-800 hover:bg-zinc-800 ring-zinc-800'
+          ? 'bg-white text-zinc-600/80 ring-zinc-300/40 duration-200 hover:bg-white hover:text-zinc-500 focus-visible:ring-zinc-800/40'
+          : 'bg-zinc-800 text-zinc-50 ring-zinc-800 hover:bg-zinc-800 hover:text-zinc-50'
       )}
       aria-label={filtersVisible ? 'Collapse filters' : 'Expand filters'}
     >
@@ -177,7 +177,7 @@ export function FilterBadges({
 }: FilterBadgesProps) {
   const badgeClassname = 'text-xs md:text-sm font-normal text-zinc-600 border-zinc-300/50 bg-white';
   return (
-    <div tabIndex={-1} className="flex flex-wrap gap-1 justify-end">
+    <div tabIndex={-1} className="flex flex-wrap justify-end gap-1">
       {selectedErasLength > 0 && (
         <Badge variant="outline" className={badgeClassname}>
           {erasCount}
