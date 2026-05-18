@@ -11,23 +11,23 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@orpc/openapi": "^1.14.2",
-    "@orpc/server": "^1.14.2",
-    "@orpc/valibot": "^1.10.4",
+    "@orpc/openapi": "^1.14.3",
+    "@orpc/server": "^1.14.3",
+    "@orpc/valibot": "^1.14.3",
     "@qafiyah/constants": "workspace:*",
     "@qafiyah/contracts": "workspace:*",
     "@qafiyah/db": "workspace:*",
     "@qafiyah/typescript": "workspace:*",
-    "hono": "^4.11.4",
+    "hono": "^4.12.19",
     "ts-pattern": "^5.9.0",
-    "valibot": "^1.0.0"
+    "valibot": "^1.4.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20250214.0",
-    "@vitest/coverage-v8": "^4.1.5",
-    "@vitest/ui": "^4.1.5",
-    "vitest": "^4.1.5",
-    "wrangler": "^4.59.1"
+    "@cloudflare/workers-types": "^4.20260517.1",
+    "@vitest/coverage-v8": "^4.1.6",
+    "@vitest/ui": "^4.1.6",
+    "vitest": "^4.1.6",
+    "wrangler": "^4.92.0"
   },
   "type": "module"
 }

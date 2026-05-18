@@ -17,7 +17,7 @@ function makeClient(baseUrl: string): ContractRouterClient<AppContract> {
 export const apiServer = makeClient(SSR_BASE_URL);
 export const apiBrowser = makeClient(BROWSER_BASE_URL);
 
-export type ApiOutputs = InferContractRouterOutputs<AppContract>;
+type ApiOutputs = InferContractRouterOutputs<AppContract>;
 
 type ListData<T> = T extends { data: infer D } ? D : never;
 type ResourceData<T> = T extends { data: infer D } ? D : never;
