@@ -1,13 +1,13 @@
-import { API_RANDOM_POEM_PATH } from '@qafiyah/constants';
+import { API_RANDOM_POEM_PATH, type MatchType, type SearchType } from '@qafiyah/constants';
 import { type PoemSlug, poemSlugSchema } from '@qafiyah/contracts';
 import * as v from 'valibot';
 import { apiBrowser, type PoemsSearchEnvelope, type PoetsSearchEnvelope } from './rpc';
 
 type SearchArgs = {
   readonly q: string;
-  readonly searchType: 'poems' | 'poets';
+  readonly searchType: SearchType;
   readonly page: string;
-  readonly matchType: 'all' | 'any' | 'exact';
+  readonly matchType: MatchType;
   readonly meterSlugs: readonly string[];
   readonly eraSlugs: readonly string[];
   readonly rhymeSlugs: readonly string[];

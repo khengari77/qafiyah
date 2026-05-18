@@ -16,6 +16,8 @@ import { asPoemSlug } from './brand';
 import { executeAs } from './execute-as';
 import type { PoemListRow } from './row-schemas';
 
+const DOUBLE_QUOTE_REGEX = /"/g;
+
 declare const PoemIdBrand: unique symbol;
 export type PoemId = number & { readonly [PoemIdBrand]: 'PoemId' };
 
@@ -37,7 +39,7 @@ export function removeTashkeel(text: string): string {
 }
 
 export function processPoemContent(content: string): ProcessedPoemContent {
-  const cleanContent = content.replace(/"/g, '');
+  const cleanContent = content.replace(DOUBLE_QUOTE_REGEX, '');
 
   const lines = cleanContent.split('*');
   const lineCount = lines.length;
@@ -72,7 +74,7 @@ export function extractPoemExcerpt(poem: RandomPoemLines, startIndex: number): s
   }
   const line1 = lines[startIndex] || '';
   const line2 = lines[startIndex + 1] || '';
-  return `${line1}\n${line2}\n\n${poem.poet_name}`.replace(/"/g, '').trim();
+  return `${line1}\n${line2}\n\n${poem.poet_name}`.replace(DOUBLE_QUOTE_REGEX, '').trim();
 }
 
 const rawPoemDataSchema = v.object({
@@ -339,7 +341,7 @@ function buildResource(
       themeName: poem.theme_name,
       themeSlug,
     },
-    clearTitle: poem.title.replace(/"/g, ''),
+    clearTitle: poem.title.replace(DOUBLE_QUOTE_REGEX, ''),
     processedContent: processPoemContent(poem.content),
     relatedPoems,
   };

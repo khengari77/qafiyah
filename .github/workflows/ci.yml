@@ -46,6 +46,12 @@ jobs:
       - name: Madge
         run: bun run madge
 
+      - name: Cross-app boundaries
+        run: bun run check:boundaries
+
+      - name: Dependency cruiser
+        run: bun run depcruise
+
       - name: Check for changes
         id: verify-changed-files
         run: |

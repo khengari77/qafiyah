@@ -151,6 +151,16 @@
         "useConsistentArrayType": { "level": "error", "options": { "syntax": "shorthand" } },
         "useConsistentBuiltinInstantiation": "error",
         "useCollapsedElseIf": "error",
+        "noRestrictedImports": {
+          "level": "error",
+          "options": {
+            "paths": {
+              "@qafiyah/web": "Cross-app imports are forbidden. Move shared code to packages/*.",
+              "@qafiyah/api": "Cross-app imports are forbidden. apps/web reaches the API via oRPC over HTTP; apps/bot uses fetch.",
+              "@qafiyah/bot": "Cross-app imports are forbidden. Move shared code to packages/*."
+            }
+          }
+        },
         "useForOf": "error",
         "useFragmentSyntax": "error",
         "useTrimStartEnd": "error",

@@ -20,7 +20,12 @@ export const DEV_API_PORT = 8787;
 // Covers: Basic Arabic (U+0600–U+06FF), Supplement (U+0750–U+077F), Extended-A (U+08A0–U+08FF).
 export const NON_ARABIC_AND_SPACE_REGEX = /[^؀-ۿݐ-ݿࢠ-ࣿ\s]/g;
 
+export const WHITESPACE_RUN_REGEX = /\s+/g;
+
 export const MAX_QUERY_LENGTH = 50;
 
 export const SEARCH_TYPE_VALUES = ['poems', 'poets'] as const;
-export const MATCH_TYPE_VALUES = ['all', 'any', 'exact'] as const;
+export type SearchType = (typeof SEARCH_TYPE_VALUES)[number];
+
+export const MATCH_TYPE_VALUES = ['all', 'exact', 'any'] as const;
+export type MatchType = (typeof MATCH_TYPE_VALUES)[number];

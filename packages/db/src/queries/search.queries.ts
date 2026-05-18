@@ -1,8 +1,4 @@
-import {
-  type MATCH_TYPE_VALUES,
-  SEARCH_POEMS_PER_PAGE,
-  SEARCH_POETS_PER_PAGE,
-} from '@qafiyah/constants';
+import { type MatchType, SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '@qafiyah/constants';
 import type {
   EraSlug,
   MeterSlug,
@@ -17,7 +13,7 @@ import * as v from 'valibot';
 import type { DbClient } from '../client';
 import { executeAs } from './execute-as';
 
-export type MatchType = (typeof MATCH_TYPE_VALUES)[number];
+export type { MatchType };
 
 export type SearchFilters = {
   readonly meterSlugs: readonly MeterSlug[] | null;

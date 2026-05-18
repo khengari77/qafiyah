@@ -14,7 +14,9 @@
     "smoke": "bun scripts/smoke-test.ts",
     "knip": "knip",
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
-    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge && bun audit && bun run smoke",
+    "check:boundaries": "bun scripts/check-cross-app-imports.ts",
+    "depcruise": "depcruise --config .dependency-cruiser.cjs apps packages",
+    "ci": "bun run format && bun run lint && bun run types && bun run test && bun run knip && bun run madge && bun run check:boundaries && bun run depcruise && bun audit && bun run smoke",
     "optimize:images": "bun scripts/optimize-images.ts"
   },
   "devDependencies": {
@@ -23,6 +25,7 @@
     "@commitlint/config-conventional": "^21.0.1",
     "@commitlint/types": "^21.0.1",
     "@types/bun": "^1.3.14",
+    "dependency-cruiser": "17.4.0",
     "husky": "^9.1.7",
     "knip": "^5.82.1",
     "madge": "8.0.0",

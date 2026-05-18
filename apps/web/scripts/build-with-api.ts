@@ -13,8 +13,7 @@
  */
 
 import path from 'node:path';
-
-const PORT = 8787;
+import { DEV_API_PORT } from '@qafiyah/constants';
 
 const HOST = '127.0.0.1';
 const READY_TIMEOUT_MS = 30_000;
@@ -49,11 +48,11 @@ async function waitForPort(port: number, hostname: string, timeoutMs: number): P
 }
 
 async function main(): Promise<void> {
-  const alreadyUp = await probePort(PORT, HOST);
+  const alreadyUp = await probePort(DEV_API_PORT, HOST);
   let api: Bun.Subprocess | null = null;
 
   if (alreadyUp) {
-    console.log('[build-with-api] API already running on port', PORT, '— reusing.');
+    console.log('[build-with-api] API already running on port', DEV_API_PORT, '— reusing.');
   } else {
     console.log('[build-with-api] Starting wrangler dev for @qafiyah/api...');
     api = Bun.spawn(['bun', '--filter', '@qafiyah/api', 'run', 'dev'], {
@@ -68,7 +67,7 @@ async function main(): Promise<void> {
         }
       },
     });
-    await waitForPort(PORT, HOST, READY_TIMEOUT_MS);
+    await waitForPort(DEV_API_PORT, HOST, READY_TIMEOUT_MS);
     console.log('[build-with-api] API is ready, starting astro build...');
   }
 
@@ -79,7 +78,7 @@ async function main(): Promise<void> {
     stderr: 'inherit',
     env: {
       ...process.env,
-      BUILD_API_URL: `http://${HOST}:${PORT}`,
+      BUILD_API_URL: `http://${HOST}:${DEV_API_PORT}`,
     },
   });
 

@@ -4,6 +4,7 @@ import {
   MAX_QUERY_LENGTH,
   NON_ARABIC_AND_SPACE_REGEX,
   SEARCH_TYPE_VALUES,
+  WHITESPACE_RUN_REGEX,
 } from '@qafiyah/constants';
 import * as v from 'valibot';
 import {
@@ -14,12 +15,7 @@ import {
   rhymeSlugSchema,
   themeSlugSchema,
 } from './brands';
-import {
-  DEFAULT_PAGE,
-  inputValidationError,
-  SEARCH_EMPTY_INPUT_MESSAGE,
-  WHITESPACE_RUN_REGEX,
-} from './constants';
+import { DEFAULT_PAGE, inputValidationError, SEARCH_EMPTY_INPUT_MESSAGE } from './constants';
 import { pageParam, pagination, subRef } from './schemas';
 
 export function cleanArabicQuery(q: string): string {

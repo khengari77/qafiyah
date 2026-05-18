@@ -1,5 +1,3 @@
-export const WHITESPACE_RUN_REGEX = /\s+/g;
-
 export const DEFAULT_PAGE = '1';
 
 export const SEARCH_EMPTY_INPUT_MESSAGE = 'أدخل كلمة بحث أو اختر فلترًا واحدًا على الأقل';

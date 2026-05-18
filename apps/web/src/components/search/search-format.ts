@@ -1,3 +1,4 @@
+import type { MatchType, SearchType } from '@qafiyah/constants';
 import { formatArabicCount } from 'arabic-count-format';
 import {
   type ArabicNounForms,
@@ -33,8 +34,8 @@ export function getResultText({
 }: {
   readonly count: number;
   readonly query: string;
-  readonly searchType: 'poems' | 'poets';
-  readonly matchType: 'all' | 'any' | 'exact';
+  readonly searchType: SearchType;
+  readonly matchType: MatchType;
   readonly hasText: boolean;
 }): string {
   const searchTypeText =
@@ -49,7 +50,7 @@ export function getResultText({
     any: SEARCH_TEXTS.matchTypeAny,
     all: SEARCH_TEXTS.matchTypeAll,
     exact: SEARCH_TEXTS.matchTypeExact,
-  } as const satisfies Readonly<Record<'any' | 'all' | 'exact', string>>;
+  } as const satisfies Readonly<Record<MatchType, string>>;
   const matchTypeText = matchTypeLabels[matchType];
 
   const cleanedInput = query.replace(NON_ARABIC_BASIC_REGEX, '');

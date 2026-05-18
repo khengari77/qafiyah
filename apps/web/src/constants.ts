@@ -1,4 +1,11 @@
-import { DEV_WEB_PORT, GITHUB_REPO_URL, PROD_API_URL, PROD_DOMAIN } from '@qafiyah/constants';
+import {
+  DEV_WEB_PORT,
+  GITHUB_REPO_URL,
+  MATCH_TYPE_VALUES,
+  PROD_API_URL,
+  PROD_DOMAIN,
+  SEARCH_TYPE_VALUES,
+} from '@qafiyah/constants';
 import { env } from '@/env';
 import { toArabicDigits } from '@/lib/arabic';
 
@@ -305,16 +312,28 @@ const THEMES_OPTIONS = [
   { id: 27, name: 'وطن' },
 ] as const satisfies readonly SearchOption[];
 
-export const searchTypeOptions = [
-  { value: 'poems', label: SEARCH_TEXTS.poemsSearchTypeLabel },
-  { value: 'poets', label: SEARCH_TEXTS.poetsSearchTypeLabel },
-] as const satisfies readonly [SelectOption, SelectOption];
+const SEARCH_TYPE_LABELS = {
+  poems: SEARCH_TEXTS.poemsSearchTypeLabel,
+  poets: SEARCH_TEXTS.poetsSearchTypeLabel,
+} as const satisfies Record<(typeof SEARCH_TYPE_VALUES)[number], string>;
 
-export const matchTypeOptions = [
-  { value: 'all', label: SEARCH_TEXTS.matchTypeAll },
-  { value: 'exact', label: SEARCH_TEXTS.matchTypeExact },
-  { value: 'any', label: SEARCH_TEXTS.matchTypeAny },
-] as const satisfies readonly SelectOption[];
+const MATCH_TYPE_LABELS = {
+  all: SEARCH_TEXTS.matchTypeAll,
+  exact: SEARCH_TEXTS.matchTypeExact,
+  any: SEARCH_TEXTS.matchTypeAny,
+} as const satisfies Record<(typeof MATCH_TYPE_VALUES)[number], string>;
+
+// BinaryToggleButton requires a 2-tuple, which `.map` does not preserve.
+const [SEARCH_TYPE_POEMS, SEARCH_TYPE_POETS] = SEARCH_TYPE_VALUES;
+export const searchTypeOptions: readonly [SelectOption, SelectOption] = [
+  { value: SEARCH_TYPE_POEMS, label: SEARCH_TYPE_LABELS[SEARCH_TYPE_POEMS] },
+  { value: SEARCH_TYPE_POETS, label: SEARCH_TYPE_LABELS[SEARCH_TYPE_POETS] },
+];
+
+export const matchTypeOptions: readonly SelectOption[] = MATCH_TYPE_VALUES.map((value) => ({
+  value,
+  label: MATCH_TYPE_LABELS[value],
+}));
 
 export const erasOptions: readonly SelectOption[] = ERAS_OPTIONS.map((era) => ({
   value: era.id.toString(),

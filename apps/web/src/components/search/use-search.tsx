@@ -3,8 +3,11 @@
 import {
   MATCH_TYPE_VALUES,
   MAX_QUERY_LENGTH,
+  type MatchType,
   NON_ARABIC_AND_SPACE_REGEX,
   SEARCH_TYPE_VALUES,
+  type SearchType,
+  WHITESPACE_RUN_REGEX,
 } from '@qafiyah/constants';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
@@ -13,9 +16,6 @@ import { useEffect, useRef, useState } from 'react';
 import { INFINITE_SCROLL_THRESHOLD, SEARCH_RESULTS_STALE_TIME_MS, SEARCH_TEXTS } from '@/constants';
 import { search } from '@/lib/api/client';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
-
-type SearchType = (typeof SEARCH_TYPE_VALUES)[number];
-type MatchType = (typeof MATCH_TYPE_VALUES)[number];
 
 export type FetchStatus =
   | { readonly kind: 'idle' }
@@ -41,8 +41,9 @@ function isMatchType(value: string): value is MatchType {
   return MATCH_TYPE_SET.has(value as MatchType);
 }
 
+// Like cleanArabicQuery but without the trim, so users can still type intermediate spaces.
 function sanitizeArabicInput(raw: string): string {
-  return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(/\s+/g, ' ');
+  return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(WHITESPACE_RUN_REGEX, ' ');
 }
 
 function validateText(input: string): string | null {
@@ -204,7 +205,7 @@ export function useSearch() {
     const raw = e.target.value;
     const sanitized = sanitizeArabicInput(raw);
     setInputValue(sanitized);
-    if (raw.replace(/\s+/g, ' ') !== sanitized) {
+    if (raw.replace(WHITESPACE_RUN_REGEX, ' ') !== sanitized) {
       setValidationError(SEARCH_TEXTS.arabicOnlyError);
       return;
     }
