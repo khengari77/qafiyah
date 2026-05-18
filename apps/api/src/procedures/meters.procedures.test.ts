@@ -111,7 +111,7 @@ describe('meters procedures', () => {
       expect(res.status).toBe(404);
     });
 
-    it('passes slug and page to the query', async () => {
+    it('reflects the requested slug and page in the response', async () => {
       listMeterPoemsMock.mockResolvedValue({
         parent: { name: 'الطويل', slug: 'tawil', poemsCount: 500 },
         poems: [],
@@ -121,9 +121,12 @@ describe('meters procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/meters/tawil/poems?page=5');
+      const res = await client.$get('/v1/meters/tawil/poems?page=5');
 
-      expect(listMeterPoemsMock).toHaveBeenCalledWith(expect.anything(), 'tawil', 5);
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.pagination.page).toBe(5);
+      expect(body.meta?.slug).toBe('tawil');
     });
   });
 });

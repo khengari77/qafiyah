@@ -97,19 +97,23 @@ describe('poets procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/poets');
+      const res = await client.$get('/v1/poets');
 
-      expect(listPoetsMock).toHaveBeenCalledWith(expect.anything(), 1);
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.pagination.page).toBe(1);
     });
 
-    it('passes page number to the query', async () => {
+    it('reflects the requested page in the response', async () => {
       listPoetsMock.mockResolvedValue({ poets: [samplePoet], total: 1, totalPages: 5 });
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/poets?page=3');
+      const res = await client.$get('/v1/poets?page=3');
 
-      expect(listPoetsMock).toHaveBeenCalledWith(expect.anything(), 3);
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.pagination.page).toBe(3);
     });
   });
 
@@ -142,7 +146,7 @@ describe('poets procedures', () => {
       expect(res.status).toBe(404);
     });
 
-    it('passes slug and page to the query', async () => {
+    it('reflects the requested slug and page in the response', async () => {
       listPoetPoemsMock.mockResolvedValue({
         parent: { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 },
         poems: [],
@@ -152,9 +156,12 @@ describe('poets procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/poets/mutanabbi/poems?page=2');
+      const res = await client.$get('/v1/poets/mutanabbi/poems?page=2');
 
-      expect(listPoetPoemsMock).toHaveBeenCalledWith(expect.anything(), 'mutanabbi', 2);
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.pagination.page).toBe(2);
+      expect(body.meta?.slug).toBe('mutanabbi');
     });
   });
 });

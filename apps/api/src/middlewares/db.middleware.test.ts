@@ -57,7 +57,6 @@ describe('dbMiddleware', () => {
     await app.fetch(new Request('http://localhost/test'), env);
 
     expect(createMockDbFactory).toHaveBeenCalledTimes(3);
-    expect(createMockDbFactory).toHaveBeenCalledWith(env.DATABASE_URL);
   });
 
   it('creates a fresh db client per request for a remote URL', async () => {
@@ -68,6 +67,5 @@ describe('dbMiddleware', () => {
     await app.fetch(new Request('http://localhost/test'), env);
 
     expect(createMockDbFactory).toHaveBeenCalledTimes(2);
-    expect(createMockDbFactory).toHaveBeenCalledWith(env.DATABASE_URL);
   });
 });

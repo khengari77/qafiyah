@@ -111,7 +111,7 @@ describe('themes procedures', () => {
       expect(res.status).toBe(404);
     });
 
-    it('passes slug and page to the query', async () => {
+    it('reflects the requested slug and page in the response', async () => {
       listThemePoemsMock.mockResolvedValue({
         parent: { name: 'الغزل', slug: 'love', poemsCount: 400 },
         poems: [],
@@ -121,9 +121,12 @@ describe('themes procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      await client.$get('/v1/themes/love/poems?page=7');
+      const res = await client.$get('/v1/themes/love/poems?page=7');
 
-      expect(listThemePoemsMock).toHaveBeenCalledWith(expect.anything(), 'love', 7);
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.pagination.page).toBe(7);
+      expect(body.meta?.slug).toBe('love');
     });
   });
 });

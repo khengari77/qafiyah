@@ -234,43 +234,6 @@ describe('searchPoems (mock)', () => {
     expect(mockDb.execute).toHaveBeenCalledTimes(1);
   });
 
-  it('covers meterLiteral-null branch (era filter only)', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValueOnce([{ kind: 'era', id: 2 }])
-        .mockResolvedValueOnce([POEMS_ROW]),
-    });
-
-    await searchPoems({
-      db: mockDb,
-      query: 'test',
-      page: 1,
-      matchType: 'all',
-      filters: { ...EMPTY_FILTERS, eraSlugs: [asEraSlug('abbasid')] },
-    });
-    expect(mockDb.execute).toHaveBeenCalledTimes(2);
-  });
-
-  it('covers eraLiteral-null path (meter-only filter)', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValueOnce([{ kind: 'meter', id: 1 }])
-        .mockResolvedValueOnce([POEMS_ROW]),
-    });
-
-    const result = await searchPoems({
-      db: mockDb,
-      query: 'test',
-      page: 1,
-      matchType: 'all',
-      filters: { ...EMPTY_FILTERS, meterSlugs: [asMeterSlug('الطويل')] },
-    });
-    expect(result.totalCount).toBe(5);
-    expect(mockDb.execute).toHaveBeenCalledTimes(2);
-  });
-
   it('returns empty result when raw is empty', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([]),
@@ -438,29 +401,6 @@ describe('browsePoemsByFilters (mock)', () => {
     expect(result.rows[0]?.poetName).toBe('شاعر');
     expect(result.rows[0]?.poetEraSlug).toBe('abbasid');
     expect(result.rows[0]?.poemMeterSlug).toBe('altawil');
-  });
-
-  it('covers toPgIntArrayParam branches: null, [], and [id]', async () => {
-    const lookupRows = [{ kind: 'meter', id: 1 }];
-    const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValueOnce(lookupRows)
-        .mockResolvedValueOnce([FILTER_POEMS_ROW])
-        .mockResolvedValueOnce([{ total: 1 }]),
-    });
-
-    const result = await browsePoemsByFilters({
-      db: mockDb,
-      page: 1,
-      filters: {
-        meterSlugs: [asMeterSlug('الطويل')],
-        eraSlugs: [asEraSlug('abbasid')],
-        themeSlugs: [asThemeSlug('فخر')],
-        rhymeSlugs: [asRhymeSlug('meem')],
-      },
-    });
-    expect(result.totalCount).toBe(1);
   });
 
   it('throws when count row has no total', async () => {

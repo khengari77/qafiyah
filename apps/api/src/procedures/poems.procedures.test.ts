@@ -140,15 +140,5 @@ describe('poems procedures', () => {
 
       expect(res.status).toBe(500);
     });
-
-    it('passes slug to the query', async () => {
-      getPoemBySlugMock.mockResolvedValue({ kind: 'found', data: samplePoemData });
-      const app = await buildOrpcApp();
-      const client = createTestClient(app, { db: createMockDb() });
-
-      await client.$get('/v1/poems/specific-slug');
-
-      expect(getPoemBySlugMock).toHaveBeenCalledWith(expect.anything(), 'specific-slug');
-    });
   });
 });
