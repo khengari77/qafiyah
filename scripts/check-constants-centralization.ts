@@ -72,9 +72,7 @@ for (const dir of SCAN_DIRS) {
 if (violations.length > 0) {
   console.error('Hardcoded constants detected:\n');
   for (const v of violations) {
-    console.error(
-      `  ${v.file}:${v.line}  "${v.match}" — use ${v.constant} from @qafiyah/constants`
-    );
+    console.error(`  ${v.file}:${v.line}  "${v.match}", use ${v.constant} from @qafiyah/constants`);
   }
   console.error(
     [

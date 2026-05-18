@@ -203,7 +203,7 @@ function findDrift(inv: Inventory): Drift[] {
 
 function reportDrift(entries: readonly Drift[]): void {
   if (entries.length === 0) {
-    console.log('  no drift — all shared deps pin identical specs');
+    console.log('  no drift, all shared deps pin identical specs');
     return;
   }
   for (const { name, occurrences, canonical } of entries) {
@@ -398,7 +398,7 @@ const anyMutation = flags.write || flags.fixDrift;
 console.log('── inventory ──');
 const allPkgs = findWorkspacePkgs();
 if (allPkgs.length === 0) {
-  console.error('[doctor] no package.json found — run from the monorepo root');
+  console.error('[doctor] no package.json found, run from the monorepo root');
   process.exit(2);
 }
 const inventory = buildInventory(allPkgs);
@@ -467,22 +467,22 @@ if (anyMutation && flags.verify) {
 console.log('');
 if (flags.write) {
   if (!counted) {
-    console.log('✓ interactive update complete — run `bun run ci` to confirm');
+    console.log('✓ interactive update complete, run `bun run ci` to confirm');
   } else if (totalBumps > 0) {
-    console.log(`✓ ${totalBumps} package(s) bumped — run \`bun run ci\` to confirm`);
+    console.log(`✓ ${totalBumps} package(s) bumped, run \`bun run ci\` to confirm`);
   } else if (before.gated.length > 0 && before.real.length === 0) {
     console.log(
       `  no bumps applied; ${before.gated.length} package(s) held by minimum-release-age (the * rows)`
     );
   } else if (before.real.length > 0) {
     console.log(
-      `  bun update made no changes despite ${before.real.length} outdated row(s) — check pin styles or overrides`
+      `  bun update made no changes despite ${before.real.length} outdated row(s), check pin styles or overrides`
     );
   } else {
     console.log('  bun update made no changes (nothing was outdated)');
   }
 } else if (flags.fixDrift) {
-  console.log('✓ drift normalized — run with --write to also bump versions');
+  console.log('✓ drift normalized, run with --write to also bump versions');
 } else if (before.real.length > 0) {
   const note =
     before.gated.length > 0 ? ` (${before.gated.length} more held by min-release-age)` : '';
@@ -496,6 +496,6 @@ if (flags.write) {
 } else {
   console.log('✓ all dependencies are up to date');
   if (drift.length > 0) {
-    console.log('  (drift remains — run with --fix-drift to normalize specs)');
+    console.log('  (drift remains, run with --fix-drift to normalize specs)');
   }
 }

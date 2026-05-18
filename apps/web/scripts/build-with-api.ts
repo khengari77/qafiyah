@@ -52,7 +52,7 @@ async function main(): Promise<void> {
   let api: Bun.Subprocess | null = null;
 
   if (alreadyUp) {
-    console.log('[build-with-api] API already running on port', DEV_API_PORT, '— reusing.');
+    console.log('[build-with-api] API already running on port', DEV_API_PORT, ', reusing.');
   } else {
     console.log('[build-with-api] Starting wrangler dev for @qafiyah/api...');
     api = Bun.spawn(['bun', '--filter', '@qafiyah/api', 'run', 'dev'], {
