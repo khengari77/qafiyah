@@ -16,6 +16,10 @@
     "madge": "madge --circular --extensions ts,tsx,js,jsx apps packages",
     "check:boundaries": "bun scripts/check-cross-app-imports.ts",
     "check:naming": "bun scripts/check-naming.ts",
+    "check:no-parent-imports": "bun scripts/check-no-parent-imports.ts",
+    "check:api-db-isolation": "bun scripts/check-api-db-isolation.ts",
+    "check:constants": "bun scripts/check-constants-centralization.ts",
+    "check:syncpack": "syncpack lint",
     "depcruise": "depcruise --config .dependency-cruiser.cjs apps packages",
     "ci": "bun scripts/ci.ts",
     "optimize:images": "bun scripts/optimize-images.ts",
@@ -32,6 +36,7 @@
     "knip": "^6.14.1",
     "madge": "8.0.0",
     "prettier": "^3.8.3",
+    "syncpack": "15.1.2",
     "turbo": "^2.9.14",
     "typescript": "6.0.3"
   },
