@@ -55,6 +55,21 @@ jobs:
       - name: Dependency cruiser
         run: bun run depcruise
 
+      - name: No parent imports
+        run: bun run check:no-parent-imports
+
+      - name: API/DB isolation
+        run: bun run check:api-db-isolation
+
+      - name: Constants centralization
+        run: bun run check:constants
+
+      - name: Syncpack
+        run: bun run check:syncpack
+
+      - name: Audit
+        run: bun audit
+
       - name: Check for changes
         id: verify-changed-files
         run: |

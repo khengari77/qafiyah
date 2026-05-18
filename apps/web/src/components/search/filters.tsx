@@ -39,11 +39,9 @@ type Props = {
     readonly rhymes: MultiFilter;
   };
   readonly isPoemsMode: boolean;
-  readonly hasText: boolean;
-  readonly hasInputText: boolean;
 };
 
-export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) {
+export function Filters({ filters, isPoemsMode }: Props) {
   return (
     <div className="relative flex flex-between flex-col gap-14 rounded-xl border border-zinc-300/40 bg-white px-8 py-10 lg:px-10 lg:py-10">
       <div className="grid h-full w-full flex-1 grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:gap-10">
@@ -63,7 +61,6 @@ export function Filters({ filters, isPoemsMode, hasText, hasInputText }: Props) 
             value={filters.matchType.value}
             onChange={filters.matchType.onChange}
             placeholder={SEARCH_TEXTS.searchTypePlaceholder}
-            disabled={!(hasText || hasInputText)}
           />
         </div>
 

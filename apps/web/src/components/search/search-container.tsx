@@ -102,8 +102,6 @@ export function SearchContainer() {
                     },
                   }}
                   isPoemsMode={state.searchType === 'poems'}
-                  hasText={flags.hasText}
-                  hasInputText={flags.hasInputText}
                 />
               )}
             </div>
