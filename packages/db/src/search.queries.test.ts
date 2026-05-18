@@ -4,8 +4,8 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { createDb, type DbClient } from '../client';
 import { asEraSlug, asMeterSlug, asRhymeSlug, asThemeSlug } from './brand';
+import { createDb, type DbClient } from './client';
 import { listPoemsByFilters, listPoetsByFilters, searchPoems, searchPoets } from './search.queries';
 import { fakeDb } from './test-utils';
 

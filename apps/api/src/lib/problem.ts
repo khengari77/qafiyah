@@ -1,6 +1,6 @@
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
-import { ERROR_BASE_URL } from '../constants';
+import { ERROR_BASE_URL } from '@/constants';
 
 export type ProblemCode =
   | 'NOT_FOUND'

@@ -1,6 +1,6 @@
 import type { SQL } from 'drizzle-orm';
 import * as v from 'valibot';
-import type { DbClient } from '../client';
+import type { DbClient } from './client';
 
 export async function executeAs<TSchema extends v.GenericSchema>(
   db: DbClient,

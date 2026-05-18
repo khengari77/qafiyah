@@ -9,12 +9,12 @@ import {
 } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import * as v from 'valibot';
-import type { DbClient } from '../client';
-import { TASHKEEL_REGEX } from '../constants';
-import { poemsFullData } from '../schema';
 import { asPoemSlug } from './brand';
+import type { DbClient } from './client';
+import { TASHKEEL_REGEX } from './constants';
 import { executeAs } from './execute-as';
 import type { PoemListRow } from './row-schemas';
+import { poemsFullData } from './schema';
 
 const DOUBLE_QUOTE_REGEX = /"/g;
 

@@ -1,12 +1,12 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { RhymeSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
-import type { DbClient } from '../client';
-import { ARABIC_LETTERS_MAP } from '../constants';
-import { rhymeStats } from '../schema';
 import { asRhymeSlug } from './brand';
+import type { DbClient } from './client';
+import { ARABIC_LETTERS_MAP } from './constants';
 import { executeAs } from './execute-as';
 import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import { rhymeStats } from './schema';
 
 const PARENS_REGEX = /[()]/g;
 const ARABIC_AL_PREFIX_REGEX = /^ال/;

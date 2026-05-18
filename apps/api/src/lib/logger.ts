@@ -1,10 +1,6 @@
 import type { Context } from 'hono';
-import {
-  HTTP_INTERNAL_SERVER_ERROR,
-  LOG_PROD_SAMPLE_RATE,
-  LOG_SLOW_REQUEST_MS,
-} from '../constants';
-import type { AppContext } from '../types';
+import { HTTP_INTERNAL_SERVER_ERROR, LOG_PROD_SAMPLE_RATE, LOG_SLOW_REQUEST_MS } from '@/constants';
+import type { AppContext } from '@/types';
 
 export type DomainFields = {
   readonly poet_id?: string | undefined;

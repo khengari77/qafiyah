@@ -2,14 +2,14 @@ import { type DbClient, poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import * as v from 'valibot';
-import { makeProblem, sendProblem } from '@/lib/problem';
-import type { AppContext } from '@/types';
 import {
   HTTP_BAD_REQUEST,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_NOT_FOUND,
   NO_STORE_CACHE_CONTROL,
-} from '../constants';
+} from '@/constants';
+import { makeProblem, sendProblem } from '@/lib/problem';
+import type { AppContext } from '@/types';
 
 type RandomPoemOption = 'slug' | 'lines';
 

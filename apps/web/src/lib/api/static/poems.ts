@@ -1,5 +1,5 @@
 import type { PoemSlug } from '@qafiyah/contracts';
-import { apiServer, type Poem } from '../rpc';
+import { apiServer, type Poem } from '@/lib/api/rpc';
 import { isNotFound } from './dedup';
 
 export async function fetchAllPoemSlugs(): Promise<readonly PoemSlug[]> {

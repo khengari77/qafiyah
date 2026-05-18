@@ -9,7 +9,7 @@ import {
   type RhymePoemsResponse,
   type Theme,
   type ThemePoemsResponse,
-} from '../rpc';
+} from '@/lib/api/rpc';
 import { dedup, isNotFound } from './dedup';
 
 export function fetchEras(): Promise<readonly Era[]> {

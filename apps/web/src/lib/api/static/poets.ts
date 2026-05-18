@@ -1,5 +1,5 @@
 import type { PoetSlug } from '@qafiyah/contracts';
-import { apiServer, type Poet, type PoetPoemsResponse, type PoetsResponse } from '../rpc';
+import { apiServer, type Poet, type PoetPoemsResponse, type PoetsResponse } from '@/lib/api/rpc';
 import { isNotFound } from './dedup';
 
 export async function fetchPoets(page: number): Promise<PoetsResponse | null> {

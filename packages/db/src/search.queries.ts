@@ -10,7 +10,7 @@ import type {
 import { eraSlugSchema, meterSlugSchema, poemSlugSchema, poetSlugSchema } from '@qafiyah/contracts';
 import { type SQL, sql } from 'drizzle-orm';
 import * as v from 'valibot';
-import type { DbClient } from '../client';
+import type { DbClient } from './client';
 import { executeAs } from './execute-as';
 
 export type { MatchType };

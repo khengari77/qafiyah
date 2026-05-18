@@ -1,67 +1,53 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
-import type { PoetSlug } from '@qafiyah/contracts';
-import { sql } from 'drizzle-orm';
-import type { DbClient } from '../client';
-import { poetStats } from '../schema';
-import { asPoetSlug } from './brand';
+import type { MeterSlug } from '@qafiyah/contracts';
+import { inArray, sql } from 'drizzle-orm';
+import { asMeterSlug } from './brand';
+import type { DbClient } from './client';
+import { FORMAL_METERS } from './constants';
 import { executeAs } from './execute-as';
 import { type PoemListRow, parentRowSchema, rawPoemRowSchema } from './row-schemas';
+import { meterStats } from './schema';
 
-export type PoetStatsRow = {
+export type MeterStatsRow = {
   readonly name: string;
-  readonly slug: PoetSlug;
+  readonly slug: MeterSlug;
   readonly poemsCount: number;
+  readonly poetsCount: number;
 };
 
-export type ListPoetsResult = {
-  readonly poets: readonly PoetStatsRow[];
-  readonly total: number;
-  readonly totalPages: number;
-};
-
-export type ListPoetPoemsResult = {
-  readonly parent: { readonly name: string; readonly slug: PoetSlug; readonly poemsCount: number };
+export type ListMeterPoemsResult = {
+  readonly parent: { readonly name: string; readonly slug: MeterSlug; readonly poemsCount: number };
   readonly poems: readonly PoemListRow[];
   readonly total: number;
   readonly totalPages: number;
 };
 
-export async function listPoets(db: DbClient, page: number): Promise<ListPoetsResult> {
-  const limit = POEMS_PER_PAGE;
-  const offset = (page - 1) * limit;
-
-  const [poets, total] = await Promise.all([
-    db
-      .select({
-        name: poetStats.name,
-        slug: poetStats.slug,
-        poemsCount: poetStats.poemsCount,
-      })
-      .from(poetStats)
-      .limit(limit)
-      .offset(offset),
-    db.$count(poetStats),
-  ]);
-  const totalPages = Math.ceil(total / limit);
-
-  return {
-    poets: poets.map((r) => ({ ...r, slug: asPoetSlug(r.slug) })),
-    total,
-    totalPages,
-  };
+export async function listMeters(db: DbClient): Promise<readonly MeterStatsRow[]> {
+  const results = await db
+    .select({
+      name: meterStats.name,
+      slug: meterStats.slug,
+      poemsCount: meterStats.poemsCount,
+      poetsCount: meterStats.poetsCount,
+    })
+    .from(meterStats)
+    .where(inArray(meterStats.name, FORMAL_METERS));
+  return results
+    .map((r) => ({ ...r, slug: asMeterSlug(r.slug) }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ar'));
 }
 
-export async function listPoetPoems(
+export async function listMeterPoems(
   db: DbClient,
-  slug: PoetSlug,
+  slug: MeterSlug,
   page: number
-): Promise<ListPoetPoemsResult | null> {
+): Promise<ListMeterPoemsResult | null> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
   const parentRows = await executeAs(
     db,
-    sql`SELECT name, poems_count FROM poet_stats WHERE slug = ${slug} LIMIT 1`,
+    sql`SELECT name, poems_count FROM meter_stats WHERE slug = ${slug} LIMIT 1`,
     parentRowSchema
   );
 
@@ -82,7 +68,7 @@ export async function listPoetPoems(
       FROM public.poems p
       JOIN public.poets pt ON p.poet_id = pt.id
       JOIN public.meters m ON p.meter_id = m.id
-      WHERE pt.slug = ${slug}
+      WHERE m.slug = ${slug}
       ORDER BY p.id
       LIMIT ${limit} OFFSET ${offset}
     `,

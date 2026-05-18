@@ -1,9 +1,9 @@
 import { createDb } from '@qafiyah/db';
 import { createMiddleware } from 'hono/factory';
+import { HTTP_INTERNAL_SERVER_ERROR, HTTP_SERVICE_UNAVAILABLE } from '@/constants';
 import { parseBindings } from '@/env';
 import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
-import { HTTP_INTERNAL_SERVER_ERROR, HTTP_SERVICE_UNAVAILABLE } from '../constants';
 
 export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
   let db: ReturnType<typeof createDb>;

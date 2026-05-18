@@ -1,5 +1,5 @@
 import type { MiddlewareHandler } from 'hono';
-import { FAVICON_CACHE_CONTROL, FAVICON_PATH } from '../constants';
+import { FAVICON_CACHE_CONTROL, FAVICON_PATH } from '@/constants';
 
 export const serveEmojiFavicon = (emoji: string): MiddlewareHandler => {
   return async (c, next) => {

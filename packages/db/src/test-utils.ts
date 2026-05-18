@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { DbClient } from '../client';
+import type { DbClient } from './client';
 
 type DrizzleChain = {
   readonly where: (...args: readonly unknown[]) => DrizzleChain;
