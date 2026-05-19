@@ -3,9 +3,9 @@ import type { GetStaticPaths } from 'astro';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { CAT_POET_PREFIX_REGEX, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { allPoets, getPoetsPage } from '@/lib/data/poets';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
+import { allPoets, getPoetsPage } from '@/lib/data/poets';
 import { stripQuotes } from '@/lib/utils';
 
 export const getStaticPaths = (() => {

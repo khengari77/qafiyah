@@ -19,7 +19,10 @@ async function run(cmd: string[], cwd: string): Promise<number> {
 
 async function main(): Promise<number> {
   console.log('[build] generate-snapshot');
-  const snapshotExit = await run(['bun', path.join(webDir, 'scripts', 'generate-snapshot.ts')], webDir);
+  const snapshotExit = await run(
+    ['bun', path.join(webDir, 'scripts', 'generate-snapshot.ts')],
+    webDir
+  );
   if (snapshotExit !== 0) {
     console.error('[build] snapshot generation failed; aborting');
     return snapshotExit;

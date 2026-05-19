@@ -70,7 +70,9 @@ export function getPoetPoemsPage(
   if (!poet) throw new Error(`poet meta for '${slug}' not found in poets snapshot`);
   const pagination = paginationFor(poems.length, page);
   if (page < 1 || page > pagination.totalPages) {
-    throw new Error(`poet '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`);
+    throw new Error(
+      `poet '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`
+    );
   }
   const start = (page - 1) * POEMS_PER_PAGE;
   return { poems: poems.slice(start, start + POEMS_PER_PAGE), poet, pagination };

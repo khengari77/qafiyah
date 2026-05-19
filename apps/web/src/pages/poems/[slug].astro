@@ -13,9 +13,7 @@ export const getStaticPaths = (() => {
   });
 }) satisfies GetStaticPaths;
 
-const { poem, layout } = Astro.props as Awaited<
-  ReturnType<typeof getStaticPaths>
->[number]['props'];
+const { poem, layout } = Astro.props as Awaited<ReturnType<typeof getStaticPaths>>[number]['props'];
 ---
 
 <Layout
