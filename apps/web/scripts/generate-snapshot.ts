@@ -8,8 +8,11 @@
  * then reads from those files via apps/web/src/lib/data/* — no HTTP, no Wrangler.
  */
 
+import { createHash } from 'node:crypto';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { poemDetail, poemListItem } from '@qafiyah/contracts';
+import * as v from 'valibot';
 import {
   createDb,
   type DbClient,
@@ -113,6 +116,22 @@ async function mapWithConcurrency<In, Out>(
   const workers = Array.from({ length: Math.min(concurrency, inputs.length) }, () => worker());
   await Promise.all(workers);
   return results;
+}
+
+function sha256OfStableJson(value: unknown): string {
+  function sort(node: unknown): unknown {
+    if (Array.isArray(node)) return node.map(sort);
+    if (node && typeof node === 'object') {
+      const entries = Object.entries(node as Record<string, unknown>).sort(([a], [b]) =>
+        a < b ? -1 : a > b ? 1 : 0
+      );
+      const out: Record<string, unknown> = {};
+      for (const [k, val] of entries) out[k] = sort(val);
+      return out;
+    }
+    return node;
+  }
+  return createHash('sha256').update(JSON.stringify(sort(value)), 'utf8').digest('hex');
 }
 
 async function main(): Promise<void> {
@@ -255,6 +274,109 @@ async function main(): Promise<void> {
     count: details.length,
     elapsed_ms: elapsed,
   }));
+
+  // Spec §6.6: belt-and-suspenders runtime check against silent schema drift
+  // between @qafiyah/db query shapes and @qafiyah/contracts Valibot schemas.
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'validate-contracts' }));
+  const firstPoemKey = Object.keys(poemsRecord)[0];
+  if (firstPoemKey) {
+    const sample = poemsRecord[firstPoemKey];
+    const parsed = v.safeParse(poemDetail, sample);
+    if (!parsed.success) {
+      reportAndExit({
+        kind: 'query_failed',
+        entity: 'contract:poemDetail',
+        message: parsed.issues.map((i) => i.message).join('; '),
+      });
+    }
+  }
+
+  function sampleListItem(record: Record<string, PoemListItem[]>): PoemListItem | null {
+    for (const list of Object.values(record)) {
+      if (list.length > 0) return list[0] ?? null;
+    }
+    return null;
+  }
+
+  const eraPoemsRecord = mapToRecord(eraPoemsResult.value);
+  const meterPoemsRecord = mapToRecord(meterPoemsResult.value);
+  const rhymePoemsRecord = mapToRecord(rhymePoemsResult.value);
+  const themePoemsRecord = mapToRecord(themePoemsResult.value);
+  const poetPoemsRecord = mapToRecord(poetPoemsResult.value);
+
+  for (const [name, record] of [
+    ['era-poems', eraPoemsRecord],
+    ['meter-poems', meterPoemsRecord],
+    ['rhyme-poems', rhymePoemsRecord],
+    ['theme-poems', themePoemsRecord],
+    ['poet-poems', poetPoemsRecord],
+  ] as const) {
+    const item = sampleListItem(record);
+    if (!item) continue;
+    const parsed = v.safeParse(poemListItem, item);
+    if (!parsed.success) {
+      reportAndExit({
+        kind: 'query_failed',
+        entity: `contract:poemListItem(${name})`,
+        message: parsed.issues.map((i) => i.message).join('; '),
+      });
+    }
+  }
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'meta' }));
+  const perPageHashes: Record<string, string> = {};
+
+  for (const poem of Object.entries(poemsRecord)) {
+    perPageHashes[`/poems/${poem[0]}`] = sha256OfStableJson(poem[1]);
+  }
+
+  function addCollectionHashes<E extends { slug: string }>(
+    routePrefix: string,
+    parents: readonly E[],
+    poemsByParent: Record<string, PoemListItem[]>
+  ): void {
+    const PAGE_SIZE = 30;
+    for (const parent of parents) {
+      const list = poemsByParent[parent.slug] ?? [];
+      const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+      for (let p = 1; p <= totalPages; p++) {
+        const slice = list.slice((p - 1) * PAGE_SIZE, p * PAGE_SIZE);
+        perPageHashes[`${routePrefix}/${parent.slug}/page/${p}`] = sha256OfStableJson({
+          parent,
+          slice,
+        });
+      }
+    }
+  }
+
+  addCollectionHashes('/eras', erasResult.value, eraPoemsRecord);
+  addCollectionHashes('/meters', metersResult.value, meterPoemsRecord);
+  addCollectionHashes('/rhymes', rhymesResult.value, rhymePoemsRecord);
+  addCollectionHashes('/themes', themesResult.value, themePoemsRecord);
+  addCollectionHashes('/poets', poets, poetPoemsRecord);
+
+  const POETS_PAGE_SIZE = 30;
+  const poetsIndexPages = Math.max(1, Math.ceil(poets.length / POETS_PAGE_SIZE));
+  for (let p = 1; p <= poetsIndexPages; p++) {
+    perPageHashes[`/poets/page/${p}`] = sha256OfStableJson(
+      poets.slice((p - 1) * POETS_PAGE_SIZE, p * POETS_PAGE_SIZE)
+    );
+  }
+
+  const dbHost = new URL(databaseUrl).hostname;
+  await writeJsonAtomic('snapshot-meta', {
+    generated_at: new Date().toISOString(),
+    db_host: dbHost,
+    entity_counts: {
+      poems: Object.keys(poemsRecord).length,
+      poets: poets.length,
+      eras: erasResult.value.length,
+      meters: metersResult.value.length,
+      rhymes: rhymesResult.value.length,
+      themes: themesResult.value.length,
+    },
+    per_page_hashes: perPageHashes,
+  });
 
   console.log(JSON.stringify({ source: 'generate-snapshot', status: 'done', output_dir: OUTPUT_DIR }));
 }
