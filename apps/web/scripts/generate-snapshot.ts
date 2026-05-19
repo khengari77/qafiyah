@@ -15,6 +15,7 @@ import {
   type DbClient,
   erasQueries,
   metersQueries,
+  poemsQueries,
   poetsQueries,
   rhymesQueries,
   themesQueries,
@@ -91,6 +92,27 @@ function mapToRecord<Slug extends string>(
     out[slug] = rows.map(toPoemListItem);
   }
   return out as Record<Slug, PoemListItem[]>;
+}
+
+async function mapWithConcurrency<In, Out>(
+  inputs: readonly In[],
+  concurrency: number,
+  fn: (input: In) => Promise<Out>
+): Promise<Out[]> {
+  const results: Out[] = new Array(inputs.length);
+  let cursor = 0;
+  async function worker(): Promise<void> {
+    while (true) {
+      const i = cursor++;
+      if (i >= inputs.length) return;
+      const input = inputs[i];
+      if (input === undefined) return;
+      results[i] = await fn(input);
+    }
+  }
+  const workers = Array.from({ length: Math.min(concurrency, inputs.length) }, () => worker());
+  await Promise.all(workers);
+  return results;
 }
 
 async function main(): Promise<void> {
@@ -181,6 +203,58 @@ async function main(): Promise<void> {
     reportAndExit({ kind: 'query_failed', entity: 'poet-poems', message: JSON.stringify(poetPoemsResult.error) });
   }
   await writeJsonAtomic('poet-poems', mapToRecord(poetPoemsResult.value));
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'poem-slugs' }));
+  const slugsResult = await poemsQueries.listAllPoemSlugs(db);
+  if (slugsResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'poem-slugs', message: JSON.stringify(slugsResult.error) });
+  }
+  const slugs = slugsResult.value;
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'poem-details', count: slugs.length }));
+  const startedAt = Date.now();
+  const details = await mapWithConcurrency(slugs, 20, async (slug) => {
+    const result = await poemsQueries.getPoemBySlug(db, slug);
+    if (result.isErr()) {
+      reportAndExit({
+        kind: 'query_failed',
+        entity: `poem:${slug}`,
+        message: JSON.stringify(result.error),
+      });
+    }
+    return [slug, result.value] as const;
+  });
+  const elapsed = Date.now() - startedAt;
+
+  const poemsRecord: Record<string, unknown> = {};
+  for (const [slug, detail] of details) {
+    // Match the contract's poemDetail shape (see apps/api/src/procedures/poems.procedures.ts:toPoemDetail).
+    poemsRecord[slug] = {
+      title: detail.displayTitle,
+      slug,
+      verses: detail.parsedContent.verses.map((verse) => [verse[0], verse[1]]),
+      verseCount: detail.parsedContent.verseCount,
+      sample: detail.parsedContent.sample,
+      keywords: detail.parsedContent.keywords,
+      poet: { name: detail.metadata.poetName, slug: detail.metadata.poetSlug },
+      era: { name: detail.metadata.eraName, slug: detail.metadata.eraSlug },
+      meter: { name: detail.metadata.meterName, slug: detail.metadata.meterSlug },
+      theme: { name: detail.metadata.themeName, slug: detail.metadata.themeSlug },
+      relatedPoems: detail.relatedPoems.map((row) => ({
+        title: row.title,
+        slug: row.slug,
+        poet: { name: row.poetName, slug: row.poetSlug },
+        meter: { name: row.meterName, slug: row.meterSlug },
+      })),
+    };
+  }
+  await writeJsonAtomic('poems', poemsRecord);
+  console.log(JSON.stringify({
+    source: 'generate-snapshot',
+    stage: 'poem-details-done',
+    count: details.length,
+    elapsed_ms: elapsed,
+  }));
 
   console.log(JSON.stringify({ source: 'generate-snapshot', status: 'done', output_dir: OUTPUT_DIR }));
 }
