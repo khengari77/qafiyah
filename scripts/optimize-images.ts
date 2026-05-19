@@ -2,6 +2,7 @@
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 import { type Result, ResultAsync } from 'neverthrow';
+import { match } from 'ts-pattern';
 
 type EncodeStrategy = { kind: 'lossy'; quality: number } | { kind: 'lossless' };
 
@@ -428,30 +429,26 @@ async function main(): Promise<void> {
       continue;
     }
 
-    const outcome = r.skipped;
-    switch (outcome) {
-      case 'safelist': {
+    match(r.skipped)
+      .with('safelist', () => {
         skippedSafelist += 1;
         if (cfg.verbose) console.log(`[optimize-images] safelist ${r.src}`);
-        break;
-      }
-      case 'fresh': {
+      })
+      .with('fresh', () => {
         skippedFresh += 1;
         if (cfg.verbose) {
           console.log(`[optimize-images] fresh ${r.src} → ${r.out} (${formatKb(r.bytesOut)} kept)`);
         }
-        break;
-      }
-      case 'dry-run': {
+      })
+      .with('dry-run', () => {
         skippedDryRun += 1;
         if (cfg.verbose) {
           console.log(
             `[optimize-images] dry-run ${r.src} → ${r.out} (source ${formatKb(r.bytesIn)})`
           );
         }
-        break;
-      }
-      case undefined: {
+      })
+      .with(undefined, () => {
         encoded += 1;
         bytesInEncoded += r.bytesIn;
         bytesOutEncoded += r.bytesOut;
@@ -464,13 +461,8 @@ async function main(): Promise<void> {
         } else if (cfg.verbose) {
           console.log(`[optimize-images] ok ${r.src} → ${r.out}  ${formatKb(r.bytesIn)}`);
         }
-        break;
-      }
-      default: {
-        const _never: never = outcome;
-        throw new Error(`[optimize-images] unhandled: ${String(_never)}`);
-      }
-    }
+      })
+      .exhaustive();
   }
 
   console.log(

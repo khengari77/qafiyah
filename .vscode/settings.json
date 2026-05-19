@@ -1,78 +1,74 @@
 {
-  // ==================== EDITOR FORMATTING ====================
+  // ==================== EDITOR ====================
   "editor.formatOnSave": true,
   "editor.formatOnPaste": true,
-  "editor.formatOnSaveMode": "file",
   "editor.defaultFormatter": "biomejs.biome",
-
   "editor.codeActionsOnSave": {
-    "source.fixAll.biome": "explicit"
+    "source.fixAll.biome": "explicit",
+    "source.organizeImports.biome": "explicit"
   },
-
   "editor.rulers": [80],
   "editor.bracketPairColorization.enabled": true,
   "editor.guides.bracketPairs": "active",
-
-  // Disable built-in JS/TS formatter (Biome takes over)
+  "editor.guides.indentation": true,
+  "editor.guides.highlightActiveIndentation": "always",
+  "editor.stickyScroll.enabled": true,
+  "editor.linkedEditing": true,
+  "editor.renderLineHighlight": "all",
   "javascript.format.enable": false,
   "typescript.format.enable": false,
-
-  // Language-specific formatters
-  "[javascript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[javascriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescript]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[typescriptreact]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[json]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[jsonc]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[css]": {
-    "editor.defaultFormatter": "biomejs.biome"
-  },
-  "[markdown]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[mdx]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode"
-  },
-  "[yaml]": {
-    "editor.defaultFormatter": "redhat.vscode-yaml"
-  },
-  "[astro]": {
-    "editor.defaultFormatter": "astro-build.astro-vscode"
-  },
-
+  // ==================== LANGUAGE FORMATTERS ====================
+  "[javascript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[javascriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescript]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[typescriptreact]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[json]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[jsonc]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[css]": { "editor.defaultFormatter": "biomejs.biome" },
+  "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[mdx]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
+  "[astro]": { "editor.defaultFormatter": "astro-build.astro-vscode" },
   // ==================== BIOME ====================
   "biome.enabled": true,
   "eslint.enable": false,
-
   // ==================== TYPESCRIPT ====================
   "typescript.tsdk": "node_modules/typescript/lib",
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "typescript.tsserver.maxTsServerMemory": 8192,
   "typescript.preferences.importModuleSpecifier": "non-relative",
   "javascript.preferences.importModuleSpecifier": "non-relative",
+  "typescript.preferences.preferTypeOnlyAutoImports": true,
+  "typescript.preferGoToSourceDefinition": true,
   "typescript.updateImportsOnFileMove.enabled": "always",
   "javascript.updateImportsOnFileMove.enabled": "always",
-
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "typescript.inlayHints.parameterNames.enabled": "literals",
+  "typescript.inlayHints.functionLikeReturnTypes.enabled": true,
+  "typescript.inlayHints.propertyDeclarationTypes.enabled": true,
+  "javascript.inlayHints.parameterNames.enabled": "literals",
+  // ==================== CSS / TAILWIND ====================
+  "css.lint.unknownAtRules": "ignore",
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "tailwindCSS.includeLanguages": {
+    "astro": "html"
+  },
+  "tailwindCSS.experimental.classRegex": [
+    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
+    ["clsx\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
+  ],
   // ==================== FILES ====================
   "files.insertFinalNewline": true,
   "files.trimTrailingWhitespace": true,
+  "files.trimFinalNewlines": true,
+  "files.eol": "\n",
   "files.exclude": {
     "**/node_modules": true,
     "**/worker-configuration.d.ts": true
   },
-
   // ==================== SEARCH EXCLUSIONS ====================
   "search.exclude": {
     "**/node_modules": true,
@@ -84,7 +80,6 @@
     "**/bun.lock": true,
     "**/dumps/**": true
   },
-
   // ==================== EXPLORER ====================
   "explorer.fileNesting.enabled": true,
   "explorer.fileNesting.expand": false,
@@ -93,19 +88,16 @@
     "*.ts": "${capture}.test.ts, ${capture}.spec.ts",
     "*.tsx": "${capture}.test.tsx, ${capture}.spec.tsx",
     ".env": ".env.*",
-    "CLAUDE.md": "AGENTS.md, README.md, LICENSE"
+    "CLAUDE.md": "AGENTS.md, README.md, LICENSE",
+    "wrangler.toml": "wrangler.jsonc, .dev.vars*, worker-configuration.d.ts",
+    "wrangler.jsonc": ".dev.vars*, worker-configuration.d.ts",
+    "astro.config.*": "env.d.ts"
   },
-
+  // ==================== WORKBENCH ====================
+  "workbench.editor.highlightModifiedTabs": true,
+  "workbench.tree.indent": 16,
   // ==================== PACKAGE MANAGER ====================
   "npm.packageManager": "bun",
-
-  // ==================== TAILWIND ====================
-  "tailwindCSS.experimental.classRegex": [
-    ["cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["cn\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"],
-    ["clsx\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]"]
-  ],
-
   // ==================== SPELLING ====================
   "cSpell.words": [
     "alwalxed",

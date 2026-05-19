@@ -5,6 +5,7 @@ import { API_V1_PREFIX, GITHUB_REPO_URL } from '@qafiyah/constants';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { HTTPException } from 'hono/http-exception';
+import { match, P } from 'ts-pattern';
 import {
   API_DESCRIPTION,
   API_OPENAPI_DOCS_PATH,
@@ -19,7 +20,7 @@ import {
   SITE_NAME_EN,
 } from './constants';
 import { type DomainFields, enrichContext, recordError } from './lib/logger';
-import { makeProblem, type ProblemCode, sendProblem, transformOrpcResponse } from './lib/problem';
+import { makeProblem, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
 import { serveEmojiFavicon } from './middlewares/favicon.middleware';
 import { loggerMiddleware } from './middlewares/logger.middleware';
@@ -93,16 +94,17 @@ app
     )
   )
   .onError((error, c) => {
-    const isHttp = error instanceof HTTPException;
-    const status = isHttp ? error.status : HTTP_INTERNAL_SERVER_ERROR;
-    let code: ProblemCode;
-    if (!isHttp) {
-      code = 'INTERNAL_SERVER_ERROR';
-    } else if (status === HTTP_NOT_FOUND) {
-      code = 'NOT_FOUND';
-    } else {
-      code = 'BAD_REQUEST';
-    }
+    const { code, status, detail } = match(error)
+      .with(P.instanceOf(HTTPException), (e) => ({
+        code: e.status === HTTP_NOT_FOUND ? ('NOT_FOUND' as const) : ('BAD_REQUEST' as const),
+        status: e.status,
+        detail: e.message,
+      }))
+      .otherwise(() => ({
+        code: 'INTERNAL_SERVER_ERROR' as const,
+        status: HTTP_INTERNAL_SERVER_ERROR,
+        detail: 'Unexpected server error',
+      }));
 
     const handle = c.var.logHandle;
     if (handle) {
@@ -114,18 +116,7 @@ app
       });
     }
 
-    if (isHttp) {
-      return sendProblem(c, makeProblem({ code, status, detail: error.message }));
-    }
-
-    return sendProblem(
-      c,
-      makeProblem({
-        code: 'INTERNAL_SERVER_ERROR',
-        status: HTTP_INTERNAL_SERVER_ERROR,
-        detail: 'Unexpected server error',
-      })
-    );
+    return sendProblem(c, makeProblem({ code, status, detail }));
   });
 
 export default app;

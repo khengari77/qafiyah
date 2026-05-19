@@ -10,6 +10,7 @@ import type {
 import { eraSlugSchema, meterSlugSchema, poemSlugSchema, poetSlugSchema } from '@qafiyah/contracts';
 import { type SQL, sql } from 'drizzle-orm';
 import { err, ok, type Result } from 'neverthrow';
+import { match } from 'ts-pattern';
 import * as v from 'valibot';
 import type { DbClient } from './client';
 import { type ExecuteAsError, executeAs } from './execute-as';
@@ -161,20 +162,20 @@ async function lookupFilterIds(
   const themeBucket: number[] = [];
   const rhymeBucket: number[] = [];
   for (const row of rowsResult.value) {
-    switch (row.kind) {
-      case 'meter':
-        meterBucket.push(row.id);
-        break;
-      case 'era':
-        eraBucket.push(row.id);
-        break;
-      case 'theme':
-        themeBucket.push(row.id);
-        break;
-      case 'rhyme':
-        rhymeBucket.push(row.id);
-        break;
-    }
+    match(row)
+      .with({ kind: 'meter' }, ({ id }) => {
+        meterBucket.push(id);
+      })
+      .with({ kind: 'era' }, ({ id }) => {
+        eraBucket.push(id);
+      })
+      .with({ kind: 'theme' }, ({ id }) => {
+        themeBucket.push(id);
+      })
+      .with({ kind: 'rhyme' }, ({ id }) => {
+        rhymeBucket.push(id);
+      })
+      .exhaustive();
   }
   return ok({
     meterIds: meterFilter ? meterBucket : null,

@@ -1,5 +1,6 @@
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
+import { match, P } from 'ts-pattern';
 import { ERROR_BASE_URL } from '@/constants';
 
 export type ProblemCode =
@@ -81,16 +82,15 @@ export function makeProblem(args: {
     ...(args.instance !== undefined && { instance: args.instance }),
     ...(args.detail !== undefined && { detail: args.detail }),
   };
-  if (args.code === 'INPUT_VALIDATION_FAILED' && args.errors !== undefined) {
-    return {
+  return match({ code: args.code, errors: args.errors })
+    .with({ code: 'INPUT_VALIDATION_FAILED', errors: P.array() }, ({ errors }) => ({
       ...base,
-      kind: 'validation',
-      code: 'INPUT_VALIDATION_FAILED',
-      status: 400,
-      errors: args.errors,
-    };
-  }
-  return { ...base, kind: 'generic' };
+      kind: 'validation' as const,
+      code: 'INPUT_VALIDATION_FAILED' as const,
+      status: 400 as const,
+      errors,
+    }))
+    .otherwise(() => ({ ...base, kind: 'generic' as const }));
 }
 
 function stripKind(problem: ProblemDetail): Omit<ProblemDetail, 'kind'> {

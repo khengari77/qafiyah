@@ -9,6 +9,7 @@ import {
 } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
+import { match } from 'ts-pattern';
 import * as v from 'valibot';
 import { asPoemSlug } from './brand';
 import type { DbClient } from './client';
@@ -427,9 +428,14 @@ function tagExecuteAsError(slug: PoemSlug) {
         readonly slug: PoemSlug;
         readonly issues: readonly string[];
       } =>
-    e.kind === 'sql_error'
-      ? { kind: 'sql_error', slug, message: e.message }
-      : { kind: 'invalid_payload_shape', slug, issues: e.issues };
+    match(e)
+      .with({ kind: 'sql_error' }, ({ message }) => ({ kind: 'sql_error' as const, slug, message }))
+      .with({ kind: 'invalid_payload_shape' }, ({ issues }) => ({
+        kind: 'invalid_payload_shape' as const,
+        slug,
+        issues,
+      }))
+      .exhaustive();
 }
 
 async function loadPoemSlugEnrichment(
@@ -543,9 +549,24 @@ export async function getPoemBySlug(
   const relatedSlugs = related_poems.map((row) => row.poem_slug);
   const enrichmentResult = await loadPoemSlugEnrichment(db, slug, poem, relatedSlugs);
   if (enrichmentResult.isErr()) {
-    const e = enrichmentResult.error;
-    if (e.kind === 'incomplete_enrichment') return err({ kind: 'incomplete_enrichment', slug });
-    return err(e);
+    return err(
+      match(enrichmentResult.error)
+        .with({ kind: 'incomplete_enrichment' }, () => ({
+          kind: 'incomplete_enrichment' as const,
+          slug,
+        }))
+        .with({ kind: 'sql_error' }, ({ message }) => ({
+          kind: 'sql_error' as const,
+          slug,
+          message,
+        }))
+        .with({ kind: 'invalid_payload_shape' }, ({ issues }) => ({
+          kind: 'invalid_payload_shape' as const,
+          slug,
+          issues,
+        }))
+        .exhaustive()
+    );
   }
   return ok(buildPoemResource(poem, related_poems, enrichmentResult.value));
 }

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
+import { match } from 'ts-pattern';
 
 const BASE = 'http://localhost:4321';
 
@@ -86,8 +87,10 @@ async function checkUrl(url: string): Promise<Result<CheckSuccess, CheckFailure>
 }
 
 function describeCheckFailure(failure: CheckFailure): string {
-  if (failure.reason === 'http_error') return `HTTP ${failure.status}`;
-  return `${failure.cause.kind}: ${failure.cause.message}`;
+  return match(failure)
+    .with({ reason: 'http_error' }, ({ status }) => `HTTP ${status}`)
+    .with({ reason: 'fetch_failed' }, ({ cause }) => `${cause.kind}: ${cause.message}`)
+    .exhaustive();
 }
 
 async function cleanup() {

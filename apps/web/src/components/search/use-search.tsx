@@ -13,6 +13,7 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
+import { match } from 'ts-pattern';
 import { INFINITE_SCROLL_THRESHOLD, SEARCH_RESULTS_STALE_TIME_MS, SEARCH_TEXTS } from '@/constants';
 import { search } from '@/lib/api/client';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
@@ -185,14 +186,17 @@ export function useSearch() {
 
   const totalResults = infiniteQuery.data?.pages[0]?.pagination.totalItems ?? 0;
 
-  const status: FetchStatus = (() => {
-    if (!canSearch) return { kind: 'idle' };
-    if (infiniteQuery.isError) return { kind: 'error' };
-    if (infiniteQuery.isLoading) return { kind: 'loading' };
-    if (infiniteQuery.isFetchingNextPage) return { kind: 'success-fetching-more', data };
-    if (infiniteQuery.isSuccess) return { kind: 'success', data };
-    return { kind: 'loading' };
-  })();
+  const status: FetchStatus = match({
+    canSearch,
+    isError: infiniteQuery.isError,
+    isFetchingNextPage: infiniteQuery.isFetchingNextPage,
+    isSuccess: infiniteQuery.isSuccess,
+  })
+    .with({ canSearch: false }, () => ({ kind: 'idle' as const }))
+    .with({ isError: true }, () => ({ kind: 'error' as const }))
+    .with({ isFetchingNextPage: true }, () => ({ kind: 'success-fetching-more' as const, data }))
+    .with({ isSuccess: true }, () => ({ kind: 'success' as const, data }))
+    .otherwise(() => ({ kind: 'loading' as const }));
 
   const { loadMoreRef } = useInfiniteScroll(
     infiniteQuery.fetchNextPage,

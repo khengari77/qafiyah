@@ -1,5 +1,6 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import { themesQueries } from '@qafiyah/db';
+import { match } from 'ts-pattern';
 import { publicProcedure } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
 import { toPoemListItem } from './list-item.mapper';
@@ -21,8 +22,17 @@ export const listThemePoems = publicProcedure.themes.listPoems.handler(
   async ({ context, input, errors }) => {
     const queryResult = await themesQueries.listThemePoems(context.db, input.slug, input.page);
     if (queryResult.isErr()) {
-      if (queryResult.error.kind === 'not_found') throw errors.NOT_FOUND();
-      throw errors.INTERNAL_SERVER_ERROR();
+      throw match(queryResult.error)
+        .with({ kind: 'not_found' }, () => errors.NOT_FOUND())
+        .with({ kind: 'sql_error' }, ({ kind, message }) => {
+          context.log?.({ error_kind: kind, error_detail: message });
+          return errors.INTERNAL_SERVER_ERROR();
+        })
+        .with({ kind: 'invalid_payload_shape' }, ({ kind, issues }) => {
+          context.log?.({ error_kind: kind, error_detail: issues.join('; ') });
+          return errors.INTERNAL_SERVER_ERROR();
+        })
+        .exhaustive();
     }
     const result = queryResult.value;
     context.log?.({

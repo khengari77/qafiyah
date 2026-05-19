@@ -4,6 +4,7 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { err, ok, Result } from 'neverthrow';
+import { match } from 'ts-pattern';
 
 const ROOT = resolve(`${import.meta.dir}/..`);
 
@@ -104,9 +105,16 @@ function findWorkspacePkgs(): Pkg[] {
   const root = readPkg(ROOT, 'root');
   if (root.isOk()) {
     out.push(root.value);
-  } else if (root.error.kind === 'malformed') {
-    console.error(`[doctor] malformed ${root.error.path}: ${root.error.message}`);
-    process.exit(2);
+  } else {
+    match(root.error)
+      .with({ kind: 'malformed' }, (e) => {
+        console.error(`[doctor] malformed ${e.path}: ${e.message}`);
+        process.exit(2);
+      })
+      .with({ kind: 'missing' }, () => {
+        // missing root package.json silently tolerated, matches prior behavior
+      })
+      .exhaustive();
   }
   for (const parent of ['apps', 'packages'] as const) {
     const parentDir = join(ROOT, parent);
@@ -121,9 +129,16 @@ function findWorkspacePkgs(): Pkg[] {
       const pkg = readPkg(childDir, `${parent}/${child}`);
       if (pkg.isOk()) {
         out.push(pkg.value);
-      } else if (pkg.error.kind === 'malformed') {
-        console.error(`[doctor] malformed ${pkg.error.path}: ${pkg.error.message}`);
-        process.exit(2);
+      } else {
+        match(pkg.error)
+          .with({ kind: 'malformed' }, (e) => {
+            console.error(`[doctor] malformed ${e.path}: ${e.message}`);
+            process.exit(2);
+          })
+          .with({ kind: 'missing' }, () => {
+            // missing child package.json silently tolerated, matches prior behavior
+          })
+          .exhaustive();
       }
     }
   }
@@ -193,9 +208,9 @@ function pickCanonical(occurrences: readonly Spec[]): string {
   const parseVersionSpec = (
     spec: string | undefined
   ): { prefix: string; raw: string; version: number[] } => {
-    const match = (spec ?? '').match(VERSION_PREFIX_RE);
-    const prefix = match?.[1] ?? '';
-    const raw = match?.[2] ?? '0';
+    const prefixMatch = (spec ?? '').match(VERSION_PREFIX_RE);
+    const prefix = prefixMatch?.[1] ?? '';
+    const raw = prefixMatch?.[2] ?? '0';
     const version = raw.split('.').map((part) => Number.parseInt(part, 10) || 0);
     while (version.length < 3) version.push(0);
     return { prefix, raw, version };

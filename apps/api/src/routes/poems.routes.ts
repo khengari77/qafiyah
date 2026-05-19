@@ -2,6 +2,7 @@ import { type DbClient, poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { err, ok, type Result } from 'neverthrow';
+import { match, P } from 'ts-pattern';
 import * as v from 'valibot';
 import {
   HTTP_BAD_REQUEST,
@@ -82,35 +83,31 @@ const app = new Hono<AppContext>()
     return c.text(bodyResult.value);
   })
   .onError((error, c) => {
-    if (error instanceof HTTPException) {
-      return sendProblem(
-        c,
-        makeProblem({
-          code: error.status === HTTP_NOT_FOUND ? 'NOT_FOUND' : 'BAD_REQUEST',
-          status: error.status,
-          detail: error.message,
-        })
-      );
-    }
-    console.error(
-      JSON.stringify({
-        source: 'poems.routes',
-        stage: 'onError',
-        method: c.req.method,
-        path: c.req.path,
-        query: c.req.query(),
-        message: error instanceof Error ? error.message : String(error),
-        name: error instanceof Error ? error.name : undefined,
-      })
-    );
-    return sendProblem(
-      c,
-      makeProblem({
-        code: 'INTERNAL_SERVER_ERROR',
-        status: HTTP_INTERNAL_SERVER_ERROR,
-        detail: 'Failed to handle poems route',
-      })
-    );
+    const { code, status, detail } = match(error)
+      .with(P.instanceOf(HTTPException), (e) => ({
+        code: e.status === HTTP_NOT_FOUND ? ('NOT_FOUND' as const) : ('BAD_REQUEST' as const),
+        status: e.status,
+        detail: e.message,
+      }))
+      .otherwise((e) => {
+        console.error(
+          JSON.stringify({
+            source: 'poems.routes',
+            stage: 'onError',
+            method: c.req.method,
+            path: c.req.path,
+            query: c.req.query(),
+            message: e instanceof Error ? e.message : String(e),
+            name: e instanceof Error ? e.name : undefined,
+          })
+        );
+        return {
+          code: 'INTERNAL_SERVER_ERROR' as const,
+          status: HTTP_INTERNAL_SERVER_ERROR,
+          detail: 'Failed to handle poems route',
+        };
+      });
+    return sendProblem(c, makeProblem({ code, status, detail }));
   });
 
 export default app;
