@@ -14,3 +14,13 @@ export const inputValidationErrorMap = {
 export const internalServerErrorMap = {
   INTERNAL_SERVER_ERROR: { status: 500, message: 'Internal server error' },
 } as const;
+
+// Error codes emitted by any contract endpoint. Combines the shared maps above
+// with per-route codes (NOT_FOUND, POEM_PARSE_ERROR). The API derives its public
+// RFC 9457 ProblemCode from this union, so adding a key here is the single
+// source the boundary trusts.
+export type ContractErrorCode =
+  | keyof typeof inputValidationErrorMap
+  | keyof typeof internalServerErrorMap
+  | 'NOT_FOUND'
+  | 'POEM_PARSE_ERROR';

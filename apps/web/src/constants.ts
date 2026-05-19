@@ -316,7 +316,7 @@ const SEARCH_TYPE_LABELS = {
   poets: SEARCH_TEXTS.poetsSearchTypeLabel,
 } as const satisfies Record<(typeof SEARCH_TYPE_VALUES)[number], string>;
 
-const MATCH_TYPE_LABELS = {
+export const MATCH_TYPE_LABELS = {
   all: SEARCH_TEXTS.matchTypeAll,
   exact: SEARCH_TEXTS.matchTypeExact,
   any: SEARCH_TEXTS.matchTypeAny,

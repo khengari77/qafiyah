@@ -32,11 +32,7 @@ export {
   type ThemeSlug,
   themeSlugSchema,
 } from './brands';
+export type { ContractErrorCode } from './constants';
 export { poemDetail } from './poems';
-export { namedSlugRef, pagination, poemListItem } from './schemas';
-export {
-  cleanArabicQuery,
-  poemSearchResult,
-  poetSearchResult,
-  searchInputSchema,
-} from './search';
+export { namedSlugRef, pagination, poemListItem, slugWithPoemCount } from './schemas';
+export { poemSearchResult, poetSearchResult } from './search';

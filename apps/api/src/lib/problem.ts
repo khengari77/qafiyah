@@ -1,15 +1,13 @@
+import type { ContractErrorCode } from '@qafiyah/contracts';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { match, P } from 'ts-pattern';
 import { ERROR_BASE_URL } from '@/constants';
 
-export type ProblemCode =
-  | 'NOT_FOUND'
-  | 'POEM_PARSE_ERROR'
-  | 'INPUT_VALIDATION_FAILED'
-  | 'BAD_REQUEST'
-  | 'INTERNAL_SERVER_ERROR'
-  | 'SERVICE_UNAVAILABLE';
+// @ANCHOR: ContractErrorCode keeps shared codes (NOT_FOUND, POEM_PARSE_ERROR,
+//   INPUT_VALIDATION_FAILED, INTERNAL_SERVER_ERROR) in sync with @qafiyah/contracts.
+//   BAD_REQUEST and SERVICE_UNAVAILABLE are API-only and live here.
+export type ProblemCode = ContractErrorCode | 'BAD_REQUEST' | 'SERVICE_UNAVAILABLE';
 
 type ValidationIssue = {
   readonly path?: string;

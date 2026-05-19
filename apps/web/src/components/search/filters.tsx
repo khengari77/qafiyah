@@ -9,15 +9,14 @@ import {
   METERS_NOUN_FORMS,
   RHYMES_NOUN_FORMS,
   SEARCH_TEXTS,
+  type SelectOption,
   THEMES_NOUN_FORMS,
 } from '@/constants';
 import { cn } from '@/lib/utils';
 
-type FilterOption = { readonly value: string; readonly label: string };
-
 type MultiFilter = {
   readonly selected: readonly string[];
-  readonly options: readonly FilterOption[];
+  readonly options: readonly SelectOption[];
   readonly onChange: (v: string | string[]) => void;
 };
 
@@ -25,12 +24,12 @@ type Props = {
   readonly filters: {
     readonly searchType: {
       readonly value: string;
-      readonly options: readonly [FilterOption, FilterOption];
+      readonly options: readonly [SelectOption, SelectOption];
       readonly onChange: (v: string) => void;
     };
     readonly matchType: {
       readonly value: string;
-      readonly options: readonly FilterOption[];
+      readonly options: readonly SelectOption[];
       readonly onChange: (v: string) => void;
     };
     readonly eras: MultiFilter;

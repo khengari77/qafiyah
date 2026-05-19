@@ -1,69 +1,59 @@
 /**
  * Minimal Valibot schemas used to validate response bodies in tests.
  * Replaces ad-hoc `(await res.json()) as ListBody` casts.
+ *
+ * Shapes are built from `@qafiyah/contracts` so tests stay in lockstep with the
+ * wire contract. The local `slug = v.string()` keeps slug validation loose
+ * (unbranded) — tests only need to confirm the field is present, not that it
+ * matches a brand.
  */
 
+import { SEARCH_TYPE_VALUES } from '@qafiyah/constants';
+import { namedSlugRef, pagination, slugWithPoemCount } from '@qafiyah/contracts';
 import * as v from 'valibot';
 
 const slug = v.string();
-
-const paginationSchema = v.object({
-  page: v.number(),
-  pageSize: v.number(),
-  totalPages: v.number(),
-  totalItems: v.number(),
-});
-
-const namedSlugRefSchema = v.object({
-  name: v.string(),
-  slug,
-});
-
-const slugWithPoemCountSchema = v.object({
-  name: v.string(),
-  slug,
-  poemsCount: v.number(),
-});
+const looseNamedSlugRef = namedSlugRef(slug);
 
 export const listBodySchema = v.object({
   data: v.array(v.unknown()),
-  pagination: paginationSchema,
-  meta: v.optional(slugWithPoemCountSchema),
+  pagination,
+  meta: v.optional(slugWithPoemCount(slug)),
 });
 
 export const slugListResponseSchema = v.object({
   data: v.array(v.string()),
-  pagination: paginationSchema,
+  pagination,
 });
 
 export const poemDetailResponseSchema = v.object({
   data: v.object({
     title: v.string(),
     slug,
-    poet: namedSlugRefSchema,
-    meter: namedSlugRefSchema,
-    theme: namedSlugRefSchema,
-    era: namedSlugRefSchema,
+    poet: looseNamedSlugRef,
+    meter: looseNamedSlugRef,
+    theme: looseNamedSlugRef,
+    era: looseNamedSlugRef,
     relatedPoems: v.array(
       v.object({
         title: v.string(),
         slug,
-        poet: namedSlugRefSchema,
-        meter: namedSlugRefSchema,
+        poet: looseNamedSlugRef,
+        meter: looseNamedSlugRef,
       })
     ),
   }),
 });
 
 export const searchBodySchema = v.object({
-  searchType: v.union([v.literal('poems'), v.literal('poets')]),
+  searchType: v.picklist(SEARCH_TYPE_VALUES),
   data: v.array(
     v.object({
       type: v.string(),
       slug: v.optional(slug),
     })
   ),
-  pagination: paginationSchema,
+  pagination,
 });
 
 export const problemDetailSchema = v.object({

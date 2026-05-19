@@ -1,5 +1,10 @@
 import type { Context } from 'hono';
-import { HTTP_INTERNAL_SERVER_ERROR, LOG_PROD_SAMPLE_RATE, LOG_SLOW_REQUEST_MS } from '@/constants';
+import {
+  type API_SERVICE_NAME,
+  HTTP_INTERNAL_SERVER_ERROR,
+  LOG_PROD_SAMPLE_RATE,
+  LOG_SLOW_REQUEST_MS,
+} from '@/constants';
 import type { AppContext } from '@/types';
 
 export type DomainFields = {
@@ -23,7 +28,7 @@ export type DomainFields = {
 };
 
 type ServiceMeta = {
-  readonly name: 'qafiyah-api';
+  readonly name: typeof API_SERVICE_NAME;
   readonly environment: string;
 };
 

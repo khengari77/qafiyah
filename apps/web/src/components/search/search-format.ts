@@ -2,6 +2,7 @@ import type { MatchType, SearchType } from '@qafiyah/constants';
 import { formatArabicCount } from 'arabic-count-format';
 import {
   type ArabicNounForms,
+  MATCH_TYPE_LABELS,
   NON_ARABIC_BASIC_REGEX,
   QUERY_DISPLAY_TRUNCATE_LENGTH,
   RESULT_TEXT_TRUNCATE_LENGTH,
@@ -46,12 +47,7 @@ export function getResultText({
     return `عثر على ${resultsText} ${SEARCH_TEXTS.filterOnlyResultLabel} بحثًا عن «${searchTypeText}»`;
   }
 
-  const matchTypeLabels = {
-    any: SEARCH_TEXTS.matchTypeAny,
-    all: SEARCH_TEXTS.matchTypeAll,
-    exact: SEARCH_TEXTS.matchTypeExact,
-  } as const satisfies Readonly<Record<MatchType, string>>;
-  const matchTypeText = matchTypeLabels[matchType];
+  const matchTypeText = MATCH_TYPE_LABELS[matchType];
 
   const cleanedInput = query.replace(NON_ARABIC_BASIC_REGEX, '');
   const shortenedInputText =

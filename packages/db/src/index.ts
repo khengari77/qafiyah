@@ -1,5 +1,5 @@
-export type { CreateDbError, DbClient, DbMode, InvalidUrlError } from './client';
-export { createDb, detectDbMode } from './client';
+export type { DbClient } from './client';
+export { createDb } from './client';
 export * as erasQueries from './eras.queries';
 export * as metersQueries from './meters.queries';
 export * as poemsQueries from './poems.queries';
