@@ -36,7 +36,7 @@ These symptoms point to a single root cause: the build re-uses the same HTTP edg
 
 - Preserving the existing static output structure, canonical URLs, SEO metadata, sitemap, and JSON-LD payloads byte-equivalent.
 - Preserving the React-islands-only client behavior of `apps/web`.
-- Preserving the `@qafiyah/db` package contract (sole consumer remains `apps/api` at runtime; the web *build script* becomes an additional build-time consumer).
+- Preserving the `@qafiyah/db` package contract (sole consumer remains `apps/api` at runtime; the web _build script_ becomes an additional build-time consumer).
 - Not shipping `@qafiyah/db` code into the browser bundle.
 
 **Non-goals (this iteration).**
@@ -88,7 +88,7 @@ Single-file Bun/Node script. Imports `createDb` from `@qafiyah/db` and the same 
 
 1. Read `DATABASE_URL` from env. Source: same `apps/api/.dev.vars` the API uses today (or any explicit env, validated up front). Fail loudly if missing.
 2. `createDb(DATABASE_URL, { mode: 'long-lived' })` — uses the existing 20-connection pool profile from `packages/db/src/client.ts`.
-3. Run bulk queries (one per call), each returning the *full* dataset for its entity. Where the existing query is paginated, the snapshot generator calls it in a loop until exhausted, or calls a new "unpaginated" variant inside `@qafiyah/db` if cleaner (see §6 for the choice).
+3. Run bulk queries (one per call), each returning the _full_ dataset for its entity. Where the existing query is paginated, the snapshot generator calls it in a loop until exhausted, or calls a new "unpaginated" variant inside `@qafiyah/db` if cleaner (see §6 for the choice).
 4. For poem details: list all poem slugs, then run the existing `getPoemBySlug`-equivalent (the Postgres function that returns the poem + ~10 related) in parallel batches of ~20 against the local pool.
 5. Compute a per-entity SHA-256 hash from canonicalized JSON of each emitted record (`poem`, `era`, `meter`, …). Aggregate into `snapshot-meta.json`.
 6. Write JSON files atomically (`*.json.tmp` → `rename`).
@@ -140,12 +140,12 @@ src/lib/data/
 
 **7 dynamic routes with `getStaticPaths`:**
 
-| File | Loader call | Props returned |
-|---|---|---|
-| `pages/poems/[slug].astro` | `allPoems()` | `{ poem, layout }` |
-| `pages/poets/page/[page].astro` | `allPoets()` | `{ poets, pagination }` |
-| `pages/poets/[slug]/page/[page].astro` | `getPoetPoemsPage(slug, page)` | `{ poems, poet, pagination }` |
-| `pages/eras/[slug]/page/[page].astro` | `getEraPoemsPage(slug, page)` | `{ poems, era, pagination }` |
+| File                                    | Loader call                     | Props returned                 |
+| --------------------------------------- | ------------------------------- | ------------------------------ |
+| `pages/poems/[slug].astro`              | `allPoems()`                    | `{ poem, layout }`             |
+| `pages/poets/page/[page].astro`         | `allPoets()`                    | `{ poets, pagination }`        |
+| `pages/poets/[slug]/page/[page].astro`  | `getPoetPoemsPage(slug, page)`  | `{ poems, poet, pagination }`  |
+| `pages/eras/[slug]/page/[page].astro`   | `getEraPoemsPage(slug, page)`   | `{ poems, era, pagination }`   |
 | `pages/meters/[slug]/page/[page].astro` | `getMeterPoemsPage(slug, page)` | `{ poems, meter, pagination }` |
 | `pages/rhymes/[slug]/page/[page].astro` | `getRhymePoemsPage(slug, page)` | `{ poems, rhyme, pagination }` |
 | `pages/themes/[slug]/page/[page].astro` | `getThemePoemsPage(slug, page)` | `{ poems, theme, pagination }` |
@@ -184,12 +184,12 @@ For paginated routes, `getStaticPaths` iterates entities, computes pages from ea
 
 **4 frontmatter-fetch routes (no `getStaticPaths`):**
 
-| File | Loader call |
-|---|---|
-| `pages/eras/index.astro` | `allEras()` (replaces `fetchEras`) |
-| `pages/meters/index.astro` | `allMeters()` |
-| `pages/rhymes/index.astro` | `allRhymes()` |
-| `pages/themes/index.astro` | `allThemes()` |
+| File                       | Loader call                        |
+| -------------------------- | ---------------------------------- |
+| `pages/eras/index.astro`   | `allEras()` (replaces `fetchEras`) |
+| `pages/meters/index.astro` | `allMeters()`                      |
+| `pages/rhymes/index.astro` | `allRhymes()`                      |
+| `pages/themes/index.astro` | `allThemes()`                      |
 
 Pure frontmatter swap. No `Astro.props` needed since these are single-instance pages.
 
@@ -232,7 +232,7 @@ Add `apps/web/.data/` to the relevant `.gitignore` (root or `apps/web/.gitignore
 
 ### 5.2 Tests removed / migrated
 
-- Tests under `apps/web/` that imported from `src/lib/api/static/*` migrate to import from `src/lib/data/*`. Functional assertions adapt to the new accessors. Any `vi.mock('@orpc/client')` or `apiServer` stubs are removed — the loader is the new boundary to mock when a page's behavior is being tested. Per the existing feedback memory ("@qafiyah/db is the DB boundary for test-mocking"), apps/web tests continue to *not* mock `@qafiyah/db` — they mock the loader.
+- Tests under `apps/web/` that imported from `src/lib/api/static/*` migrate to import from `src/lib/data/*`. Functional assertions adapt to the new accessors. Any `vi.mock('@orpc/client')` or `apiServer` stubs are removed — the loader is the new boundary to mock when a page's behavior is being tested. Per the existing feedback memory ("@qafiyah/db is the DB boundary for test-mocking"), apps/web tests continue to _not_ mock `@qafiyah/db` — they mock the loader.
 
 ### 5.3 SEO verification
 
@@ -315,15 +315,15 @@ The current iteration only writes `snapshot-meta.json` with the right shape. No 
 
 ## 8. Expected speedup
 
-| Step | Now | After |
-|---|---|---|
-| Wrangler boot                | ~5–10 s | 0 |
-| ~100k HTTP fetches           | ~75–90 min | 0 |
-| Bulk DB queries              | included above | ~15–30 s |
-| Per-poem related-fn (×100k, pool=20) | included | ~5–15 s |
-| Astro HTML rendering         | ~30 min | ~5–15 min (parallel, CPU-bound) |
-| Snapshot file I/O            | 0 | ~1–3 s |
-| **Total**                    | **~2 h** | **~6–16 min** |
+| Step                                 | Now            | After                           |
+| ------------------------------------ | -------------- | ------------------------------- |
+| Wrangler boot                        | ~5–10 s        | 0                               |
+| ~100k HTTP fetches                   | ~75–90 min     | 0                               |
+| Bulk DB queries                      | included above | ~15–30 s                        |
+| Per-poem related-fn (×100k, pool=20) | included       | ~5–15 s                         |
+| Astro HTML rendering                 | ~30 min        | ~5–15 min (parallel, CPU-bound) |
+| Snapshot file I/O                    | 0              | ~1–3 s                          |
+| **Total**                            | **~2 h**       | **~6–16 min**                   |
 
 The HTTP and Wrangler overheads — dominating ~90 min today — drop to ~0. The Astro rendering phase compresses because each page's frontmatter becomes a memory read instead of an HTTP RTT, and pages render in parallel across cores. Target: 10–15× speedup; 20× is plausible on an 8-core box with healthy I/O.
 
@@ -332,7 +332,7 @@ The HTTP and Wrangler overheads — dominating ~90 min today — drop to ~0. The
 ## 9. Boundaries & invariants
 
 - **Browser bundle untouched.** Nothing under `apps/web/src/lib/data/` may be imported by client islands. Vite's SSR-only transform handles this; we add a CI check (knip or a simple grep) only if a regression occurs.
-- **`@qafiyah/db` boundary.** `apps/api` remains the runtime consumer. `apps/web/scripts/generate-snapshot.ts` becomes a *build-time* consumer. No `@qafiyah/db` import appears under `apps/web/src/`.
+- **`@qafiyah/db` boundary.** `apps/api` remains the runtime consumer. `apps/web/scripts/generate-snapshot.ts` becomes a _build-time_ consumer. No `@qafiyah/db` import appears under `apps/web/src/`.
 - **Production runtime is unaffected.** `apps/api` (Cloudflare Workers), `apiBrowser` (browser-side search), the prod DB, nginx config, and `/v1/poems/random` are all untouched.
 - **Output equivalence.** `dist/` should be byte-equivalent or near-equivalent to today's output for SEO/UX purposes. `verify-seo.ts` is the gate.
 
