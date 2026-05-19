@@ -1,13 +1,12 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchRhymes } from '@/lib/api/static/collections';
+import { allRhymes } from '@/lib/data/collections';
 import { toArabicDigits } from '@/lib/arabic';
-import { unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const rhymes = unwrapForBoundary(await fetchRhymes(), 'fetchRhymes');
+const rhymes = allRhymes();
 
 const title = `${SITE_NAME_AR} | تصفح حسب القوافي`;
 const description = `قوافي الشعر العربي على ${SITE_NAME_AR}: من الهمزة إلى الياء — تصفح القصائد حسب حرف الروي مع إحصاءات لكل قافية (${toArabicDigits(rhymes.length)} حرفًا).`;
