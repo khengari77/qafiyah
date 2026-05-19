@@ -2,13 +2,12 @@
 import { formatArabicCount } from 'arabic-count-format';
 import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchEras } from '@/lib/api/static/collections';
+import { allEras } from '@/lib/data/collections';
 import { toArabicDigits } from '@/lib/arabic';
-import { unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const eras = unwrapForBoundary(await fetchEras(), 'fetchEras');
+const eras = allEras();
 
 const eraLabel = formatArabicCount({
   count: eras.length,

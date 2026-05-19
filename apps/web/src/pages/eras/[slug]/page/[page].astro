@@ -1,46 +1,36 @@
 ---
-import { eraSlugSchema } from '@qafiyah/contracts';
-import * as v from 'valibot';
+import type { GetStaticPaths } from 'astro';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchEraPoemPage, fetchEras } from '@/lib/api/static/collections';
+import { allEras, getEraPoemsPage } from '@/lib/data/collections';
 import { toArabicDigits } from '@/lib/arabic';
-import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { generatePageNumbers, parsePageParam } from '@/lib/page-numbers';
+import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
-export async function getStaticPaths() {
-  const eras = unwrapForBoundary(await fetchEras(), 'fetchEras');
-  const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const era of eras) {
+export const getStaticPaths = (() => {
+  const out: Array<{
+    params: { slug: string; page: string };
+    props: ReturnType<typeof getEraPoemsPage>;
+  }> = [];
+  for (const era of allEras()) {
     for (const page of generatePageNumbers(era.poemsCount)) {
-      params.push({ params: { slug: era.slug, page: page.toString() } });
+      out.push({
+        params: { slug: era.slug, page: page.toString() },
+        props: getEraPoemsPage(era.slug, page),
+      });
     }
   }
-  return params;
-}
+  return out;
+}) satisfies GetStaticPaths;
 
-const parsedSlug = v.safeParse(eraSlugSchema, Astro.params.slug);
-const pageResult = parsePageParam(Astro.params.page);
-if (!parsedSlug.success || pageResult.isErr()) {
-  return Astro.redirect('/404');
-}
-const slug = parsedSlug.output;
-const pageNumber = pageResult.value;
-const page = pageNumber.toString();
-
-const responseResult = await fetchEraPoemPage(slug, pageNumber);
-if (responseResult.isErr()) {
-  if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw boundaryError('fetchEraPoemPage', responseResult.error);
-}
-const response = responseResult.value;
-
-const poems = response.data;
-const era = response.meta;
-const { totalPages } = response.pagination;
+const { poems, era, pagination } = Astro.props as Awaited<
+  ReturnType<typeof getStaticPaths>
+>[number]['props'];
+const slug = era.slug;
+const pageNumber = pagination.page;
+const totalPages = pagination.totalPages;
 const hasNextPage = pageNumber < totalPages;
 const hasPrevPage = pageNumber > 1;
 const nextPageUrl = `/eras/${slug}/page/${pageNumber + 1}`;
@@ -48,7 +38,7 @@ const prevPageUrl = `/eras/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 const eraTitle = `${era.name}ين`;
 
-const title = `${SITE_NAME_AR} | قصائد ال${era.name}ين | صفحة (${toArabicDigits(page as string)})`;
+const title = `${SITE_NAME_AR} | قصائد ال${era.name}ين | صفحة (${toArabicDigits(pageNumber.toString())})`;
 const description = `قصائد العصر ال${era.name} على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}، ${toArabicDigits(era.poemsCount)} قصيدة من شعراء العصر ال${era.name}.`;
 
 const collectionJsonLd = {
