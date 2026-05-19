@@ -1,5 +1,4 @@
 import type { PoemSlug } from '@qafiyah/contracts';
-import { err, ok, type Result } from 'neverthrow';
 import {
   POEM_DEFAULT_TITLE,
   POEM_KEYWORDS_JOIN_SEPARATOR,
@@ -12,8 +11,6 @@ import {
   UNKNOWN_POET_NAME,
 } from '@/constants';
 import type { Poem } from '@/lib/api/rpc';
-import { fetchPoem } from '@/lib/api/static/poems';
-import type { ApiFetchError } from '@/lib/api/static/result';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { flattenVerses } from '@/lib/flatten-verses';
 
@@ -102,13 +99,11 @@ function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
   };
 }
 
-export type LoadPoemPageError = ApiFetchError;
+export type LoadPoemPageError = never;
 
-export async function loadPoemPage(
+export function buildPoemPage(
+  poem: Poem,
   slug: PoemSlug
-): Promise<Result<{ readonly poem: Poem; readonly layout: PoemLayoutProps }, LoadPoemPageError>> {
-  const poemResult = await fetchPoem(slug);
-  if (poemResult.isErr()) return err(poemResult.error);
-  const poem = poemResult.value;
-  return ok({ poem, layout: buildPoemLayout(poem, slug) });
+): { readonly poem: Poem; readonly layout: PoemLayoutProps } {
+  return { poem, layout: buildPoemLayout(poem, slug) };
 }
