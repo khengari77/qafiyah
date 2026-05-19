@@ -50,7 +50,15 @@ async function probePort(port: number, hostname: string): Promise<boolean> {
     // Bun.connect requires at least one of `data` or `drain` on `socket` — see
     // also scripts/check-port.ts. The socket is closed immediately, so the
     // handler is never invoked.
-    const sock = await Bun.connect({ hostname, port, socket: { data() { /* noop */ } } });
+    const sock = await Bun.connect({
+      hostname,
+      port,
+      socket: {
+        data() {
+          /* noop */
+        },
+      },
+    });
     sock.end();
     return true;
   } catch {
