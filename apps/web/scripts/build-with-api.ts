@@ -98,11 +98,22 @@ async function main(): Promise<Result<number, BuildError>> {
     console.log('[build-with-api] API already running on port', DEV_API_PORT, ', reusing.');
   } else {
     console.log('[build-with-api] Starting wrangler dev for @qafiyah/api...');
+    // Wrangler's Node wrapper accumulates per-request state during the long
+    // static build (~50k pages × 1 fetch each). Default V8 old-space is ~1.5GB
+    // and OOMs after ~10 minutes (~140MB/min). 12GB is sized for the full
+    // ~2h build with headroom; WRANGLER_LOG=warn keeps stdout from bloating
+    // bun --filter's buffer with per-request "GET … 200 OK" lines.
+    const nodeOptions = `${process.env['NODE_OPTIONS'] ?? ''} --max-old-space-size=12288`.trim();
     api = Bun.spawn(['bun', '--filter=@qafiyah/api', 'run', 'dev'], {
       cwd: repoRoot,
       stdin: 'inherit',
       stdout: 'inherit',
       stderr: 'inherit',
+      env: {
+        ...process.env,
+        NODE_OPTIONS: nodeOptions,
+        WRANGLER_LOG: process.env['WRANGLER_LOG'] ?? 'warn',
+      },
       onExit(proc, exitCode) {
         if (exitCode !== null && exitCode !== 0 && proc.signalCode !== 'SIGTERM') {
           console.error(
