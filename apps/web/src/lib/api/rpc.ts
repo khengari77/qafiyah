@@ -17,21 +17,6 @@ type ApiOutputs = InferContractRouterOutputs<AppContract>;
 
 type DataField<T> = T extends { data: infer D } ? D : never;
 
-// Collection items
-export type Era = DataField<ApiOutputs['eras']['list']>[number];
-export type Meter = DataField<ApiOutputs['meters']['list']>[number];
-export type Rhyme = DataField<ApiOutputs['rhymes']['list']>[number];
-export type Theme = DataField<ApiOutputs['themes']['list']>[number];
-export type Poet = DataField<ApiOutputs['poets']['list']>[number];
-
-// Full envelopes (carry data + pagination + meta)
-export type EraPoemsResponse = ApiOutputs['eras']['listPoems'];
-export type MeterPoemsResponse = ApiOutputs['meters']['listPoems'];
-export type PoetPoemsResponse = ApiOutputs['poets']['listPoems'];
-export type RhymePoemsResponse = ApiOutputs['rhymes']['listPoems'];
-export type ThemePoemsResponse = ApiOutputs['themes']['listPoems'];
-export type PoetsResponse = ApiOutputs['poets']['list'];
-
 // Single resource
 export type Poem = DataField<ApiOutputs['poems']['getPoemBySlug']>;
 

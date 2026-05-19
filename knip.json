@@ -2,5 +2,10 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreWorkspaces": ["packages/typescript"],
   "ignoreBinaries": ["pkill"],
-  "ignoreFiles": ["apps/web/worker-configuration.d.ts"]
+  "ignoreFiles": ["apps/web/worker-configuration.d.ts"],
+  "workspaces": {
+    "apps/web": {
+      "entry": ["scripts/generate-snapshot.ts"]
+    }
+  }
 }

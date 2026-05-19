@@ -12,6 +12,15 @@ type NextHandlerError = {
   readonly name?: string;
 };
 
+// @NOTE: cached at module scope so we don't spin up a fresh postgres pool on
+// every request. In Cloudflare Workers each isolate handles many requests; in
+// wrangler dev the process is long-lived. The static web build hits this API
+// ~50k times — per-request pool creation churns connections and eventually
+// wedges wrangler/postgres. DATABASE_URL is constant per isolate, so caching
+// by-isolate is correct. Failures aren't cached so a fixed config recovers on
+// the next request.
+let cachedDb: DbClient | undefined;
+
 export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
   const bindingsResult = parseBindings(c.env);
   if (bindingsResult.isErr()) {
@@ -33,27 +42,31 @@ export const dbMiddleware = createMiddleware<AppContext>(async (c, next) => {
       })
     );
   }
-  const dbResult = createDb(bindingsResult.value.DATABASE_URL);
-  if (dbResult.isErr()) {
-    console.error(
-      JSON.stringify({
-        source: 'db.middleware',
-        stage: 'create_db',
-        path: c.req.path,
-        method: c.req.method,
-        error: dbResult.error,
-      })
-    );
-    return sendProblem(
-      c,
-      makeProblem({
-        code: 'INTERNAL_SERVER_ERROR',
-        status: HTTP_INTERNAL_SERVER_ERROR,
-        detail: 'Server misconfigured',
-      })
-    );
+  let db = cachedDb;
+  if (!db) {
+    const dbResult = createDb(bindingsResult.value.DATABASE_URL);
+    if (dbResult.isErr()) {
+      console.error(
+        JSON.stringify({
+          source: 'db.middleware',
+          stage: 'create_db',
+          path: c.req.path,
+          method: c.req.method,
+          error: dbResult.error,
+        })
+      );
+      return sendProblem(
+        c,
+        makeProblem({
+          code: 'INTERNAL_SERVER_ERROR',
+          status: HTTP_INTERNAL_SERVER_ERROR,
+          detail: 'Server misconfigured',
+        })
+      );
+    }
+    db = dbResult.value;
+    cachedDb = db;
   }
-  const db: DbClient = dbResult.value;
   c.set('db', db);
   const nextResult = await ResultAsync.fromPromise(
     next(),

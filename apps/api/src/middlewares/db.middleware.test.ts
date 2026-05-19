@@ -49,7 +49,7 @@ describe('dbMiddleware', () => {
     expect(res.status).toBe(500);
   });
 
-  it('creates a fresh db client per request for a localhost URL', async () => {
+  it('caches the db client across requests within one module instance', async () => {
     const app = buildAppWithMiddleware(await reimportMiddleware());
     const env = { DATABASE_URL: 'postgresql://u:p@127.0.0.1:5433/d' };
 
@@ -57,16 +57,23 @@ describe('dbMiddleware', () => {
     await app.fetch(new Request('http://localhost/test'), env);
     await app.fetch(new Request('http://localhost/test'), env);
 
-    expect(createMockDbFactory).toHaveBeenCalledTimes(3);
+    expect(createMockDbFactory).toHaveBeenCalledTimes(1);
   });
 
-  it('creates a fresh db client per request for a remote URL', async () => {
+  it('does not cache failures so a recovered config works on retry', async () => {
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const app = buildAppWithMiddleware(await reimportMiddleware());
-    const env = { DATABASE_URL: 'postgresql://u:p@db.example.com:5432/d' };
 
-    await app.fetch(new Request('http://localhost/test'), env);
-    await app.fetch(new Request('http://localhost/test'), env);
+    const bad = await app.fetch(new Request('http://localhost/test'), {
+      DATABASE_URL: 'not-a-url',
+    });
+    expect(bad.status).toBe(500);
 
-    expect(createMockDbFactory).toHaveBeenCalledTimes(2);
+    const good = await app.fetch(new Request('http://localhost/test'), {
+      DATABASE_URL: 'postgresql://u:p@127.0.0.1:5433/d',
+    });
+    consoleSpy.mockRestore();
+    expect(good.status).toBe(200);
+    expect(createMockDbFactory).toHaveBeenCalledTimes(1);
   });
 });

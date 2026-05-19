@@ -99,8 +99,6 @@ function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
   };
 }
 
-export type LoadPoemPageError = never;
-
 export function buildPoemPage(
   poem: Poem,
   slug: PoemSlug

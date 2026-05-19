@@ -80,7 +80,10 @@ function isValidFile(name: string): boolean {
   return stripped.split('.').every(isValidSegment);
 }
 
-const isValidDir = (name: string): boolean => isValidSegment(name);
+function isValidDir(name: string): boolean {
+  const stripped = name.startsWith('.') ? name.slice(1) : name;
+  return stripped.split('.').every(isValidSegment);
+}
 
 type Violation = { kind: 'file' | 'dir'; path: string };
 

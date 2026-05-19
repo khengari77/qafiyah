@@ -31,6 +31,7 @@ export function castPartialAsDbClient<T extends object>(partial: T): DbClient {
   return partial as unknown as DbClient;
 }
 
+// biome-ignore lint/style/noProcessEnv: test-only helper reads env directly to gate integration tests
 const TEST_DATABASE_URL = process.env['TEST_DATABASE_URL'] ?? '';
 
 // Integration test helper — skips the callback when TEST_DATABASE_URL is absent.

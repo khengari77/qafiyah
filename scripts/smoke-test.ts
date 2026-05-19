@@ -24,7 +24,7 @@ const URLS = [
 ];
 
 const STARTUP_TIMEOUT_MS = 120_000;
-const REQUEST_TIMEOUT_MS = 5_000;
+const REQUEST_TIMEOUT_MS = 10_000;
 const POLL_INTERVAL_MS = 250;
 const POLL_FETCH_MS = 500;
 const ROOT_URL = `${BASE}/`;

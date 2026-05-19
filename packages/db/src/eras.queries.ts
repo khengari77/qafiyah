@@ -6,7 +6,12 @@ import { asEraSlug } from './brand';
 import type { DbClient } from './client';
 import { ERAS_SORT_ORDER } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import { type PoemListRow, parentScopedPoemRowSchema, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
+import {
+  type PoemListRow,
+  parentScopedPoemRowSchema,
+  parentStatsRowSchema,
+  rawPoemRowSchema,
+} from './row-schemas';
 import { eraStats } from './schema';
 
 const ERAS_SORT_INDEX = new Map<string, number>(ERAS_SORT_ORDER.map((name, i) => [name, i]));

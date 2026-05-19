@@ -6,7 +6,12 @@ import { asRhymeSlug } from './brand';
 import type { DbClient } from './client';
 import { ARABIC_LETTERS_MAP } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import { type PoemListRow, parentScopedPoemRowSchema, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
+import {
+  type PoemListRow,
+  parentScopedPoemRowSchema,
+  parentStatsRowSchema,
+  rawPoemRowSchema,
+} from './row-schemas';
 import { rhymeStats } from './schema';
 
 const PARENS_REGEX = /[()]/g;

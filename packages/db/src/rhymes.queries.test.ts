@@ -1,6 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asRhymeSlug } from './brand';
-import { listAllRhymePoems, listRhymePoems, listRhymes, normalizeRhymePattern } from './rhymes.queries';
+import {
+  listAllRhymePoems,
+  listRhymePoems,
+  listRhymes,
+  normalizeRhymePattern,
+} from './rhymes.queries';
 import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 
 describe('normalizeRhymePattern', () => {
