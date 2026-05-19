@@ -41,6 +41,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9",
+    "@qafiyah/db": "workspace:*",
     "@orpc/contract": "^1.14.3",
     "@qafiyah/typescript": "workspace:*",
     "@tailwindcss/vite": "^4.3.0",
