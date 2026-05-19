@@ -12,7 +12,6 @@ import { createHash } from 'node:crypto';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { poemDetail, poemListItem } from '@qafiyah/contracts';
-import * as v from 'valibot';
 import {
   createDb,
   type DbClient,
@@ -23,6 +22,7 @@ import {
   rhymesQueries,
   themesQueries,
 } from '@qafiyah/db';
+import * as v from 'valibot';
 
 const HERE = import.meta.dir;
 const WEB_DIR = resolve(HERE, '..');
@@ -35,9 +35,7 @@ type GeneratorError =
   | { readonly kind: 'write_failed'; readonly path: string; readonly message: string };
 
 function reportAndExit(error: GeneratorError): never {
-  console.error(
-    JSON.stringify({ source: 'generate-snapshot', error, output_dir: OUTPUT_DIR })
-  );
+  console.error(JSON.stringify({ source: 'generate-snapshot', error, output_dir: OUTPUT_DIR }));
   process.exit(1);
 }
 
@@ -122,8 +120,13 @@ function sha256OfStableJson(value: unknown): string {
   function sort(node: unknown): unknown {
     if (Array.isArray(node)) return node.map(sort);
     if (node && typeof node === 'object') {
+      const compareKeys = (a: string, b: string): number => {
+        if (a < b) return -1;
+        if (a > b) return 1;
+        return 0;
+      };
       const entries = Object.entries(node as Record<string, unknown>).sort(([a], [b]) =>
-        a < b ? -1 : a > b ? 1 : 0
+        compareKeys(a, b)
       );
       const out: Record<string, unknown> = {};
       for (const [k, val] of entries) out[k] = sort(val);
@@ -131,7 +134,9 @@ function sha256OfStableJson(value: unknown): string {
     }
     return node;
   }
-  return createHash('sha256').update(JSON.stringify(sort(value)), 'utf8').digest('hex');
+  return createHash('sha256')
+    .update(JSON.stringify(sort(value)), 'utf8')
+    .digest('hex');
 }
 
 async function main(): Promise<void> {
@@ -151,28 +156,44 @@ async function main(): Promise<void> {
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'eras' }));
   const erasResult = await erasQueries.listEras(db);
   if (erasResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'eras', message: JSON.stringify(erasResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'eras',
+      message: JSON.stringify(erasResult.error),
+    });
   }
   await writeJsonAtomic('eras', erasResult.value);
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'meters' }));
   const metersResult = await metersQueries.listMeters(db);
   if (metersResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'meters', message: JSON.stringify(metersResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'meters',
+      message: JSON.stringify(metersResult.error),
+    });
   }
   await writeJsonAtomic('meters', metersResult.value);
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'rhymes' }));
   const rhymesResult = await rhymesQueries.listRhymes(db);
   if (rhymesResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'rhymes', message: JSON.stringify(rhymesResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'rhymes',
+      message: JSON.stringify(rhymesResult.error),
+    });
   }
   await writeJsonAtomic('rhymes', rhymesResult.value);
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'themes' }));
   const themesResult = await themesQueries.listThemes(db);
   if (themesResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'themes', message: JSON.stringify(themesResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'themes',
+      message: JSON.stringify(themesResult.error),
+    });
   }
   await writeJsonAtomic('themes', themesResult.value);
 
@@ -181,7 +202,11 @@ async function main(): Promise<void> {
   for (let page = 1; ; page++) {
     const pageResult = await poetsQueries.listPoets(db, page);
     if (pageResult.isErr()) {
-      reportAndExit({ kind: 'query_failed', entity: 'poets', message: JSON.stringify(pageResult.error) });
+      reportAndExit({
+        kind: 'query_failed',
+        entity: 'poets',
+        message: JSON.stringify(pageResult.error),
+      });
     }
     poets.push(...pageResult.value.poets);
     if (page >= pageResult.value.totalPages) break;
@@ -191,46 +216,72 @@ async function main(): Promise<void> {
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'era-poems' }));
   const eraPoemsResult = await erasQueries.listAllEraPoems(db);
   if (eraPoemsResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'era-poems', message: JSON.stringify(eraPoemsResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'era-poems',
+      message: JSON.stringify(eraPoemsResult.error),
+    });
   }
   await writeJsonAtomic('era-poems', mapToRecord(eraPoemsResult.value));
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'meter-poems' }));
   const meterPoemsResult = await metersQueries.listAllMeterPoems(db);
   if (meterPoemsResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'meter-poems', message: JSON.stringify(meterPoemsResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'meter-poems',
+      message: JSON.stringify(meterPoemsResult.error),
+    });
   }
   await writeJsonAtomic('meter-poems', mapToRecord(meterPoemsResult.value));
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'rhyme-poems' }));
   const rhymePoemsResult = await rhymesQueries.listAllRhymePoems(db);
   if (rhymePoemsResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'rhyme-poems', message: JSON.stringify(rhymePoemsResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'rhyme-poems',
+      message: JSON.stringify(rhymePoemsResult.error),
+    });
   }
   await writeJsonAtomic('rhyme-poems', mapToRecord(rhymePoemsResult.value));
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'theme-poems' }));
   const themePoemsResult = await themesQueries.listAllThemePoems(db);
   if (themePoemsResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'theme-poems', message: JSON.stringify(themePoemsResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'theme-poems',
+      message: JSON.stringify(themePoemsResult.error),
+    });
   }
   await writeJsonAtomic('theme-poems', mapToRecord(themePoemsResult.value));
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'poet-poems' }));
   const poetPoemsResult = await poetsQueries.listAllPoetPoems(db);
   if (poetPoemsResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'poet-poems', message: JSON.stringify(poetPoemsResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'poet-poems',
+      message: JSON.stringify(poetPoemsResult.error),
+    });
   }
   await writeJsonAtomic('poet-poems', mapToRecord(poetPoemsResult.value));
 
   console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'poem-slugs' }));
   const slugsResult = await poemsQueries.listAllPoemSlugs(db);
   if (slugsResult.isErr()) {
-    reportAndExit({ kind: 'query_failed', entity: 'poem-slugs', message: JSON.stringify(slugsResult.error) });
+    reportAndExit({
+      kind: 'query_failed',
+      entity: 'poem-slugs',
+      message: JSON.stringify(slugsResult.error),
+    });
   }
   const slugs = slugsResult.value;
 
-  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'poem-details', count: slugs.length }));
+  console.log(
+    JSON.stringify({ source: 'generate-snapshot', stage: 'poem-details', count: slugs.length })
+  );
   const startedAt = Date.now();
   const details = await mapWithConcurrency(slugs, 20, async (slug) => {
     const result = await poemsQueries.getPoemBySlug(db, slug);
@@ -268,12 +319,14 @@ async function main(): Promise<void> {
     };
   }
   await writeJsonAtomic('poems', poemsRecord);
-  console.log(JSON.stringify({
-    source: 'generate-snapshot',
-    stage: 'poem-details-done',
-    count: details.length,
-    elapsed_ms: elapsed,
-  }));
+  console.log(
+    JSON.stringify({
+      source: 'generate-snapshot',
+      stage: 'poem-details-done',
+      count: details.length,
+      elapsed_ms: elapsed,
+    })
+  );
 
   // Spec §6.6: belt-and-suspenders runtime check against silent schema drift
   // between @qafiyah/db query shapes and @qafiyah/contracts Valibot schemas.
@@ -378,7 +431,9 @@ async function main(): Promise<void> {
     per_page_hashes: perPageHashes,
   });
 
-  console.log(JSON.stringify({ source: 'generate-snapshot', status: 'done', output_dir: OUTPUT_DIR }));
+  console.log(
+    JSON.stringify({ source: 'generate-snapshot', status: 'done', output_dir: OUTPUT_DIR })
+  );
 }
 
 await main();

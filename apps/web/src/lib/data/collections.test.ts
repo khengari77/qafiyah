@@ -1,9 +1,8 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { EraSlug, MeterSlug, RhymeSlug, ThemeSlug } from '@qafiyah/contracts';
-import { __resetLoaderCacheForTests, setSnapshotDirForTests } from './loader';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   __resetCollectionsMemoForTests,
   allEras,
@@ -15,10 +14,9 @@ import {
   getRhymePoemsPage,
   getThemePoemsPage,
 } from './collections';
+import { __resetLoaderCacheForTests, setSnapshotDirForTests } from './loader';
 
-const ERAS_FIXTURE = [
-  { slug: 'jahili', name: 'الجاهلي', poetsCount: 12, poemsCount: 31 },
-];
+const ERAS_FIXTURE = [{ slug: 'jahili', name: 'الجاهلي', poetsCount: 12, poemsCount: 31 }];
 const METERS_FIXTURE = [{ slug: 'albasit', name: 'البسيط', poemsCount: 31 }];
 const RHYMES_FIXTURE = [{ slug: 'rhyme-1', name: 'باء', poemsCount: 31 }];
 const THEMES_FIXTURE = [{ slug: 'theme-1', name: 'مدح', poemsCount: 31 }];
@@ -99,10 +97,10 @@ describe('collections data accessor', () => {
   });
 
   it('throws on unknown era slug', () => {
-    expect(() => getEraPoemsPage('missing' as EraSlug, 1)).toThrow(/era 'missing'/i);
+    expect(() => getEraPoemsPage('missing' as EraSlug, 1)).toThrow("era 'missing'");
   });
 
   it('throws on out-of-range page', () => {
-    expect(() => getMeterPoemsPage('albasit' as MeterSlug, 99)).toThrow(/page 99 out of range/i);
+    expect(() => getMeterPoemsPage('albasit' as MeterSlug, 99)).toThrow('page 99 out of range');
   });
 });

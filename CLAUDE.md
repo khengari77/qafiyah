@@ -59,7 +59,7 @@ vitest run path/to/file.test.ts
 - **One mission per session.**
 - Port conflicts → `bun run clean:dev`, restart.
 - DB dumps in `dumps/` (newest = latest). See `dumps/MAINTAINERS_GUIDE.md`.
-- **Web build is ~2 hours.** To verify quickly: run build, kill after ~20s (enough for Wrangler + first `getStaticPaths` errors), then `bun run clean:dev`.
+- **Web build is ~10–15 min** (snapshot ~7 min + astro build ~5–10 min). To verify quickly: run `bunx astro build` directly (skips snapshot), kill after ~60s (enough for snapshot reuse + first dist files), then `bun run clean:dev`.
 
 ## Quality Checklist (TRUST 5)
 

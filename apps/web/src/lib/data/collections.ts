@@ -1,11 +1,5 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
-import type {
-  EraSlug,
-  MeterSlug,
-  RhymeSlug,
-  ThemeSlug,
-  poemListItem,
-} from '@qafiyah/contracts';
+import type { EraSlug, MeterSlug, poemListItem, RhymeSlug, ThemeSlug } from '@qafiyah/contracts';
 import type * as v from 'valibot';
 import { readSnapshotFile } from './loader';
 
@@ -15,8 +9,18 @@ type Era = {
   readonly poetsCount: number;
   readonly poemsCount: number;
 };
-type Meter = { readonly slug: MeterSlug; readonly name: string; readonly poemsCount: number };
-type Rhyme = { readonly slug: RhymeSlug; readonly name: string; readonly poemsCount: number };
+type Meter = {
+  readonly slug: MeterSlug;
+  readonly name: string;
+  readonly poemsCount: number;
+  readonly poetsCount: number;
+};
+type Rhyme = {
+  readonly slug: RhymeSlug;
+  readonly name: string;
+  readonly poemsCount: number;
+  readonly poetsCount: number;
+};
 type Theme = { readonly slug: ThemeSlug; readonly name: string; readonly poemsCount: number };
 type PoemListItem = v.InferOutput<typeof poemListItem>;
 
@@ -59,7 +63,7 @@ function loadList<T>(snapshotName: string, memoKey: keyof Memo): readonly T[] {
 
 function loadPoemsMap<Slug extends string>(
   snapshotName: string,
-  memoKey: keyof Memo,
+  memoKey: keyof Memo
 ): ReadonlyMap<Slug, readonly PoemListItem[]> {
   const hit = memo[memoKey] as ReadonlyMap<Slug, readonly PoemListItem[]> | null;
   if (hit) return hit;
@@ -101,7 +105,7 @@ export function allThemes(): readonly Theme[] {
 
 export function getEraPoemsPage(
   slug: EraSlug,
-  page: number,
+  page: number
 ): { poems: readonly PoemListItem[]; era: Era; pagination: Pagination } {
   const poems = loadPoemsMap<EraSlug>('era-poems', 'eraPoems').get(slug);
   if (!poems) throw new Error(`era '${slug}' not found in snapshot`);
@@ -109,14 +113,16 @@ export function getEraPoemsPage(
   if (!era) throw new Error(`era meta for '${slug}' not found`);
   const pagination = paginationFor(poems.length, page);
   if (page < 1 || page > pagination.totalPages) {
-    throw new Error(`era '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`);
+    throw new Error(
+      `era '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`
+    );
   }
   return { poems: pageSlice(poems, page), era, pagination };
 }
 
 export function getMeterPoemsPage(
   slug: MeterSlug,
-  page: number,
+  page: number
 ): { poems: readonly PoemListItem[]; meter: Meter; pagination: Pagination } {
   const poems = loadPoemsMap<MeterSlug>('meter-poems', 'meterPoems').get(slug);
   if (!poems) throw new Error(`meter '${slug}' not found in snapshot`);
@@ -124,14 +130,16 @@ export function getMeterPoemsPage(
   if (!meter) throw new Error(`meter meta for '${slug}' not found`);
   const pagination = paginationFor(poems.length, page);
   if (page < 1 || page > pagination.totalPages) {
-    throw new Error(`meter '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`);
+    throw new Error(
+      `meter '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`
+    );
   }
   return { poems: pageSlice(poems, page), meter, pagination };
 }
 
 export function getRhymePoemsPage(
   slug: RhymeSlug,
-  page: number,
+  page: number
 ): { poems: readonly PoemListItem[]; rhyme: Rhyme; pagination: Pagination } {
   const poems = loadPoemsMap<RhymeSlug>('rhyme-poems', 'rhymePoems').get(slug);
   if (!poems) throw new Error(`rhyme '${slug}' not found in snapshot`);
@@ -139,14 +147,16 @@ export function getRhymePoemsPage(
   if (!rhyme) throw new Error(`rhyme meta for '${slug}' not found`);
   const pagination = paginationFor(poems.length, page);
   if (page < 1 || page > pagination.totalPages) {
-    throw new Error(`rhyme '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`);
+    throw new Error(
+      `rhyme '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`
+    );
   }
   return { poems: pageSlice(poems, page), rhyme, pagination };
 }
 
 export function getThemePoemsPage(
   slug: ThemeSlug,
-  page: number,
+  page: number
 ): { poems: readonly PoemListItem[]; theme: Theme; pagination: Pagination } {
   const poems = loadPoemsMap<ThemeSlug>('theme-poems', 'themePoems').get(slug);
   if (!poems) throw new Error(`theme '${slug}' not found in snapshot`);
@@ -154,7 +164,9 @@ export function getThemePoemsPage(
   if (!theme) throw new Error(`theme meta for '${slug}' not found`);
   const pagination = paginationFor(poems.length, page);
   if (page < 1 || page > pagination.totalPages) {
-    throw new Error(`theme '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`);
+    throw new Error(
+      `theme '${slug}' page ${page} out of range (totalPages=${pagination.totalPages})`
+    );
   }
   return { poems: pageSlice(poems, page), theme, pagination };
 }

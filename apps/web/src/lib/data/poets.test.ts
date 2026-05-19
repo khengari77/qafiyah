@@ -1,15 +1,10 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { PoetSlug } from '@qafiyah/contracts';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { __resetLoaderCacheForTests, setSnapshotDirForTests } from './loader';
-import {
-  __resetPoetsMemoForTests,
-  allPoets,
-  getPoetPoemsPage,
-  getPoetsPage,
-} from './poets';
+import { __resetPoetsMemoForTests, allPoets, getPoetPoemsPage, getPoetsPage } from './poets';
 
 const POETS_FIXTURE = [
   { slug: 'poet-a', name: 'Poet A', poemsCount: 65 },
@@ -60,7 +55,7 @@ describe('poets data accessor', () => {
   });
 
   it('getPoetsPage throws on out-of-range page', () => {
-    expect(() => getPoetsPage(99)).toThrow(/poets page 99 out of range/i);
+    expect(() => getPoetsPage(99)).toThrow('poets page 99 out of range');
   });
 
   it('getPoetPoemsPage returns the page slice + meta', () => {
@@ -72,10 +67,10 @@ describe('poets data accessor', () => {
   });
 
   it('getPoetPoemsPage throws on unknown poet', () => {
-    expect(() => getPoetPoemsPage('missing' as PoetSlug, 1)).toThrow(/poet 'missing'/i);
+    expect(() => getPoetPoemsPage('missing' as PoetSlug, 1)).toThrow("poet 'missing'");
   });
 
   it('getPoetPoemsPage throws on out-of-range page for a known poet', () => {
-    expect(() => getPoetPoemsPage('poet-b' as PoetSlug, 5)).toThrow(/page 5 out of range/i);
+    expect(() => getPoetPoemsPage('poet-b' as PoetSlug, 5)).toThrow('page 5 out of range');
   });
 });

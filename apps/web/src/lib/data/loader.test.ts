@@ -4,6 +4,8 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { __resetLoaderCacheForTests, readSnapshotFile, setSnapshotDirForTests } from './loader';
 
+const snapshotNotFoundPattern = /snapshot file .* not found.*regenerate/i;
+
 describe('readSnapshotFile', () => {
   let tempDir: string;
 
@@ -35,8 +37,6 @@ describe('readSnapshotFile', () => {
   });
 
   it('throws a clear error when the snapshot file is missing', () => {
-    expect(() => readSnapshotFile('does-not-exist')).toThrow(
-      /snapshot file .* not found.*regenerate/i
-    );
+    expect(() => readSnapshotFile('does-not-exist')).toThrow(snapshotNotFoundPattern);
   });
 });

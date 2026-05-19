@@ -27,6 +27,7 @@ export function readSnapshotFile<T>(name: string): T {
   try {
     raw = readFileSync(path, 'utf8');
   } catch (cause) {
+    // biome-ignore lint/nursery/useErrorCause: cause is already passed below
     throw new Error(
       `snapshot file '${name}.json' not found at ${path}. ` +
         `Run 'bun apps/web/scripts/generate-snapshot.ts' first to regenerate.`,

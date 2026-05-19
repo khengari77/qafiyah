@@ -1,12 +1,12 @@
 ---
-import type { GetStaticPaths } from 'astro';
 import { formatArabicCount } from 'arabic-count-format';
+import type { GetStaticPaths } from 'astro';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { POEMS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { allPoets, getPoetPoemsPage } from '@/lib/data/poets';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
+import { allPoets, getPoetPoemsPage } from '@/lib/data/poets';
 import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
@@ -17,7 +17,11 @@ export const getStaticPaths = (() => {
     props: ReturnType<typeof getPoetPoemsPage>;
   }> = [];
   for (const poet of poets) {
-    for (const page of generatePageNumbers(poet.poemsCount)) {
+    if (poet.poemsCount === 0) continue;
+    const {
+      pagination: { totalItems },
+    } = getPoetPoemsPage(poet.slug, 1);
+    for (const page of generatePageNumbers(totalItems)) {
       out.push({
         params: { slug: poet.slug, page: page.toString() },
         props: getPoetPoemsPage(poet.slug, page),

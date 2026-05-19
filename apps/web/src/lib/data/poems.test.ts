@@ -1,10 +1,12 @@
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { PoemSlug } from '@qafiyah/contracts';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { __resetLoaderCacheForTests, setSnapshotDirForTests } from './loader';
-import { __resetPoemsMemoForTests, allPoems, allPoemSlugs, getPoem } from './poems';
+import { __resetPoemsMemoForTests, allPoemSlugs, allPoems, getPoem } from './poems';
+
+const poemNotFoundPattern = /poem 'missing' not found in snapshot/i;
 
 const FIXTURE: Record<string, unknown> = {
   'poem-a': {
@@ -53,7 +55,7 @@ describe('poems data accessor', () => {
   });
 
   it('getPoem throws a clear error for an unknown slug', () => {
-    expect(() => getPoem('missing' as PoemSlug)).toThrow(/poem 'missing' not found in snapshot/i);
+    expect(() => getPoem('missing' as PoemSlug)).toThrow(poemNotFoundPattern);
   });
 
   it('allPoemSlugs returns the slugs', () => {
