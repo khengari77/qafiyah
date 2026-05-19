@@ -12,7 +12,7 @@ import path from 'node:path';
 
 const webDir = path.resolve(import.meta.dir, '..');
 
-async function run(cmd: readonly string[], cwd: string): Promise<number> {
+async function run(cmd: string[], cwd: string): Promise<number> {
   const proc = Bun.spawn(cmd, { cwd, stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
   return await proc.exited;
 }

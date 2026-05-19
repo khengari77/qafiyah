@@ -17,12 +17,4 @@ const _env = defineEnv({
 export const env = {
   PUBLIC_API_URL: _env.PUBLIC_API_URL,
   DEV: _rawEnv['DEV'] === true,
-  // @NOTE: BUILD_API_URL is a Node-only build-time variable injected by
-  // scripts/build-with-api.ts. Vite's import.meta.env only exposes PUBLIC_*
-  // vars, so we read from process.env directly and guard for the browser
-  // (where `process` is undefined).
-  BUILD_API_URL:
-    typeof process === 'undefined'
-      ? undefined
-      : (process.env['BUILD_API_URL'] as string | undefined),
 };
