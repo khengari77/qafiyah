@@ -8,6 +8,7 @@ compatibility_flags = ["nodejs_compat"]
 ENVIRONMENT = "production"
 
 [dev]
+ip = "127.0.0.1"
 port = 8787
 
 [observability]

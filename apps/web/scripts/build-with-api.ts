@@ -47,7 +47,10 @@ type BuildError = {
 
 async function probePort(port: number, hostname: string): Promise<boolean> {
   try {
-    const sock = await Bun.connect({ hostname, port, socket: {} });
+    // Bun.connect requires at least one of `data` or `drain` on `socket` — see
+    // also scripts/check-port.ts. The socket is closed immediately, so the
+    // handler is never invoked.
+    const sock = await Bun.connect({ hostname, port, socket: { data() { /* noop */ } } });
     sock.end();
     return true;
   } catch {
@@ -74,7 +77,7 @@ async function waitForPort(
     hints: [
       `Did 'bun db:setup' succeed?`,
       `Is DATABASE_URL set in apps/api/.dev.vars?`,
-      `Try running 'bun --filter @qafiyah/api dev' manually to see errors.`,
+      `Try running 'bun --filter=@qafiyah/api dev' manually to see errors.`,
     ],
   });
 }
@@ -87,7 +90,7 @@ async function main(): Promise<Result<number, BuildError>> {
     console.log('[build-with-api] API already running on port', DEV_API_PORT, ', reusing.');
   } else {
     console.log('[build-with-api] Starting wrangler dev for @qafiyah/api...');
-    api = Bun.spawn(['bun', '--filter', '@qafiyah/api', 'run', 'dev'], {
+    api = Bun.spawn(['bun', '--filter=@qafiyah/api', 'run', 'dev'], {
       cwd: repoRoot,
       stdin: 'inherit',
       stdout: 'inherit',
