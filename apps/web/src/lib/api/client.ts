@@ -1,6 +1,12 @@
-import { API_RANDOM_POEM_PATH, type MatchType, type SearchType } from '@qafiyah/constants';
-import { type PoemSlug, poemSlugSchema } from '@qafiyah/contracts';
-import { err, ok, type Result, ResultAsync } from 'neverthrow';
+import type { MatchType, SearchType } from '@qafiyah/constants';
+import {
+  buildRandomPoemUrl,
+  fetchRandomPoemText,
+  type PoemSlug,
+  poemSlugSchema,
+  type RandomPoemTransportError,
+} from '@qafiyah/contracts';
+import { err, ok, type Result } from 'neverthrow';
 import * as v from 'valibot';
 import { apiBrowser, type PoemsSearchEnvelope, type PoetsSearchEnvelope } from './rpc';
 import { type ApiFetchError, callApi } from './static/result';
@@ -34,13 +40,7 @@ export function search(args: SearchArgs): Promise<Result<SearchResult, ApiFetchE
 }
 
 export type FetchRandomPoemSlugError =
-  | {
-      readonly kind: 'network';
-      readonly url: string;
-      readonly cause: { readonly message: string; readonly name?: string };
-    }
-  | { readonly kind: 'http_error'; readonly url: string; readonly status: number }
-  | { readonly kind: 'empty_response'; readonly url: string }
+  | RandomPoemTransportError
   | {
       readonly kind: 'invalid_slug';
       readonly url: string;
@@ -51,32 +51,14 @@ export type FetchRandomPoemSlugError =
 export async function fetchRandomPoemSlug(
   baseUrl: string
 ): Promise<Result<PoemSlug, FetchRandomPoemSlugError>> {
-  const url = `${baseUrl}${API_RANDOM_POEM_PATH}?option=slug`;
-  const fetchResult = await ResultAsync.fromPromise(
-    fetch(url),
-    (cause): FetchRandomPoemSlugError => ({
-      kind: 'network',
-      url,
-      cause: {
-        message: cause instanceof Error ? cause.message : String(cause),
-        ...(cause instanceof Error && cause.name ? { name: cause.name } : {}),
-      },
-    })
-  );
-  if (fetchResult.isErr()) return err(fetchResult.error);
-  const response = fetchResult.value;
-  if (!response.ok) {
-    return err({ kind: 'http_error', url, status: response.status });
-  }
-  const slug = (await response.text()).trim();
-  if (!slug) {
-    return err({ kind: 'empty_response', url });
-  }
+  const textResult = await fetchRandomPoemText(baseUrl, 'slug');
+  if (textResult.isErr()) return err(textResult.error);
+  const slug = textResult.value;
   const parsed = v.safeParse(poemSlugSchema, slug);
   if (!parsed.success) {
     return err({
       kind: 'invalid_slug',
-      url,
+      url: buildRandomPoemUrl(baseUrl, 'slug'),
       raw: slug,
       issues: parsed.issues.map((i) => i.message),
     });

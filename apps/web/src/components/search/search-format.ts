@@ -1,9 +1,7 @@
-import type { MatchType, SearchType } from '@qafiyah/constants';
-import { formatArabicCount } from 'arabic-count-format';
+import { type MatchType, NON_ARABIC_BASIC_REGEX, type SearchType } from '@qafiyah/constants';
+import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import {
-  type ArabicNounForms,
   MATCH_TYPE_LABELS,
-  NON_ARABIC_BASIC_REGEX,
   QUERY_DISPLAY_TRUNCATE_LENGTH,
   RESULT_TEXT_TRUNCATE_LENGTH,
   RESULTS_NOUN_FORMS,

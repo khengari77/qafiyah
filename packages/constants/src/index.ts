@@ -22,7 +22,13 @@ export const DEV_API_PORT = 8787;
 // Covers: Basic Arabic (U+0600–U+06FF), Supplement (U+0750–U+077F), Extended-A (U+08A0–U+08FF).
 export const NON_ARABIC_AND_SPACE_REGEX = /[^؀-ۿݐ-ݿࢠ-ࣿ\s]/g;
 
+// Narrower variant covering only the Basic Arabic block; for pure display contexts
+// where the Supplement and Extended-A blocks are not expected.
+export const NON_ARABIC_BASIC_REGEX = /[^؀-ۿ\s]/g;
+
 export const WHITESPACE_RUN_REGEX = /\s+/g;
+
+export const DOUBLE_QUOTE_REGEX = /"/g;
 
 export const MAX_QUERY_LENGTH = 50;
 

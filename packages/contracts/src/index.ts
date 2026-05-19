@@ -34,5 +34,16 @@ export {
 } from './brands';
 export type { ContractErrorCode } from './constants';
 export { poemDetail } from './poems';
+export {
+  buildRandomPoemUrl,
+  fetchRandomPoemText,
+  type RandomPoemOption,
+  type RandomPoemTransportError,
+} from './random-poem-client';
 export { namedSlugRef, pagination, poemListItem, slugWithPoemCount } from './schemas';
-export { poemSearchResult, poetSearchResult } from './search';
+export {
+  cleanArabicQuery,
+  poemSearchResult,
+  poetSearchResult,
+  sanitizeArabicInput,
+} from './search';

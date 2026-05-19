@@ -1,4 +1,4 @@
-import { MAX_TWEET_LENGTH } from '@qafiyah/constants';
+import { DOUBLE_QUOTE_REGEX, MAX_TWEET_LENGTH } from '@qafiyah/constants';
 import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
 import {
   eraSlugSchema,
@@ -17,8 +17,6 @@ import { TASHKEEL_REGEX } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
 import type { PoemListRow } from './row-schemas';
 import { poemsFullData } from './schema';
-
-const DOUBLE_QUOTE_REGEX = /"/g;
 
 declare const PoemIdBrand: unique symbol;
 export type PoemId = number & { readonly [PoemIdBrand]: 'PoemId' };

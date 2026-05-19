@@ -19,12 +19,16 @@ import {
 import { DEFAULT_PAGE, inputValidationErrorMap, internalServerErrorMap } from './constants';
 import { namedSlugRef, pageParam, pagination } from './schemas';
 
+// Strips non-Arabic chars and collapses internal whitespace runs.
+// Does NOT trim leading/trailing whitespace — for that, use cleanArabicQuery.
+// The no-trim variant is for live-typing sanitization where mid-word spaces
+// must survive until the user submits.
+export function sanitizeArabicInput(raw: string): string {
+  return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(WHITESPACE_RUN_REGEX, ' ');
+}
+
 export function cleanArabicQuery(query: string): string {
-  return query
-    .trim()
-    .replace(NON_ARABIC_AND_SPACE_REGEX, '')
-    .replace(WHITESPACE_RUN_REGEX, ' ')
-    .trim();
+  return sanitizeArabicInput(query.trim()).trim();
 }
 
 const meterSlugsSchema = v.optional(v.array(meterSlugSchema), []);

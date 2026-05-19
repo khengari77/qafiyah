@@ -16,6 +16,7 @@
   "dependencies": {
     "@orpc/contract": "^1.14.3",
     "@qafiyah/constants": "workspace:*",
+    "neverthrow": "^8.2.0",
     "valibot": "^1.4.0"
   },
   "devDependencies": {

@@ -1,4 +1,9 @@
-import { API_RANDOM_POEM_PATH, MAX_TWEET_LENGTH, PROD_API_URL } from '@qafiyah/constants';
+import { MAX_TWEET_LENGTH, PROD_API_URL } from '@qafiyah/constants';
+import {
+  buildRandomPoemUrl,
+  fetchRandomPoemText,
+  type RandomPoemTransportError,
+} from '@qafiyah/contracts';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { TwitterApi } from 'twitter-api-v2';
 import { env } from './env';
@@ -6,21 +11,10 @@ import { withRetry } from './retry';
 
 const POEM_RESPONSE_FORMAT = 'lines';
 
+type RetryableTransportError = RandomPoemTransportError & { readonly retryable: boolean };
+
 type FetchPoemError =
-  | {
-      readonly kind: 'network';
-      readonly url: string;
-      readonly message: string;
-      readonly retryable: true;
-    }
-  | { readonly kind: 'rate_limited'; readonly url: string; readonly retryable: false }
-  | {
-      readonly kind: 'http_error';
-      readonly url: string;
-      readonly status: number;
-      readonly retryable: true;
-    }
-  | { readonly kind: 'empty_response'; readonly url: string; readonly retryable: false }
+  | RetryableTransportError
   | {
       readonly kind: 'too_long';
       readonly url: string;
@@ -38,29 +32,20 @@ type PostTweetError =
       readonly retryable: true;
     };
 
+// Network/HTTP failures are transient; rate-limit and empty bodies aren't.
+function tagRetryable(error: RandomPoemTransportError): RetryableTransportError {
+  const retryable = error.kind === 'network' || error.kind === 'http_error';
+  return { ...error, retryable };
+}
+
 async function fetchPoem(): Promise<Result<string, FetchPoemError>> {
-  const url = `${PROD_API_URL}${API_RANDOM_POEM_PATH}?option=${POEM_RESPONSE_FORMAT}`;
-  const fetchResult = await ResultAsync.fromPromise(
-    fetch(url),
-    (cause): FetchPoemError => ({
-      kind: 'network',
-      url,
-      message: cause instanceof Error ? cause.message : String(cause),
-      retryable: true,
-    })
-  );
-  if (fetchResult.isErr()) return err(fetchResult.error);
-  const response = fetchResult.value;
-  if (response.status === 429) return err({ kind: 'rate_limited', url, retryable: false });
-  if (!response.ok) {
-    return err({ kind: 'http_error', url, status: response.status, retryable: true });
-  }
-  const poem = (await response.text()).trim();
-  if (!poem) return err({ kind: 'empty_response', url, retryable: false });
+  const textResult = await fetchRandomPoemText(PROD_API_URL, POEM_RESPONSE_FORMAT);
+  if (textResult.isErr()) return err(tagRetryable(textResult.error));
+  const poem = textResult.value;
   if (poem.length > MAX_TWEET_LENGTH) {
     return err({
       kind: 'too_long',
-      url,
+      url: buildRandomPoemUrl(PROD_API_URL, POEM_RESPONSE_FORMAT),
       length: poem.length,
       max: MAX_TWEET_LENGTH,
       retryable: false,

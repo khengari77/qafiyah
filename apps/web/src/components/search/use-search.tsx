@@ -4,11 +4,11 @@ import {
   MATCH_TYPE_VALUES,
   MAX_QUERY_LENGTH,
   type MatchType,
-  NON_ARABIC_AND_SPACE_REGEX,
   SEARCH_TYPE_VALUES,
   type SearchType,
   WHITESPACE_RUN_REGEX,
 } from '@qafiyah/constants';
+import { sanitizeArabicInput } from '@qafiyah/contracts';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 import type React from 'react';
@@ -40,11 +40,6 @@ function isSearchType(value: string): value is SearchType {
 
 function isMatchType(value: string): value is MatchType {
   return MATCH_TYPE_SET.has(value as MatchType);
-}
-
-// Like cleanArabicQuery but without the trim, so users can still type intermediate spaces.
-function sanitizeArabicInput(raw: string): string {
-  return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(WHITESPACE_RUN_REGEX, ' ');
 }
 
 function validateText(input: string): string | null {

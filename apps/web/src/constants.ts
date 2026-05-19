@@ -6,6 +6,7 @@ import {
   PROD_DOMAIN,
   SEARCH_TYPE_VALUES,
 } from '@qafiyah/constants';
+import type { ArabicNounForms } from 'arabic-count-format';
 import { env } from '@/env';
 import { toArabicDigits } from '@/lib/arabic';
 
@@ -14,28 +15,11 @@ export type SelectOption = {
   readonly label: string;
 };
 
-// Same range as NON_ARABIC_AND_SPACE_REGEX but Basic Arabic block only; used in pure display contexts.
-export const NON_ARABIC_BASIC_REGEX = /[^؀-ۿ\s]/g;
-
-export const DOUBLE_QUOTE_REGEX = /"/g;
 export const CAT_POET_PREFIX_REGEX = /^cat-poet-/;
 
 export const REACT_QUERY_STALE_TIME_MS = 2 * 24 * 60 * 60 * 1000;
 export const REACT_QUERY_GC_TIME_MS = 3 * 24 * 60 * 60 * 1000;
 export const REACT_QUERY_RETRY_COUNT = 1;
-
-export const ERA_NAMES = new Map([
-  ['islamic', 'إسلامي'],
-  ['abbasid', 'عباسي'],
-  ['umayyad', 'أموي'],
-  ['jahili', 'جاهلي'],
-  ['mukhadram', 'مخضرم'],
-  ['andalusian', 'أندلسي'],
-  ['mamluki', 'مملوكي'],
-  ['ottoman', 'عثماني'],
-  ['ayyubi', 'أيوبي'],
-  ['late', 'متأخر'],
-]);
 
 export const DATABASE_DUMPS_URL = `${GITHUB_REPO_URL}/tree/main/dumps`;
 export const DEVELOPER_SITE_URL = 'https://alwalxed.com';
@@ -146,14 +130,6 @@ export const SEARCH_TEXTS = {
   matchTypeAny: 'بعض الكلمات',
   maxLengthErrorTemplate: 'يجب ألا يتجاوز النص {n} حرفًا',
 } as const;
-
-// Mirrors arabic-count-format's `ArabicNounForms`. Declared locally to keep
-// @qafiyah/constants free of runtime dependencies.
-export type ArabicNounForms = {
-  readonly singular: string;
-  readonly dual: string;
-  readonly plural: string;
-};
 
 export const ERAS_NOUN_FORMS = {
   singular: 'عصر',
