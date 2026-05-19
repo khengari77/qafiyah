@@ -1,49 +1,36 @@
 ---
-import { POEMS_PER_PAGE } from '@qafiyah/constants';
+import type { GetStaticPaths } from 'astro';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { CAT_POET_PREFIX_REGEX, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchPoetsPage, fetchPoetsTotalPages } from '@/lib/api/static/poets';
+import { allPoets, getPoetsPage } from '@/lib/data/poets';
 import { toArabicDigits } from '@/lib/arabic';
-import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { parsePageParam } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
-export async function getStaticPaths() {
-  const totalPages = unwrapForBoundary(await fetchPoetsTotalPages(), 'fetchPoetsTotalPages');
-  return Array.from({ length: totalPages }, (_, i) => ({
-    params: { page: (i + 1).toString() },
-  }));
-}
+export const getStaticPaths = (() => {
+  const poets = allPoets();
+  const totalPages = Math.max(1, Math.ceil(poets.length / 30));
+  return Array.from({ length: totalPages }, (_, i) => {
+    const page = i + 1;
+    const { poets: pagePoets, pagination } = getPoetsPage(page);
+    return { params: { page: page.toString() }, props: { poets: pagePoets, pagination } };
+  });
+}) satisfies GetStaticPaths;
 
-const pageResult = parsePageParam(Astro.params.page);
-if (pageResult.isErr()) return Astro.redirect('/404');
-const pageNumber = pageResult.value;
-const page = pageNumber.toString();
-
-const responseResult = await fetchPoetsPage(pageNumber);
-
-if (responseResult.isErr()) {
-  if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw boundaryError('fetchPoetsPage', responseResult.error);
-}
-const response = responseResult.value;
-if (response.data.length === 0) {
-  return Astro.redirect('/404');
-}
-
-const poets = response.data;
-const { pagination } = response;
+const { poets, pagination } = Astro.props as Awaited<
+  ReturnType<typeof getStaticPaths>
+>[number]['props'];
+const pageNumber = pagination.page;
 const totalPoets = pagination.totalItems;
-const totalPages = pagination.totalPages || Math.ceil(totalPoets / POEMS_PER_PAGE);
+const totalPages = pagination.totalPages;
 const hasNextPage = pageNumber < totalPages;
 const hasPrevPage = pageNumber > 1;
 const nextPageUrl = `/poets/page/${pageNumber + 1}`;
 const prevPageUrl = `/poets/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 
-const title = `${SITE_NAME_AR} | الشعراء | صفحة (${toArabicDigits(page as string)})`;
+const title = `${SITE_NAME_AR} | الشعراء | صفحة (${toArabicDigits(pageNumber.toString())})`;
 const description = `الشعراء على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}. تصفح دواوين ${toArabicDigits(totalPoets)} شاعرٍ من العصر الجاهلي إلى الحديث.`;
 
 const collectionJsonLd = {
