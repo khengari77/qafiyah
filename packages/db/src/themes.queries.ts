@@ -5,7 +5,7 @@ import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asThemeSlug } from './brand';
 import type { DbClient } from './client';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
+import { type PoemListRow, parentScopedPoemRowSchema, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { themeStats } from './schema';
 
 export type ThemeStatsRow = {
@@ -108,4 +108,48 @@ export async function listThemePoems(
     total,
     totalPages: Math.ceil(total / limit),
   });
+}
+
+export type ListAllThemePoemsError = ExecuteAsError;
+
+export async function listAllThemePoems(
+  db: DbClient
+): Promise<Result<ReadonlyMap<ThemeSlug, readonly PoemListRow[]>, ListAllThemePoemsError>> {
+  const rawPoemsResult = await executeAs(
+    db,
+    sql`
+      SELECT
+        th.slug::TEXT AS parent_slug,
+        p.title AS title,
+        p.slug::TEXT AS slug,
+        pt.name AS poet_name,
+        pt.slug AS poet_slug,
+        m.name AS meter_name,
+        m.slug AS meter_slug
+      FROM public.poems p
+      JOIN public.poets pt ON p.poet_id = pt.id
+      JOIN public.meters m ON p.meter_id = m.id
+      JOIN public.themes th ON p.theme_id = th.id
+      ORDER BY th.slug, p.id
+    `,
+    parentScopedPoemRowSchema
+  );
+  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
+
+  const grouped = new Map<ThemeSlug, PoemListRow[]>();
+  for (const row of rawPoemsResult.value) {
+    const themeSlug = asThemeSlug(row.parent_slug);
+    const list = grouped.get(themeSlug);
+    const entry: PoemListRow = {
+      title: row.title,
+      slug: row.slug,
+      poetName: row.poet_name,
+      poetSlug: row.poet_slug,
+      meterName: row.meter_name,
+      meterSlug: row.meter_slug,
+    };
+    if (list) list.push(entry);
+    else grouped.set(themeSlug, [entry]);
+  }
+  return ok(grouped);
 }

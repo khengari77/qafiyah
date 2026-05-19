@@ -6,7 +6,7 @@ import { asRhymeSlug } from './brand';
 import type { DbClient } from './client';
 import { ARABIC_LETTERS_MAP } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
+import { type PoemListRow, parentScopedPoemRowSchema, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { rhymeStats } from './schema';
 
 const PARENS_REGEX = /[()]/g;
@@ -148,4 +148,48 @@ export async function listRhymePoems(
     total,
     totalPages: Math.ceil(total / limit),
   });
+}
+
+export type ListAllRhymePoemsError = ExecuteAsError;
+
+export async function listAllRhymePoems(
+  db: DbClient
+): Promise<Result<ReadonlyMap<RhymeSlug, readonly PoemListRow[]>, ListAllRhymePoemsError>> {
+  const rawPoemsResult = await executeAs(
+    db,
+    sql`
+      SELECT
+        r.slug::TEXT AS parent_slug,
+        p.title AS title,
+        p.slug::TEXT AS slug,
+        pt.name AS poet_name,
+        pt.slug AS poet_slug,
+        m.name AS meter_name,
+        m.slug AS meter_slug
+      FROM public.poems p
+      JOIN public.poets pt ON p.poet_id = pt.id
+      JOIN public.meters m ON p.meter_id = m.id
+      JOIN public.rhymes r ON p.rhyme_id = r.id
+      ORDER BY r.slug, p.id
+    `,
+    parentScopedPoemRowSchema
+  );
+  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
+
+  const grouped = new Map<RhymeSlug, PoemListRow[]>();
+  for (const row of rawPoemsResult.value) {
+    const rhymeSlug = asRhymeSlug(row.parent_slug);
+    const list = grouped.get(rhymeSlug);
+    const entry: PoemListRow = {
+      title: row.title,
+      slug: row.slug,
+      poetName: row.poet_name,
+      poetSlug: row.poet_slug,
+      meterName: row.meter_name,
+      meterSlug: row.meter_slug,
+    };
+    if (list) list.push(entry);
+    else grouped.set(rhymeSlug, [entry]);
+  }
+  return ok(grouped);
 }

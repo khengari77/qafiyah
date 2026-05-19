@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asEraSlug } from './brand';
-import { listEraPoems, listEras } from './eras.queries';
-import { castPartialAsDbClient, makeChain } from './test-utils';
+import { listAllEraPoems, listEraPoems, listEras } from './eras.queries';
+import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 
 describe('listEras', () => {
   it('returns rows sorted by ERAS_SORT_ORDER', async () => {
@@ -89,5 +89,28 @@ describe('listEraPoems', () => {
 
     const result = await listEraPoems(mockDb, asEraSlug('x'), 1);
     expect(result._unsafeUnwrap().total).toBe(42);
+  });
+});
+
+describe('listAllEraPoems', () => {
+  it('returns a Map keyed by era slug containing all poems for that era', async () => {
+    await withTestDb(async (db) => {
+      const result = await listAllEraPoems(db);
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+      const map = result.value;
+      expect(map.size).toBeGreaterThan(0);
+      for (const [, poems] of map) {
+        expect(poems.length).toBeGreaterThan(0);
+        expect(poems[0]).toMatchObject({
+          title: expect.any(String),
+          slug: expect.any(String),
+          poetName: expect.any(String),
+          poetSlug: expect.any(String),
+          meterName: expect.any(String),
+          meterSlug: expect.any(String),
+        });
+      }
+    });
   });
 });

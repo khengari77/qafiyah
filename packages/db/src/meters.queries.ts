@@ -6,7 +6,7 @@ import { asMeterSlug } from './brand';
 import type { DbClient } from './client';
 import { FORMAL_METERS } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
+import { type PoemListRow, parentScopedPoemRowSchema, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { meterStats } from './schema';
 
 export type MeterStatsRow = {
@@ -111,4 +111,47 @@ export async function listMeterPoems(
     total,
     totalPages: Math.ceil(total / limit),
   });
+}
+
+export type ListAllMeterPoemsError = ExecuteAsError;
+
+export async function listAllMeterPoems(
+  db: DbClient
+): Promise<Result<ReadonlyMap<MeterSlug, readonly PoemListRow[]>, ListAllMeterPoemsError>> {
+  const rawPoemsResult = await executeAs(
+    db,
+    sql`
+      SELECT
+        m.slug AS parent_slug,
+        p.title AS title,
+        p.slug AS slug,
+        pt.name AS poet_name,
+        pt.slug AS poet_slug,
+        m.name AS meter_name,
+        m.slug AS meter_slug
+      FROM public.poems p
+      JOIN public.poets pt ON p.poet_id = pt.id
+      JOIN public.meters m ON p.meter_id = m.id
+      ORDER BY m.slug, p.id
+    `,
+    parentScopedPoemRowSchema
+  );
+  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
+
+  const grouped = new Map<MeterSlug, PoemListRow[]>();
+  for (const row of rawPoemsResult.value) {
+    const meterSlug = asMeterSlug(row.parent_slug);
+    const list = grouped.get(meterSlug);
+    const entry: PoemListRow = {
+      title: row.title,
+      slug: row.slug,
+      poetName: row.poet_name,
+      poetSlug: row.poet_slug,
+      meterName: row.meter_name,
+      meterSlug: row.meter_slug,
+    };
+    if (list) list.push(entry);
+    else grouped.set(meterSlug, [entry]);
+  }
+  return ok(grouped);
 }

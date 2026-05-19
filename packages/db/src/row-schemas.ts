@@ -16,6 +16,16 @@ export const rawPoemRowSchema = v.object({
   meter_slug: meterSlugSchema,
 });
 
+export const parentScopedPoemRowSchema = v.object({
+  parent_slug: v.string(),
+  title: v.string(),
+  slug: poemSlugSchema,
+  poet_name: v.string(),
+  poet_slug: poetSlugSchema,
+  meter_name: v.string(),
+  meter_slug: meterSlugSchema,
+});
+
 // Types intentionally inferred at use sites via v.InferOutput<typeof ...Schema>;
 // keeping them un-exported avoids unused-export churn.
 

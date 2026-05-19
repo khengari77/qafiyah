@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import type { DbClient } from './client';
+import { createDb, type DbClient } from './client';
 
 type DrizzleChain = {
   readonly where: (...args: readonly unknown[]) => DrizzleChain;
@@ -29,4 +29,14 @@ export function makeChain(data: readonly unknown[]): DrizzleChain {
 // individual tests stay free of `as unknown as DbClient`.
 export function castPartialAsDbClient<T extends object>(partial: T): DbClient {
   return partial as unknown as DbClient;
+}
+
+const TEST_DATABASE_URL = process.env['TEST_DATABASE_URL'] ?? '';
+
+// Integration test helper — skips the callback when TEST_DATABASE_URL is absent.
+// Usage: await withTestDb(async (db) => { ... });
+export async function withTestDb(fn: (db: DbClient) => Promise<void>): Promise<void> {
+  if (TEST_DATABASE_URL === '') return;
+  const db = createDb(TEST_DATABASE_URL)._unsafeUnwrap();
+  await fn(db);
 }

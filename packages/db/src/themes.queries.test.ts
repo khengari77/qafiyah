@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asThemeSlug } from './brand';
-import { castPartialAsDbClient, makeChain } from './test-utils';
-import { listThemePoems, listThemes } from './themes.queries';
+import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
+import { listAllThemePoems, listThemePoems, listThemes } from './themes.queries';
 
 describe('listThemes', () => {
   it('returns themes sorted by poemsCount descending', async () => {
@@ -56,5 +56,28 @@ describe('listThemePoems', () => {
 
     const result = await listThemePoems(mockDb, asThemeSlug('nonexistent'), 1);
     expect(result._unsafeUnwrapErr().kind).toBe('not_found');
+  });
+});
+
+describe('listAllThemePoems', () => {
+  it('returns a Map keyed by theme slug containing all poems for that theme', async () => {
+    await withTestDb(async (db) => {
+      const result = await listAllThemePoems(db);
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+      const map = result.value;
+      expect(map.size).toBeGreaterThan(0);
+      for (const [, poems] of map) {
+        expect(poems.length).toBeGreaterThan(0);
+        expect(poems[0]).toMatchObject({
+          title: expect.any(String),
+          slug: expect.any(String),
+          poetName: expect.any(String),
+          poetSlug: expect.any(String),
+          meterName: expect.any(String),
+          meterSlug: expect.any(String),
+        });
+      }
+    });
   });
 });
