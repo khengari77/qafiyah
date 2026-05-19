@@ -1,13 +1,12 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchThemes } from '@/lib/api/static/collections';
+import { allThemes } from '@/lib/data/collections';
 import { toArabicDigits } from '@/lib/arabic';
-import { unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const themes = unwrapForBoundary(await fetchThemes(), 'fetchThemes');
+const themes = allThemes();
 
 const title = `${SITE_NAME_AR} | تصفح حسب الأغراض`;
 const description = `أغراض الشعر العربي على ${SITE_NAME_AR}: المدح والرثاء والغزل والهجاء والحكمة والوصف وغيرها — ${toArabicDigits(themes.length)} غرضًا مع إحصاءات القصائد لكل غرض.`;

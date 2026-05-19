@@ -1,53 +1,43 @@
 ---
-import { themeSlugSchema } from '@qafiyah/contracts';
-import * as v from 'valibot';
+import type { GetStaticPaths } from 'astro';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchThemePoemPage, fetchThemes } from '@/lib/api/static/collections';
+import { allThemes, getThemePoemsPage } from '@/lib/data/collections';
 import { toArabicDigits } from '@/lib/arabic';
-import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { generatePageNumbers, parsePageParam } from '@/lib/page-numbers';
+import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
-export async function getStaticPaths() {
-  const themes = unwrapForBoundary(await fetchThemes(), 'fetchThemes');
-  const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const theme of themes) {
+export const getStaticPaths = (() => {
+  const out: Array<{
+    params: { slug: string; page: string };
+    props: ReturnType<typeof getThemePoemsPage>;
+  }> = [];
+  for (const theme of allThemes()) {
     for (const page of generatePageNumbers(theme.poemsCount)) {
-      params.push({ params: { slug: theme.slug, page: page.toString() } });
+      out.push({
+        params: { slug: theme.slug, page: page.toString() },
+        props: getThemePoemsPage(theme.slug, page),
+      });
     }
   }
-  return params;
-}
+  return out;
+}) satisfies GetStaticPaths;
 
-const parsedSlug = v.safeParse(themeSlugSchema, Astro.params.slug);
-const pageResult = parsePageParam(Astro.params.page);
-if (!parsedSlug.success || pageResult.isErr()) {
-  return Astro.redirect('/404');
-}
-const slug = parsedSlug.output;
-const pageNumber = pageResult.value;
-const page = pageNumber.toString();
-
-const responseResult = await fetchThemePoemPage(slug, pageNumber);
-if (responseResult.isErr()) {
-  if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw boundaryError('fetchThemePoemPage', responseResult.error);
-}
-const response = responseResult.value;
-
-const poems = response.data;
-const theme = response.meta;
-const { totalPages } = response.pagination;
+const { poems, theme, pagination } = Astro.props as Awaited<
+  ReturnType<typeof getStaticPaths>
+>[number]['props'];
+const slug = theme.slug;
+const pageNumber = pagination.page;
+const totalPages = pagination.totalPages;
 const hasNextPage = pageNumber < totalPages;
 const hasPrevPage = pageNumber > 1;
 const nextPageUrl = `/themes/${slug}/page/${pageNumber + 1}`;
 const prevPageUrl = `/themes/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 
-const title = `${SITE_NAME_AR} | قصائد غرض ${theme.name} | صفحة (${toArabicDigits(page as string)})`;
+const title = `${SITE_NAME_AR} | قصائد غرض ${theme.name} | صفحة (${toArabicDigits(pageNumber.toString())})`;
 const description = `قصائد غرض ${theme.name} على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}، ${toArabicDigits(theme.poemsCount)} قصيدة.`;
 
 const collectionJsonLd = {
