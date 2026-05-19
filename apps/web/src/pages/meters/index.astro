@@ -1,13 +1,12 @@
 ---
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchMeters } from '@/lib/api/static/collections';
+import { allMeters } from '@/lib/data/collections';
 import { toArabicDigits } from '@/lib/arabic';
-import { unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const meters = unwrapForBoundary(await fetchMeters(), 'fetchMeters');
+const meters = allMeters();
 
 const title = `${SITE_NAME_AR} | تصفح حسب البحور`;
 const description = `بحور الشعر العربي على ${SITE_NAME_AR}: الطويل والكامل والوافر والبسيط والمتقارب والمتدارك والرمل والرجز وغيرها — ${toArabicDigits(meters.length)} بحرًا مع عدد القصائد المتوفرة لكل بحر.`;
