@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "bun ../../scripts/check-port.ts 4321 && astro dev",
-    "build": "bun ./scripts/build-with-api.ts",
+    "build": "bun ./scripts/build.ts",
     "build:raw": "astro build",
     "verify:seo": "bun ./scripts/verify-seo.ts",
     "start": "astro preview",
