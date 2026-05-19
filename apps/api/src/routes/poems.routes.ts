@@ -1,3 +1,4 @@
+import { RANDOM_POEM_OPTIONS, type RandomPoemOption } from '@qafiyah/contracts';
 import { type DbClient, poemsQueries } from '@qafiyah/db';
 import { Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
@@ -13,15 +14,13 @@ import {
 import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
 
-type RandomPoemFormat = 'slug' | 'lines';
-
 type RandomPoemError =
   | { readonly kind: 'excerpt_error'; readonly cause: poemsQueries.GetRandomPoemExcerptError }
   | { readonly kind: 'slug_error'; readonly cause: poemsQueries.GetRandomPoemSlugError };
 
 async function fetchRandomPoemBody(
   db: DbClient,
-  format: RandomPoemFormat
+  format: RandomPoemOption
 ): Promise<Result<string, RandomPoemError>> {
   if (format === 'lines') {
     const result = await poemsQueries.getRandomPoemExcerpt(db);
@@ -33,11 +32,11 @@ async function fetchRandomPoemBody(
   return ok(slugResult.value);
 }
 
-const optionSchema = v.optional(v.picklist(['slug', 'lines'] as const), 'slug');
+const optionSchema = v.optional(v.picklist(RANDOM_POEM_OPTIONS), 'slug');
 
 type ParseOptionError = { readonly kind: 'invalid_option'; readonly raw: string | undefined };
 
-function parseOption(raw: string | undefined): Result<RandomPoemFormat, ParseOptionError> {
+function parseOption(raw: string | undefined): Result<RandomPoemOption, ParseOptionError> {
   const parsed = v.safeParse(optionSchema, raw);
   return parsed.success ? ok(parsed.output) : err({ kind: 'invalid_option', raw });
 }

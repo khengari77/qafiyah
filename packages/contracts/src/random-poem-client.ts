@@ -1,7 +1,8 @@
 import { API_RANDOM_POEM_PATH } from '@qafiyah/constants';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 
-export type RandomPoemOption = 'slug' | 'lines';
+export const RANDOM_POEM_OPTIONS = ['slug', 'lines'] as const;
+export type RandomPoemOption = (typeof RANDOM_POEM_OPTIONS)[number];
 
 export type RandomPoemTransportError =
   | {

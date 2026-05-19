@@ -37,6 +37,7 @@ export { poemDetail } from './poems';
 export {
   buildRandomPoemUrl,
   fetchRandomPoemText,
+  RANDOM_POEM_OPTIONS,
   type RandomPoemOption,
   type RandomPoemTransportError,
 } from './random-poem-client';
