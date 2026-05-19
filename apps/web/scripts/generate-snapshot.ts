@@ -58,6 +58,41 @@ async function writeJsonAtomic(name: string, value: unknown): Promise<void> {
   }
 }
 
+type PoemListRow = {
+  readonly title: string;
+  readonly slug: string;
+  readonly poetName: string;
+  readonly poetSlug: string;
+  readonly meterName: string;
+  readonly meterSlug: string;
+};
+
+type PoemListItem = {
+  readonly title: string;
+  readonly slug: string;
+  readonly poet: { readonly name: string; readonly slug: string };
+  readonly meter: { readonly name: string; readonly slug: string };
+};
+
+function toPoemListItem(row: PoemListRow): PoemListItem {
+  return {
+    title: row.title,
+    slug: row.slug,
+    poet: { name: row.poetName, slug: row.poetSlug },
+    meter: { name: row.meterName, slug: row.meterSlug },
+  };
+}
+
+function mapToRecord<Slug extends string>(
+  map: ReadonlyMap<Slug, readonly PoemListRow[]>
+): Record<Slug, PoemListItem[]> {
+  const out: Record<string, PoemListItem[]> = {};
+  for (const [slug, rows] of map) {
+    out[slug] = rows.map(toPoemListItem);
+  }
+  return out as Record<Slug, PoemListItem[]>;
+}
+
 async function main(): Promise<void> {
   const databaseUrl = readDatabaseUrl();
 
@@ -111,6 +146,41 @@ async function main(): Promise<void> {
     if (page >= pageResult.value.totalPages) break;
   }
   await writeJsonAtomic('poets', poets);
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'era-poems' }));
+  const eraPoemsResult = await erasQueries.listAllEraPoems(db);
+  if (eraPoemsResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'era-poems', message: JSON.stringify(eraPoemsResult.error) });
+  }
+  await writeJsonAtomic('era-poems', mapToRecord(eraPoemsResult.value));
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'meter-poems' }));
+  const meterPoemsResult = await metersQueries.listAllMeterPoems(db);
+  if (meterPoemsResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'meter-poems', message: JSON.stringify(meterPoemsResult.error) });
+  }
+  await writeJsonAtomic('meter-poems', mapToRecord(meterPoemsResult.value));
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'rhyme-poems' }));
+  const rhymePoemsResult = await rhymesQueries.listAllRhymePoems(db);
+  if (rhymePoemsResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'rhyme-poems', message: JSON.stringify(rhymePoemsResult.error) });
+  }
+  await writeJsonAtomic('rhyme-poems', mapToRecord(rhymePoemsResult.value));
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'theme-poems' }));
+  const themePoemsResult = await themesQueries.listAllThemePoems(db);
+  if (themePoemsResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'theme-poems', message: JSON.stringify(themePoemsResult.error) });
+  }
+  await writeJsonAtomic('theme-poems', mapToRecord(themePoemsResult.value));
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'poet-poems' }));
+  const poetPoemsResult = await poetsQueries.listAllPoetPoems(db);
+  if (poetPoemsResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'poet-poems', message: JSON.stringify(poetPoemsResult.error) });
+  }
+  await writeJsonAtomic('poet-poems', mapToRecord(poetPoemsResult.value));
 
   console.log(JSON.stringify({ source: 'generate-snapshot', status: 'done', output_dir: OUTPUT_DIR }));
 }
