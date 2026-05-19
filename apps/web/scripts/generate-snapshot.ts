@@ -10,7 +10,15 @@
 
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { createDb, type DbClient } from '@qafiyah/db';
+import {
+  createDb,
+  type DbClient,
+  erasQueries,
+  metersQueries,
+  poetsQueries,
+  rhymesQueries,
+  themesQueries,
+} from '@qafiyah/db';
 
 const HERE = import.meta.dir;
 const WEB_DIR = resolve(HERE, '..');
@@ -64,11 +72,45 @@ async function main(): Promise<void> {
 
   await mkdir(OUTPUT_DIR, { recursive: true });
 
-  // Entity dumps are added in subsequent tasks (T8-T11).
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'eras' }));
+  const erasResult = await erasQueries.listEras(db);
+  if (erasResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'eras', message: JSON.stringify(erasResult.error) });
+  }
+  await writeJsonAtomic('eras', erasResult.value);
 
-  // Voids the "unused variable" lint for db/writeJsonAtomic until later tasks consume them.
-  void db;
-  void writeJsonAtomic;
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'meters' }));
+  const metersResult = await metersQueries.listMeters(db);
+  if (metersResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'meters', message: JSON.stringify(metersResult.error) });
+  }
+  await writeJsonAtomic('meters', metersResult.value);
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'rhymes' }));
+  const rhymesResult = await rhymesQueries.listRhymes(db);
+  if (rhymesResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'rhymes', message: JSON.stringify(rhymesResult.error) });
+  }
+  await writeJsonAtomic('rhymes', rhymesResult.value);
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'themes' }));
+  const themesResult = await themesQueries.listThemes(db);
+  if (themesResult.isErr()) {
+    reportAndExit({ kind: 'query_failed', entity: 'themes', message: JSON.stringify(themesResult.error) });
+  }
+  await writeJsonAtomic('themes', themesResult.value);
+
+  console.log(JSON.stringify({ source: 'generate-snapshot', stage: 'poets' }));
+  const poets: Array<{ slug: string; name: string; poemsCount: number }> = [];
+  for (let page = 1; ; page++) {
+    const pageResult = await poetsQueries.listPoets(db, page);
+    if (pageResult.isErr()) {
+      reportAndExit({ kind: 'query_failed', entity: 'poets', message: JSON.stringify(pageResult.error) });
+    }
+    poets.push(...pageResult.value.poets);
+    if (page >= pageResult.value.totalPages) break;
+  }
+  await writeJsonAtomic('poets', poets);
 
   console.log(JSON.stringify({ source: 'generate-snapshot', status: 'done', output_dir: OUTPUT_DIR }));
 }
