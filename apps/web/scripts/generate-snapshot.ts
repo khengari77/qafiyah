@@ -9,6 +9,7 @@
  */
 
 import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { mkdir, rename, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { poemDetail, poemListItem } from '@qafiyah/contracts';
@@ -39,7 +40,37 @@ function reportAndExit(error: GeneratorError): never {
   process.exit(1);
 }
 
+// Falls back to apps/api/.dev.vars (the file Wrangler dev reads) so `bun run build`
+// works without the caller having to export DATABASE_URL by hand. Matches the
+// developer ergonomics of the old build-with-api.ts pipeline.
+function loadDevVarsFallback(): void {
+  if (process.env['DATABASE_URL']) return;
+  const devVarsPath = resolve(WEB_DIR, '..', 'api', '.dev.vars');
+  let raw: string;
+  try {
+    raw = readFileSync(devVarsPath, 'utf8');
+  } catch {
+    return;
+  }
+  for (const line of raw.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if (
+      (value.startsWith('"') && value.endsWith('"')) ||
+      (value.startsWith("'") && value.endsWith("'"))
+    ) {
+      value = value.slice(1, -1);
+    }
+    if (!process.env[key]) process.env[key] = value;
+  }
+}
+
 function readDatabaseUrl(): string {
+  loadDevVarsFallback();
   const url = process.env['DATABASE_URL'];
   if (!url) reportAndExit({ kind: 'missing_env', name: 'DATABASE_URL' });
   return url;
