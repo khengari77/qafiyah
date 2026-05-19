@@ -10,6 +10,14 @@
 
 import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Result } from 'neverthrow';
+
+const safeParseJson = Result.fromThrowable(
+  (raw: string): unknown => JSON.parse(raw),
+  (cause): { message: string } => ({
+    message: cause instanceof Error ? cause.message : String(cause),
+  })
+);
 
 const DIST = new URL('../dist/', import.meta.url).pathname;
 const TITLE_MAX = 80;
@@ -76,10 +84,9 @@ for await (const file of walk(DIST)) {
   }
 
   for (const ldMatch of html.matchAll(RX.ld)) {
-    try {
-      JSON.parse(ldMatch[1] ?? '');
-    } catch (e) {
-      problems.push(`${rel}: invalid JSON-LD (${(e as Error).message})`);
+    const parseResult = safeParseJson(ldMatch[1] ?? '');
+    if (parseResult.isErr()) {
+      problems.push(`${rel}: invalid JSON-LD (${parseResult.error.message})`);
     }
   }
 }

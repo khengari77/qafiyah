@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
 
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
+
 const BASE = 'http://localhost:4321';
 
 const URLS = [
@@ -29,27 +31,63 @@ const ROOT = `${import.meta.dir}/..`;
 
 const uniqueUrls = [...new Set(URLS)];
 
-async function waitForServer(): Promise<boolean> {
+type FetchError = {
+  readonly kind: 'network' | 'timeout';
+  readonly message: string;
+};
+
+async function tryFetch(url: string, timeoutMs: number): Promise<Result<Response, FetchError>> {
+  return await ResultAsync.fromPromise(
+    fetch(url, { signal: AbortSignal.timeout(timeoutMs) }),
+    (cause): FetchError => {
+      const isAbort = cause instanceof DOMException && cause.name === 'AbortError';
+      return {
+        kind: isAbort ? 'timeout' : 'network',
+        message: cause instanceof Error ? cause.message : String(cause),
+      };
+    }
+  );
+}
+
+type ServerReady = { readonly kind: 'ready' };
+type ServerUnready = { readonly kind: 'timeout'; readonly lastError: FetchError | null };
+
+async function waitForServer(): Promise<Result<ServerReady, ServerUnready>> {
   const deadline = Date.now() + STARTUP_TIMEOUT_MS;
+  let lastError: FetchError | null = null;
   while (Date.now() < deadline) {
-    try {
-      const res = await fetch(ROOT_URL, { signal: AbortSignal.timeout(POLL_FETCH_MS) });
-      if (res.status < 500) return true;
-    } catch {
-      /* keep polling */
+    const fetchResult = await tryFetch(ROOT_URL, POLL_FETCH_MS);
+    if (fetchResult.isOk()) {
+      if (fetchResult.value.status < 500) return ok({ kind: 'ready' });
+      lastError = { kind: 'network', message: `HTTP ${fetchResult.value.status}` };
+    } else {
+      lastError = fetchResult.error;
     }
     await Bun.sleep(POLL_INTERVAL_MS);
   }
-  return false;
+  return err({ kind: 'timeout', lastError });
 }
 
-async function checkUrl(url: string) {
-  try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) });
-    return { url, ok: res.status === 200, detail: `HTTP ${res.status}` };
-  } catch (err) {
-    return { url, ok: false, detail: String(err) };
+type CheckSuccess = { readonly url: string; readonly status: number };
+type CheckFailure =
+  | { readonly url: string; readonly reason: 'http_error'; readonly status: number }
+  | { readonly url: string; readonly reason: 'fetch_failed'; readonly cause: FetchError };
+
+async function checkUrl(url: string): Promise<Result<CheckSuccess, CheckFailure>> {
+  const fetchResult = await tryFetch(url, REQUEST_TIMEOUT_MS);
+  if (fetchResult.isErr()) {
+    return err({ url, reason: 'fetch_failed', cause: fetchResult.error });
   }
+  const status = fetchResult.value.status;
+  if (status !== 200) {
+    return err({ url, reason: 'http_error', status });
+  }
+  return ok({ url, status });
+}
+
+function describeCheckFailure(failure: CheckFailure): string {
+  if (failure.reason === 'http_error') return `HTTP ${failure.status}`;
+  return `${failure.cause.kind}: ${failure.cause.message}`;
 }
 
 async function cleanup() {
@@ -65,9 +103,12 @@ async function main() {
   });
 
   process.stdout.write('Started smoking...');
-  const ready = await waitForServer();
-  if (!ready) {
-    console.error(' server never came up (see /tmp/dev-server.log)');
+  const readiness = await waitForServer();
+  if (readiness.isErr()) {
+    const tail = readiness.error.lastError
+      ? ` last error: ${readiness.error.lastError.kind} — ${readiness.error.lastError.message}.`
+      : '';
+    console.error(` server never came up (see /tmp/dev-server.log).${tail}`);
     dev.kill();
     await cleanup();
     process.exit(1);
@@ -76,8 +117,8 @@ async function main() {
 
   for (const url of uniqueUrls) {
     const result = await checkUrl(url);
-    if (!result.ok) {
-      console.error(`FAIL  ${result.url}  →  ${result.detail}`);
+    if (result.isErr()) {
+      console.error(`FAIL  ${result.error.url}  →  ${describeCheckFailure(result.error)}`);
       dev.kill();
       await cleanup();
       process.exit(1);

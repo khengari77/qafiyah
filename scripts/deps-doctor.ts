@@ -3,6 +3,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
+import { err, ok, Result } from 'neverthrow';
 
 const ROOT = resolve(`${import.meta.dir}/..`);
 
@@ -58,29 +59,55 @@ type OutdatedRow = {
 
 // ──────────────────────────── pkg discovery ────────────────────────────
 
-function readPkg(dir: string, workspace: string): Pkg | null {
-  let raw: string;
-  try {
-    raw = readFileSync(join(dir, 'package.json'), 'utf8');
-  } catch {
-    return null;
+type ReadPkgError =
+  | { readonly kind: 'missing'; readonly path: string }
+  | { readonly kind: 'malformed'; readonly path: string; readonly message: string };
+
+const safeReadFile = Result.fromThrowable(
+  (path: string): string => readFileSync(path, 'utf8'),
+  (cause): { kind: 'missing'; message: string } => ({
+    kind: 'missing',
+    message: cause instanceof Error ? cause.message : String(cause),
+  })
+);
+
+const safeParseJson = Result.fromThrowable(
+  (raw: string): unknown => JSON.parse(raw),
+  (cause): { kind: 'malformed'; message: string } => ({
+    kind: 'malformed',
+    message: cause instanceof Error ? cause.message : String(cause),
+  })
+);
+
+function readPkg(dir: string, workspace: string): Result<Pkg, ReadPkgError> {
+  const path = join(dir, 'package.json');
+  const rawResult = safeReadFile(path);
+  if (rawResult.isErr()) return err({ kind: 'missing', path });
+  const parsedResult = safeParseJson(rawResult.value);
+  if (parsedResult.isErr()) {
+    return err({ kind: 'malformed', path, message: parsedResult.error.message });
   }
-  const json = JSON.parse(raw) as {
+  const json = parsedResult.value as {
     dependencies?: Record<string, string>;
     devDependencies?: Record<string, string>;
   };
-  return {
+  return ok({
     workspace,
     dir,
     deps: json.dependencies ?? {},
     devDeps: json.devDependencies ?? {},
-  };
+  });
 }
 
 function findWorkspacePkgs(): Pkg[] {
   const out: Pkg[] = [];
   const root = readPkg(ROOT, 'root');
-  if (root) out.push(root);
+  if (root.isOk()) {
+    out.push(root.value);
+  } else if (root.error.kind === 'malformed') {
+    console.error(`[doctor] malformed ${root.error.path}: ${root.error.message}`);
+    process.exit(2);
+  }
   for (const parent of ['apps', 'packages'] as const) {
     const parentDir = join(ROOT, parent);
     let entries: string[];
@@ -92,7 +119,12 @@ function findWorkspacePkgs(): Pkg[] {
     for (const child of entries) {
       const childDir = join(parentDir, child);
       const pkg = readPkg(childDir, `${parent}/${child}`);
-      if (pkg) out.push(pkg);
+      if (pkg.isOk()) {
+        out.push(pkg.value);
+      } else if (pkg.error.kind === 'malformed') {
+        console.error(`[doctor] malformed ${pkg.error.path}: ${pkg.error.message}`);
+        process.exit(2);
+      }
     }
   }
   return out;
@@ -129,9 +161,18 @@ function reportInventory(inv: Inventory, workspaceCount: number): void {
 }
 
 function reportOverrides(): void {
-  const root = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')) as {
-    overrides?: Record<string, string>;
-  };
+  const path = join(ROOT, 'package.json');
+  const rawResult = safeReadFile(path);
+  if (rawResult.isErr()) {
+    console.error(`[doctor] could not read ${path}: ${rawResult.error.message}`);
+    process.exit(2);
+  }
+  const parsedResult = safeParseJson(rawResult.value);
+  if (parsedResult.isErr()) {
+    console.error(`[doctor] malformed ${path}: ${parsedResult.error.message}`);
+    process.exit(2);
+  }
+  const root = parsedResult.value as { overrides?: Record<string, string> };
   if (!root.overrides || Object.keys(root.overrides).length === 0) return;
   console.log('  overrides (preserved as-is):');
   for (const [name, spec] of Object.entries(root.overrides)) {
@@ -226,8 +267,22 @@ function fixDrift(entries: readonly Drift[]): number {
   const loadPackageEntry = (dir: string): Entry => {
     let entry = pkgs.get(dir);
     if (!entry) {
-      const raw = readFileSync(join(dir, 'package.json'), 'utf8');
-      entry = { raw, json: JSON.parse(raw) as Record<string, unknown>, isModified: false };
+      const path = join(dir, 'package.json');
+      const rawResult = safeReadFile(path);
+      if (rawResult.isErr()) {
+        console.error(`[doctor] could not read ${path}: ${rawResult.error.message}`);
+        process.exit(2);
+      }
+      const parsedResult = safeParseJson(rawResult.value);
+      if (parsedResult.isErr()) {
+        console.error(`[doctor] malformed ${path}: ${parsedResult.error.message}`);
+        process.exit(2);
+      }
+      entry = {
+        raw: rawResult.value,
+        json: parsedResult.value as Record<string, unknown>,
+        isModified: false,
+      };
       pkgs.set(dir, entry);
     }
     return entry;

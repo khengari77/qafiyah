@@ -154,8 +154,8 @@ export function useSearch() {
 
   const infiniteQuery = useInfiniteQuery({
     queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
-    queryFn: ({ pageParam = 1 }) => {
-      return search({
+    queryFn: async ({ pageParam = 1 }) => {
+      const result = await search({
         q: query,
         searchType,
         page: String(pageParam),
@@ -165,6 +165,8 @@ export function useSearch() {
         rhymeSlugs: [...splitCsvIds(rhymeIds)],
         themeSlugs: [...splitCsvIds(themeIds)],
       });
+      if (result.isErr()) throw result.error;
+      return result.value;
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) =>

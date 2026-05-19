@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import path from 'node:path';
 import { parseArgs } from 'node:util';
+import { type Result, ResultAsync } from 'neverthrow';
 
 type EncodeStrategy = { kind: 'lossy'; quality: number } | { kind: 'lossless' };
 
@@ -244,28 +245,43 @@ function formatKb(n: number): string {
   return `${(n / 1024).toFixed(1)} KB`;
 }
 
+type EncodeError =
+  | { readonly kind: 'unsupported_format'; readonly code: 'ERR_IMAGE_FORMAT_UNSUPPORTED' }
+  | { readonly kind: 'encode_failed'; readonly message: string };
+
 async function encodeToWebP(
   srcPath: string,
   outPath: string,
   strategy: EncodeStrategy,
   maxWidth: number | null
-): Promise<{ bytesOut: number }> {
-  let pipe = Bun.file(srcPath).image({ autoOrient: true });
-
-  if (maxWidth !== null) {
-    pipe = pipe.resize(maxWidth, undefined, {
-      fit: 'inside',
-      withoutEnlargement: true,
-    });
-  }
-
-  const encoded =
-    strategy.kind === 'lossless'
-      ? pipe.webp({ lossless: true })
-      : pipe.webp({ quality: strategy.quality });
-
-  const bytesWritten = await encoded.write(outPath);
-  return { bytesOut: bytesWritten };
+): Promise<Result<{ bytesOut: number }, EncodeError>> {
+  return await ResultAsync.fromPromise(
+    (async () => {
+      let pipe = Bun.file(srcPath).image({ autoOrient: true });
+      if (maxWidth !== null) {
+        pipe = pipe.resize(maxWidth, undefined, {
+          fit: 'inside',
+          withoutEnlargement: true,
+        });
+      }
+      const encoded =
+        strategy.kind === 'lossless'
+          ? pipe.webp({ lossless: true })
+          : pipe.webp({ quality: strategy.quality });
+      const bytesWritten = await encoded.write(outPath);
+      return { bytesOut: bytesWritten };
+    })(),
+    (cause): EncodeError => {
+      const code = getImageErrorCode(cause);
+      if (code === 'ERR_IMAGE_FORMAT_UNSUPPORTED') {
+        return { kind: 'unsupported_format', code };
+      }
+      return {
+        kind: 'encode_failed',
+        message: cause instanceof Error ? cause.message : String(cause),
+      };
+    }
+  );
 }
 
 async function processOne(absPath: string, cfg: CliConfig): Promise<FileResult> {
@@ -320,20 +336,9 @@ async function processOne(absPath: string, cfg: CliConfig): Promise<FileResult> 
     return { ok: true, src: absPath, out: outPath, bytesIn, bytesOut: 0, skipped: 'dry-run' };
   }
 
-  try {
-    const { bytesOut } = await encodeToWebP(absPath, outPath, strategy, cfg.maxWidth);
-
-    if (cfg.replace) {
-      try {
-        await Bun.file(absPath).delete();
-      } catch {
-        // best-effort, match `rm -f` semantics
-      }
-    }
-    return { ok: true, src: absPath, out: outPath, bytesIn, bytesOut };
-  } catch (err) {
-    const code = getImageErrorCode(err);
-    if (code === 'ERR_IMAGE_FORMAT_UNSUPPORTED') {
+  const encodeResult = await encodeToWebP(absPath, outPath, strategy, cfg.maxWidth);
+  if (encodeResult.isErr()) {
+    if (encodeResult.error.kind === 'unsupported_format') {
       return {
         ok: true,
         src: absPath,
@@ -341,9 +346,14 @@ async function processOne(absPath: string, cfg: CliConfig): Promise<FileResult> 
         message: 'ERR_IMAGE_FORMAT_UNSUPPORTED',
       };
     }
-    const reason = err instanceof Error ? err.message : String(err);
-    return { ok: false, src: absPath, reason };
+    return { ok: false, src: absPath, reason: encodeResult.error.message };
   }
+
+  if (cfg.replace) {
+    // best-effort, match `rm -f` semantics: discard failures
+    await ResultAsync.fromPromise(Bun.file(absPath).delete(), () => undefined);
+  }
+  return { ok: true, src: absPath, out: outPath, bytesIn, bytesOut: encodeResult.value.bytesOut };
 }
 
 async function collectFiles(cfg: CliConfig): Promise<string[]> {

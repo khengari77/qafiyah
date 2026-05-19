@@ -37,6 +37,24 @@ function arrayOrNull<T>(arr: readonly T[]): readonly T[] | null {
   return arr.length > 0 ? arr : null;
 }
 
+function describeSearchError(error: searchQueries.SearchError): {
+  readonly kind: string;
+  readonly detail: string;
+} {
+  return match(error)
+    .with({ kind: 'sql_error' }, ({ kind, message }) => ({ kind, detail: message }))
+    .with({ kind: 'invalid_payload_shape' }, ({ kind, issues }) => ({
+      kind,
+      detail: issues.join('; '),
+    }))
+    .with({ kind: 'missing_total' }, ({ kind, source }) => ({ kind, detail: `source=${source}` }))
+    .with({ kind: 'non_finite_total' }, ({ kind, source, raw }) => ({
+      kind,
+      detail: `source=${source}; raw=${String(raw)}`,
+    }))
+    .exhaustive();
+}
+
 export const search = publicProcedure.search.search.handler(({ context, input, errors }) => {
   const query = input.q;
   const hasText = query.length > 0;
@@ -48,6 +66,7 @@ export const search = publicProcedure.search.search.handler(({ context, input, e
 
   return match(input.searchType)
     .with('poems', async () => {
+      const stage = hasText ? 'searchPoems' : 'browsePoemsByFilters';
       const queryResult = hasText
         ? await searchQueries.searchPoems({
             db: context.db,
@@ -62,13 +81,8 @@ export const search = publicProcedure.search.search.handler(({ context, input, e
             filters: { meterSlugs, eraSlugs, themeSlugs, rhymeSlugs },
           });
       if (queryResult.isErr()) {
-        console.error(
-          JSON.stringify({
-            source: 'search.procedures',
-            stage: hasText ? 'searchPoems' : 'browsePoemsByFilters',
-            error: queryResult.error,
-          })
-        );
+        const { kind, detail } = describeSearchError(queryResult.error);
+        context.log?.({ error_kind: kind, error_stage: stage, error_detail: detail });
         throw errors.INTERNAL_SERVER_ERROR();
       }
       const { rows, totalCount } = queryResult.value;
@@ -92,6 +106,7 @@ export const search = publicProcedure.search.search.handler(({ context, input, e
       };
     })
     .with('poets', async () => {
+      const stage = hasText ? 'searchPoets' : 'browsePoetsByFilters';
       const queryResult = hasText
         ? await searchQueries.searchPoets({
             db: context.db,
@@ -106,13 +121,8 @@ export const search = publicProcedure.search.search.handler(({ context, input, e
             eraSlugs,
           });
       if (queryResult.isErr()) {
-        console.error(
-          JSON.stringify({
-            source: 'search.procedures',
-            stage: hasText ? 'searchPoets' : 'browsePoetsByFilters',
-            error: queryResult.error,
-          })
-        );
+        const { kind, detail } = describeSearchError(queryResult.error);
+        context.log?.({ error_kind: kind, error_stage: stage, error_detail: detail });
         throw errors.INTERNAL_SERVER_ERROR();
       }
       const { rows, totalCount } = queryResult.value;

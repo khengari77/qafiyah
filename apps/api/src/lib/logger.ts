@@ -17,6 +17,9 @@ export type DomainFields = {
   readonly page?: number | undefined;
   readonly page_size?: number | undefined;
   readonly total_pages?: number | undefined;
+  readonly error_kind?: string | undefined;
+  readonly error_stage?: string | undefined;
+  readonly error_detail?: string | undefined;
 };
 
 type ServiceMeta = {

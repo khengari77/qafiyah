@@ -3,6 +3,7 @@ import { type PoemSlug, poemSlugSchema } from '@qafiyah/contracts';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import * as v from 'valibot';
 import { apiBrowser, type PoemsSearchEnvelope, type PoetsSearchEnvelope } from './rpc';
+import { type ApiFetchError, callApi } from './static/result';
 
 type SearchArgs = {
   readonly q: string;
@@ -17,17 +18,19 @@ type SearchArgs = {
 
 type SearchResult = PoemsSearchEnvelope | PoetsSearchEnvelope;
 
-export function search(args: SearchArgs): Promise<SearchResult> {
-  return apiBrowser.search.search({
-    q: args.q,
-    searchType: args.searchType,
-    page: args.page,
-    matchType: args.matchType,
-    meterSlugs: args.searchType === 'poems' ? [...args.meterSlugs] : [],
-    rhymeSlugs: args.searchType === 'poems' ? [...args.rhymeSlugs] : [],
-    themeSlugs: args.searchType === 'poems' ? [...args.themeSlugs] : [],
-    eraSlugs: [...args.eraSlugs],
-  });
+export function search(args: SearchArgs): Promise<Result<SearchResult, ApiFetchError>> {
+  return callApi('search.search', { ...args }, () =>
+    apiBrowser.search.search({
+      q: args.q,
+      searchType: args.searchType,
+      page: args.page,
+      matchType: args.matchType,
+      meterSlugs: args.searchType === 'poems' ? [...args.meterSlugs] : [],
+      rhymeSlugs: args.searchType === 'poems' ? [...args.rhymeSlugs] : [],
+      themeSlugs: args.searchType === 'poems' ? [...args.themeSlugs] : [],
+      eraSlugs: [...args.eraSlugs],
+    })
+  );
 }
 
 export type FetchRandomPoemSlugError =
