@@ -1,47 +1,38 @@
 ---
-import { poetSlugSchema } from '@qafiyah/contracts';
+import type { GetStaticPaths } from 'astro';
 import { formatArabicCount } from 'arabic-count-format';
-import * as v from 'valibot';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { POEMS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
-import { fetchAllPoets, fetchPoetPoemPage } from '@/lib/api/static/poets';
+import { allPoets, getPoetPoemsPage } from '@/lib/data/poets';
 import { toArabicDigits } from '@/lib/arabic';
-import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { generatePageNumbers, parsePageParam } from '@/lib/page-numbers';
+import { generatePageNumbers } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
-export async function getStaticPaths() {
-  const poets = unwrapForBoundary(await fetchAllPoets(), 'fetchAllPoets');
-  const params: Array<{ params: { slug: string; page: string } }> = [];
+export const getStaticPaths = (() => {
+  const poets = allPoets();
+  const out: Array<{
+    params: { slug: string; page: string };
+    props: ReturnType<typeof getPoetPoemsPage>;
+  }> = [];
   for (const poet of poets) {
     for (const page of generatePageNumbers(poet.poemsCount)) {
-      params.push({ params: { slug: poet.slug, page: page.toString() } });
+      out.push({
+        params: { slug: poet.slug, page: page.toString() },
+        props: getPoetPoemsPage(poet.slug, page),
+      });
     }
   }
-  return params;
-}
+  return out;
+}) satisfies GetStaticPaths;
 
-const parsedSlug = v.safeParse(poetSlugSchema, Astro.params.slug);
-const pageResult = parsePageParam(Astro.params.page);
-if (!parsedSlug.success || pageResult.isErr()) {
-  return Astro.redirect('/404');
-}
-const slug = parsedSlug.output;
-const pageNumber = pageResult.value;
-const page = pageNumber.toString();
-
-const responseResult = await fetchPoetPoemPage(slug, pageNumber);
-if (responseResult.isErr()) {
-  if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw boundaryError('fetchPoetPoemPage', responseResult.error);
-}
-const response = responseResult.value;
-
-const poems = response.data;
-const poet = response.meta;
-const { totalPages } = response.pagination;
+const { poems, poet, pagination } = Astro.props as Awaited<
+  ReturnType<typeof getStaticPaths>
+>[number]['props'];
+const slug = poet.slug;
+const pageNumber = pagination.page;
+const totalPages = pagination.totalPages;
 const hasNextPage = pageNumber < totalPages;
 const hasPrevPage = pageNumber > 1;
 const nextPageUrl = `/poets/${slug}/page/${pageNumber + 1}`;
@@ -53,7 +44,7 @@ const poemsLabel = formatArabicCount({
   nounForms: POEMS_NOUN_FORMS,
 });
 
-const title = `${SITE_NAME_AR} | ديوان «${poet.name}» | صفحة (${toArabicDigits(page as string)})`;
+const title = `${SITE_NAME_AR} | ديوان «${poet.name}» | صفحة (${toArabicDigits(pageNumber.toString())})`;
 const description = `ديوان الشاعر ${poet.name} على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}، عدد القصائد: ${toArabicDigits(poet.poemsCount)}.`;
 
 const personJsonLd = {
