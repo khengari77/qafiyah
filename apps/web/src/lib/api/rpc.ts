@@ -41,7 +41,7 @@ export type Poem = DataField<ApiOutputs['poems']['getPoemBySlug']>;
 
 // Search
 type SearchResponse = ApiOutputs['search']['search'];
-export type PoemsSearchEnvelope = Extract<SearchResponse, { searchType: 'poems' }>;
-export type PoetsSearchEnvelope = Extract<SearchResponse, { searchType: 'poets' }>;
+type PoemsSearchEnvelope = Extract<SearchResponse, { searchType: 'poems' }>;
+type PoetsSearchEnvelope = Extract<SearchResponse, { searchType: 'poets' }>;
 export type PoemSearchResult = DataField<PoemsSearchEnvelope>[number];
 export type PoetSearchResult = DataField<PoetsSearchEnvelope>[number];

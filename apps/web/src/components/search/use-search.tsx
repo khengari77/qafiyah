@@ -15,7 +15,7 @@ import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
 import { match } from 'ts-pattern';
 import { INFINITE_SCROLL_THRESHOLD, SEARCH_RESULTS_STALE_TIME_MS, SEARCH_TEXTS } from '@/constants';
-import { search } from '@/lib/api/client';
+import { orpc } from '@/lib/api/orpc';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
 
 export type FetchStatus =
@@ -148,31 +148,29 @@ export function useSearch() {
     theme_ids: themeIds,
   };
 
-  const infiniteQuery = useInfiniteQuery({
-    queryKey: ['search', query, searchType, matchType, eraIds, meterIds, rhymeIds, themeIds],
-    queryFn: async ({ pageParam = 1 }) => {
-      const result = await search({
+  const isPoemsMode = searchType === 'poems';
+  const infiniteQuery = useInfiniteQuery(
+    orpc.search.search.infiniteOptions({
+      input: (pageParam: number) => ({
         q: query,
         searchType,
         page: String(pageParam),
         matchType,
-        meterSlugs: [...splitCsvIds(meterIds)],
+        meterSlugs: isPoemsMode ? [...splitCsvIds(meterIds)] : [],
         eraSlugs: [...splitCsvIds(eraIds)],
-        rhymeSlugs: [...splitCsvIds(rhymeIds)],
-        themeSlugs: [...splitCsvIds(themeIds)],
-      });
-      if (result.isErr()) throw result.error;
-      return result.value;
-    },
-    initialPageParam: 1,
-    getNextPageParam: (lastPage) =>
-      lastPage.pagination.page < lastPage.pagination.totalPages
-        ? lastPage.pagination.page + 1
-        : undefined,
-    enabled: canSearch,
-    staleTime: SEARCH_RESULTS_STALE_TIME_MS,
-    refetchOnWindowFocus: false,
-  });
+        rhymeSlugs: isPoemsMode ? [...splitCsvIds(rhymeIds)] : [],
+        themeSlugs: isPoemsMode ? [...splitCsvIds(themeIds)] : [],
+      }),
+      initialPageParam: 1,
+      getNextPageParam: (lastPage) =>
+        lastPage.pagination.page < lastPage.pagination.totalPages
+          ? lastPage.pagination.page + 1
+          : undefined,
+      enabled: canSearch,
+      staleTime: SEARCH_RESULTS_STALE_TIME_MS,
+      refetchOnWindowFocus: false,
+    })
+  );
 
   const data: readonly (PoemSearchResult | PoetSearchResult)[] =
     infiniteQuery.data?.pages.flatMap(
