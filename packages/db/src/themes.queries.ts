@@ -1,10 +1,10 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { ThemeSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
-import { err, ok, type Result } from 'neverthrow';
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asThemeSlug } from './brand';
 import type { DbClient } from './client';
-import { executeAs } from './execute-as';
+import { type ExecuteAsError, executeAs } from './execute-as';
 import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { themeStats } from './schema';
 
@@ -14,6 +14,8 @@ export type ThemeStatsRow = {
   readonly poemsCount: number;
 };
 
+export type ListThemesError = { readonly kind: 'sql_error'; readonly message: string };
+
 export type ListThemePoemsResult = {
   readonly parent: { readonly name: string; readonly slug: ThemeSlug; readonly poemsCount: number };
   readonly poems: readonly PoemListRow[];
@@ -21,19 +23,32 @@ export type ListThemePoemsResult = {
   readonly totalPages: number;
 };
 
-export type ListThemePoemsError = { readonly kind: 'not_found'; readonly slug: ThemeSlug };
+export type ListThemePoemsError =
+  | { readonly kind: 'not_found'; readonly slug: ThemeSlug }
+  | ExecuteAsError;
 
-export async function listThemes(db: DbClient): Promise<readonly ThemeStatsRow[]> {
-  const results = await db
-    .select({
-      name: themeStats.name,
-      slug: themeStats.slug,
-      poemsCount: themeStats.poemsCount,
+export async function listThemes(
+  db: DbClient
+): Promise<Result<readonly ThemeStatsRow[], ListThemesError>> {
+  const queryResult = await ResultAsync.fromPromise(
+    db
+      .select({
+        name: themeStats.name,
+        slug: themeStats.slug,
+        poemsCount: themeStats.poemsCount,
+      })
+      .from(themeStats),
+    (cause): ListThemesError => ({
+      kind: 'sql_error',
+      message: cause instanceof Error ? cause.message : String(cause),
     })
-    .from(themeStats);
-  return results
-    .map((row) => ({ ...row, slug: asThemeSlug(row.slug) }))
-    .sort((a, b) => b.poemsCount - a.poemsCount);
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  return ok(
+    queryResult.value
+      .map((row) => ({ ...row, slug: asThemeSlug(row.slug) }))
+      .sort((a, b) => b.poemsCount - a.poemsCount)
+  );
 }
 
 export async function listThemePoems(
@@ -44,17 +59,19 @@ export async function listThemePoems(
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const parentRows = await executeAs(
+  const parentRowsResult = await executeAs(
     db,
     sql`SELECT name, poems_count FROM theme_stats WHERE slug = ${slug}::UUID LIMIT 1`,
     parentStatsRowSchema
   );
+  if (parentRowsResult.isErr()) return err(parentRowsResult.error);
+  const parentRows = parentRowsResult.value;
 
   if (parentRows.length === 0 || !parentRows[0]) return err({ kind: 'not_found', slug });
 
   const total = Number(parentRows[0].poems_count);
 
-  const rawPoems = await executeAs(
+  const rawPoemsResult = await executeAs(
     db,
     sql`
       SELECT
@@ -74,8 +91,9 @@ export async function listThemePoems(
     `,
     rawPoemRowSchema
   );
+  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
 
-  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+  const poems: readonly PoemListRow[] = rawPoemsResult.value.map((row) => ({
     title: row.title,
     slug: row.slug,
     poetName: row.poet_name,

@@ -13,9 +13,9 @@ describe('listMeters', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
-    const result = await listMeters(mockDb);
-    expect(result.length).toBe(2);
-    expect(result[0]?.name).toBe('الطويل');
+    const value = (await listMeters(mockDb))._unsafeUnwrap();
+    expect(value.length).toBe(2);
+    expect(value[0]?.name).toBe('الطويل');
   });
 
   it('returns empty array when no meters exist', async () => {
@@ -23,8 +23,8 @@ describe('listMeters', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
-    const result = await listMeters(mockDb);
-    expect(result).toEqual([]);
+    const value = (await listMeters(mockDb))._unsafeUnwrap();
+    expect(value).toEqual([]);
   });
 });
 

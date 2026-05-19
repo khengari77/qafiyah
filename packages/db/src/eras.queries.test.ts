@@ -13,9 +13,9 @@ describe('listEras', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
-    const result = await listEras(mockDb);
-    expect(result[0]?.name).toBe('جاهلي');
-    expect(result[1]?.name).toBe('عباسي');
+    const value = (await listEras(mockDb))._unsafeUnwrap();
+    expect(value[0]?.name).toBe('جاهلي');
+    expect(value[1]?.name).toBe('عباسي');
   });
 
   it('returns empty array when no eras exist', async () => {
@@ -23,8 +23,8 @@ describe('listEras', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
-    const result = await listEras(mockDb);
-    expect(result).toEqual([]);
+    const value = (await listEras(mockDb))._unsafeUnwrap();
+    expect(value).toEqual([]);
   });
 });
 
@@ -62,12 +62,13 @@ describe('listEraPoems', () => {
     expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
-  it('throws when parent row is falsy (valibot rejects null)', async () => {
+  it('returns invalid_payload_shape err when parent row is falsy (valibot rejects null)', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValueOnce([null]),
     });
 
-    await expect(listEraPoems(mockDb, asEraSlug('test'), 1)).rejects.toThrow();
+    const result = await listEraPoems(mockDb, asEraSlug('test'), 1);
+    expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
   });
 
   it('computes totalPages correctly', async () => {

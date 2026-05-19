@@ -4,8 +4,10 @@ import { publicProcedure } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
 import { toPoemListItem } from './list-item.mapper';
 
-export const listEras = publicProcedure.eras.list.handler(async ({ context }) => {
-  const eras = await erasQueries.listEras(context.db);
+export const listEras = publicProcedure.eras.list.handler(async ({ context, errors }) => {
+  const result = await erasQueries.listEras(context.db);
+  if (result.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+  const eras = result.value;
   context.log?.({ result_count: eras.length });
   return listEnvelope({
     data: eras,
@@ -18,7 +20,10 @@ export const listEras = publicProcedure.eras.list.handler(async ({ context }) =>
 export const listEraPoems = publicProcedure.eras.listPoems.handler(
   async ({ context, input, errors }) => {
     const queryResult = await erasQueries.listEraPoems(context.db, input.slug, input.page);
-    if (queryResult.isErr()) throw errors.NOT_FOUND();
+    if (queryResult.isErr()) {
+      if (queryResult.error.kind === 'not_found') throw errors.NOT_FOUND();
+      throw errors.INTERNAL_SERVER_ERROR();
+    }
     const result = queryResult.value;
     context.log?.({
       era: input.slug,

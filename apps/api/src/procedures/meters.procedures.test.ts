@@ -58,7 +58,7 @@ describe('meters procedures', () => {
 
   describe('listMeters', () => {
     it('returns meters list wrapped in envelope', async () => {
-      listMetersMock.mockResolvedValue([sampleMeter]);
+      listMetersMock.mockResolvedValue(ok([sampleMeter]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -71,7 +71,7 @@ describe('meters procedures', () => {
     });
 
     it('returns empty list when no meters exist', async () => {
-      listMetersMock.mockResolvedValue([]);
+      listMetersMock.mockResolvedValue(ok([]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

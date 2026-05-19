@@ -6,17 +6,15 @@ import { ERA_NAMES, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constan
 import Layout from '@/layouts/layout.astro';
 import { fetchEraPoemPage, fetchEras } from '@/lib/api/static/collections';
 import { toArabicDigits } from '@/lib/arabic';
+import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { generatePageNumbers } from '@/lib/page-numbers';
+import { generatePageNumbers, parsePageParam } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const erasResult = await fetchEras();
-  if (erasResult.isErr()) {
-    throw new Error(`fetchEras failed: ${JSON.stringify(erasResult.error)}`);
-  }
+  const eras = unwrapForBoundary(await fetchEras(), 'fetchEras');
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const era of erasResult.value) {
+  for (const era of eras) {
     for (const page of generatePageNumbers(era.poemsCount)) {
       params.push({ params: { slug: era.slug, page: page.toString() } });
     }
@@ -25,17 +23,18 @@ export async function getStaticPaths() {
 }
 
 const parsedSlug = v.safeParse(eraSlugSchema, Astro.params.slug);
-const pageNumber = Number.parseInt(Astro.params.page ?? '', 10);
-if (!(parsedSlug.success && Number.isFinite(pageNumber)) || pageNumber < 1) {
+const pageResult = parsePageParam(Astro.params.page);
+if (!parsedSlug.success || pageResult.isErr()) {
   return Astro.redirect('/404');
 }
 const slug = parsedSlug.output;
+const pageNumber = pageResult.value;
 const page = pageNumber.toString();
 
 const responseResult = await fetchEraPoemPage(slug, pageNumber);
 if (responseResult.isErr()) {
   if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw new Error(`fetchEraPoemPage failed: ${JSON.stringify(responseResult.error)}`);
+  throw boundaryError('fetchEraPoemPage', responseResult.error);
 }
 const response = responseResult.value;
 

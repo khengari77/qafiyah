@@ -17,19 +17,33 @@ describe('createDb', () => {
     expect(result._unsafeUnwrap()).toBeDefined();
   });
 
+  it('returns invalid_url error for a malformed URL', () => {
+    const result = createDb('not-a-url');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('invalid_url');
+    if (error.kind === 'invalid_url') {
+      expect(error.rawUrl).toBe('not-a-url');
+      expect(error.message).toBeTruthy();
+    }
+  });
+
   it('returns invalid_port error when URL has no port', () => {
     const result = createDb('postgres://user:pass@localhost/db');
     const error = result._unsafeUnwrapErr();
     expect(error.kind).toBe('invalid_port');
-    expect(error.rawPort).toBe('');
-    expect(error.databaseUrlHost).toBe('localhost');
+    if (error.kind === 'invalid_port') {
+      expect(error.rawPort).toBe('');
+      expect(error.databaseUrlHost).toBe('localhost');
+    }
   });
 
   it('returns invalid_port error when port is 0', () => {
     const result = createDb('postgres://user:pass@localhost:0/db');
     const error = result._unsafeUnwrapErr();
     expect(error.kind).toBe('invalid_port');
-    expect(error.rawPort).toBe('0');
+    if (error.kind === 'invalid_port') {
+      expect(error.rawPort).toBe('0');
+    }
   });
 
   it('applies the long-lived profile for a localhost URL', () => {
@@ -60,19 +74,28 @@ describe('createDb', () => {
 });
 
 describe('detectDbMode', () => {
-  it('returns long-lived for 127.0.0.1', () => {
-    expect(detectDbMode('postgres://u:p@127.0.0.1:5432/d')).toBe('long-lived');
+  it('returns ok with long-lived for 127.0.0.1', () => {
+    expect(detectDbMode('postgres://u:p@127.0.0.1:5432/d')._unsafeUnwrap()).toBe('long-lived');
   });
 
-  it('returns long-lived for localhost', () => {
-    expect(detectDbMode('postgres://u:p@localhost:5432/d')).toBe('long-lived');
+  it('returns ok with long-lived for localhost', () => {
+    expect(detectDbMode('postgres://u:p@localhost:5432/d')._unsafeUnwrap()).toBe('long-lived');
   });
 
-  it('returns long-lived for host.docker.internal', () => {
-    expect(detectDbMode('postgres://u:p@host.docker.internal:5432/d')).toBe('long-lived');
+  it('returns ok with long-lived for host.docker.internal', () => {
+    expect(detectDbMode('postgres://u:p@host.docker.internal:5432/d')._unsafeUnwrap()).toBe(
+      'long-lived'
+    );
   });
 
-  it('returns edge for an arbitrary remote host', () => {
-    expect(detectDbMode('postgres://u:p@db.example.com:5432/d')).toBe('edge');
+  it('returns ok with edge for an arbitrary remote host', () => {
+    expect(detectDbMode('postgres://u:p@db.example.com:5432/d')._unsafeUnwrap()).toBe('edge');
+  });
+
+  it('returns invalid_url error for a malformed URL', () => {
+    const result = detectDbMode('not-a-url');
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('invalid_url');
+    expect(error.rawUrl).toBe('not-a-url');
   });
 });

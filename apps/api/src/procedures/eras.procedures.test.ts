@@ -58,7 +58,7 @@ describe('eras procedures', () => {
 
   describe('listEras', () => {
     it('returns eras list wrapped in envelope', async () => {
-      listErasMock.mockResolvedValue([sampleEra]);
+      listErasMock.mockResolvedValue(ok([sampleEra]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -72,7 +72,7 @@ describe('eras procedures', () => {
     });
 
     it('returns empty list when no eras exist', async () => {
-      listErasMock.mockResolvedValue([]);
+      listErasMock.mockResolvedValue(ok([]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

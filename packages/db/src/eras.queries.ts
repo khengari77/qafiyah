@@ -1,11 +1,11 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { EraSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
-import { err, ok, type Result } from 'neverthrow';
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asEraSlug } from './brand';
 import type { DbClient } from './client';
 import { ERAS_SORT_ORDER } from './constants';
-import { executeAs } from './execute-as';
+import { type ExecuteAsError, executeAs } from './execute-as';
 import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { eraStats } from './schema';
 
@@ -18,6 +18,8 @@ export type EraStatsRow = {
   readonly poemsCount: number;
 };
 
+export type ListErasError = { readonly kind: 'sql_error'; readonly message: string };
+
 export type ListEraPoemsResult = {
   readonly parent: { readonly name: string; readonly slug: EraSlug; readonly poemsCount: number };
   readonly poems: readonly PoemListRow[];
@@ -25,22 +27,35 @@ export type ListEraPoemsResult = {
   readonly totalPages: number;
 };
 
-export type ListEraPoemsError = { readonly kind: 'not_found'; readonly slug: EraSlug };
+export type ListEraPoemsError =
+  | { readonly kind: 'not_found'; readonly slug: EraSlug }
+  | ExecuteAsError;
 
-export async function listEras(db: DbClient): Promise<readonly EraStatsRow[]> {
-  const results = await db
-    .select({
-      name: eraStats.name,
-      slug: eraStats.slug,
-      poetsCount: eraStats.poetsCount,
-      poemsCount: eraStats.poemsCount,
+export async function listEras(
+  db: DbClient
+): Promise<Result<readonly EraStatsRow[], ListErasError>> {
+  const queryResult = await ResultAsync.fromPromise(
+    db
+      .select({
+        name: eraStats.name,
+        slug: eraStats.slug,
+        poetsCount: eraStats.poetsCount,
+        poemsCount: eraStats.poemsCount,
+      })
+      .from(eraStats),
+    (cause): ListErasError => ({
+      kind: 'sql_error',
+      message: cause instanceof Error ? cause.message : String(cause),
     })
-    .from(eraStats);
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
   const getSortIndex = (name: string): number =>
     ERAS_SORT_INDEX.get(name) ?? Number.MAX_SAFE_INTEGER;
-  return results
-    .map((row) => ({ ...row, slug: asEraSlug(row.slug) }))
-    .sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name));
+  return ok(
+    queryResult.value
+      .map((row) => ({ ...row, slug: asEraSlug(row.slug) }))
+      .sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name))
+  );
 }
 
 export async function listEraPoems(
@@ -51,17 +66,19 @@ export async function listEraPoems(
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const parentRows = await executeAs(
+  const parentRowsResult = await executeAs(
     db,
     sql`SELECT name, poems_count FROM era_stats WHERE slug = ${slug} LIMIT 1`,
     parentStatsRowSchema
   );
+  if (parentRowsResult.isErr()) return err(parentRowsResult.error);
+  const parentRows = parentRowsResult.value;
 
   if (parentRows.length === 0 || !parentRows[0]) return err({ kind: 'not_found', slug });
 
   const total = Number(parentRows[0].poems_count);
 
-  const rawPoems = await executeAs(
+  const rawPoemsResult = await executeAs(
     db,
     sql`
       SELECT
@@ -81,8 +98,9 @@ export async function listEraPoems(
     `,
     rawPoemRowSchema
   );
+  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
 
-  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+  const poems: readonly PoemListRow[] = rawPoemsResult.value.map((row) => ({
     title: row.title,
     slug: row.slug,
     poetName: row.poet_name,

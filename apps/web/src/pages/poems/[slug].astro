@@ -4,14 +4,12 @@ import * as v from 'valibot';
 import { PoemDisplay } from '@/components/poem-display';
 import Layout from '@/layouts/layout.astro';
 import { fetchAllPoemSlugs } from '@/lib/api/static/poems';
+import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { loadPoemPage } from '@/lib/poem-page';
 
 export async function getStaticPaths() {
-  const slugsResult = await fetchAllPoemSlugs();
-  if (slugsResult.isErr()) {
-    throw new Error(`fetchAllPoemSlugs failed: ${JSON.stringify(slugsResult.error)}`);
-  }
-  return slugsResult.value.map((poemSlug) => ({ params: { slug: poemSlug } }));
+  const slugs = unwrapForBoundary(await fetchAllPoemSlugs(), 'fetchAllPoemSlugs');
+  return slugs.map((poemSlug) => ({ params: { slug: poemSlug } }));
 }
 
 const parsed = v.safeParse(poemSlugSchema, Astro.params.slug);
@@ -23,7 +21,7 @@ const pageDataResult = await loadPoemPage(slug);
 
 if (pageDataResult.isErr()) {
   if (pageDataResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw new Error(`loadPoemPage failed: ${JSON.stringify(pageDataResult.error)}`);
+  throw boundaryError('loadPoemPage', pageDataResult.error);
 }
 
 const { poem, layout: seo } = pageDataResult.value;

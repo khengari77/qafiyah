@@ -58,7 +58,7 @@ describe('rhymes procedures', () => {
 
   describe('listRhymes', () => {
     it('returns rhymes list wrapped in envelope', async () => {
-      listRhymesMock.mockResolvedValue([sampleRhyme]);
+      listRhymesMock.mockResolvedValue(ok([sampleRhyme]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -71,7 +71,7 @@ describe('rhymes procedures', () => {
     });
 
     it('returns empty list when no rhymes exist', async () => {
-      listRhymesMock.mockResolvedValue([]);
+      listRhymesMock.mockResolvedValue(ok([]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

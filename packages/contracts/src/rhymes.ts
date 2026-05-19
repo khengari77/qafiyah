@@ -1,6 +1,6 @@
 import { oc } from '@orpc/contract';
 import { rhymeSlugSchema } from './brands';
-import { EXAMPLE_RHYME_SLUG, inputValidationErrorMap } from './constants';
+import { EXAMPLE_RHYME_SLUG, inputValidationErrorMap, internalServerErrorMap } from './constants';
 import {
   listResponse,
   listResponseWithMeta,
@@ -12,6 +12,7 @@ import {
 
 const listRhymesContract = oc
   .route({ method: 'GET', path: '/rhymes' })
+  .errors({ ...internalServerErrorMap })
   .output(listResponse(slugWithCounts(rhymeSlugSchema)));
 
 const listRhymePoemsContract = oc
@@ -19,6 +20,7 @@ const listRhymePoemsContract = oc
   .input(slugAndPageInput(rhymeSlugSchema, EXAMPLE_RHYME_SLUG))
   .errors({
     ...inputValidationErrorMap,
+    ...internalServerErrorMap,
     NOT_FOUND: { status: 404, message: 'Rhyme not found' },
   })
   .output(listResponseWithMeta(poemListItem, slugWithPoemCount(rhymeSlugSchema)));

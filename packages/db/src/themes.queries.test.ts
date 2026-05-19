@@ -13,9 +13,9 @@ describe('listThemes', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
-    const result = await listThemes(mockDb);
-    expect(result[0]?.name).toBe('غزل');
-    expect(result[1]?.name).toBe('رثاء');
+    const value = (await listThemes(mockDb))._unsafeUnwrap();
+    expect(value[0]?.name).toBe('غزل');
+    expect(value[1]?.name).toBe('رثاء');
   });
 
   it('returns empty array when no themes exist', async () => {
@@ -23,8 +23,8 @@ describe('listThemes', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
-    const result = await listThemes(mockDb);
-    expect(result).toEqual([]);
+    const value = (await listThemes(mockDb))._unsafeUnwrap();
+    expect(value).toEqual([]);
   });
 });
 

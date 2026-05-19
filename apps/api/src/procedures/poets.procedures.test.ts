@@ -58,7 +58,7 @@ describe('poets procedures', () => {
 
   describe('listPoets', () => {
     it('returns poets list wrapped in envelope', async () => {
-      listPoetsMock.mockResolvedValue({ poets: [samplePoet], total: 1, totalPages: 1 });
+      listPoetsMock.mockResolvedValue(ok({ poets: [samplePoet], total: 1, totalPages: 1 }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -71,7 +71,7 @@ describe('poets procedures', () => {
     });
 
     it('returns 200 with empty data on page 1 when no poets exist', async () => {
-      listPoetsMock.mockResolvedValue({ poets: [], total: 0, totalPages: 0 });
+      listPoetsMock.mockResolvedValue(ok({ poets: [], total: 0, totalPages: 0 }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -84,7 +84,7 @@ describe('poets procedures', () => {
     });
 
     it('returns 404 when page exceeds totalPages', async () => {
-      listPoetsMock.mockResolvedValue({ poets: [], total: 10, totalPages: 1 });
+      listPoetsMock.mockResolvedValue(ok({ poets: [], total: 10, totalPages: 1 }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -94,7 +94,7 @@ describe('poets procedures', () => {
     });
 
     it('defaults to page 1 when no page is provided', async () => {
-      listPoetsMock.mockResolvedValue({ poets: [samplePoet], total: 1, totalPages: 1 });
+      listPoetsMock.mockResolvedValue(ok({ poets: [samplePoet], total: 1, totalPages: 1 }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -106,7 +106,7 @@ describe('poets procedures', () => {
     });
 
     it('reflects the requested page in the response', async () => {
-      listPoetsMock.mockResolvedValue({ poets: [samplePoet], total: 1, totalPages: 5 });
+      listPoetsMock.mockResolvedValue(ok({ poets: [samplePoet], total: 1, totalPages: 5 }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

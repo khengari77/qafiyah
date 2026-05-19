@@ -1,6 +1,6 @@
 import { oc } from '@orpc/contract';
 import { eraSlugSchema } from './brands';
-import { EXAMPLE_ERA_SLUG, inputValidationErrorMap } from './constants';
+import { EXAMPLE_ERA_SLUG, inputValidationErrorMap, internalServerErrorMap } from './constants';
 import {
   listResponse,
   listResponseWithMeta,
@@ -12,6 +12,7 @@ import {
 
 const listErasContract = oc
   .route({ method: 'GET', path: '/eras' })
+  .errors({ ...internalServerErrorMap })
   .output(listResponse(slugWithCounts(eraSlugSchema)));
 
 const listEraPoemsContract = oc
@@ -19,6 +20,7 @@ const listEraPoemsContract = oc
   .input(slugAndPageInput(eraSlugSchema, EXAMPLE_ERA_SLUG))
   .errors({
     ...inputValidationErrorMap,
+    ...internalServerErrorMap,
     NOT_FOUND: { status: 404, message: 'Era not found' },
   })
   .output(listResponseWithMeta(poemListItem, slugWithPoemCount(eraSlugSchema)));

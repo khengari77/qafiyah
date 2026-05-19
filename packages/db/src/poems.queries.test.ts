@@ -176,8 +176,8 @@ describe('listAllPoemSlugs', () => {
       }),
     });
 
-    const result = await listAllPoemSlugs(mockDb);
-    expect(result).toEqual(['slug-1', 'slug-2']);
+    const value = (await listAllPoemSlugs(mockDb))._unsafeUnwrap();
+    expect(value).toEqual(['slug-1', 'slug-2']);
   });
 
   it('returns empty slugs when no poems exist', async () => {
@@ -185,8 +185,8 @@ describe('listAllPoemSlugs', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
-    const result = await listAllPoemSlugs(mockDb);
-    expect(result).toEqual([]);
+    const value = (await listAllPoemSlugs(mockDb))._unsafeUnwrap();
+    expect(value).toEqual([]);
   });
 });
 

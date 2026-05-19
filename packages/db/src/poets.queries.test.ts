@@ -11,10 +11,10 @@ describe('listPoets', () => {
       $count: vi.fn().mockResolvedValue(1),
     });
 
-    const result = await listPoets(mockDb, 1);
-    expect(result.poets[0]?.name).toBe('المتنبي');
-    expect(result.total).toBe(1);
-    expect(result.totalPages).toBe(1);
+    const value = (await listPoets(mockDb, 1))._unsafeUnwrap();
+    expect(value.poets[0]?.name).toBe('المتنبي');
+    expect(value.total).toBe(1);
+    expect(value.totalPages).toBe(1);
   });
 
   it('returns empty list when no poets exist', async () => {
@@ -23,10 +23,10 @@ describe('listPoets', () => {
       $count: vi.fn().mockResolvedValue(0),
     });
 
-    const result = await listPoets(mockDb, 1);
-    expect(result.poets).toEqual([]);
-    expect(result.total).toBe(0);
-    expect(result.totalPages).toBe(0);
+    const value = (await listPoets(mockDb, 1))._unsafeUnwrap();
+    expect(value.poets).toEqual([]);
+    expect(value.total).toBe(0);
+    expect(value.totalPages).toBe(0);
   });
 });
 

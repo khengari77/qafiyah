@@ -7,11 +7,12 @@ import {
   poetSlugSchema,
   themeSlugSchema,
 } from './brands';
-import { EXAMPLE_POEM_SLUG, inputValidationErrorMap } from './constants';
+import { EXAMPLE_POEM_SLUG, inputValidationErrorMap, internalServerErrorMap } from './constants';
 import { listResponse, namedSlugRef, poemListItem, resourceResponse, slugInput } from './schemas';
 
 const listPoemSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
+  .errors({ ...internalServerErrorMap })
   .output(listResponse(poemSlugSchema));
 
 export const poemDetail = v.object({

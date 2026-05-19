@@ -34,10 +34,17 @@ async function fetchRandomPoemBody(
 
 const optionSchema = v.optional(v.picklist(['slug', 'lines'] as const), 'slug');
 
+type ParseOptionError = { readonly kind: 'invalid_option'; readonly raw: string | undefined };
+
+function parseOption(raw: string | undefined): Result<RandomPoemFormat, ParseOptionError> {
+  const parsed = v.safeParse(optionSchema, raw);
+  return parsed.success ? ok(parsed.output) : err({ kind: 'invalid_option', raw });
+}
+
 const app = new Hono<AppContext>()
   .get('/random', async (c) => {
-    const parsed = v.safeParse(optionSchema, c.req.query('option'));
-    if (!parsed.success) {
+    const optionResult = parseOption(c.req.query('option'));
+    if (optionResult.isErr()) {
       return sendProblem(
         c,
         makeProblem({
@@ -48,7 +55,7 @@ const app = new Hono<AppContext>()
       );
     }
 
-    const bodyResult = await fetchRandomPoemBody(c.get('db'), parsed.output);
+    const bodyResult = await fetchRandomPoemBody(c.get('db'), optionResult.value);
     if (bodyResult.isErr()) {
       console.error(
         JSON.stringify({
@@ -56,7 +63,7 @@ const app = new Hono<AppContext>()
           stage: 'fetchRandomPoemBody',
           method: c.req.method,
           path: c.req.path,
-          option: parsed.output,
+          option: optionResult.value,
           error: bodyResult.error,
         })
       );

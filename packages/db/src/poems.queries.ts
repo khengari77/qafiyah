@@ -8,12 +8,12 @@ import {
   themeSlugSchema,
 } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
-import { err, ok, type Result } from 'neverthrow';
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import * as v from 'valibot';
 import { asPoemSlug } from './brand';
 import type { DbClient } from './client';
 import { TASHKEEL_REGEX } from './constants';
-import { executeAs } from './execute-as';
+import { type ExecuteAsError, executeAs } from './execute-as';
 import type { PoemListRow } from './row-schemas';
 import { poemsFullData } from './schema';
 
@@ -120,9 +120,20 @@ const poemRelatedSqlErrorSchema = v.object({
 });
 type PoemRelatedSuccess = v.InferOutput<typeof poemRelatedSuccessSchema>;
 
-export async function listAllPoemSlugs(db: DbClient): Promise<readonly PoemSlug[]> {
-  const rows = await db.select({ slug: poemsFullData.slug }).from(poemsFullData);
-  return rows.map((row) => asPoemSlug(row.slug));
+export type ListAllPoemSlugsError = { readonly kind: 'sql_error'; readonly message: string };
+
+export async function listAllPoemSlugs(
+  db: DbClient
+): Promise<Result<readonly PoemSlug[], ListAllPoemSlugsError>> {
+  const queryResult = await ResultAsync.fromPromise(
+    db.select({ slug: poemsFullData.slug }).from(poemsFullData),
+    (cause): ListAllPoemSlugsError => ({
+      kind: 'sql_error',
+      message: cause instanceof Error ? cause.message : String(cause),
+    })
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  return ok(queryResult.value.map((row) => asPoemSlug(row.slug)));
 }
 
 const randomPoemPayloadSchema = v.pipe(
@@ -164,6 +175,7 @@ export type GetRandomPoemExcerptError =
       readonly issues: readonly string[];
     }
   | { readonly kind: 'missing_content_field'; readonly poemId: PoemId }
+  | { readonly kind: 'query_failed'; readonly message: string }
   | ExtractExcerptError
   | {
       readonly kind: 'excerpt_too_long';
@@ -189,7 +201,15 @@ function safeJsonParse(
 export async function getRandomPoemExcerpt(
   db: DbClient
 ): Promise<Result<RandomPoemExcerpt, GetRandomPoemExcerptError>> {
-  const result = await db.execute(sql`SELECT get_random_eligible_poem()`);
+  const queryResult = await ResultAsync.fromPromise(
+    db.execute(sql`SELECT get_random_eligible_poem()`),
+    (cause): { kind: 'query_failed'; message: string } => ({
+      kind: 'query_failed',
+      message: cause instanceof Error ? cause.message : String(cause),
+    })
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  const result = queryResult.value;
 
   if (!result || result.length === 0 || !result[0]?.['get_random_eligible_poem']) {
     return err({ kind: 'no_eligible_poem' });
@@ -244,12 +264,21 @@ export async function getRandomPoemExcerpt(
 
 export type GetRandomPoemSlugError =
   | { readonly kind: 'no_eligible_poem_slug' }
-  | { readonly kind: 'invalid_payload_shape'; readonly raw: unknown };
+  | { readonly kind: 'invalid_payload_shape'; readonly raw: unknown }
+  | { readonly kind: 'query_failed'; readonly message: string };
 
 export async function getRandomPoemSlug(
   db: DbClient
 ): Promise<Result<PoemSlug, GetRandomPoemSlugError>> {
-  const result = await db.execute(sql`SELECT get_random_eligible_poem_slug()`);
+  const queryResult = await ResultAsync.fromPromise(
+    db.execute(sql`SELECT get_random_eligible_poem_slug()`),
+    (cause): { kind: 'query_failed'; message: string } => ({
+      kind: 'query_failed',
+      message: cause instanceof Error ? cause.message : String(cause),
+    })
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  const result = queryResult.value;
   const row = result?.[0];
 
   if (!row?.['get_random_eligible_poem_slug']) {
@@ -344,7 +373,16 @@ async function loadPoemWithRelated(
   db: DbClient,
   slug: PoemSlug
 ): Promise<Result<PoemRelatedSuccess, LoadPoemWithRelatedError>> {
-  const result = await db.execute(sql`SELECT get_poem_with_related(${slug})`);
+  const queryResult = await ResultAsync.fromPromise(
+    db.execute(sql`SELECT get_poem_with_related(${slug})`),
+    (cause): LoadPoemWithRelatedError => ({
+      kind: 'sql_error',
+      slug,
+      message: cause instanceof Error ? cause.message : String(cause),
+    })
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  const result = queryResult.value;
   if (!result || result.length === 0 || !result[0]?.['get_poem_with_related']) {
     return err({ kind: 'not_found', slug });
   }
@@ -366,18 +404,42 @@ async function loadPoemWithRelated(
   });
 }
 
-type LoadPoemSlugEnrichmentError = {
-  readonly kind: 'incomplete_enrichment';
-  readonly meterFound: boolean;
-  readonly themeFound: boolean;
-};
+type LoadPoemSlugEnrichmentError =
+  | {
+      readonly kind: 'incomplete_enrichment';
+      readonly meterFound: boolean;
+      readonly themeFound: boolean;
+    }
+  | { readonly kind: 'sql_error'; readonly slug: PoemSlug; readonly message: string }
+  | {
+      readonly kind: 'invalid_payload_shape';
+      readonly slug: PoemSlug;
+      readonly issues: readonly string[];
+    };
+
+function tagExecuteAsError(slug: PoemSlug) {
+  return (
+    e: ExecuteAsError
+  ):
+    | { readonly kind: 'sql_error'; readonly slug: PoemSlug; readonly message: string }
+    | {
+        readonly kind: 'invalid_payload_shape';
+        readonly slug: PoemSlug;
+        readonly issues: readonly string[];
+      } =>
+    e.kind === 'sql_error'
+      ? { kind: 'sql_error', slug, message: e.message }
+      : { kind: 'invalid_payload_shape', slug, issues: e.issues };
+}
 
 async function loadPoemSlugEnrichment(
   db: DbClient,
+  slug: PoemSlug,
   poem: RawPoemRow,
   relatedSlugs: readonly PoemSlug[]
 ): Promise<Result<PoemSlugEnrichment, LoadPoemSlugEnrichmentError>> {
-  const [meterLookup, themeLookup, relatedEnrichment] = await Promise.all([
+  const tag = tagExecuteAsError(slug);
+  const [meterLookupResult, themeLookupResult, relatedEnrichmentResult] = await Promise.all([
     executeAs(
       db,
       sql`SELECT slug FROM public.meters WHERE name = ${poem.meter_name} LIMIT 1`,
@@ -389,7 +451,7 @@ async function loadPoemSlugEnrichment(
       themeLookupRowSchema
     ),
     relatedSlugs.length === 0
-      ? Promise.resolve([] as readonly RelatedEnrichmentRow[])
+      ? Promise.resolve(ok([]) as Result<readonly RelatedEnrichmentRow[], ExecuteAsError>)
       : executeAs(
           db,
           sql`
@@ -405,6 +467,14 @@ async function loadPoemSlugEnrichment(
           relatedEnrichmentRowSchema
         ),
   ]);
+
+  if (meterLookupResult.isErr()) return err(tag(meterLookupResult.error));
+  if (themeLookupResult.isErr()) return err(tag(themeLookupResult.error));
+  if (relatedEnrichmentResult.isErr()) return err(tag(relatedEnrichmentResult.error));
+
+  const meterLookup = meterLookupResult.value;
+  const themeLookup = themeLookupResult.value;
+  const relatedEnrichment = relatedEnrichmentResult.value;
 
   const meterSlug = meterLookup[0]?.slug;
   const themeSlug = themeLookup[0]?.slug;
@@ -471,9 +541,11 @@ export async function getPoemBySlug(
     return err({ kind: 'incomplete_poem_data', slug });
   }
   const relatedSlugs = related_poems.map((row) => row.poem_slug);
-  const enrichmentResult = await loadPoemSlugEnrichment(db, poem, relatedSlugs);
+  const enrichmentResult = await loadPoemSlugEnrichment(db, slug, poem, relatedSlugs);
   if (enrichmentResult.isErr()) {
-    return err({ kind: 'incomplete_enrichment', slug });
+    const e = enrichmentResult.error;
+    if (e.kind === 'incomplete_enrichment') return err({ kind: 'incomplete_enrichment', slug });
+    return err(e);
   }
   return ok(buildPoemResource(poem, related_poems, enrichmentResult.value));
 }

@@ -5,31 +5,28 @@ import { CAT_POET_PREFIX_REGEX, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } fro
 import Layout from '@/layouts/layout.astro';
 import { fetchPoetsPage, fetchPoetsTotalPages } from '@/lib/api/static/poets';
 import { toArabicDigits } from '@/lib/arabic';
+import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
+import { parsePageParam } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const totalPagesResult = await fetchPoetsTotalPages();
-  if (totalPagesResult.isErr()) {
-    throw new Error(`fetchPoetsTotalPages failed: ${JSON.stringify(totalPagesResult.error)}`);
-  }
-  const totalPages = totalPagesResult.value;
+  const totalPages = unwrapForBoundary(await fetchPoetsTotalPages(), 'fetchPoetsTotalPages');
   return Array.from({ length: totalPages }, (_, i) => ({
     params: { page: (i + 1).toString() },
   }));
 }
 
-const pageNumber = Number.parseInt(Astro.params.page ?? '', 10);
-if (!Number.isFinite(pageNumber) || pageNumber < 1) {
-  return Astro.redirect('/404');
-}
+const pageResult = parsePageParam(Astro.params.page);
+if (pageResult.isErr()) return Astro.redirect('/404');
+const pageNumber = pageResult.value;
 const page = pageNumber.toString();
 
 const responseResult = await fetchPoetsPage(pageNumber);
 
 if (responseResult.isErr()) {
   if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw new Error(`fetchPoetsPage failed: ${JSON.stringify(responseResult.error)}`);
+  throw boundaryError('fetchPoetsPage', responseResult.error);
 }
 const response = responseResult.value;
 if (response.data.length === 0) {

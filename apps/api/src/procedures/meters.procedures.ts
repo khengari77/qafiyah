@@ -4,8 +4,10 @@ import { publicProcedure } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
 import { toPoemListItem } from './list-item.mapper';
 
-export const listMeters = publicProcedure.meters.list.handler(async ({ context }) => {
-  const meters = await metersQueries.listMeters(context.db);
+export const listMeters = publicProcedure.meters.list.handler(async ({ context, errors }) => {
+  const result = await metersQueries.listMeters(context.db);
+  if (result.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+  const meters = result.value;
   context.log?.({ result_count: meters.length });
   return listEnvelope({
     data: meters,
@@ -18,7 +20,10 @@ export const listMeters = publicProcedure.meters.list.handler(async ({ context }
 export const listMeterPoems = publicProcedure.meters.listPoems.handler(
   async ({ context, input, errors }) => {
     const queryResult = await metersQueries.listMeterPoems(context.db, input.slug, input.page);
-    if (queryResult.isErr()) throw errors.NOT_FOUND();
+    if (queryResult.isErr()) {
+      if (queryResult.error.kind === 'not_found') throw errors.NOT_FOUND();
+      throw errors.INTERNAL_SERVER_ERROR();
+    }
     const result = queryResult.value;
     context.log?.({
       meter: input.slug,

@@ -289,8 +289,10 @@ describe('searchPoems (mock)', () => {
     });
     const error = result._unsafeUnwrapErr();
     expect(error.kind).toBe('missing_total');
-    expect(error.source).toBe('searchPoems');
-    expect(error.inputs).toMatchObject({ query: 'test', page: 1, matchType: 'all' });
+    if (error.kind === 'missing_total') {
+      expect(error.source).toBe('searchPoems');
+      expect(error.inputs).toMatchObject({ query: 'test', page: 1, matchType: 'all' });
+    }
   });
 
   it('returns non_finite_total when total_count is not finite', async () => {
@@ -462,7 +464,9 @@ describe('browsePoemsByFilters (mock)', () => {
     });
     const error = result._unsafeUnwrapErr();
     expect(error.kind).toBe('missing_total');
-    expect(error.source).toBe('browsePoemsByFilters');
+    if (error.kind === 'missing_total') {
+      expect(error.source).toBe('browsePoemsByFilters');
+    }
   });
 
   it('returns non_finite_total when total is not finite', async () => {

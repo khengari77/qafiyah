@@ -7,16 +7,40 @@ export type DbClient = PostgresJsDatabase<Readonly<Record<string, never>>>;
 
 export type DbMode = 'edge' | 'long-lived';
 
-export type CreateDbError = {
-  readonly kind: 'invalid_port';
-  readonly rawPort: string;
-  readonly databaseUrlHost: string;
+export type InvalidUrlError = {
+  readonly kind: 'invalid_url';
+  readonly rawUrl: string;
+  readonly message: string;
 };
+
+export type CreateDbError =
+  | InvalidUrlError
+  | {
+      readonly kind: 'invalid_port';
+      readonly rawPort: string;
+      readonly databaseUrlHost: string;
+    };
 
 const LOCAL_HOSTS = new Set(['127.0.0.1', 'localhost', '::1', 'host.docker.internal']);
 
-export function detectDbMode(databaseUrl: string): DbMode {
-  return LOCAL_HOSTS.has(new URL(databaseUrl).hostname) ? 'long-lived' : 'edge';
+function parseDbUrl(databaseUrl: string): Result<URL, InvalidUrlError> {
+  try {
+    return ok(new URL(databaseUrl));
+  } catch (cause) {
+    return err({
+      kind: 'invalid_url',
+      rawUrl: databaseUrl,
+      message: cause instanceof Error ? cause.message : String(cause),
+    });
+  }
+}
+
+function modeForHostname(hostname: string): DbMode {
+  return LOCAL_HOSTS.has(hostname) ? 'long-lived' : 'edge';
+}
+
+export function detectDbMode(databaseUrl: string): Result<DbMode, InvalidUrlError> {
+  return parseDbUrl(databaseUrl).map((url) => modeForHostname(url.hostname));
 }
 
 const PROFILES = {
@@ -44,7 +68,9 @@ export function createDb(
   databaseUrl: string,
   options?: { readonly mode?: DbMode }
 ): Result<DbClient, CreateDbError> {
-  const url = new URL(databaseUrl);
+  const urlResult = parseDbUrl(databaseUrl);
+  if (urlResult.isErr()) return err(urlResult.error);
+  const url = urlResult.value;
   const port = Number.parseInt(url.port, 10);
   if (!Number.isInteger(port) || port <= 0 || port > 65535) {
     return err({
@@ -53,7 +79,7 @@ export function createDb(
       databaseUrlHost: url.hostname,
     });
   }
-  const mode = options?.mode ?? detectDbMode(databaseUrl);
+  const mode = options?.mode ?? modeForHostname(url.hostname);
   const profile = PROFILES[mode];
   const client = postgres({
     host: url.hostname,

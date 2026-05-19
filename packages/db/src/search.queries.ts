@@ -12,7 +12,7 @@ import { type SQL, sql } from 'drizzle-orm';
 import { err, ok, type Result } from 'neverthrow';
 import * as v from 'valibot';
 import type { DbClient } from './client';
-import { executeAs } from './execute-as';
+import { type ExecuteAsError, executeAs } from './execute-as';
 
 export type { MatchType };
 
@@ -62,6 +62,8 @@ export type SearchTotalError =
       readonly raw: unknown;
       readonly inputs: Readonly<Record<string, unknown>>;
     };
+
+export type SearchError = SearchTotalError | ExecuteAsError;
 
 const rawPoemSearchRowSchema = v.object({
   poet_name: v.string(),
@@ -122,14 +124,14 @@ async function lookupFilterIds(
   eraSlugs: readonly EraSlug[] | null,
   themeSlugs: readonly ThemeSlug[] | null,
   rhymeSlugs: readonly RhymeSlug[] | null
-): Promise<FilterIds> {
+): Promise<Result<FilterIds, ExecuteAsError>> {
   const meterFilter = meterSlugs && meterSlugs.length > 0 ? meterSlugs : null;
   const eraFilter = eraSlugs && eraSlugs.length > 0 ? eraSlugs : null;
   const themeFilter = themeSlugs && themeSlugs.length > 0 ? themeSlugs : null;
   const rhymeFilter = rhymeSlugs && rhymeSlugs.length > 0 ? rhymeSlugs : null;
 
   if (!(meterFilter || eraFilter || themeFilter || rhymeFilter)) {
-    return { meterIds: null, eraIds: null, themeIds: null, rhymeIds: null };
+    return ok({ meterIds: null, eraIds: null, themeIds: null, rhymeIds: null });
   }
 
   const meterLiteral = meterFilter ? formatPgTextArrayLiteral(meterFilter) : null;
@@ -137,7 +139,7 @@ async function lookupFilterIds(
   const themeLiteral = themeFilter ? formatPgTextArrayLiteral(themeFilter) : null;
   const rhymeLiteral = rhymeFilter ? formatPgTextArrayLiteral(rhymeFilter) : null;
 
-  const rows = await executeAs(
+  const rowsResult = await executeAs(
     db,
     sql`
       SELECT 'meter' AS kind, id FROM meter_stats WHERE ${meterLiteral === null ? sql`FALSE` : sql`(id::TEXT = ANY(${meterLiteral}::TEXT[]) OR slug::TEXT = ANY(${meterLiteral}::TEXT[]))`}
@@ -150,6 +152,7 @@ async function lookupFilterIds(
     `,
     filterIdsRowSchema
   );
+  if (rowsResult.isErr()) return err(rowsResult.error);
 
   // @WARN: buckets are mutated below to partition rows by kind. They are projected into
   //   readonly arrays before returning.
@@ -157,7 +160,7 @@ async function lookupFilterIds(
   const eraBucket: number[] = [];
   const themeBucket: number[] = [];
   const rhymeBucket: number[] = [];
-  for (const row of rows) {
+  for (const row of rowsResult.value) {
     switch (row.kind) {
       case 'meter':
         meterBucket.push(row.id);
@@ -173,26 +176,27 @@ async function lookupFilterIds(
         break;
     }
   }
-  return {
+  return ok({
     meterIds: meterFilter ? meterBucket : null,
     eraIds: eraFilter ? eraBucket : null,
     themeIds: themeFilter ? themeBucket : null,
     rhymeIds: rhymeFilter ? rhymeBucket : null,
-  };
+  });
 }
 
 async function lookupEraIds(
   db: DbClient,
   slugs: readonly EraSlug[] | null
-): Promise<readonly number[] | null> {
-  if (!slugs || slugs.length === 0) return null;
+): Promise<Result<readonly number[] | null, ExecuteAsError>> {
+  if (!slugs || slugs.length === 0) return ok(null);
   const literal = formatPgTextArrayLiteral(slugs);
-  const rows = await executeAs(
+  const rowsResult = await executeAs(
     db,
     sql`SELECT id FROM era_stats WHERE id::TEXT = ANY(${literal}::TEXT[]) OR slug::TEXT = ANY(${literal}::TEXT[])`,
     idRowSchema
   );
-  return rows.map((row) => row.id);
+  if (rowsResult.isErr()) return err(rowsResult.error);
+  return ok(rowsResult.value.map((row) => row.id));
 }
 
 function toPoemSearchRow(row: Omit<RawPoemSearchRow, 'total_count'>): PoemSearchRow {
@@ -227,17 +231,19 @@ export async function searchPoems(args: {
   readonly page: number;
   readonly matchType: MatchType;
   readonly filters: SearchFilters;
-}): Promise<Result<SearchPage<PoemSearchRow>, SearchTotalError>> {
+}): Promise<Result<SearchPage<PoemSearchRow>, SearchError>> {
   const { db, query, page, matchType, filters } = args;
-  const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
+  const filterIdsResult = await lookupFilterIds(
     db,
     filters.meterSlugs,
     filters.eraSlugs,
     filters.themeSlugs,
     filters.rhymeSlugs
   );
+  if (filterIdsResult.isErr()) return err(filterIdsResult.error);
+  const { meterIds, eraIds, themeIds, rhymeIds } = filterIdsResult.value;
 
-  const raw = await executeAs(
+  const rawResult = await executeAs(
     db,
     sql`
       WITH s AS (
@@ -261,6 +267,8 @@ export async function searchPoems(args: {
     `,
     rawPoemSearchRowSchema
   );
+  if (rawResult.isErr()) return err(rawResult.error);
+  const raw = rawResult.value;
 
   if (raw.length === 0) return ok({ rows: [], totalCount: 0 });
 
@@ -276,11 +284,13 @@ export async function searchPoets(args: {
   readonly page: number;
   readonly matchType: MatchType;
   readonly eraSlugs: readonly EraSlug[] | null;
-}): Promise<Result<SearchPage<PoetSearchRow>, SearchTotalError>> {
+}): Promise<Result<SearchPage<PoetSearchRow>, SearchError>> {
   const { db, query, page, matchType, eraSlugs } = args;
-  const eraIds = await lookupEraIds(db, eraSlugs);
+  const eraIdsResult = await lookupEraIds(db, eraSlugs);
+  if (eraIdsResult.isErr()) return err(eraIdsResult.error);
+  const eraIds = eraIdsResult.value;
 
-  const raw = await executeAs(
+  const rawResult = await executeAs(
     db,
     sql`
       WITH s AS (
@@ -299,6 +309,8 @@ export async function searchPoets(args: {
     `,
     rawPoetSearchRowSchema
   );
+  if (rawResult.isErr()) return err(rawResult.error);
+  const raw = rawResult.value;
 
   if (raw.length === 0) return ok({ rows: [], totalCount: 0 });
 
@@ -335,15 +347,17 @@ export async function browsePoemsByFilters(args: {
   readonly db: DbClient;
   readonly page: number;
   readonly filters: SearchFilters;
-}): Promise<Result<SearchPage<PoemSearchRow>, SearchTotalError>> {
+}): Promise<Result<SearchPage<PoemSearchRow>, SearchError>> {
   const { db, page, filters } = args;
-  const { meterIds, eraIds, themeIds, rhymeIds } = await lookupFilterIds(
+  const filterIdsResult = await lookupFilterIds(
     db,
     filters.meterSlugs,
     filters.eraSlugs,
     filters.themeSlugs,
     filters.rhymeSlugs
   );
+  if (filterIdsResult.isErr()) return err(filterIdsResult.error);
+  const { meterIds, eraIds, themeIds, rhymeIds } = filterIdsResult.value;
 
   const meterParam = toPgIntArrayParam(meterIds);
   const eraParam = toPgIntArrayParam(eraIds);
@@ -359,97 +373,103 @@ export async function browsePoemsByFilters(args: {
     AND (${rhymeParam} IS NULL OR p.rhyme_id = ANY(${rhymeParam}))
   `;
 
-  const rowsPromise = executeAs(
-    db,
-    sql`
-      SELECT
-        pt.name AS poet_name,
-        e.name AS poet_era,
-        e.slug AS poet_era_slug,
-        pt.slug AS poet_slug,
-        p.title AS poem_title,
-        array_to_string((string_to_array(p.content, '*'))[1:2], '*') AS poem_snippet,
-        m.name AS poem_meter,
-        m.slug AS poem_meter_slug,
-        p.slug AS poem_slug,
-        0::real AS relevance
-      FROM public.poems p
-      JOIN public.poets pt ON p.poet_id = pt.id
-      JOIN public.meters m ON p.meter_id = m.id
-      JOIN public.eras e ON pt.era_id = e.id
-      WHERE ${filterClause}
-      ORDER BY p.id DESC
-      LIMIT ${SEARCH_POEMS_PER_PAGE}
-      OFFSET ${offset}
-    `,
-    rawPoemSearchRowSchema
-  );
+  const [rowsResult, countResult] = await Promise.all([
+    executeAs(
+      db,
+      sql`
+        SELECT
+          pt.name AS poet_name,
+          e.name AS poet_era,
+          e.slug AS poet_era_slug,
+          pt.slug AS poet_slug,
+          p.title AS poem_title,
+          array_to_string((string_to_array(p.content, '*'))[1:2], '*') AS poem_snippet,
+          m.name AS poem_meter,
+          m.slug AS poem_meter_slug,
+          p.slug AS poem_slug,
+          0::real AS relevance
+        FROM public.poems p
+        JOIN public.poets pt ON p.poet_id = pt.id
+        JOIN public.meters m ON p.meter_id = m.id
+        JOIN public.eras e ON pt.era_id = e.id
+        WHERE ${filterClause}
+        ORDER BY p.id DESC
+        LIMIT ${SEARCH_POEMS_PER_PAGE}
+        OFFSET ${offset}
+      `,
+      rawPoemSearchRowSchema
+    ),
+    executeAs(
+      db,
+      sql`
+        SELECT COUNT(*)::bigint AS total
+        FROM public.poems p
+        JOIN public.poets pt ON p.poet_id = pt.id
+        WHERE ${filterClause}
+      `,
+      countRowSchema
+    ),
+  ]);
 
-  const countPromise = executeAs(
-    db,
-    sql`
-      SELECT COUNT(*)::bigint AS total
-      FROM public.poems p
-      JOIN public.poets pt ON p.poet_id = pt.id
-      WHERE ${filterClause}
-    `,
-    countRowSchema
-  );
-
-  const [rows, count] = await Promise.all([rowsPromise, countPromise]);
+  if (rowsResult.isErr()) return err(rowsResult.error);
+  if (countResult.isErr()) return err(countResult.error);
 
   const inputs = { page, filters } as const;
-  const totalResult = parseTotalCountRow(count, 'browsePoemsByFilters', inputs);
+  const totalResult = parseTotalCountRow(countResult.value, 'browsePoemsByFilters', inputs);
   if (totalResult.isErr()) return err(totalResult.error);
-  return ok({ rows: rows.map(toPoemSearchRow), totalCount: totalResult.value });
+  return ok({ rows: rowsResult.value.map(toPoemSearchRow), totalCount: totalResult.value });
 }
 
 export async function browsePoetsByFilters(args: {
   readonly db: DbClient;
   readonly page: number;
   readonly eraSlugs: readonly EraSlug[] | null;
-}): Promise<Result<SearchPage<PoetSearchRow>, SearchTotalError>> {
+}): Promise<Result<SearchPage<PoetSearchRow>, SearchError>> {
   const { db, page, eraSlugs } = args;
-  const eraIds = await lookupEraIds(db, eraSlugs);
+  const eraIdsResult = await lookupEraIds(db, eraSlugs);
+  if (eraIdsResult.isErr()) return err(eraIdsResult.error);
+  const eraIds = eraIdsResult.value;
   const eraParam = toPgIntArrayParam(eraIds);
   const offset = (page - 1) * SEARCH_POETS_PER_PAGE;
 
   const filterClause = sql`(${eraParam} IS NULL OR pt.era_id = ANY(${eraParam}))`;
 
-  const rowsPromise = executeAs(
-    db,
-    sql`
-      SELECT
-        pt.name AS poet_name,
-        e.name AS poet_era,
-        e.slug AS poet_era_slug,
-        pt.slug AS poet_slug,
-        COALESCE(pt.bio, '') AS poet_bio,
-        0::double precision AS relevance
-      FROM public.poets pt
-      JOIN public.eras e ON pt.era_id = e.id
-      WHERE ${filterClause}
-      ORDER BY pt.id DESC
-      LIMIT ${SEARCH_POETS_PER_PAGE}
-      OFFSET ${offset}
-    `,
-    rawPoetSearchRowSchema
-  );
+  const [rowsResult, countResult] = await Promise.all([
+    executeAs(
+      db,
+      sql`
+        SELECT
+          pt.name AS poet_name,
+          e.name AS poet_era,
+          e.slug AS poet_era_slug,
+          pt.slug AS poet_slug,
+          COALESCE(pt.bio, '') AS poet_bio,
+          0::double precision AS relevance
+        FROM public.poets pt
+        JOIN public.eras e ON pt.era_id = e.id
+        WHERE ${filterClause}
+        ORDER BY pt.id DESC
+        LIMIT ${SEARCH_POETS_PER_PAGE}
+        OFFSET ${offset}
+      `,
+      rawPoetSearchRowSchema
+    ),
+    executeAs(
+      db,
+      sql`
+        SELECT COUNT(*)::bigint AS total
+        FROM public.poets pt
+        WHERE ${filterClause}
+      `,
+      countRowSchema
+    ),
+  ]);
 
-  const countPromise = executeAs(
-    db,
-    sql`
-      SELECT COUNT(*)::bigint AS total
-      FROM public.poets pt
-      WHERE ${filterClause}
-    `,
-    countRowSchema
-  );
-
-  const [rows, count] = await Promise.all([rowsPromise, countPromise]);
+  if (rowsResult.isErr()) return err(rowsResult.error);
+  if (countResult.isErr()) return err(countResult.error);
 
   const inputs = { page, eraSlugs } as const;
-  const totalResult = parseTotalCountRow(count, 'browsePoetsByFilters', inputs);
+  const totalResult = parseTotalCountRow(countResult.value, 'browsePoetsByFilters', inputs);
   if (totalResult.isErr()) return err(totalResult.error);
-  return ok({ rows: rows.map(toPoetSearchRow), totalCount: totalResult.value });
+  return ok({ rows: rowsResult.value.map(toPoetSearchRow), totalCount: totalResult.value });
 }

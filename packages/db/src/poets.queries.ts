@@ -1,10 +1,10 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { PoetSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
-import { err, ok, type Result } from 'neverthrow';
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asPoetSlug } from './brand';
 import type { DbClient } from './client';
-import { executeAs } from './execute-as';
+import { type ExecuteAsError, executeAs } from './execute-as';
 import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { poetStats } from './schema';
 
@@ -20,6 +20,8 @@ export type ListPoetsResult = {
   readonly totalPages: number;
 };
 
+export type ListPoetsError = { readonly kind: 'sql_error'; readonly message: string };
+
 export type ListPoetPoemsResult = {
   readonly parent: { readonly name: string; readonly slug: PoetSlug; readonly poemsCount: number };
   readonly poems: readonly PoemListRow[];
@@ -27,31 +29,42 @@ export type ListPoetPoemsResult = {
   readonly totalPages: number;
 };
 
-export type ListPoetPoemsError = { readonly kind: 'not_found'; readonly slug: PoetSlug };
+export type ListPoetPoemsError =
+  | { readonly kind: 'not_found'; readonly slug: PoetSlug }
+  | ExecuteAsError;
 
-export async function listPoets(db: DbClient, page: number): Promise<ListPoetsResult> {
+export async function listPoets(
+  db: DbClient,
+  page: number
+): Promise<Result<ListPoetsResult, ListPoetsError>> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const [poets, total] = await Promise.all([
-    db
-      .select({
-        name: poetStats.name,
-        slug: poetStats.slug,
-        poemsCount: poetStats.poemsCount,
-      })
-      .from(poetStats)
-      .limit(limit)
-      .offset(offset),
-    db.$count(poetStats),
-  ]);
-  const totalPages = Math.ceil(total / limit);
-
-  return {
+  const queryResult = await ResultAsync.fromPromise(
+    Promise.all([
+      db
+        .select({
+          name: poetStats.name,
+          slug: poetStats.slug,
+          poemsCount: poetStats.poemsCount,
+        })
+        .from(poetStats)
+        .limit(limit)
+        .offset(offset),
+      db.$count(poetStats),
+    ]),
+    (cause): ListPoetsError => ({
+      kind: 'sql_error',
+      message: cause instanceof Error ? cause.message : String(cause),
+    })
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  const [poets, total] = queryResult.value;
+  return ok({
     poets: poets.map((row) => ({ ...row, slug: asPoetSlug(row.slug) })),
     total,
-    totalPages,
-  };
+    totalPages: Math.ceil(total / limit),
+  });
 }
 
 export async function listPoetPoems(
@@ -62,17 +75,19 @@ export async function listPoetPoems(
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const parentRows = await executeAs(
+  const parentRowsResult = await executeAs(
     db,
     sql`SELECT name, poems_count FROM poet_stats WHERE slug = ${slug} LIMIT 1`,
     parentStatsRowSchema
   );
+  if (parentRowsResult.isErr()) return err(parentRowsResult.error);
+  const parentRows = parentRowsResult.value;
 
   if (parentRows.length === 0 || !parentRows[0]) return err({ kind: 'not_found', slug });
 
   const total = Number(parentRows[0].poems_count);
 
-  const rawPoems = await executeAs(
+  const rawPoemsResult = await executeAs(
     db,
     sql`
       SELECT
@@ -91,8 +106,9 @@ export async function listPoetPoems(
     `,
     rawPoemRowSchema
   );
+  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
 
-  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+  const poems: readonly PoemListRow[] = rawPoemsResult.value.map((row) => ({
     title: row.title,
     slug: row.slug,
     poetName: row.poet_name,

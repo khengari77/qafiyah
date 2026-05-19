@@ -90,7 +90,7 @@ describe('poems routes', () => {
     expect(res.status).toBe(500);
   });
 
-  it('returns problem+json when db throws a 404 HTTPException', async () => {
+  it('returns 500 problem+json when db rejection is an HTTPException (now caught as query_failed)', async () => {
     const db = createMockDb();
     db.execute = vi.fn().mockRejectedValue(new HTTPException(404, { message: 'not found' }));
 
@@ -98,22 +98,9 @@ describe('poems routes', () => {
 
     const res = await client.$get('/random?option=slug');
 
-    expect(res.status).toBe(404);
+    expect(res.status).toBe(500);
     expect(res.headers.get('Content-Type')).toBe('application/problem+json');
     const body = (await res.json()) as { code: string };
-    expect(body.code).toBe('NOT_FOUND');
-  });
-
-  it('returns BAD_REQUEST problem when db throws a non-404 HTTPException', async () => {
-    const db = createMockDb();
-    db.execute = vi.fn().mockRejectedValue(new HTTPException(400, { message: 'bad input' }));
-
-    const client = createTestClient(poems, { db });
-
-    const res = await client.$get('/random?option=slug');
-
-    expect(res.status).toBe(400);
-    const body = (await res.json()) as { code: string };
-    expect(body.code).toBe('BAD_REQUEST');
+    expect(body.code).toBe('INTERNAL_SERVER_ERROR');
   });
 });

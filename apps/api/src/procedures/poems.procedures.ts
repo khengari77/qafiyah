@@ -24,16 +24,20 @@ function toPoemDetail(slug: PoemSlug, data: poemsQueries.PoemDetail): PoemDetail
   };
 }
 
-export const listPoemSlugs = publicProcedure.poems.listPoemSlugs.handler(async ({ context }) => {
-  const slugs = await poemsQueries.listAllPoemSlugs(context.db);
-  context.log?.({ result_count: slugs.length });
-  return listEnvelope({
-    data: slugs,
-    totalItems: slugs.length,
-    page: 1,
-    pageSize: slugs.length || 1,
-  });
-});
+export const listPoemSlugs = publicProcedure.poems.listPoemSlugs.handler(
+  async ({ context, errors }) => {
+    const result = await poemsQueries.listAllPoemSlugs(context.db);
+    if (result.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+    const slugs = result.value;
+    context.log?.({ result_count: slugs.length });
+    return listEnvelope({
+      data: slugs,
+      totalItems: slugs.length,
+      page: 1,
+      pageSize: slugs.length || 1,
+    });
+  }
+);
 
 export const getPoemBySlug = publicProcedure.poems.getPoemBySlug.handler(
   async ({ context, input, errors }) => {

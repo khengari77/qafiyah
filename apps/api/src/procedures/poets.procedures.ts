@@ -5,7 +5,9 @@ import { listEnvelope, listEnvelopeWithMeta } from './envelope';
 import { toPoemListItem } from './list-item.mapper';
 
 export const listPoets = publicProcedure.poets.list.handler(async ({ context, input, errors }) => {
-  const result = await poetsQueries.listPoets(context.db, input.page);
+  const queryResult = await poetsQueries.listPoets(context.db, input.page);
+  if (queryResult.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+  const result = queryResult.value;
   if (input.page > 1 && input.page > result.totalPages) throw errors.NOT_FOUND();
   context.log?.({
     result_count: result.total,
@@ -24,7 +26,10 @@ export const listPoets = publicProcedure.poets.list.handler(async ({ context, in
 export const listPoetPoems = publicProcedure.poets.listPoems.handler(
   async ({ context, input, errors }) => {
     const queryResult = await poetsQueries.listPoetPoems(context.db, input.slug, input.page);
-    if (queryResult.isErr()) throw errors.NOT_FOUND();
+    if (queryResult.isErr()) {
+      if (queryResult.error.kind === 'not_found') throw errors.NOT_FOUND();
+      throw errors.INTERNAL_SERVER_ERROR();
+    }
     const result = queryResult.value;
     context.log?.({
       poet_id: input.slug,

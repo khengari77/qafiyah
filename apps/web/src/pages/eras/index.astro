@@ -4,14 +4,11 @@ import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/c
 import Layout from '@/layouts/layout.astro';
 import { fetchEras } from '@/lib/api/static/collections';
 import { toArabicDigits } from '@/lib/arabic';
+import { unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { stripQuotes } from '@/lib/utils';
 
-const erasResult = await fetchEras();
-if (erasResult.isErr()) {
-  throw new Error(`fetchEras failed: ${JSON.stringify(erasResult.error)}`);
-}
-const eras = erasResult.value;
+const eras = unwrapForBoundary(await fetchEras(), 'fetchEras');
 
 const eraLabel = formatArabicCount({
   count: eras.length,

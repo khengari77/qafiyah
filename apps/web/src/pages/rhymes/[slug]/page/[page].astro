@@ -6,17 +6,15 @@ import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { fetchRhymePoemPage, fetchRhymes } from '@/lib/api/static/collections';
 import { toArabicDigits } from '@/lib/arabic';
+import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { generatePageNumbers } from '@/lib/page-numbers';
+import { generatePageNumbers, parsePageParam } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const rhymesResult = await fetchRhymes();
-  if (rhymesResult.isErr()) {
-    throw new Error(`fetchRhymes failed: ${JSON.stringify(rhymesResult.error)}`);
-  }
+  const rhymes = unwrapForBoundary(await fetchRhymes(), 'fetchRhymes');
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const rhyme of rhymesResult.value) {
+  for (const rhyme of rhymes) {
     for (const page of generatePageNumbers(rhyme.poemsCount)) {
       params.push({ params: { slug: rhyme.slug, page: page.toString() } });
     }
@@ -25,17 +23,18 @@ export async function getStaticPaths() {
 }
 
 const parsedSlug = v.safeParse(rhymeSlugSchema, Astro.params.slug);
-const pageNumber = Number.parseInt(Astro.params.page ?? '', 10);
-if (!(parsedSlug.success && Number.isFinite(pageNumber)) || pageNumber < 1) {
+const pageResult = parsePageParam(Astro.params.page);
+if (!parsedSlug.success || pageResult.isErr()) {
   return Astro.redirect('/404');
 }
 const slug = parsedSlug.output;
+const pageNumber = pageResult.value;
 const page = pageNumber.toString();
 
 const responseResult = await fetchRhymePoemPage(slug, pageNumber);
 if (responseResult.isErr()) {
   if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw new Error(`fetchRhymePoemPage failed: ${JSON.stringify(responseResult.error)}`);
+  throw boundaryError('fetchRhymePoemPage', responseResult.error);
 }
 const response = responseResult.value;
 

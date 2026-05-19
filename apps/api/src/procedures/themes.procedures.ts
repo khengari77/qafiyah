@@ -4,8 +4,10 @@ import { publicProcedure } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
 import { toPoemListItem } from './list-item.mapper';
 
-export const listThemes = publicProcedure.themes.list.handler(async ({ context }) => {
-  const themes = await themesQueries.listThemes(context.db);
+export const listThemes = publicProcedure.themes.list.handler(async ({ context, errors }) => {
+  const result = await themesQueries.listThemes(context.db);
+  if (result.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+  const themes = result.value;
   context.log?.({ result_count: themes.length });
   return listEnvelope({
     data: themes,
@@ -18,7 +20,10 @@ export const listThemes = publicProcedure.themes.list.handler(async ({ context }
 export const listThemePoems = publicProcedure.themes.listPoems.handler(
   async ({ context, input, errors }) => {
     const queryResult = await themesQueries.listThemePoems(context.db, input.slug, input.page);
-    if (queryResult.isErr()) throw errors.NOT_FOUND();
+    if (queryResult.isErr()) {
+      if (queryResult.error.kind === 'not_found') throw errors.NOT_FOUND();
+      throw errors.INTERNAL_SERVER_ERROR();
+    }
     const result = queryResult.value;
     context.log?.({
       theme: input.slug,

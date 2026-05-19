@@ -43,8 +43,8 @@ describe('listRhymes', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
-    const result = await listRhymes(mockDb);
-    const baaGroup = result.find((r) => r.name === 'باء');
+    const value = (await listRhymes(mockDb))._unsafeUnwrap();
+    const baaGroup = value.find((r) => r.name === 'باء');
     expect(baaGroup).toBeDefined();
     expect(baaGroup?.poemsCount).toBe(30);
     expect(baaGroup?.poetsCount).toBe(13);
@@ -55,8 +55,8 @@ describe('listRhymes', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
-    const result = await listRhymes(mockDb);
-    expect(result).toEqual([]);
+    const value = (await listRhymes(mockDb))._unsafeUnwrap();
+    expect(value).toEqual([]);
   });
 
   it('ignores rhymes whose pattern does not match any letter', async () => {
@@ -65,8 +65,8 @@ describe('listRhymes', () => {
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
     });
 
-    const result = await listRhymes(mockDb);
-    expect(result).toEqual([]);
+    const value = (await listRhymes(mockDb))._unsafeUnwrap();
+    expect(value).toEqual([]);
   });
 });
 

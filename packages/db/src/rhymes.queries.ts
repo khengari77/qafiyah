@@ -1,11 +1,11 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { RhymeSlug } from '@qafiyah/contracts';
 import { sql } from 'drizzle-orm';
-import { err, ok, type Result } from 'neverthrow';
+import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asRhymeSlug } from './brand';
 import type { DbClient } from './client';
 import { ARABIC_LETTERS_MAP } from './constants';
-import { executeAs } from './execute-as';
+import { type ExecuteAsError, executeAs } from './execute-as';
 import { type PoemListRow, parentStatsRowSchema, rawPoemRowSchema } from './row-schemas';
 import { rhymeStats } from './schema';
 
@@ -23,6 +23,10 @@ export type RhymeLetterStatsRow = {
   readonly poetsCount: number;
 };
 
+export type ListRhymesError =
+  | { readonly kind: 'sql_error'; readonly message: string }
+  | { readonly kind: 'empty_letter_group'; readonly letter: string };
+
 export type ListRhymePoemsResult = {
   readonly parent: { readonly name: string; readonly slug: RhymeSlug; readonly poemsCount: number };
   readonly poems: readonly PoemListRow[];
@@ -30,10 +34,22 @@ export type ListRhymePoemsResult = {
   readonly totalPages: number;
 };
 
-export type ListRhymePoemsError = { readonly kind: 'not_found'; readonly slug: RhymeSlug };
+export type ListRhymePoemsError =
+  | { readonly kind: 'not_found'; readonly slug: RhymeSlug }
+  | ExecuteAsError;
 
-export async function listRhymes(db: DbClient): Promise<readonly RhymeLetterStatsRow[]> {
-  const results = await db.select().from(rhymeStats);
+export async function listRhymes(
+  db: DbClient
+): Promise<Result<readonly RhymeLetterStatsRow[], ListRhymesError>> {
+  const queryResult = await ResultAsync.fromPromise(
+    db.select().from(rhymeStats),
+    (cause): ListRhymesError => ({
+      kind: 'sql_error',
+      message: cause instanceof Error ? cause.message : String(cause),
+    })
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  const results = queryResult.value;
 
   // @WARN: groupedRhymes is intentionally mutable, letters are accumulated across
   //   iterations of the result loop before being projected into the readonly output.
@@ -60,20 +76,19 @@ export async function listRhymes(db: DbClient): Promise<readonly RhymeLetterStat
     }
   }
 
-  const enrichedGroups: readonly RhymeLetterStatsRow[] = Array.from(groupedRhymes.entries()).map(
-    ([letter, { rhymes, totalPoemsCount, totalPoetsCount }]) => {
-      const firstRhyme = rhymes[0];
-      if (!firstRhyme) throw new Error('listRhymes: no first rhyme for letter');
-      return {
-        name: letter,
-        slug: asRhymeSlug(firstRhyme.slug),
-        poemsCount: totalPoemsCount,
-        poetsCount: totalPoetsCount,
-      };
-    }
-  );
+  const enrichedGroups: RhymeLetterStatsRow[] = [];
+  for (const [letter, { rhymes, totalPoemsCount, totalPoetsCount }] of groupedRhymes.entries()) {
+    const firstRhyme = rhymes[0];
+    if (!firstRhyme) return err({ kind: 'empty_letter_group', letter });
+    enrichedGroups.push({
+      name: letter,
+      slug: asRhymeSlug(firstRhyme.slug),
+      poemsCount: totalPoemsCount,
+      poetsCount: totalPoetsCount,
+    });
+  }
 
-  return [...enrichedGroups].sort((a, b) => a.name.localeCompare(b.name, 'ar'));
+  return ok(enrichedGroups.sort((a, b) => a.name.localeCompare(b.name, 'ar')));
 }
 
 export async function listRhymePoems(
@@ -84,17 +99,19 @@ export async function listRhymePoems(
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
 
-  const parentRows = await executeAs(
+  const parentRowsResult = await executeAs(
     db,
     sql`SELECT pattern AS name, poems_count FROM rhyme_stats WHERE slug = ${slug}::UUID LIMIT 1`,
     parentStatsRowSchema
   );
+  if (parentRowsResult.isErr()) return err(parentRowsResult.error);
+  const parentRows = parentRowsResult.value;
 
   if (parentRows.length === 0 || !parentRows[0]) return err({ kind: 'not_found', slug });
 
   const total = Number(parentRows[0].poems_count);
 
-  const rawPoems = await executeAs(
+  const rawPoemsResult = await executeAs(
     db,
     sql`
       SELECT
@@ -114,8 +131,9 @@ export async function listRhymePoems(
     `,
     rawPoemRowSchema
   );
+  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
 
-  const poems: readonly PoemListRow[] = rawPoems.map((row) => ({
+  const poems: readonly PoemListRow[] = rawPoemsResult.value.map((row) => ({
     title: row.title,
     slug: row.slug,
     poetName: row.poet_name,

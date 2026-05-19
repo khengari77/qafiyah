@@ -7,17 +7,15 @@ import { POEMS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/
 import Layout from '@/layouts/layout.astro';
 import { fetchAllPoets, fetchPoetPoemPage } from '@/lib/api/static/poets';
 import { toArabicDigits } from '@/lib/arabic';
+import { boundaryError, unwrapForBoundary } from '@/lib/astro-boundary';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { generatePageNumbers } from '@/lib/page-numbers';
+import { generatePageNumbers, parsePageParam } from '@/lib/page-numbers';
 import { stripQuotes } from '@/lib/utils';
 
 export async function getStaticPaths() {
-  const poetsResult = await fetchAllPoets();
-  if (poetsResult.isErr()) {
-    throw new Error(`fetchAllPoets failed: ${JSON.stringify(poetsResult.error)}`);
-  }
+  const poets = unwrapForBoundary(await fetchAllPoets(), 'fetchAllPoets');
   const params: Array<{ params: { slug: string; page: string } }> = [];
-  for (const poet of poetsResult.value) {
+  for (const poet of poets) {
     for (const page of generatePageNumbers(poet.poemsCount)) {
       params.push({ params: { slug: poet.slug, page: page.toString() } });
     }
@@ -26,17 +24,18 @@ export async function getStaticPaths() {
 }
 
 const parsedSlug = v.safeParse(poetSlugSchema, Astro.params.slug);
-const pageNumber = Number.parseInt(Astro.params.page ?? '', 10);
-if (!(parsedSlug.success && Number.isFinite(pageNumber)) || pageNumber < 1) {
+const pageResult = parsePageParam(Astro.params.page);
+if (!parsedSlug.success || pageResult.isErr()) {
   return Astro.redirect('/404');
 }
 const slug = parsedSlug.output;
+const pageNumber = pageResult.value;
 const page = pageNumber.toString();
 
 const responseResult = await fetchPoetPoemPage(slug, pageNumber);
 if (responseResult.isErr()) {
   if (responseResult.error.kind === 'not_found') return Astro.redirect('/404');
-  throw new Error(`fetchPoetPoemPage failed: ${JSON.stringify(responseResult.error)}`);
+  throw boundaryError('fetchPoetPoemPage', responseResult.error);
 }
 const response = responseResult.value;
 

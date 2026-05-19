@@ -58,7 +58,7 @@ describe('themes procedures', () => {
 
   describe('listThemes', () => {
     it('returns themes list wrapped in envelope', async () => {
-      listThemesMock.mockResolvedValue([sampleTheme]);
+      listThemesMock.mockResolvedValue(ok([sampleTheme]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -71,7 +71,7 @@ describe('themes procedures', () => {
     });
 
     it('returns empty list when no themes exist', async () => {
-      listThemesMock.mockResolvedValue([]);
+      listThemesMock.mockResolvedValue(ok([]));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
