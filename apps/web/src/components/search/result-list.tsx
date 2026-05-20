@@ -3,7 +3,6 @@ import type { Ref } from 'react';
 import { match } from 'ts-pattern';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { SITE_URL } from '@/constants';
 import { PoemCard, PoetCard } from './result-cards';
 import type { FetchStatus } from './use-search';
 
@@ -45,7 +44,7 @@ function ErrorState({
         className="mt-8 border-red-200 text-red-600 text-xs hover:bg-red-100 hover:text-red-700 md:text-sm"
         size="sm"
       >
-        <a href={SITE_URL}>{refreshText}</a>
+        <a href="/">{refreshText}</a>
       </Button>
     </Card>
   );
