@@ -34,16 +34,12 @@ async function fetchRandomPoemBody(
 
 const optionSchema = v.optional(v.picklist(RANDOM_POEM_OPTIONS), 'slug');
 
-type ParseOptionError = { readonly kind: 'invalid_option'; readonly raw: string | undefined };
-
-function parseOption(raw: string | undefined): Result<RandomPoemOption, ParseOptionError> {
-  const parsed = v.safeParse(optionSchema, raw);
-  return parsed.success ? ok(parsed.output) : err({ kind: 'invalid_option', raw });
-}
-
 const app = new Hono<AppContext>()
   .get('/random', async (c) => {
-    const optionResult = parseOption(c.req.query('option'));
+    const parsed = v.safeParse(optionSchema, c.req.query('option'));
+    const optionResult = parsed.success
+      ? ok(parsed.output)
+      : err({ kind: 'invalid_option' as const, raw: c.req.query('option') });
     if (optionResult.isErr()) {
       return sendProblem(
         c,
