@@ -1,6 +1,10 @@
 ---
 import { NOT_FOUND_CODE, NOT_FOUND_MESSAGE_AR, NOT_FOUND_TITLE } from '@/constants';
 import Layout from '@/layouts/layout.astro';
+import { CACHE_NONE } from '@/lib/server/cache';
+
+Astro.response.status = 404;
+Astro.response.headers.set('Cache-Control', CACHE_NONE);
 ---
 
 <Layout
