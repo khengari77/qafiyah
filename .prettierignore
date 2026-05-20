@@ -18,6 +18,10 @@ yarn.lock
 # Database dumps
 data/datasets
 
+# AI planning/spec docs — keep their embedded code blocks verbatim (Prettier
+# strips semicolons from the TS samples, which then differ from the real source).
+docs/superpowers
+
 # Type definitions
 env.d.ts
 worker-configuration.d.ts
