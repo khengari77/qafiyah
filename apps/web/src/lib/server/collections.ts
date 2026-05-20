@@ -1,5 +1,6 @@
-import { isDefinedError, safe } from '@orpc/client';
+import { safe } from '@orpc/client';
 import type { EraSlug, MeterSlug, RhymeSlug, ThemeSlug } from '@qafiyah/contracts';
+import { errorStatus } from './api-error';
 import { apiServer } from './client';
 import type { ApiOutputs } from './types';
 
@@ -39,7 +40,7 @@ export async function getEraPoemsPage(
 } | null> {
   const { error, data } = await safe(apiServer.eras.listPoems({ slug, page: String(page) }));
   if (error) {
-    if (isDefinedError(error) && error.code === 'NOT_FOUND') return null;
+    if (errorStatus(error) === 404) return null;
     throw error;
   }
   if (page > data.pagination.totalPages) return null;
@@ -56,7 +57,7 @@ export async function getMeterPoemsPage(
 } | null> {
   const { error, data } = await safe(apiServer.meters.listPoems({ slug, page: String(page) }));
   if (error) {
-    if (isDefinedError(error) && error.code === 'NOT_FOUND') return null;
+    if (errorStatus(error) === 404) return null;
     throw error;
   }
   if (page > data.pagination.totalPages) return null;
@@ -73,7 +74,7 @@ export async function getRhymePoemsPage(
 } | null> {
   const { error, data } = await safe(apiServer.rhymes.listPoems({ slug, page: String(page) }));
   if (error) {
-    if (isDefinedError(error) && error.code === 'NOT_FOUND') return null;
+    if (errorStatus(error) === 404) return null;
     throw error;
   }
   if (page > data.pagination.totalPages) return null;
@@ -90,7 +91,7 @@ export async function getThemePoemsPage(
 } | null> {
   const { error, data } = await safe(apiServer.themes.listPoems({ slug, page: String(page) }));
   if (error) {
-    if (isDefinedError(error) && error.code === 'NOT_FOUND') return null;
+    if (errorStatus(error) === 404) return null;
     throw error;
   }
   if (page > data.pagination.totalPages) return null;

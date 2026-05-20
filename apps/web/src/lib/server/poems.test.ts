@@ -42,8 +42,13 @@ describe('getPoem', () => {
     expect(await getPoem('missing' as PoemSlug)).toBeNull();
   });
 
-  it('rethrows unexpected errors', async () => {
+  it('returns null on POEM_PARSE_ERROR (the API signal for a missing/invalid poem)', async () => {
     getMock.mockRejectedValue(new ORPCError('POEM_PARSE_ERROR', { defined: true, status: 500 }));
-    await expect(getPoem('boom' as PoemSlug)).rejects.toThrow();
+    expect(await getPoem('missing' as PoemSlug)).toBeNull();
+  });
+
+  it('rethrows unexpected (non-defined) errors', async () => {
+    getMock.mockRejectedValue(new Error('network down'));
+    await expect(getPoem('boom' as PoemSlug)).rejects.toThrow('network down');
   });
 });
