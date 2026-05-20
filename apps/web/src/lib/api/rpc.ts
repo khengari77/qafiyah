@@ -7,11 +7,9 @@ import { API_URL } from '@/constants';
 
 const BROWSER_BASE_URL = `${API_URL}${API_V1_PREFIX}`;
 
-function makeBrowserClient(): ContractRouterClient<AppContract> {
-  return createORPCClient(new OpenAPILink(contract, { url: BROWSER_BASE_URL }));
-}
-
-export const apiBrowser = makeBrowserClient();
+export const apiBrowser: ContractRouterClient<AppContract> = createORPCClient(
+  new OpenAPILink(contract, { url: BROWSER_BASE_URL })
+);
 
 type ApiOutputs = InferContractRouterOutputs<AppContract>;
 
