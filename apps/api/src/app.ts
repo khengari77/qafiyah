@@ -12,7 +12,6 @@ import {
   API_OPENAPI_SPEC_PATH,
   API_VERSION,
   CORS_MAX_AGE_SECONDS,
-  FAVICON_EMOJI,
   HTTP_INTERNAL_SERVER_ERROR,
   HTTP_NOT_FOUND,
   LICENSE_NAME,
@@ -22,7 +21,7 @@ import {
 import { type DomainFields, enrichContext, recordError } from './lib/logger';
 import { makeProblem, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
-import { serveEmojiFavicon } from './middlewares/favicon.middleware';
+import { faviconMiddleware } from './middlewares/favicon.middleware';
 import { loggerMiddleware } from './middlewares/logger.middleware';
 import { router, routerNamespaces } from './router';
 import index from './routes/index.routes';
@@ -41,7 +40,7 @@ app.use(
     credentials: false,
   })
 );
-app.use(serveEmojiFavicon(FAVICON_EMOJI));
+app.use(faviconMiddleware);
 app.use(loggerMiddleware);
 
 for (const ns of routerNamespaces) {
