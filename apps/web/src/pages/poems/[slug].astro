@@ -2,7 +2,7 @@
 import type { PoemSlug } from '@qafiyah/contracts';
 import { PoemDisplay } from '@/components/poem-display';
 import Layout from '@/layouts/layout.astro';
-import { buildPoemPage } from '@/lib/poem-page';
+import { buildPoemLayout } from '@/lib/poem-page';
 import { CACHE_POEM } from '@/lib/server/cache';
 import { getPoem } from '@/lib/server/poems';
 
@@ -11,7 +11,8 @@ const detail = slug ? await getPoem(slug as PoemSlug) : null;
 if (!detail) return Astro.rewrite('/404');
 
 Astro.response.headers.set('Cache-Control', CACHE_POEM);
-const { poem, layout } = buildPoemPage(detail, slug as PoemSlug);
+const poem = detail;
+const layout = buildPoemLayout(detail, slug as PoemSlug);
 ---
 
 <Layout

@@ -76,7 +76,7 @@ function buildJsonLd(
   return [article, crumbs];
 }
 
-function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
+export function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
   const displayTitle = poem.title || POEM_DEFAULT_TITLE;
   const poetName = poem.poet.name || UNKNOWN_POET_NAME;
   const description = sanitizeMetaText(flattenVerses(poem.verses));
@@ -97,11 +97,4 @@ function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
     twitterDescription,
     jsonLd: buildJsonLd(poem, slug, pageUrl, sanitizedKeywords),
   };
-}
-
-export function buildPoemPage(
-  poem: Poem,
-  slug: PoemSlug
-): { readonly poem: Poem; readonly layout: PoemLayoutProps } {
-  return { poem, layout: buildPoemLayout(poem, slug) };
 }
