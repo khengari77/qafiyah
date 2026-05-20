@@ -1,26 +1,19 @@
 ---
-import type { GetStaticPaths } from 'astro';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { CAT_POET_PREFIX_REGEX, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { allPoets, getPoetsPage } from '@/lib/data/poets';
+import { parsePageParam } from '@/lib/page-numbers';
+import { CACHE_LIST } from '@/lib/server/cache';
+import { getPoetsPage } from '@/lib/server/poets';
 import { stripQuotes } from '@/lib/utils';
 
-export const getStaticPaths = (() => {
-  const poets = allPoets();
-  const totalPages = Math.max(1, Math.ceil(poets.length / 30));
-  return Array.from({ length: totalPages }, (_, i) => {
-    const page = i + 1;
-    const { poets: pagePoets, pagination } = getPoetsPage(page);
-    return { params: { page: page.toString() }, props: { poets: pagePoets, pagination } };
-  });
-}) satisfies GetStaticPaths;
-
-const { poets, pagination } = Astro.props as Awaited<
-  ReturnType<typeof getStaticPaths>
->[number]['props'];
+const page = parsePageParam(Astro.params.page);
+const data = page === null ? null : await getPoetsPage(page);
+if (!data) return Astro.rewrite('/404');
+Astro.response.headers.set('Cache-Control', CACHE_LIST);
+const { poets, pagination } = data;
 const pageNumber = pagination.page;
 const totalPoets = pagination.totalItems;
 const totalPages = pagination.totalPages;
