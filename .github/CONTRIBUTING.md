@@ -38,7 +38,7 @@ The web app is served on port 4321 and the API on port 8787. If you encounter po
 
 `bun run db:setup` writes the necessary environment files automatically:
 
-- `apps/api/.dev.vars`, `DATABASE_URL` pointing to the local Docker Postgres instance
+- `apps/api/.env`, `DATABASE_URL` pointing to the local Docker Postgres instance
 - `apps/web/.env`, `PUBLIC_API_URL` pointing to the production API for the browser bundle
 
 Do not commit these files; they are listed in `.gitignore`.

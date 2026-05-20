@@ -1,5 +1,0 @@
-# Wrangler reads this file for `wrangler dev`. Copy to `.dev.vars` and fill in.
-# `pnpm db:setup` generates `.dev.vars` pointing at the local Docker Postgres.
-
-# Default for the local Docker Postgres spun up by `pnpm db:setup`:
-DATABASE_URL=postgresql://qafiyah:qafiyah@127.0.0.1:5433/qafiyah

@@ -40,12 +40,11 @@ function reportAndExit(error: GeneratorError): never {
   process.exit(1);
 }
 
-// Falls back to apps/api/.dev.vars (the file Wrangler dev reads) so `bun run build`
-// works without the caller having to export DATABASE_URL by hand. Matches the
-// developer ergonomics of the old build-with-api.ts pipeline.
+// Falls back to apps/api/.env (the file the API reads) so `bun run build`
+// works without the caller having to export DATABASE_URL by hand.
 function loadDevVarsFallback(): void {
   if (process.env['DATABASE_URL']) return;
-  const devVarsPath = resolve(WEB_DIR, '..', 'api', '.dev.vars');
+  const devVarsPath = resolve(WEB_DIR, '..', 'api', '.env');
   let raw: string;
   try {
     raw = readFileSync(devVarsPath, 'utf8');

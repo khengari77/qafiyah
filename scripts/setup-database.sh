@@ -23,7 +23,7 @@ readonly SERVICE="db"
 readonly DUMP_DIR="dumps"
 readonly COMPOSE_FILE="docker-compose.yml"
 
-readonly API_ENV_FILE="apps/api/.dev.vars"
+readonly API_ENV_FILE="apps/api/.env"
 readonly WEB_ENV_FILE="apps/web/.env"
 
 readonly MAX_WAIT_SECONDS=30
@@ -126,7 +126,7 @@ write_env_files() {
 DATABASE_URL=$url
 EOF
 
-    # Astro reads from apps/web/.env (not Wrangler's .dev.vars).
+    # Astro reads from apps/web/.env.
     # The browser bundle only needs the API URL; the API holds the DB credentials.
     cat > "$WEB_ENV_FILE" <<EOF
 # Point dev search/random at the local API (queries local DB, no CORS)
