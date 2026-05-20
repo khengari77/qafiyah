@@ -21,7 +21,7 @@ function boot(): { port: number; fetch: ReturnType<typeof createFetchHandler> } 
     console.error(JSON.stringify({ source: 'server', stage: 'boot', error: result.error }));
     process.exit(1);
   }
-  const bindings = result._unsafeUnwrap();
+  const bindings = result.value;
   return {
     port: Number(process.env['PORT'] ?? DEFAULT_PORT),
     fetch: createFetchHandler(bindings),
