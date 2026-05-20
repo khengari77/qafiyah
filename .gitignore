@@ -60,6 +60,3 @@ __pycache__/
 apps/web/.astro/
 .claude/
 TODO.md
-
-# Web build snapshot (regenerated each build)
-apps/web/.data/

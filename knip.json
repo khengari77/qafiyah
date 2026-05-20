@@ -5,7 +5,7 @@
   "ignoreFiles": ["apps/web/worker-configuration.d.ts"],
   "workspaces": {
     "apps/web": {
-      "entry": ["scripts/generate-snapshot.ts"]
+      "entry": ["scripts/verify-seo.ts"]
     },
     "apps/api": {
       "entry": ["src/server.ts"]
