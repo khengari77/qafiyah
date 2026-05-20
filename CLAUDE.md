@@ -36,7 +36,7 @@ vitest run path/to/file.test.ts
 
 ## Architecture
 
-**`apps/web`** — Static build queries API via `src/lib/api/static.ts` → `rpc.ts`. Build script sets `BUILD_API_URL` from a reachable API (`WEB_BUILD_DATABASE_URL` drives the snapshot), runs `astro build` (all static paths pre-rendered via oRPC), and tears down. `PUBLIC_API_URL` always points to prod for the browser. React is islands-only. Path alias `@/*` → `src/*`. RTL layout. Non-trailing-slash canonical URLs.
+**`apps/web`** — Static build runs `scripts/build.ts`: (1) `generate-snapshot.ts` reads the DB (`DATABASE_URL`, falling back to `apps/api/.env`) and dumps JSON into `.data/`, then (2) `astro build` pre-renders all paths from those JSON files via `src/lib/data/*` — no Wrangler, no build-time HTTP. In Docker, `WEB_BUILD_DATABASE_URL` supplies the build-time `DATABASE_URL`. `PUBLIC_API_URL` always points to prod for the browser islands. React is islands-only. Path alias `@/*` → `src/*`. RTL layout. Non-trailing-slash canonical URLs.
 
 **Web deploy** — VPS + nginx. Build locally, rsync `dist/` → `/var/www/qafiyah`. nginx: www→apex, trailing-slash redirect, immutable `/_astro/` cache.
 
