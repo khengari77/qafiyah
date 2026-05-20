@@ -4,7 +4,7 @@
   "scripts": {
     "prepare": "husky",
     "db:setup": "./scripts/setup-database.sh",
-    "clean:dev": "pkill -f 'qafiyah/.*(astro|wrangler|workerd)' || true",
+    "clean:dev": "pkill -f 'qafiyah/.*astro' || true; pkill -f 'apps/api/src/server.ts' || true",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "types": "turbo run types",
