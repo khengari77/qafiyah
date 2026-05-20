@@ -15,7 +15,6 @@ export function createFetchHandler(env: Bindings) {
 function boot(): { port: number; fetch: ReturnType<typeof createFetchHandler> } {
   const result = parseBindings(process.env);
   if (result.isErr()) {
-    // biome-ignore lint/suspicious/noConsole: fatal boot diagnostics before the server exists.
     console.error(JSON.stringify({ source: 'server', stage: 'boot', error: result.error }));
     process.exit(1);
   }
