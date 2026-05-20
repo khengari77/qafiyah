@@ -16,8 +16,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@astrojs/node": "^10.1.1",
     "@astrojs/react": "^5.0.5",
-    "@astrojs/sitemap": "3.7.2",
     "@orpc/client": "^1.14.3",
     "@orpc/openapi-client": "^1.14.3",
     "@orpc/tanstack-query": "^1.14.3",
