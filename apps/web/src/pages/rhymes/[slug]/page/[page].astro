@@ -1,36 +1,22 @@
 ---
-import type { GetStaticPaths } from 'astro';
+import type { RhymeSlug } from '@qafiyah/contracts';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { allRhymes, getRhymePoemsPage } from '@/lib/data/collections';
-import { generatePageNumbers } from '@/lib/page-numbers';
+import { parsePageParam } from '@/lib/page-numbers';
+import { CACHE_LIST } from '@/lib/server/cache';
+import { getRhymePoemsPage } from '@/lib/server/collections';
 import { stripQuotes } from '@/lib/utils';
 
-export const getStaticPaths = (() => {
-  const out: Array<{
-    params: { slug: string; page: string };
-    props: ReturnType<typeof getRhymePoemsPage>;
-  }> = [];
-  for (const rhyme of allRhymes()) {
-    const {
-      pagination: { totalItems },
-    } = getRhymePoemsPage(rhyme.slug, 1);
-    for (const page of generatePageNumbers(totalItems)) {
-      out.push({
-        params: { slug: rhyme.slug, page: page.toString() },
-        props: getRhymePoemsPage(rhyme.slug, page),
-      });
-    }
-  }
-  return out;
-}) satisfies GetStaticPaths;
-
-const { poems, rhyme, pagination } = Astro.props as Awaited<
-  ReturnType<typeof getStaticPaths>
->[number]['props'];
+const page = parsePageParam(Astro.params.page);
+const slugParam = Astro.params.slug;
+const data =
+  page === null || !slugParam ? null : await getRhymePoemsPage(slugParam as RhymeSlug, page);
+if (!data) return Astro.rewrite('/404');
+Astro.response.headers.set('Cache-Control', CACHE_LIST);
+const { poems, rhyme, pagination } = data;
 const slug = rhyme.slug;
 const pageNumber = pagination.page;
 const totalPages = pagination.totalPages;
