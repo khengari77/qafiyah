@@ -6,6 +6,9 @@
   "workspaces": {
     "apps/web": {
       "entry": ["scripts/generate-snapshot.ts"]
+    },
+    "apps/api": {
+      "entry": ["src/server.ts"]
     }
   }
 }

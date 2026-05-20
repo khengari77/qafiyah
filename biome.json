@@ -358,7 +358,13 @@
       }
     },
     {
-      "includes": ["**/env.ts", "**/src/env.ts", "**/vitest.setup.ts", "**/vitest.config.ts"],
+      "includes": [
+        "**/env.ts",
+        "**/src/env.ts",
+        "**/src/server.ts",
+        "**/vitest.setup.ts",
+        "**/vitest.config.ts"
+      ],
       "linter": {
         "rules": {
           "style": {
