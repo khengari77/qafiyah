@@ -1,9 +1,6 @@
 import app from './app';
 import { type Bindings, parseBindings } from './env';
 
-// @NOTE: Bun globals — remove once tsconfig adds `types: ["bun"]` in Task 3.
-declare const process: { env: Record<string, string | undefined>; exit(code: number): never };
-
 const DEFAULT_PORT = 8787;
 
 /**
@@ -18,6 +15,7 @@ export function createFetchHandler(env: Bindings) {
 function boot(): { port: number; fetch: ReturnType<typeof createFetchHandler> } {
   const result = parseBindings(process.env);
   if (result.isErr()) {
+    // biome-ignore lint/suspicious/noConsole: fatal boot diagnostics before the server exists.
     console.error(JSON.stringify({ source: 'server', stage: 'boot', error: result.error }));
     process.exit(1);
   }
@@ -30,6 +28,4 @@ function boot(): { port: number; fetch: ReturnType<typeof createFetchHandler> } 
 
 // Bun starts a server from the default export only when this is the entry
 // module. Importing it in tests (import.meta.main === false) is side-effect free.
-// @NOTE: `(import.meta as BunImportMeta).main` — remove cast once tsconfig adds `types: ["bun"]` in Task 3.
-type BunImportMeta = ImportMeta & { main: boolean };
-export default (import.meta as BunImportMeta).main ? boot() : null;
+export default import.meta.main ? boot() : null;

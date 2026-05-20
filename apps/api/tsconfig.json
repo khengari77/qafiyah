@@ -1,8 +1,9 @@
 {
-  "extends": "@qafiyah/typescript/cloudflare.json",
+  "extends": "@qafiyah/typescript/bun.json",
   "compilerOptions": {
     "jsxImportSource": "hono/jsx",
-    "types": ["@types/bun"],
+    "types": ["bun"],
+    "noEmit": true,
     "paths": {
       "@/*": ["./src/*"]
     }
