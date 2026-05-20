@@ -96,13 +96,6 @@ function stripKind(problem: ProblemDetail): Omit<ProblemDetail, 'kind'> {
   return rest;
 }
 
-function buildProblemResponse(problem: ProblemDetail): Response {
-  return new Response(JSON.stringify(stripKind(problem)), {
-    status: parseHttpStatus(problem.status),
-    headers: { 'Content-Type': 'application/problem+json' },
-  });
-}
-
 export function sendProblem(c: Context, problem: ProblemDetail): Response {
   const withInstance =
     problem.instance === undefined ? { ...problem, instance: c.req.path } : problem;
@@ -175,5 +168,8 @@ export async function transformOrpcResponse(
   }
 
   const problem = orpcErrorToProblem(body, response.status, instance);
-  return buildProblemResponse(problem);
+  return new Response(JSON.stringify(stripKind(problem)), {
+    status: parseHttpStatus(problem.status),
+    headers: { 'Content-Type': 'application/problem+json' },
+  });
 }
