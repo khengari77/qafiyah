@@ -4,10 +4,12 @@ import { ERAS_NOUN_FORMS, SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/c
 import Layout from '@/layouts/layout.astro';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
-import { allEras } from '@/lib/data/collections';
+import { CACHE_INDEX } from '@/lib/server/cache';
+import { allEras } from '@/lib/server/collections';
 import { stripQuotes } from '@/lib/utils';
 
-const eras = allEras();
+const eras = await allEras();
+Astro.response.headers.set('Cache-Control', CACHE_INDEX);
 
 const eraLabel = formatArabicCount({
   count: eras.length,
