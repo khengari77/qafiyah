@@ -11,7 +11,7 @@ type RandomPoemStatus =
   | { readonly kind: 'loading' }
   | { readonly kind: 'error' };
 
-function useRandomPoemNavigation() {
+export function RandomPoemButton() {
   const [status, setStatus] = useState<RandomPoemStatus>({ kind: 'idle' });
 
   const handleClick = async () => {
@@ -26,11 +26,6 @@ function useRandomPoemNavigation() {
     window.location.href = `/poems/${result.value}`;
   };
 
-  return { handleClick, status };
-}
-
-export function RandomPoemButton() {
-  const { handleClick, status } = useRandomPoemNavigation();
   const isLoading = status.kind === 'loading';
 
   return (
