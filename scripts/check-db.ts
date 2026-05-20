@@ -24,5 +24,5 @@ function isReachable(): Promise<boolean> {
 if (!(await isReachable())) {
   console.warn(`\n[predev] warn: Postgres is not reachable on ${HOST}:${PORT}.`);
   console.warn('[predev] warn: the qafiyah Docker container may not be running.');
-  console.warn('[predev] warn: run `bun run db:setup` to start it.\n');
+  console.warn('[predev] warn: run `bun run db:up` to start it.\n');
 }

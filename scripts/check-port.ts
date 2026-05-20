@@ -63,7 +63,7 @@ for (const host of ['127.0.0.1', '::1'] as const) {
   if (result.value === 'busy') {
     console.error(`\n[predev] port ${port} is already in use.`);
     console.error('[predev] another dev server is probably still running.');
-    console.error('[predev] run `bun run clean:dev` to clear orphans, then try again.\n');
+    console.error('[predev] run `bun run clean` to clear orphans, then try again.\n');
     process.exit(1);
   }
 }

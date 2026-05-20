@@ -11,12 +11,18 @@ services:
       - "5433:5432"
     volumes:
       - db_data:/var/lib/postgresql/data
+      # First-boot auto-seed: on a fresh volume, Postgres runs db-init.sh which
+      # restores the newest dump from /dumps. Skipped when the volume has data.
+      - ./dumps:/dumps:ro
+      - ./scripts/db-init.sh:/docker-entrypoint-initdb.d/10-restore.sh:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h localhost -U qafiyah -d qafiyah"]
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 10s
+      # Generous start_period covers the first-boot dump restore (minutes) so
+      # dependents waiting on `condition: service_healthy` don't time out.
+      retries: 60
+      start_period: 300s
 
   api:
     build:

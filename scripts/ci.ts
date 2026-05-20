@@ -65,7 +65,7 @@ async function runOne(task: Task, procs: Map<string, Subprocess>): Promise<Resul
 }
 
 async function cleanupOrphans(): Promise<void> {
-  await Bun.spawn(['bun', 'run', 'clean:dev'], {
+  await Bun.spawn(['bun', 'run', 'clean'], {
     cwd: ROOT,
     stdout: 'ignore',
     stderr: 'ignore',

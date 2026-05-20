@@ -94,7 +94,7 @@ function describeCheckFailure(failure: CheckFailure): string {
 }
 
 async function cleanup() {
-  await Bun.spawn(['bun', 'run', 'clean:dev'], { cwd: ROOT, stdout: 'ignore', stderr: 'ignore' })
+  await Bun.spawn(['bun', 'run', 'clean'], { cwd: ROOT, stdout: 'ignore', stderr: 'ignore' })
     .exited;
 }
 
