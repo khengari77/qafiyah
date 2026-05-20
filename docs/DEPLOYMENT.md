@@ -6,14 +6,13 @@ This document covers the deployment process for all three Qafiyah apps. It is no
 
 ## API (`apps/api`)
 
-The API runs on Cloudflare Workers and is deployed via Wrangler.
+The API runs as a Bun + Hono server packaged in a Docker container (`apps/api/Dockerfile`). The full stack (Postgres, API, web) is orchestrated via `docker-compose.yml` at the repo root.
 
 ```bash
-bun --filter @qafiyah/api run deploy
-# runs: wrangler deploy --minify
+docker compose up -d --build
 ```
 
-This publishes the Worker to Cloudflare. No environment secrets are committed, configure them via `wrangler secret put` or the Cloudflare dashboard before the first deploy.
+`DATABASE_URL` and `ENVIRONMENT` are injected into the `api` service by `docker-compose.yml` and read from `process.env` at runtime. No secrets are committed; set them as environment variables or in a `.env` file referenced by compose before the first deploy.
 
 ## Web (`apps/web`)
 
@@ -25,14 +24,13 @@ The web app is intentionally self-hosted on a VPS behind nginx to keep hosting c
 bun --filter @qafiyah/web run build
 ```
 
-The build script (`scripts/build-with-api.ts`) automatically:
+The web image runs the DB snapshot at build time. Before building, `WEB_BUILD_DATABASE_URL` must point at a reachable Postgres instance (the default in compose points at the host-published `db` port). The build script pre-renders all static paths via oRPC against the API, then Astro writes the output to `apps/web/dist/`.
 
-1. Starts a local Wrangler dev server on `:8787`
-2. Sets `BUILD_API_URL=http://127.0.0.1:8787`
-3. Runs `astro build` (all static paths pre-rendered via oRPC against the local API)
-4. Tears the Wrangler process down
+To build only the web image:
 
-Output lands in `apps/web/dist/`.
+```bash
+docker compose build web
+```
 
 ### Deploy
 
@@ -42,7 +40,9 @@ rsync -av --delete apps/web/dist/ user@host:/var/www/qafiyah/
 
 ### nginx
 
-The nginx configuration is checked in at `apps/web/nginx.conf`. To install it on the VPS:
+The nginx configuration is checked in at `apps/web/nginx.conf`. When deploying via Docker Compose, the web image (`apps/web/Dockerfile`) bakes this file into the image at `/etc/nginx/conf.d/default.conf` — no manual VPS copy is needed.
+
+If deploying the static `dist/` directly to a VPS without Docker, install it manually:
 
 ```bash
 cp apps/web/nginx.conf /etc/nginx/sites-available/qafiyah.conf

@@ -7,7 +7,7 @@
 | Package               | Stack                                                         |
 | --------------------- | ------------------------------------------------------------- |
 | `apps/web`            | Astro 6 static, React 19 islands, TailwindCSS, TanStack Query |
-| `apps/api`            | Hono + oRPC + Valibot, Cloudflare Workers, OpenAPI            |
+| `apps/api`            | Hono + oRPC + Valibot, Bun server (Docker), OpenAPI           |
 | `apps/bot`            | X/Twitter bot via `twitter-api-v2`, GitHub Actions cron       |
 | `packages/db`         | Drizzle ORM + PostgreSQL FTS (API-only)                       |
 | `packages/contracts`  | Shared oRPC contracts (Valibot)                               |
@@ -19,7 +19,7 @@
 ```bash
 bun run dev / build / lint / format / types / test
 bun run db:setup        # Docker Postgres :5433, restored from latest dump
-bun run clean:dev       # kill orphan astro/wrangler/workerd processes
+bun run clean:dev       # kill orphan astro/api-server processes
 bun run ci              # format + lint + types + test + knip + madge + audit
 
 bun --filter @qafiyah/api run dev|test
@@ -36,13 +36,13 @@ vitest run path/to/file.test.ts
 
 ## Architecture
 
-**`apps/web`** — Static build queries API via `src/lib/api/static.ts` → `rpc.ts`. Build script auto-starts Wrangler on :8787, sets `BUILD_API_URL`, runs `astro build`, tears down. `PUBLIC_API_URL` always points to prod for the browser. React is islands-only. Path alias `@/*` → `src/*`. RTL layout. Non-trailing-slash canonical URLs.
+**`apps/web`** — Static build queries API via `src/lib/api/static.ts` → `rpc.ts`. Build script sets `BUILD_API_URL` from a reachable API (`WEB_BUILD_DATABASE_URL` drives the snapshot), runs `astro build` (all static paths pre-rendered via oRPC), and tears down. `PUBLIC_API_URL` always points to prod for the browser. React is islands-only. Path alias `@/*` → `src/*`. RTL layout. Non-trailing-slash canonical URLs.
 
 **Web deploy** — VPS + nginx. Build locally, rsync `dist/` → `/var/www/qafiyah`. nginx: www→apex, trailing-slash redirect, immutable `/_astro/` cache.
 
-**`apps/api`** — Thin Hono layer over `@qafiyah/db`. No Drizzle/postgres imports in `apps/api/src`. Procedures in `src/procedures/*.procedures.ts`, composed in `src/router.ts`, mounted via `OpenAPIHandler`. `/poems/random` and `/` are raw Hono routes. No API code ships to browser.
+**`apps/api`** — Thin Hono layer over `@qafiyah/db`. Entrypoint `src/server.ts` (run via `bun run src/server.ts`); reads `DATABASE_URL`/`PORT`/`ENVIRONMENT` from `process.env`. No Drizzle/postgres imports in `apps/api/src`. Procedures in `src/procedures/*.procedures.ts`, composed in `src/router.ts`, mounted via `OpenAPIHandler`. `/poems/random` and `/` are raw Hono routes. Runs as a long-lived Bun process (the per-process db-cache in `db.middleware.ts` is shared across all requests). No API code ships to browser.
 
-**`packages/db`** — Query namespaces: `erasQueries`, `metersQueries`, `poemsQueries`, `poetsQueries`, `rhymesQueries`, `searchQueries`, `themesQueries`. Factory: `createDb(url)`. Internal utils (not re-exported): `removeTashkeel`, `processPoemContent`, `extractPoemExcerpt`, `normalizeRhymePattern`. Bundled by Wrangler; sole consumer is `apps/api`. (`cleanArabicQuery` lives in `@qafiyah/contracts` and runs inside the search input schema.)
+**`packages/db`** — Query namespaces: `erasQueries`, `metersQueries`, `poemsQueries`, `poetsQueries`, `rhymesQueries`, `searchQueries`, `themesQueries`. Factory: `createDb(url)`. Internal utils (not re-exported): `removeTashkeel`, `processPoemContent`, `extractPoemExcerpt`, `normalizeRhymePattern`. Bundled into the Bun runtime image; sole consumer is `apps/api`. (`cleanArabicQuery` lives in `@qafiyah/contracts` and runs inside the search input schema.)
 
 **`apps/bot`** — Cron at 08/12/16/20 UTC (11/15/19/23 KSA). Calls `/poems/random`, posts via `twitter-api-v2`. Exponential backoff, 3 retries.
 
