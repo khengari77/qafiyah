@@ -450,6 +450,38 @@ describe('getPoemBySlug', () => {
     }
   });
 
+  it('returns not_found when the function reports "Not Found" (missing poem)', async () => {
+    const mockDb = castPartialAsDbClient({
+      execute: vi.fn().mockResolvedValue([
+        {
+          get_poem_with_related: {
+            error: 'Not Found',
+            message: 'No poem found with slug: 00000000-0000-0000-0000-000000000000',
+          },
+        },
+      ]),
+    });
+
+    const result = await getPoemBySlug(mockDb, asPoemSlug('00000000-0000-0000-0000-000000000000'));
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
+  });
+
+  it('returns not_found when the function reports "Invalid UUID format"', async () => {
+    const mockDb = castPartialAsDbClient({
+      execute: vi.fn().mockResolvedValue([
+        {
+          get_poem_with_related: {
+            error: 'Invalid UUID format',
+            message: 'The provided slug is not a valid UUID: nope',
+          },
+        },
+      ]),
+    });
+
+    const result = await getPoemBySlug(mockDb, asPoemSlug('nope'));
+    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
+  });
+
   it('returns incomplete_poem_data when poem is missing required fields', async () => {
     const incompleteData = {
       poem: {

@@ -390,6 +390,12 @@ async function loadPoemWithRelated(
   if (success.success) return ok(success.output);
   const sqlError = v.safeParse(poemRelatedSqlErrorSchema, payload);
   if (sqlError.success) {
+    // get_poem_with_related signals a non-resolvable slug via these error codes
+    // (a missing poem, or a malformed UUID) — both mean "no such poem" → not_found
+    // (so the API returns 404, not 500). Any other error payload is unexpected → sql_error.
+    if (sqlError.output.error === 'Not Found' || sqlError.output.error === 'Invalid UUID format') {
+      return err({ kind: 'not_found', slug });
+    }
     return err({
       kind: 'sql_error',
       slug,

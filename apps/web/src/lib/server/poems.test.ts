@@ -42,12 +42,12 @@ describe('getPoem', () => {
     expect(await getPoem('missing' as PoemSlug)).toBeNull();
   });
 
-  it('returns null on POEM_PARSE_ERROR (the API signal for a missing/invalid poem)', async () => {
-    getMock.mockRejectedValue(new ORPCError('POEM_PARSE_ERROR', { defined: true, status: 500 }));
-    expect(await getPoem('missing' as PoemSlug)).toBeNull();
+  it('rethrows on a 500 (a genuine server error is not a missing poem)', async () => {
+    getMock.mockRejectedValue(new ORPCError('INTERNAL_SERVER_ERROR', { status: 500 }));
+    await expect(getPoem('boom' as PoemSlug)).rejects.toThrow();
   });
 
-  it('rethrows unexpected (non-defined) errors', async () => {
+  it('rethrows unexpected (non-ORPCError) errors', async () => {
     getMock.mockRejectedValue(new Error('network down'));
     await expect(getPoem('boom' as PoemSlug)).rejects.toThrow('network down');
   });
