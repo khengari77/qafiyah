@@ -8,7 +8,7 @@ import {
   themeSlugSchema,
 } from './brands';
 import { EXAMPLE_POEM_SLUG, inputValidationErrorMap, internalServerErrorMap } from './constants';
-import { listResponse, namedSlugRef, poemListItem, resourceResponse, slugInput } from './schemas';
+import { listResponse, namedSlugRef, poemListItem, slugInput } from './schemas';
 
 const listPoemSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
@@ -37,7 +37,7 @@ const getPoemBySlugContract = oc
     NOT_FOUND: { status: 404, message: 'Poem not found' },
     POEM_PARSE_ERROR: { status: 500, message: 'Poem data could not be parsed' },
   })
-  .output(resourceResponse(poemDetail));
+  .output(v.object({ data: poemDetail }));
 
 export const poemsContract = {
   listPoemSlugs: listPoemSlugsContract,

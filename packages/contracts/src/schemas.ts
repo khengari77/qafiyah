@@ -70,6 +70,3 @@ export const listResponseWithMeta = <TItem extends v.GenericSchema, TMeta extend
   item: TItem,
   meta: TMeta
 ) => v.object({ data: v.array(item), pagination, meta });
-
-export const resourceResponse = <TItem extends v.GenericSchema>(item: TItem) =>
-  v.object({ data: item });
