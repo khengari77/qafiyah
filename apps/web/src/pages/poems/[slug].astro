@@ -1,19 +1,17 @@
 ---
-import type { GetStaticPaths } from 'astro';
+import type { PoemSlug } from '@qafiyah/contracts';
 import { PoemDisplay } from '@/components/poem-display';
 import Layout from '@/layouts/layout.astro';
-import { allPoems } from '@/lib/data/poems';
 import { buildPoemPage } from '@/lib/poem-page';
+import { CACHE_POEM } from '@/lib/server/cache';
+import { getPoem } from '@/lib/server/poems';
 
-export const getStaticPaths = (() => {
-  const poems = allPoems();
-  return Array.from(poems, ([slug, detail]) => {
-    const { poem, layout } = buildPoemPage(detail, slug);
-    return { params: { slug }, props: { poem, layout } };
-  });
-}) satisfies GetStaticPaths;
+const { slug } = Astro.params;
+const detail = slug ? await getPoem(slug as PoemSlug) : null;
+if (!detail) return Astro.rewrite('/404');
 
-const { poem, layout } = Astro.props as Awaited<ReturnType<typeof getStaticPaths>>[number]['props'];
+Astro.response.headers.set('Cache-Control', CACHE_POEM);
+const { poem, layout } = buildPoemPage(detail, slug as PoemSlug);
 ---
 
 <Layout
