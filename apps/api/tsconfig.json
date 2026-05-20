@@ -2,7 +2,7 @@
   "extends": "@qafiyah/typescript/cloudflare.json",
   "compilerOptions": {
     "jsxImportSource": "hono/jsx",
-    "types": ["@cloudflare/workers-types/2023-07-01"],
+    "types": ["@types/bun"],
     "paths": {
       "@/*": ["./src/*"]
     }
