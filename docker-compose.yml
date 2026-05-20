@@ -39,12 +39,16 @@ services:
     build:
       context: .
       dockerfile: apps/web/Dockerfile
-      args:
-        # Snapshot runs at BUILD time and cannot reach the `db` service network.
-        # Point at a reachable Postgres (host-published db port by default).
-        DATABASE_URL: ${WEB_BUILD_DATABASE_URL:-postgresql://qafiyah:qafiyah@host.docker.internal:5433/qafiyah}
     container_name: qafiyah-web
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      api:
+        condition: service_started
+    environment:
+      # SSR pages call the api service over the internal compose network.
+      INTERNAL_API_URL: http://api:8787
     ports:
       - "80:80"
 
