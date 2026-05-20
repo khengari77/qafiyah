@@ -18,6 +18,36 @@ services:
       retries: 5
       start_period: 10s
 
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: qafiyah-api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Internal network: service name `db`, internal port 5432.
+      DATABASE_URL: postgresql://qafiyah:qafiyah@db:5432/qafiyah
+      ENVIRONMENT: production
+      PORT: "8787"
+    ports:
+      - "8787:8787"
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        # Snapshot runs at BUILD time and cannot reach the `db` service network.
+        # Point at a reachable Postgres (host-published db port by default).
+        DATABASE_URL: ${WEB_BUILD_DATABASE_URL:-postgresql://qafiyah:qafiyah@host.docker.internal:5433/qafiyah}
+    container_name: qafiyah-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+
 volumes:
   db_data:
     name: qafiyah-db-data
