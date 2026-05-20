@@ -24,7 +24,9 @@ The web app is intentionally self-hosted on a VPS behind nginx to keep hosting c
 bun --filter @qafiyah/web run build
 ```
 
-The web image runs the DB snapshot at build time. Before building, `WEB_BUILD_DATABASE_URL` must point at a reachable Postgres instance (the default in compose points at the host-published `db` port). The build script pre-renders all static paths via oRPC against the API, then Astro writes the output to `apps/web/dist/`.
+The web image runs the DB snapshot at build time. Before building, `WEB_BUILD_DATABASE_URL` must point at a reachable Postgres instance (the default in compose points at the host-published `db` port). The build (`apps/web/scripts/build.ts`) first runs `generate-snapshot.ts`, which reads the database directly via `@qafiyah/db` and dumps JSON into `apps/web/.data/`; `astro build` then pre-renders all static paths from those JSON files into `apps/web/dist/` — no API or build-time HTTP is involved.
+
+> The snapshot `DATABASE_URL` is passed as a Docker build arg and persists in the build stage's cache/history (it is **not** present in the final nginx image). Point it at a throwaway or local replica — the compose default uses the local `db` — never at production credentials; the snapshot data is identical regardless of source.
 
 To build only the web image:
 
