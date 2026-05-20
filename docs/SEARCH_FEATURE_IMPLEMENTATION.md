@@ -2,7 +2,7 @@
 
 ## About This Document
 
-This document is a reference for the PostgreSQL Full-Text Search (FTS) implementation in Qafiyah. It records the schema changes, SQL functions, and design decisions made during implementation. It is not a step-by-step setup guide for local development, use `bun run db:setup` for that.
+This document is a reference for the PostgreSQL Full-Text Search (FTS) implementation in Qafiyah. It records the schema changes, SQL functions, and design decisions made during implementation. It is not a step-by-step setup guide for local development, use `bun run dev` for that.
 
 ## Status
 

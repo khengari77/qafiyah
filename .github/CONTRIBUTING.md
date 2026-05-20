@@ -9,7 +9,7 @@ If this is your first time contributing to an open source project, the [How to C
 ## Prerequisites
 
 - Bun ≥ 1.3.14 (enforced via the `packageManager` field; npm, yarn, and pnpm are blocked by a preinstall hook)
-- Docker (required for `bun run db:setup`, which spins up a Postgres 17 container on port 5433)
+- Docker (runs the Postgres 17 container on port 5433; the dev/up scripts manage it)
 - Git
 
 ## Local Development Setup
@@ -19,27 +19,24 @@ If this is your first time contributing to an open source project, the [How to C
    ```bash
    bun install
    ```
-3. Start the local database (Docker must be running):
-   ```bash
-   bun run db:setup
-   ```
-4. Start all workspaces in development mode:
+3. Start everything in development mode (Docker must be running):
    ```bash
    bun run dev
    ```
-5. To run only the API worker:
+   This boots the seeded Postgres container (auto-restored from the latest dump on first boot), writes the local `.env` files, and runs the web app and API with hot reload.
+4. To run only the API worker:
    ```bash
    bun --filter @qafiyah/api run dev
    ```
 
-The web app is served on port 4321 and the API on port 8787. If you encounter port-conflict errors, run `bun run clean:dev` and try again.
+The web app is served on port 4321 and the API on port 8787. If you encounter port-conflict errors, run `bun run clean` and try again.
 
 ## Environment Variables
 
-`bun run db:setup` writes the necessary environment files automatically:
+`bun run dev` writes the local environment files automatically (copying the checked-in `.env.example` files if they are missing):
 
 - `apps/api/.env`, `DATABASE_URL` pointing to the local Docker Postgres instance
-- `apps/web/.env`, `PUBLIC_API_URL` pointing to the production API for the browser bundle
+- `apps/web/.env`, `PUBLIC_API_URL` pointing to the local API on `:8787` (so the browser islands query the local DB without CORS)
 
 Do not commit these files; they are listed in `.gitignore`.
 

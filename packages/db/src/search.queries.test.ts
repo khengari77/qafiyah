@@ -1,6 +1,6 @@
 /**
  * Integration tests for filter-only search against the local Postgres dump.
- * Skipped unless TEST_DATABASE_URL is provided (e.g. `bun run db:setup` then export).
+ * Skipped unless TEST_DATABASE_URL is provided (e.g. `bun run db:up` then export).
  */
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';

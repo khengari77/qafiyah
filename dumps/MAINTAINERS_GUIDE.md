@@ -54,7 +54,7 @@ After creating a new dump:
   ```
 - [ ] Restore locally to confirm integrity:
   ```bash
-  bun run db:setup
+  bun run db:reset
   psql -U qafiyah -d qafiyah -h 127.0.0.1 -p 5433 -c "SELECT count(*) FROM poems;"
   ```
 - [ ] Update the dataset statistics table in `dumps/README.md` if counts have changed.

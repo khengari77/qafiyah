@@ -17,10 +17,13 @@
 ## Commands
 
 ```bash
-bun run dev / build / lint / format / types / test
-bun run db:setup        # Docker Postgres :5433, restored from latest dump
-bun run clean:dev       # kill orphan astro/api-server processes
-bun run ci              # format + lint + types + test + knip + madge + audit
+bun run dev             # seeded Postgres (Docker) + hot-reload web & API
+bun run up / down       # full stack in Docker (DB self-seeds first boot) / stop
+bun run db:up           # just the seeded Postgres container (:5433)
+bun run db:reset        # wipe DB volume + re-seed from latest dump
+bun run build / lint / format / types / test
+bun run clean           # kill orphan astro/api-server processes
+bun run ci              # format + lint + types + test + knip + madge + audit + smoke
 
 bun --filter @qafiyah/api run dev|test
 vitest run path/to/file.test.ts
@@ -57,9 +60,9 @@ vitest run path/to/file.test.ts
 ## Session Discipline
 
 - **One mission per session.**
-- Port conflicts → `bun run clean:dev`, restart.
+- Port conflicts → `bun run clean`, restart.
 - DB dumps in `dumps/` (newest = latest). See `dumps/MAINTAINERS_GUIDE.md`.
-- **Web build is `astro build` only (~seconds)** — no snapshot. The running stack needs the `api` container (and DB) up for SSR; `bun run dev` starts both. Verify pages with `astro dev` + curl against a seeded DB (`bun run db:setup`).
+- **Web build is `astro build` only (~seconds)** — no snapshot. The running stack needs the `api` container (and DB) up for SSR; `bun run dev` starts both. Verify pages with `astro dev` + curl against a seeded DB (`bun run db:up`).
 
 ## Quality Checklist (TRUST 5)
 
