@@ -1,15 +1,13 @@
 #!/usr/bin/env bun
 
-// biome-ignore-all lint/suspicious/noConsole: build supervisor logs progress to the developer.
+// biome-ignore-all lint/suspicious/noConsole: verifier logs progress to the developer.
 
 /**
- * Validates SEO invariants on the built static HTML in dist/.
- * Run after `astro build`. Exits non-zero if any page is missing critical
- * <head> metadata, has the wrong heading hierarchy, or ships invalid JSON-LD.
+ * Validates SEO invariants by fetching a representative URL per route template
+ * from a running server (one URL per template proves the template). Set BASE_URL
+ * and the sample slugs via env. Exits non-zero on any missing/invalid metadata.
  */
 
-import { readdir, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
 import { Result } from 'neverthrow';
 
 const safeParseJson = Result.fromThrowable(
@@ -19,21 +17,18 @@ const safeParseJson = Result.fromThrowable(
   })
 );
 
-const DIST = new URL('../dist/', import.meta.url).pathname;
+const BASE_URL = process.env['BASE_URL'] ?? 'http://localhost:4321';
+const POEM_SLUG = process.env['SEO_POEM_SLUG'];
+const ERA_SLUG = process.env['SEO_ERA_SLUG'];
+const POET_SLUG = process.env['SEO_POET_SLUG'];
 const TITLE_MAX = 80;
 const DESC_MIN = 60;
 const DESC_MAX = 320;
 
-async function* walk(dir: string): AsyncGenerator<string> {
-  for (const entry of await readdir(dir, { withFileTypes: true })) {
-    const full = join(dir, entry.name);
-    if (entry.isDirectory()) {
-      yield* walk(full);
-    } else if (entry.name.endsWith('.html')) {
-      yield full;
-    }
-  }
-}
+const paths = ['/', '/eras', '/meters', '/rhymes', '/themes', '/poets/page/1', '/404'];
+if (ERA_SLUG) paths.push(`/eras/${ERA_SLUG}/page/1`);
+if (POET_SLUG) paths.push(`/poets/${POET_SLUG}/page/1`);
+if (POEM_SLUG) paths.push(`/poems/${POEM_SLUG}`);
 
 const RX = {
   title: /<title[^>]*>([\s\S]*?)<\/title>/i,
@@ -48,46 +43,43 @@ const RX = {
 
 const problems: string[] = [];
 
-for await (const file of walk(DIST)) {
-  const rel = file.replace(DIST, '/');
-  const html = await readFile(file, 'utf8');
-  const is404 = rel.endsWith('/404.html');
+for (const path of paths) {
+  const res = await fetch(`${BASE_URL}${path}`);
+  const html = await res.text();
+  const is404 = path === '/404';
 
-  const titleMatch = RX.title.exec(html);
-  const title = titleMatch?.[1]?.trim();
+  const title = RX.title.exec(html)?.[1]?.trim();
   if (!title) {
-    problems.push(`${rel}: missing <title>`);
+    problems.push(`${path}: missing <title>`);
   } else if (title.length > TITLE_MAX) {
-    problems.push(`${rel}: <title> > ${TITLE_MAX} chars (${title.length})`);
+    problems.push(`${path}: <title> > ${TITLE_MAX} chars (${title.length})`);
   }
 
   if (!is404) {
     const desc = RX.desc.exec(html)?.[1]?.trim();
     if (!desc) {
-      problems.push(`${rel}: missing <meta description>`);
+      problems.push(`${path}: missing <meta description>`);
     } else if (desc.length < DESC_MIN || desc.length > DESC_MAX) {
-      problems.push(`${rel}: description length ${desc.length} not in [${DESC_MIN},${DESC_MAX}]`);
+      problems.push(`${path}: description length ${desc.length} not in [${DESC_MIN},${DESC_MAX}]`);
     }
-    if (!RX.canonical.test(html)) problems.push(`${rel}: missing canonical`);
-    if (!RX.ogImage.test(html)) problems.push(`${rel}: missing og:image`);
-    if (!RX.ogType.test(html)) problems.push(`${rel}: missing og:type`);
+    if (!RX.canonical.test(html)) problems.push(`${path}: missing canonical`);
+    if (!RX.ogImage.test(html)) problems.push(`${path}: missing og:image`);
+    if (!RX.ogType.test(html)) problems.push(`${path}: missing og:type`);
     const twCard = RX.twitterCard.exec(html)?.[1]?.trim();
     if (twCard !== 'summary_large_image') {
       problems.push(
-        `${rel}: twitter:card must be summary_large_image (got "${twCard ?? 'missing'}")`
+        `${path}: twitter:card must be summary_large_image (got "${twCard ?? 'missing'}")`
       );
     }
     const h1s = [...html.matchAll(RX.h1)];
     if (h1s.length !== 1) {
-      problems.push(`${rel}: expected 1 <h1>, got ${h1s.length}`);
+      problems.push(`${path}: expected 1 <h1>, got ${h1s.length}`);
     }
   }
 
   for (const ldMatch of html.matchAll(RX.ld)) {
-    const parseResult = safeParseJson(ldMatch[1] ?? '');
-    if (parseResult.isErr()) {
-      problems.push(`${rel}: invalid JSON-LD (${parseResult.error.message})`);
-    }
+    const parsed = safeParseJson(ldMatch[1] ?? '');
+    if (parsed.isErr()) problems.push(`${path}: invalid JSON-LD (${parsed.error.message})`);
   }
 }
 
@@ -96,4 +88,4 @@ if (problems.length > 0) {
   for (const p of problems) console.error(`  ${p}`);
   process.exit(1);
 }
-console.log('SEO: all pages pass');
+console.log(`SEO: all ${paths.length} sampled routes pass`);
