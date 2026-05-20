@@ -4,15 +4,15 @@
 
 ## Packages
 
-| Package               | Stack                                                         |
-| --------------------- | ------------------------------------------------------------- |
-| `apps/web`            | Astro 6 static, React 19 islands, TailwindCSS, TanStack Query |
-| `apps/api`            | Hono + oRPC + Valibot, Bun server (Docker), OpenAPI           |
-| `apps/bot`            | X/Twitter bot via `twitter-api-v2`, GitHub Actions cron       |
-| `packages/db`         | Drizzle ORM + PostgreSQL FTS (API-only)                       |
-| `packages/contracts`  | Shared oRPC contracts (Valibot)                               |
-| `packages/constants`  | Brand/URLs/ports                                              |
-| `packages/typescript` | Shared tsconfigs                                              |
+| Package               | Stack                                                                            |
+| --------------------- | -------------------------------------------------------------------------------- |
+| `apps/web`            | Astro 6 SSR (@astrojs/node + Bun), React 19 islands, TailwindCSS, TanStack Query |
+| `apps/api`            | Hono + oRPC + Valibot, Bun server (Docker), OpenAPI                              |
+| `apps/bot`            | X/Twitter bot via `twitter-api-v2`, GitHub Actions cron                          |
+| `packages/db`         | Drizzle ORM + PostgreSQL FTS (API-only)                                          |
+| `packages/contracts`  | Shared oRPC contracts (Valibot)                                                  |
+| `packages/constants`  | Brand/URLs/ports                                                                 |
+| `packages/typescript` | Shared tsconfigs                                                                 |
 
 ## Commands
 
@@ -36,9 +36,9 @@ vitest run path/to/file.test.ts
 
 ## Architecture
 
-**`apps/web`** — Static build runs `scripts/build.ts`: (1) `generate-snapshot.ts` reads the DB (`DATABASE_URL`, falling back to `apps/api/.env`) and dumps JSON into `.data/`, then (2) `astro build` pre-renders all paths from those JSON files via `src/lib/data/*` — no Wrangler, no build-time HTTP. In Docker, `WEB_BUILD_DATABASE_URL` supplies the build-time `DATABASE_URL`. `PUBLIC_API_URL` always points to prod for the browser islands. React is islands-only. Path alias `@/*` → `src/*`. RTL layout. Non-trailing-slash canonical URLs.
+**`apps/web`** — On-demand SSR (`output: 'server'`, `@astrojs/node` standalone run under Bun). Every route renders per request by fetching from the internal `api` container via the oRPC contract: server-only accessors in `src/lib/server/*` (`apiServer`, pointed at `INTERNAL_API_URL`) map the API's HTTP error status to a 404 (`errorStatus` — the API serializes Problem+JSON, so the oRPC client only exposes status-mapped errors; the poem endpoint returns 500 for a missing poem), and each page sets a `Cache-Control` TTL. No DB access from web, no snapshot. `PUBLIC_API_URL` points the browser islands at prod (falls back to prod when unset). Dynamic sitemap routes under `src/pages/sitemap*`. React is islands-only. Path alias `@/*` → `src/*`. RTL layout. Non-trailing-slash canonical URLs.
 
-**Web deploy** — VPS + nginx. Build locally, rsync `dist/` → `/var/www/qafiyah`. nginx: www→apex, trailing-slash redirect, immutable `/_astro/` cache.
+**Web deploy** — VPS + Docker: `docker compose up -d --build`. The web image bundles nginx (proxy_cache + static asset serving + www→apex/trailing-slash canonicalization) in front of the Bun SSR server; `INTERNAL_API_URL=http://api:8787`. nginx serves cached HTML on hits and `/_astro/` immutably; freshness is TTL-based (no rebuild for new poems).
 
 **`apps/api`** — Thin Hono layer over `@qafiyah/db`. Entrypoint `src/server.ts` (run via `bun run src/server.ts`); reads `DATABASE_URL`/`PORT`/`ENVIRONMENT` from `process.env`. No Drizzle/postgres imports in `apps/api/src`. Procedures in `src/procedures/*.procedures.ts`, composed in `src/router.ts`, mounted via `OpenAPIHandler`. `/poems/random` and `/` are raw Hono routes. Runs as a long-lived Bun process (the per-process db-cache in `db.middleware.ts` is shared across all requests). No API code ships to browser.
 
@@ -59,7 +59,7 @@ vitest run path/to/file.test.ts
 - **One mission per session.**
 - Port conflicts → `bun run clean:dev`, restart.
 - DB dumps in `dumps/` (newest = latest). See `dumps/MAINTAINERS_GUIDE.md`.
-- **Web build is ~10–15 min** (snapshot ~7 min + astro build ~5–10 min). To verify quickly: run `bunx astro build` directly (skips snapshot), kill after ~60s (enough for snapshot reuse + first dist files), then `bun run clean:dev`.
+- **Web build is `astro build` only (~seconds)** — no snapshot. The running stack needs the `api` container (and DB) up for SSR; `bun run dev` starts both. Verify pages with `astro dev` + curl against a seeded DB (`bun run db:setup`).
 
 ## Quality Checklist (TRUST 5)
 

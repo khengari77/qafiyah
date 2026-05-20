@@ -16,53 +16,29 @@ docker compose up -d --build
 
 ## Web (`apps/web`)
 
-The web app is intentionally self-hosted on a VPS behind nginx to keep hosting costs minimal for an open-access project. There is no CDN or managed hosting layer.
+The web app is an Astro **server (SSR)** app, self-hosted on a VPS in a Docker container. Every route renders on-demand by calling the internal `api` container via the oRPC contract; nginx (bundled in the web image) caches the rendered HTML and serves built static assets from disk. There is no DB snapshot and no static `dist/` rsync.
 
-### Build
-
-```bash
-bun --filter @qafiyah/web run build
-```
-
-The web image runs the DB snapshot at build time. Before building, `WEB_BUILD_DATABASE_URL` must point at a reachable Postgres instance (the default in compose points at the host-published `db` port). The build (`apps/web/scripts/build.ts`) first runs `generate-snapshot.ts`, which reads the database directly via `@qafiyah/db` and dumps JSON into `apps/web/.data/`; `astro build` then pre-renders all static paths from those JSON files into `apps/web/dist/` — no API or build-time HTTP is involved.
-
-> The snapshot `DATABASE_URL` is passed as a Docker build arg and persists in the build stage's cache/history (it is **not** present in the final nginx image). Point it at a throwaway or local replica — the compose default uses the local `db` — never at production credentials; the snapshot data is identical regardless of source.
-
-To build only the web image:
+### Build & deploy
 
 ```bash
-docker compose build web
+docker compose up -d --build
 ```
 
-### Deploy
+The web image build runs `astro build` only — **no `DATABASE_URL` is needed at build time**. At runtime, `INTERNAL_API_URL` (set to `http://api:8787` in `docker-compose.yml`) points SSR at the `api` service over the internal compose network. `PUBLIC_API_URL` is unset, so the browser islands fall back to the production API.
 
-```bash
-rsync -av --delete apps/web/dist/ user@host:/var/www/qafiyah/
-```
+To build only the web image: `docker compose build web`.
 
-### nginx
+### Caching & freshness
 
-The nginx configuration is checked in at `apps/web/nginx.conf`. When deploying via Docker Compose, the web image (`apps/web/Dockerfile`) bakes this file into the image at `/etc/nginx/conf.d/default.conf` — no manual VPS copy is needed.
+Each route sets a `Cache-Control` TTL (poems 24h, collection lists/indexes 1h, sitemaps 24h; the 404 is `no-store`). nginx (`proxy_cache`) honors it, collapses concurrent misses (`proxy_cache_lock`), and serves stale on upstream errors / during background refresh. New or edited poems appear automatically within the TTL — no rebuild. nginx also canonicalizes www→apex and trailing slashes, and serves `/_astro/` immutably.
 
-If deploying the static `dist/` directly to a VPS without Docker, install it manually:
+### Sitemap
 
-```bash
-cp apps/web/nginx.conf /etc/nginx/sites-available/qafiyah.conf
-ln -s /etc/nginx/sites-available/qafiyah.conf /etc/nginx/sites-enabled/
-nginx -t && systemctl reload nginx
-```
+`/sitemap-index.xml` is generated on-demand (poems sharded at 45k URLs/file, plus poets and collection landing pages) and cached like any other route. `public/robots.txt` references it.
 
-Key rules the config enforces:
+### nginx & TLS
 
-| Rule                            | Detail                                                                      |
-| ------------------------------- | --------------------------------------------------------------------------- |
-| www → apex redirect             | `301 $scheme://qafiyah.com$request_uri`                                     |
-| Trailing-slash canonicalization | `rewrite ^/(.+)/$ /$1 permanent`                                            |
-| Static file serving             | `try_files $uri $uri/index.html =404`                                       |
-| Immutable asset caching         | `/_astro/` gets `Cache-Control: public, immutable, max-age=1y`              |
-| UTF-8 charset                   | Declared explicitly for `text/plain` and other types nginx omits by default |
-
-TLS is managed externally (certbot or reverse-proxy layer) and is intentionally absent from the config file.
+The full nginx config is checked in at `apps/web/nginx.conf` and baked into the web image at `/etc/nginx/nginx.conf` (it proxies HTML to the Astro server on `127.0.0.1:4321` and serves `/app/apps/web/dist/client` from disk). TLS is managed externally (certbot or a front reverse-proxy) and is intentionally absent from the config.
 
 ## Bot (`apps/bot`)
 
