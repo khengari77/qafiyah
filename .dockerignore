@@ -45,3 +45,13 @@ pnpm-debug.log*
 *.pem
 coverage
 .vercel
+
+# Heavy / irrelevant paths for Docker build contexts.
+# Snapshots read from the DB over the network, so dumps/ is never needed.
+dumps
+apps/web/.data
+**/node_modules
+**/.wrangler
+**/coverage
+tools/**/venv
+tools/**/.venv
