@@ -67,7 +67,16 @@
   "files.eol": "\n",
   "files.exclude": {
     "**/node_modules": true,
-    "**/worker-configuration.d.ts": true
+    "**/worker-configuration.d.ts": true,
+    "**/.turbo": true,
+    "**/.astro": true,
+    "**/dist": true,
+    "**/coverage": true,
+    "**/.git": true,
+    "**/.claude": true,
+    "**/.vscode": true,
+    "**/.husky": true,
+    "**/.github": true
   },
   // ==================== SEARCH EXCLUSIONS ====================
   "search.exclude": {
@@ -87,11 +96,12 @@
     "package.json": "bun.lock, bunfig.toml, .npmrc, turbo.json, tsconfig*.json, biome.json, knip.json, commitlint.config.*, .prettierrc*, .prettierignore, .dependency-cruiser.*",
     "*.ts": "${capture}.test.ts, ${capture}.spec.ts",
     "*.tsx": "${capture}.test.tsx, ${capture}.spec.tsx",
-    ".env": ".env.*",
-    "CLAUDE.md": "AGENTS.md, README.md, LICENSE",
-    "wrangler.toml": "wrangler.jsonc, .dev.vars*, worker-configuration.d.ts",
-    "wrangler.jsonc": ".dev.vars*, worker-configuration.d.ts",
-    "astro.config.*": "env.d.ts"
+    ".env": ".env.*, .env.example",
+    "README.md": "AGENTS.md, CLAUDE.md, LICENSE, TODO.md",
+    "astro.config.*": "env.d.ts, components.json",
+    "vitest.config.*": "vitest.setup.*",
+    "docker-compose.yml": "docker-compose.*.yml, .dockerignore",
+    "nginx.conf": "nginx-security-headers.conf, docker-entrypoint.sh"
   },
   // ==================== WORKBENCH ====================
   "workbench.editor.highlightModifiedTabs": true,
