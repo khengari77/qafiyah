@@ -1,33 +1,47 @@
 # Git
 .git
 .gitignore
+.gitattributes
 
-# Dependencies
-node_modules
+# Dependencies (installed fresh inside the image)
+**/node_modules
 .pnp
 .pnp.js
 
-# Build outputs
-dist
+# Build outputs & caches (produced inside the image; never copy host copies)
+**/dist
+**/.astro
+**/.turbo
+**/.wrangler
+**/*.tsbuildinfo
 .next
 out
 build
-.turbo
 
-# Environment files
+# Tests & coverage (not needed at build or runtime)
+**/coverage
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/vitest.config.*
+
+# Env files (secrets/local config; never bake into an image)
 .env
 .env.local
 .env.*.local
 .dev.vars
 
-# IDE
+# Tooling / IDE / CI / docs
 .vscode
 .idea
+.husky
+.github
+docs
 *.swp
 *.swo
 *~
 
-# OS
+# OS junk
 .DS_Store
 Thumbs.db
 
@@ -38,20 +52,15 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Database backups
+# Secrets / local backups
+*.pem
 .db_setup_backups
 
-# Misc
-*.pem
-coverage
-.vercel
-
-# Heavy / irrelevant paths for Docker build contexts.
-# Snapshots read from the DB over the network, so dumps/ is never needed.
+# Heavy / irrelevant: DB dumps are bind-mounted at runtime, never built in.
 dumps
-apps/web/.data
-**/node_modules
-**/.wrangler
-**/coverage
 tools/**/venv
 tools/**/.venv
+
+# Misc
+.vercel
+docker-compose.override.yml
