@@ -13,3 +13,4 @@ export {
   toPoetDoc,
 } from './documents';
 export { POEMS_INDEX_BODY, POETS_INDEX_BODY } from './indices';
+export { buildPoemSearchBody, buildPoetSearchBody } from './query';
