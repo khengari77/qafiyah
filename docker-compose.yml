@@ -32,8 +32,6 @@ services:
       dockerfile: apps/api/Dockerfile
     container_name: qafiyah-api
     restart: unless-stopped
-    # PID 1 reaper for the bun process (the image has no tini).
-    init: true
     depends_on:
       db:
         condition: service_healthy

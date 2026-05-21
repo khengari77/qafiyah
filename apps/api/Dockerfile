@@ -43,6 +43,9 @@ COPY packages ./packages
 # --- runtime: minimal image, non-root, with a DB-free healthcheck.
 FROM base AS runtime
 ENV PORT=8787
+# tini (PID 1) reaps zombies and forwards signals to bun for a clean shutdown —
+# same strategy as the web image, so no compose `init` is needed.
+RUN apk add --no-cache tini
 # node_modules (root hoist + @qafiyah/* symlinks), workspace source, and the
 # per-app node_modules all come from the pruned stage. apps/api carries src +
 # tsconfig.json (needed for the @/* path alias) but no tests (.dockerignore).
@@ -55,4 +58,5 @@ WORKDIR /app/apps/api
 # /v1/docs is the OpenAPI reference UI: a 200 that never touches the DB.
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
   CMD wget -q -O /dev/null http://127.0.0.1:8787/v1/docs || exit 1
+ENTRYPOINT ["/sbin/tini", "--"]
 CMD ["bun", "run", "src/server.ts"]

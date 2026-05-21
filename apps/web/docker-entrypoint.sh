@@ -3,7 +3,8 @@
 # as sibling children under tini (PID 1). If EITHER dies, exit so the container
 # stops and `restart: unless-stopped` recovers the whole thing — a crashed SSR
 # origin must not leave nginx up serving 502s behind a still-"healthy" container.
-HOST="${HOST:-127.0.0.1}" PORT="${PORT:-4321}" bun /app/apps/web/dist/server/entry.mjs &
+# Astro reads PORT; source it from SSR_PORT so a stray container PORT can't move it.
+HOST="${HOST:-127.0.0.1}" PORT="${SSR_PORT:-4321}" bun /app/apps/web/dist/server/entry.mjs &
 ssr=$!
 nginx -g 'daemon off;' &
 ngx=$!
