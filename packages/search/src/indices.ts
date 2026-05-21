@@ -1,0 +1,55 @@
+import { ANALYSIS } from './analysis';
+
+// text analyzed as normalized, with an exact keyword sub-field and a stemmed
+// sub-field — boosted exact > normalized > stemmed at query time.
+const arabicText = {
+  type: 'text',
+  analyzer: 'arabic_normalized',
+  fields: {
+    exact: { type: 'keyword' },
+    stemmed: { type: 'text', analyzer: 'arabic_stemmed' },
+  },
+} as const;
+
+const settings = { number_of_shards: 1, number_of_replicas: 0, analysis: ANALYSIS } as const;
+
+export const POEMS_INDEX_BODY = {
+  settings,
+  mappings: {
+    dynamic: 'strict',
+    properties: {
+      id: { type: 'integer' },
+      slug: { type: 'keyword' },
+      hash: { type: 'keyword', index: false },
+      title: arabicText,
+      content: arabicText,
+      poetName: arabicText,
+      titleDisplay: { type: 'keyword', index: false },
+      poetNameDisplay: { type: 'keyword', index: false },
+      poetSlug: { type: 'keyword' },
+      eraSlug: { type: 'keyword' },
+      eraName: { type: 'keyword', index: false },
+      meterSlug: { type: 'keyword' },
+      meterName: { type: 'keyword', index: false },
+      themeSlug: { type: 'keyword' },
+      rhymeSlug: { type: 'keyword' },
+    },
+  },
+} as const;
+
+export const POETS_INDEX_BODY = {
+  settings,
+  mappings: {
+    dynamic: 'strict',
+    properties: {
+      id: { type: 'integer' },
+      slug: { type: 'keyword' },
+      hash: { type: 'keyword', index: false },
+      name: arabicText,
+      bio: arabicText,
+      nameDisplay: { type: 'keyword', index: false },
+      eraSlug: { type: 'keyword' },
+      eraName: { type: 'keyword', index: false },
+    },
+  },
+} as const;
