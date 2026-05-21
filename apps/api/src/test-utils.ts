@@ -4,6 +4,7 @@
  */
 
 import type { DbClient } from '@qafiyah/db';
+import type { SearchClient } from '@qafiyah/search';
 import { Hono } from 'hono';
 import { createMiddleware } from 'hono/factory';
 import * as v from 'valibot';
@@ -66,11 +67,12 @@ type TestClientWithGet = {
 };
 
 /**
- * Creates a test middleware that injects the database into context
+ * Creates a test middleware that injects the database and search client into context
  */
-function createDbTestMiddleware(db: DbClient) {
+function createTestContextMiddleware(db: DbClient, es: SearchClient) {
   return createMiddleware<AppContext>(async (c, next) => {
     c.set('db', db);
+    c.set('es', es);
     await next();
   });
 }
@@ -82,17 +84,19 @@ export function createTestClient<T extends Hono<AppContext>>(
   app: T,
   options?: {
     readonly db?: DbClient;
+    readonly es?: SearchClient;
     readonly bindings?: Partial<Bindings>;
   }
 ): TestClientWithGet {
   const db = options?.db ?? createMockDb();
+  const es = options?.es ?? ({} as unknown as SearchClient);
   const bindings = {
     DATABASE_URL: 'postgresql://test:test@localhost:5432/test',
     ...options?.bindings,
   } satisfies Bindings;
 
   const testApp = new Hono<AppContext>();
-  testApp.use(createDbTestMiddleware(db));
+  testApp.use(createTestContextMiddleware(db, es));
   testApp.route('/', app);
 
   return {

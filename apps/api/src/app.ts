@@ -21,6 +21,7 @@ import {
 import { type DomainFields, enrichContext, recordError } from './lib/logger';
 import { makeProblem, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
+import { esMiddleware } from './middlewares/es.middleware';
 import { faviconMiddleware } from './middlewares/favicon.middleware';
 import { loggerMiddleware } from './middlewares/logger.middleware';
 import { router, routerNamespaces } from './router';
@@ -46,6 +47,7 @@ app.use(loggerMiddleware);
 for (const ns of routerNamespaces) {
   app.use(`${API_V1_PREFIX}/${ns}/*`, dbMiddleware);
 }
+app.use(`${API_V1_PREFIX}/*`, esMiddleware);
 
 const orpcHandler = new OpenAPIHandler(router, {
   plugins: [
@@ -70,7 +72,11 @@ const orpcHandler = new OpenAPIHandler(router, {
 app.use(`${API_V1_PREFIX}/*`, async (c, next) => {
   if (ORPC_BYPASS_PATHS.has(c.req.path)) return next();
   const result = await orpcHandler.handle(c.req.raw, {
-    context: { db: c.get('db'), log: (data: DomainFields) => enrichContext(c, data) },
+    context: {
+      db: c.get('db'),
+      es: c.get('es'),
+      log: (data: DomainFields) => enrichContext(c, data),
+    },
     prefix: API_V1_PREFIX,
   });
   if (!result.matched) return next();

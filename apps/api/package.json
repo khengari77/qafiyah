@@ -16,6 +16,7 @@
     "@qafiyah/constants": "workspace:*",
     "@qafiyah/contracts": "workspace:*",
     "@qafiyah/db": "workspace:*",
+    "@qafiyah/search": "workspace:*",
     "@qafiyah/typescript": "workspace:*",
     "hono": "^4.12.19",
     "neverthrow": "^8.2.0",

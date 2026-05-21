@@ -3,6 +3,7 @@ import * as v from 'valibot';
 
 const schema = v.object({
   DATABASE_URL: v.pipe(v.string(), v.url()),
+  ELASTICSEARCH_URL: v.optional(v.pipe(v.string(), v.url())),
   ENVIRONMENT: v.optional(v.string()),
 });
 

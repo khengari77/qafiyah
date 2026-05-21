@@ -28,7 +28,7 @@ async function buildOrpcApp() {
   const app = new Hono<AppContext>();
   app.use('/v1/*', async (c, next) => {
     const result = await orpcHandler.handle(c.req.raw, {
-      context: { db: c.get('db') },
+      context: { db: c.get('db'), es: c.get('es') },
       prefix: '/v1',
     });
     if (!result.matched) return next();
