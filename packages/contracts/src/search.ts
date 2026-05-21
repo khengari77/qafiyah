@@ -19,16 +19,11 @@ import {
 import { DEFAULT_PAGE, inputValidationErrorMap, internalServerErrorMap } from './constants';
 import { namedSlugRef, pageParam, pagination } from './schemas';
 
-// Strips non-Arabic chars and collapses internal whitespace runs.
-// Does NOT trim leading/trailing whitespace — for that, use cleanArabicQuery.
-// The no-trim variant is for live-typing sanitization where mid-word spaces
-// must survive until the user submits.
+// Strips non-Arabic chars and collapses internal whitespace runs (no trim).
+// Used by the web search island for live-typing sanitization, where mid-word
+// spaces must survive until the user submits.
 export function sanitizeArabicInput(raw: string): string {
   return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(WHITESPACE_RUN_REGEX, ' ');
-}
-
-export function cleanArabicQuery(query: string): string {
-  return sanitizeArabicInput(query.trim()).trim();
 }
 
 const meterSlugsSchema = v.optional(v.array(meterSlugSchema), []);
@@ -58,15 +53,7 @@ export const poetSearchResult = v.object({
 
 export const searchInputSchema = v.pipe(
   v.object({
-    q: v.optional(
-      v.pipe(
-        v.string(),
-        v.maxLength(MAX_QUERY_LENGTH),
-        v.examples(['المتنبي']),
-        v.transform(cleanArabicQuery)
-      ),
-      ''
-    ),
+    q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])), ''),
     searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
     page: v.optional(pageParam, DEFAULT_PAGE),
     matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),

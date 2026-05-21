@@ -42,9 +42,4 @@ export {
   type RandomPoemTransportError,
 } from './random-poem-client';
 export { namedSlugRef, pagination, poemListItem, slugWithPoemCount } from './schemas';
-export {
-  cleanArabicQuery,
-  poemSearchResult,
-  poetSearchResult,
-  sanitizeArabicInput,
-} from './search';
+export { poemSearchResult, poetSearchResult, sanitizeArabicInput } from './search';

@@ -106,8 +106,8 @@ describe('search procedure', () => {
     expect(body.data[0]?.type).toBe('poem');
   });
 
-  it('accepts non-Arabic text with a filter (treats q as empty)', async () => {
-    browsePoemsByFiltersMock.mockResolvedValue(ok({ rows: [], totalCount: 0 }));
+  it('runs a text search for any non-empty q (no server-side Arabic cleaning)', async () => {
+    searchPoemsMock.mockResolvedValue(ok({ rows: [], totalCount: 0 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
     const res = await client.$get('/v1/search?searchType=poems&q=hello&eraSlugs%5B0%5D=abbasid');
