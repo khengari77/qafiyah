@@ -1,4 +1,15 @@
 export {
+  type AdminError,
+  bulkIndex,
+  diffKeys,
+  ensureIndex,
+  indexHealth,
+  listIndicesForAlias,
+  nextIndexName,
+  swapAlias,
+  toBulkOperations,
+} from './admin';
+export {
   type CreateSearchClientError,
   createSearchClient,
   type SearchClient,
