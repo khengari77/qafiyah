@@ -233,7 +233,7 @@ export async function searchPoems(args: {
   readonly matchType: MatchType;
   readonly filters: SearchFilters;
 }): Promise<Result<SearchPage<PoemSearchRow>, SearchError>> {
-  const { db, query, page, matchType, filters } = args;
+  const { db, query, page, filters } = args;
   const filterIdsResult = await lookupFilterIds(
     db,
     filters.meterSlugs,
@@ -243,40 +243,57 @@ export async function searchPoems(args: {
   );
   if (filterIdsResult.isErr()) return err(filterIdsResult.error);
   const { meterIds, eraIds, themeIds, rhymeIds } = filterIdsResult.value;
-
-  const rawResult = await executeAs(
-    db,
-    sql`
-      WITH s AS (
-        SELECT * FROM search_poems(
-          ${query}::TEXT,
-          ${page}::INTEGER,
-          ${matchType}::TEXT,
-          ${toPgIntArrayParam(meterIds)},
-          ${toPgIntArrayParam(eraIds)},
-          ${toPgIntArrayParam(themeIds)},
-          ${toPgIntArrayParam(rhymeIds)}
-        )
-      )
-      SELECT
-        s.*,
-        m.slug AS poem_meter_slug,
-        e.slug AS poet_era_slug
-      FROM s
-      LEFT JOIN public.meters m ON m.name = s.poem_meter
-      LEFT JOIN public.eras e ON e.name = s.poet_era
-    `,
-    rawPoemSearchRowSchema
-  );
-  if (rawResult.isErr()) return err(rawResult.error);
-  const raw = rawResult.value;
-
-  if (raw.length === 0) return ok({ rows: [], totalCount: 0 });
-
-  const inputs = { query, page, matchType, filters } as const;
-  const totalResult = parseRawTotalCount(raw[0]?.total_count, 'searchPoems', inputs);
+  const meterParam = toPgIntArrayParam(meterIds);
+  const eraParam = toPgIntArrayParam(eraIds);
+  const themeParam = toPgIntArrayParam(themeIds);
+  const rhymeParam = toPgIntArrayParam(rhymeIds);
+  const offset = (page - 1) * SEARCH_POEMS_PER_PAGE;
+  // @NOTE: deliberately naïve full-table scan (no index, no normalization) —
+  // the baseline before Elasticsearch. ILIKE on raw (diacritic-bearing) text.
+  const like = `%${query}%`;
+  const filterClause = sql`
+    (${meterParam} IS NULL OR p.meter_id = ANY(${meterParam}))
+    AND (${eraParam} IS NULL OR pt.era_id = ANY(${eraParam}))
+    AND (${themeParam} IS NULL OR p.theme_id = ANY(${themeParam}))
+    AND (${rhymeParam} IS NULL OR p.rhyme_id = ANY(${rhymeParam}))
+    AND (p.title ILIKE ${like} OR p.content ILIKE ${like})
+  `;
+  const [rowsResult, countResult] = await Promise.all([
+    executeAs(
+      db,
+      sql`
+        SELECT
+          pt.name AS poet_name, e.name AS poet_era, e.slug AS poet_era_slug, pt.slug AS poet_slug,
+          p.title AS poem_title,
+          array_to_string((string_to_array(p.content, '*'))[1:2], '*') AS poem_snippet,
+          m.name AS poem_meter, m.slug AS poem_meter_slug, p.slug AS poem_slug, 0::real AS relevance
+        FROM public.poems p
+        JOIN public.poets pt ON p.poet_id = pt.id
+        JOIN public.meters m ON p.meter_id = m.id
+        JOIN public.eras e ON pt.era_id = e.id
+        WHERE ${filterClause}
+        ORDER BY p.id DESC
+        LIMIT ${SEARCH_POEMS_PER_PAGE} OFFSET ${offset}
+      `,
+      rawPoemSearchRowSchema
+    ),
+    executeAs(
+      db,
+      sql`
+        SELECT COUNT(*)::bigint AS total
+        FROM public.poems p
+        JOIN public.poets pt ON p.poet_id = pt.id
+        WHERE ${filterClause}
+      `,
+      countRowSchema
+    ),
+  ]);
+  if (rowsResult.isErr()) return err(rowsResult.error);
+  if (countResult.isErr()) return err(countResult.error);
+  const inputs = { query, page, filters } as const;
+  const totalResult = parseTotalCountRow(countResult.value, 'searchPoems', inputs);
   if (totalResult.isErr()) return err(totalResult.error);
-  return ok({ rows: raw.map(toPoemSearchRow), totalCount: totalResult.value });
+  return ok({ rows: rowsResult.value.map(toPoemSearchRow), totalCount: totalResult.value });
 }
 
 export async function searchPoets(args: {
@@ -286,39 +303,46 @@ export async function searchPoets(args: {
   readonly matchType: MatchType;
   readonly eraSlugs: readonly EraSlug[] | null;
 }): Promise<Result<SearchPage<PoetSearchRow>, SearchError>> {
-  const { db, query, page, matchType, eraSlugs } = args;
+  const { db, query, page, eraSlugs } = args;
   const eraIdsResult = await lookupEraIds(db, eraSlugs);
   if (eraIdsResult.isErr()) return err(eraIdsResult.error);
-  const eraIds = eraIdsResult.value;
-
-  const rawResult = await executeAs(
-    db,
-    sql`
-      WITH s AS (
-        SELECT * FROM search_poets(
-          ${query}::TEXT,
-          ${page}::INTEGER,
-          ${matchType}::TEXT,
-          ${toPgIntArrayParam(eraIds)}
-        )
-      )
-      SELECT
-        s.*,
-        e.slug AS poet_era_slug
-      FROM s
-      LEFT JOIN public.eras e ON e.name = s.poet_era
-    `,
-    rawPoetSearchRowSchema
-  );
-  if (rawResult.isErr()) return err(rawResult.error);
-  const raw = rawResult.value;
-
-  if (raw.length === 0) return ok({ rows: [], totalCount: 0 });
-
-  const inputs = { query, page, matchType, eraSlugs } as const;
-  const totalResult = parseRawTotalCount(raw[0]?.total_count, 'searchPoets', inputs);
+  const eraParam = toPgIntArrayParam(eraIdsResult.value);
+  const offset = (page - 1) * SEARCH_POETS_PER_PAGE;
+  // @NOTE: naïve baseline — ILIKE on name/bio, no index, no normalization.
+  const like = `%${query}%`;
+  const filterClause = sql`
+    (${eraParam} IS NULL OR pt.era_id = ANY(${eraParam}))
+    AND (pt.name ILIKE ${like} OR COALESCE(pt.bio, '') ILIKE ${like})
+  `;
+  const [rowsResult, countResult] = await Promise.all([
+    executeAs(
+      db,
+      sql`
+        SELECT
+          pt.name AS poet_name, e.name AS poet_era, e.slug AS poet_era_slug, pt.slug AS poet_slug,
+          COALESCE(pt.bio, '') AS poet_bio, 0::double precision AS relevance
+        FROM public.poets pt
+        JOIN public.eras e ON pt.era_id = e.id
+        WHERE ${filterClause}
+        ORDER BY pt.id DESC
+        LIMIT ${SEARCH_POETS_PER_PAGE} OFFSET ${offset}
+      `,
+      rawPoetSearchRowSchema
+    ),
+    executeAs(
+      db,
+      sql`
+        SELECT COUNT(*)::bigint AS total FROM public.poets pt WHERE ${filterClause}
+      `,
+      countRowSchema
+    ),
+  ]);
+  if (rowsResult.isErr()) return err(rowsResult.error);
+  if (countResult.isErr()) return err(countResult.error);
+  const inputs = { query, page, eraSlugs } as const;
+  const totalResult = parseTotalCountRow(countResult.value, 'searchPoets', inputs);
   if (totalResult.isErr()) return err(totalResult.error);
-  return ok({ rows: raw.map(toPoetSearchRow), totalCount: totalResult.value });
+  return ok({ rows: rowsResult.value.map(toPoetSearchRow), totalCount: totalResult.value });
 }
 
 function parseRawTotalCount(
