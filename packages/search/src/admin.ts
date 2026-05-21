@@ -19,7 +19,7 @@ export function nextIndexName(prefix: string, existing: readonly string[]): stri
 
 export function toBulkOperations(
   index: string,
-  docs: readonly { readonly slug: string }[]
+  docs: readonly ({ readonly slug: string } & Record<string, unknown>)[]
 ): unknown[] {
   const ops: unknown[] = [];
   for (const doc of docs) {

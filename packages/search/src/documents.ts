@@ -1,7 +1,8 @@
 import { createHash } from 'node:crypto';
 
-// U+0610–U+061A, U+064B–U+065F, U+06D6–U+06ED — Arabic diacritics + small marks; plus tatweel.
-const TASHKEEL_REGEX = /[ؐ-ًؚ-ٟۖ-ۭـ]/g;
+// U+0610–U+061A (small signs), U+064B–U+065F (combining marks), U+06D6–U+06ED (Quran marks), U+0640 tatweel.
+// NOTE: use explicit \u escapes — literal Arabic ranges are parsed inconsistently by Bun's regex engine.
+const TASHKEEL_REGEX = /[ؐ-ًؚ-ٟۖ-ۭـ]/g;
 
 function stripTashkeel(text: string): string {
   return text.replace(TASHKEEL_REGEX, '');

@@ -25,3 +25,11 @@ export {
 } from './documents';
 export { POEMS_INDEX_BODY, POETS_INDEX_BODY } from './indices';
 export { buildPoemSearchBody, buildPoetSearchBody } from './query';
+export {
+  type PoemHit,
+  type PoetHit,
+  type SearchPage,
+  type SearchRunError,
+  searchPoems,
+  searchPoets,
+} from './search';
