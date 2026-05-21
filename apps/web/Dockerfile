@@ -56,6 +56,7 @@ COPY --from=build     /app/apps/web/dist  ./apps/web/dist
 COPY --from=prod-deps /app/node_modules   ./node_modules
 COPY --from=prod-deps /app/packages       ./packages
 COPY apps/web/nginx.conf /etc/nginx/nginx.conf
+COPY apps/web/nginx-security-headers.conf /etc/nginx/nginx-security-headers.conf
 COPY apps/web/docker-entrypoint.sh /docker-entrypoint.sh
 # nginx writes its cache as the unprivileged `nginx` user; pid + temp -> /tmp.
 RUN chmod +x /docker-entrypoint.sh \

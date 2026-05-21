@@ -43,7 +43,7 @@ The image build runs `astro build` only — **no `DATABASE_URL` at build time.**
 
 ### Caching & freshness
 
-Each route sets a `Cache-Control` TTL (poems 24h; collection lists/indexes 1h; sitemaps 24h; the 404 is `no-store`). nginx (`proxy_cache`) honors it, collapses concurrent misses (`proxy_cache_lock`), and serves stale on upstream errors or during background refresh. New or edited poems appear within the TTL — no rebuild. nginx also canonicalizes www→apex and trailing slashes, gzips text responses, and serves `/_astro/` immutably.
+Each route sets a `Cache-Control` TTL (poems 24h; collection lists/indexes 1h; sitemaps 24h; the 404 is `no-store`). nginx (`proxy_cache`) honors it, collapses concurrent misses (`proxy_cache_lock`), and serves stale on upstream errors or during background refresh. New or edited poems appear within the TTL — no rebuild. nginx also canonicalizes URLs to the https apex (www→apex and trailing slashes), sets baseline security headers, gzips text responses, and serves `/_astro/` immutably.
 
 ### Sitemap
 
@@ -51,7 +51,7 @@ Each route sets a `Cache-Control` TTL (poems 24h; collection lists/indexes 1h; s
 
 ### nginx & TLS
 
-The full config is checked in at `apps/web/nginx.conf` and baked into the image at `/etc/nginx/nginx.conf`. It proxies HTML to the Astro origin on `127.0.0.1:4321`, serves `/app/apps/web/dist/client` from disk, and answers a container-local `/healthz`. TLS is terminated upstream by Cloudflare; the config is plain HTTP on `8080` by design.
+The full config is checked in at `apps/web/nginx.conf` and baked into the image at `/etc/nginx/nginx.conf`. It proxies HTML to the Astro origin on `127.0.0.1:4321`, serves `/app/apps/web/dist/client` from disk, and answers a container-local `/healthz`. TLS is terminated upstream by Cloudflare; the config is plain HTTP on `8080` by design — and because TLS lives at the edge, `$scheme` here is always `http`: the www→apex redirect is its own `server` block hardcoding `https://qafiyah.com`, and same-host redirects (trailing slash) stay relative (`absolute_redirect off`) so the browser keeps its https — never an `http://` Location or a leaked `:8080`. Baseline security headers (`X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `X-Frame-Options: DENY`) live in `apps/web/nginx-security-headers.conf`, included at server scope and re-included in every `location` that sets its own headers (nginx drops inherited `add_header` there). The real visitor IP is restored from Cloudflare's `CF-Connecting-IP` header; `set_real_ip_from` trusts the Docker bridge ranges (`172.16.0.0/12`, plus `192.168.0.0/16` for Docker Desktop) — safe because the loopback-bound published port admits only the local `cloudflared`. On first deploy, confirm restoration by checking that `docker logs qafiyah-web` shows real client IPs in the access log rather than the `172.x`/`192.168.x` bridge gateway.
 
 ## Bot (`apps/bot`)
 
