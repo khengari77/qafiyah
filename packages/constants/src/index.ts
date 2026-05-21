@@ -37,3 +37,18 @@ export type SearchType = (typeof SEARCH_TYPE_VALUES)[number];
 
 export const MATCH_TYPE_VALUES = ['all', 'exact', 'any'] as const;
 export type MatchType = (typeof MATCH_TYPE_VALUES)[number];
+
+export const DEV_ELASTICSEARCH_PORT = 9200;
+
+// Versioned indices (poems_v1, poets_v1, …) sit behind stable aliases so
+// reindexing can swap atomically with zero downtime.
+export const POEMS_INDEX_ALIAS = 'poems';
+export const POETS_INDEX_ALIAS = 'poets';
+export const POEMS_INDEX_PREFIX = 'poems_v';
+export const POETS_INDEX_PREFIX = 'poets_v';
+
+// Weekly Postgres↔Elasticsearch reconciliation cadence (ms).
+export const RECONCILE_INTERVAL_MS = 7 * 24 * 60 * 60 * 1000;
+
+export const WORKER_HEALTH_PORT = 8088;
+export const ES_BULK_BATCH_SIZE = 1000;

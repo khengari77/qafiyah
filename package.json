@@ -6,6 +6,8 @@
     "dev": "./scripts/dev.sh",
     "up": "docker compose up -d --build",
     "down": "docker compose down",
+    "es:up": "docker compose up -d --wait elasticsearch",
+    "es:down": "docker compose stop elasticsearch",
     "db:up": "docker compose up -d --wait db",
     "db:reset": "docker compose down -v && docker compose up -d --wait db",
     "clean": "pkill -f 'qafiyah/.*astro' || true; pkill -f 'apps/api/src/server.ts' || true",
