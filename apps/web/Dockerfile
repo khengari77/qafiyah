@@ -38,16 +38,21 @@ COPY packages/typescript/package.json packages/typescript/package.json
 # --ignore-scripts: the root `prepare` (husky, a devDep) fails under
 # --production. Only the runtime install uses it — the `deps`/`build` stage
 # must keep scripts so esbuild's postinstall runs for `astro build`.
-RUN bun install --frozen-lockfile --production --ignore-scripts && mkdir -p apps/web/node_modules
+# --linker hoisted: the repo's isolated linker leaves transitive deps unhoisted,
+# but the bundled SSR server resolves externalized deps (e.g. @orpc/contract,
+# via the bundled @qafiyah/contracts) from a flat root node_modules. Hoisting the
+# runtime install makes them resolvable; the host's install config is untouched.
+RUN bun install --frozen-lockfile --production --ignore-scripts --linker hoisted \
+    && mkdir -p apps/web/node_modules
 COPY packages ./packages
 
 # --- serve: nginx (front) + Bun standalone SSR (origin), fully non-root.
 FROM oven/bun:1.3.14-alpine AS serve
 RUN apk add --no-cache nginx tini
 WORKDIR /app
-# Keep dist at its workspace path so the standalone server resolves modules from
-# apps/web/node_modules then the hoisted root node_modules; packages/ provides
-# the @qafiyah/* workspace symlink targets.
+# Keep dist at its workspace path so the standalone server resolves externalized
+# modules from the flat (hoisted) root node_modules; packages/ provides the
+# @qafiyah/* workspace symlink targets for any source consumed at runtime.
 COPY --from=build     /app/apps/web/dist          ./apps/web/dist
 COPY --from=prod-deps /app/node_modules           ./node_modules
 COPY --from=prod-deps /app/apps/web/node_modules  ./apps/web/node_modules
