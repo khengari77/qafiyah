@@ -3,7 +3,6 @@ import {
   MATCH_TYPE_VALUES,
   MAX_QUERY_LENGTH,
   NON_ARABIC_AND_SPACE_REGEX,
-  SEARCH_EMPTY_INPUT_MESSAGE,
   SEARCH_TYPE_VALUES,
   WHITESPACE_RUN_REGEX,
 } from '@qafiyah/constants';
@@ -19,17 +18,10 @@ import {
 import { DEFAULT_PAGE, inputValidationErrorMap, internalServerErrorMap } from './constants';
 import { namedSlugRef, pageParam, pagination } from './schemas';
 
-// Strips non-Arabic chars and collapses internal whitespace runs (no trim).
-// Used by the web search island for live-typing sanitization, where mid-word
-// spaces must survive until the user submits.
+// Live-typing sanitizer kept for the web input (UX); not applied server-side.
 export function sanitizeArabicInput(raw: string): string {
   return raw.replace(NON_ARABIC_AND_SPACE_REGEX, '').replace(WHITESPACE_RUN_REGEX, ' ');
 }
-
-const meterSlugsSchema = v.optional(v.array(meterSlugSchema), []);
-const eraSlugsSchema = v.optional(v.array(eraSlugSchema), []);
-const rhymeSlugsSchema = v.optional(v.array(rhymeSlugSchema), []);
-const themeSlugsSchema = v.optional(v.array(themeSlugSchema), []);
 
 export const poemSearchResult = v.object({
   type: v.literal('poem'),
@@ -51,28 +43,24 @@ export const poetSearchResult = v.object({
   relevance: v.number(),
 });
 
-export const searchInputSchema = v.pipe(
-  v.object({
-    q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])), ''),
-    searchType: v.pipe(v.picklist(SEARCH_TYPE_VALUES), v.examples(['poems'])),
-    page: v.optional(pageParam, DEFAULT_PAGE),
-    matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
-    meterSlugs: meterSlugsSchema,
-    eraSlugs: eraSlugsSchema,
-    rhymeSlugs: rhymeSlugsSchema,
-    themeSlugs: themeSlugsSchema,
-  }),
-  v.check((input) => {
-    const hasText = input.q.length > 0;
-    const hasFilters =
-      input.meterSlugs.length +
-        input.eraSlugs.length +
-        input.themeSlugs.length +
-        input.rhymeSlugs.length >
-      0;
-    return hasText || hasFilters;
-  }, SEARCH_EMPTY_INPUT_MESSAGE)
-);
+const optionalSlugs = <S extends v.GenericSchema<string, string>>(s: S) =>
+  v.optional(v.array(s), []);
+
+export const searchInputSchema = v.object({
+  q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])), ''),
+  types: v.optional(v.array(v.picklist(SEARCH_TYPE_VALUES)), [...SEARCH_TYPE_VALUES]),
+  poemsPage: v.optional(pageParam, DEFAULT_PAGE),
+  poetsPage: v.optional(pageParam, DEFAULT_PAGE),
+  matchType: v.optional(v.picklist(MATCH_TYPE_VALUES), 'all'),
+  poetSlugs: optionalSlugs(poetSlugSchema),
+  eraSlugs: optionalSlugs(eraSlugSchema),
+  meterSlugs: optionalSlugs(meterSlugSchema),
+  rhymeSlugs: optionalSlugs(rhymeSlugSchema),
+  themeSlugs: optionalSlugs(themeSlugSchema),
+});
+
+const poemsSection = v.object({ data: v.array(poemSearchResult), pagination });
+const poetsSection = v.object({ data: v.array(poetSearchResult), pagination });
 
 export const searchContract = {
   search: oc
@@ -80,17 +68,10 @@ export const searchContract = {
     .input(searchInputSchema)
     .errors({ ...inputValidationErrorMap, ...internalServerErrorMap })
     .output(
-      v.variant('searchType', [
-        v.object({
-          searchType: v.literal('poems'),
-          data: v.array(poemSearchResult),
-          pagination,
-        }),
-        v.object({
-          searchType: v.literal('poets'),
-          data: v.array(poetSearchResult),
-          pagination,
-        }),
-      ])
+      v.object({
+        q: v.string(),
+        poems: v.nullable(poemsSection),
+        poets: v.nullable(poetsSection),
+      })
     ),
 };
