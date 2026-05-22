@@ -6,6 +6,10 @@ export {
   indexHealth,
   listIndicesForAlias,
   nextIndexName,
+  type ReconcileConfig,
+  reconcileFromSource,
+  type ReindexConfig,
+  reindexFromSource,
   swapAlias,
   toBulkOperations,
 } from './admin';

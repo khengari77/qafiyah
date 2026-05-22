@@ -120,3 +120,111 @@ export async function indexHealth(
     return err(toAdminError(cause));
   }
 }
+
+export type ReindexConfig<TDoc extends { readonly slug: string; readonly id?: number }> = {
+  readonly alias: string;
+  readonly prefix: string;
+  readonly body: object;
+  // Returns the next batch keyed by ascending cursor; return [] when exhausted.
+  readonly fetchBatch: (cursor: number) => Promise<readonly TDoc[]>;
+  // Advance the cursor from the last doc of a batch (default: last.id).
+  readonly cursorOf?: (doc: TDoc) => number;
+};
+
+// Build a fresh versioned index, bulk-load it, then atomically point the alias at
+// it and drop the previous versions — zero-downtime reindex.
+export async function reindexFromSource<TDoc extends { readonly slug: string; readonly id?: number }>(
+  client: SearchClient,
+  config: ReindexConfig<TDoc>
+): Promise<Result<{ readonly index: string; readonly count: number }, AdminError>> {
+  const existing = await listIndicesForAlias(client, config.prefix);
+  if (existing.isErr()) return err(existing.error);
+  const target = nextIndexName(config.prefix, existing.value);
+
+  const created = await ensureIndex(client, target, config.body);
+  if (created.isErr()) return err(created.error);
+
+  let cursor = 0;
+  let total = 0;
+  for (;;) {
+    const batch = await config.fetchBatch(cursor);
+    if (batch.length === 0) break;
+    const bulk = await bulkIndex(client, target, batch);
+    if (bulk.isErr()) return err(bulk.error);
+    total += batch.length;
+    const last = batch[batch.length - 1];
+    if (!last) break;
+    cursor = config.cursorOf ? config.cursorOf(last) : (last.id ?? cursor + batch.length);
+  }
+
+  const swapped = await swapAlias(client, config.alias, target);
+  if (swapped.isErr()) return err(swapped.error);
+
+  for (const name of existing.value) {
+    if (name !== target) {
+      try {
+        await client.indices.delete({ index: name, ignore_unavailable: true });
+      } catch {
+        // best-effort: the alias already points at the new index
+      }
+    }
+  }
+  return ok({ index: target, count: total });
+}
+
+export type ReconcileConfig<TDoc extends { readonly slug: string }> = {
+  readonly alias: string;
+  // (slug → hash) for everything currently in the source of truth (Postgres).
+  readonly sourceKeys: () => Promise<ReadonlyMap<string, string>>;
+  // Fetch full docs for the slugs that need upserting.
+  readonly fetchDocs: (slugs: readonly string[]) => Promise<readonly TDoc[]>;
+};
+
+// Scroll the whole alias (slug → hash), diff against the source, then upsert
+// changed/missing docs and delete orphans. Returns counts for observability.
+export async function reconcileFromSource<TDoc extends { readonly slug: string }>(
+  client: SearchClient,
+  config: ReconcileConfig<TDoc>
+): Promise<Result<{ readonly upserted: number; readonly deleted: number }, AdminError>> {
+  try {
+    const esKeys = new Map<string, string>();
+    let response = await client.search({
+      index: config.alias,
+      scroll: '2m',
+      size: 1000,
+      _source: ['slug', 'hash'],
+      query: { match_all: {} },
+    });
+    let scrollId = response._scroll_id;
+    let hits = response.hits.hits;
+    while (hits.length > 0) {
+      for (const h of hits) {
+        const src = h._source as { slug: string; hash: string };
+        esKeys.set(src.slug, src.hash);
+      }
+      if (!scrollId) break;
+      response = await client.scroll({ scroll_id: scrollId, scroll: '2m' });
+      scrollId = response._scroll_id;
+      hits = response.hits.hits;
+    }
+    if (scrollId) await client.clearScroll({ scroll_id: scrollId });
+
+    const pgKeys = await config.sourceKeys();
+    const { upsert, delete: orphans } = diffKeys(pgKeys, esKeys);
+
+    if (upsert.length > 0) {
+      const docs = await config.fetchDocs(upsert);
+      const bulk = await bulkIndex(client, config.alias, docs);
+      if (bulk.isErr()) return err(bulk.error);
+    }
+    if (orphans.length > 0) {
+      await client.bulk({
+        operations: orphans.map((slug) => ({ delete: { _index: config.alias, _id: slug } })),
+      });
+      await client.indices.refresh({ index: config.alias });
+    }
+    return ok({ upserted: upsert.length, deleted: orphans.length });
+  } catch (cause) {
+    return err(toAdminError(cause));
+  }
+}
