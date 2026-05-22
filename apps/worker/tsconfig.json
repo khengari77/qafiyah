@@ -1,0 +1,12 @@
+{
+  "extends": "@qafiyah/typescript/bun.json",
+  "compilerOptions": {
+    "types": ["bun"],
+    "noEmit": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -10,4 +10,4 @@ docker compose up -d --wait db
 [[ -f apps/web/.env ]] || cp apps/web/.env.example apps/web/.env
 
 # API (:8787, --hot) + web (:4321, astro dev) with hot reload.
-exec turbo run dev
+exec turbo run dev --filter=@qafiyah/web --filter=@qafiyah/api
