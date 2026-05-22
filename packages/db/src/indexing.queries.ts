@@ -82,12 +82,12 @@ const POEM_SELECT = sql`
 export async function streamPoemBatch(
   db: DbClient,
   afterId: number,
-  limit: number,
+  limit: number
 ): Promise<Result<readonly PoemSource[], ExecuteAsError>> {
   const rows = await executeAs(
     db,
     sql`${POEM_SELECT} WHERE p.id > ${afterId} ORDER BY p.id ASC LIMIT ${limit}`,
-    poemRowSchema,
+    poemRowSchema
   );
   if (rows.isErr()) return err(rows.error);
   return ok(rows.value.map(toPoemSource));
@@ -96,7 +96,7 @@ export async function streamPoemBatch(
 export async function streamPoetBatch(
   db: DbClient,
   afterId: number,
-  limit: number,
+  limit: number
 ): Promise<Result<readonly PoetSource[], ExecuteAsError>> {
   const rows = await executeAs(
     db,
@@ -107,7 +107,7 @@ export async function streamPoetBatch(
       JOIN public.eras e ON pt.era_id = e.id
       WHERE pt.id > ${afterId} ORDER BY pt.id ASC LIMIT ${limit}
     `,
-    poetRowSchema,
+    poetRowSchema
   );
   if (rows.isErr()) return err(rows.error);
   return ok(rows.value.map(toPoetSource));
@@ -116,14 +116,15 @@ export async function streamPoetBatch(
 // Fetch full source rows for a specific set of slugs (reconcile upserts).
 export async function getPoemsBySlugs(
   db: DbClient,
-  slugs: readonly string[],
+  slugs: readonly string[]
 ): Promise<Result<readonly PoemSource[], ExecuteAsError>> {
   if (slugs.length === 0) return ok([]);
   const literal = formatPgTextArrayLiteral(slugs);
   const rows = await executeAs(
     db,
-    sql`${POEM_SELECT} WHERE p.slug = ANY(${literal}::text[])`,
-    poemRowSchema,
+    // p.slug is a UUID column — cast to text to compare against the text[] param.
+    sql`${POEM_SELECT} WHERE p.slug::text = ANY(${literal}::text[])`,
+    poemRowSchema
   );
   if (rows.isErr()) return err(rows.error);
   return ok(rows.value.map(toPoemSource));
@@ -131,7 +132,7 @@ export async function getPoemsBySlugs(
 
 export async function getPoetsBySlugs(
   db: DbClient,
-  slugs: readonly string[],
+  slugs: readonly string[]
 ): Promise<Result<readonly PoetSource[], ExecuteAsError>> {
   if (slugs.length === 0) return ok([]);
   const literal = formatPgTextArrayLiteral(slugs);
@@ -141,9 +142,9 @@ export async function getPoetsBySlugs(
       SELECT pt.id AS id, pt.slug AS slug, pt.name AS name, COALESCE(pt.bio, '') AS bio,
              e.name AS era_name, e.slug AS era_slug
       FROM public.poets pt JOIN public.eras e ON pt.era_id = e.id
-      WHERE pt.slug = ANY(${literal}::text[])
+      WHERE pt.slug::text = ANY(${literal}::text[])
     `,
-    poetRowSchema,
+    poetRowSchema
   );
   if (rows.isErr()) return err(rows.error);
   return ok(rows.value.map(toPoetSource));
