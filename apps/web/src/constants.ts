@@ -129,6 +129,8 @@ export const SEARCH_TEXTS = {
   matchTypeExact: 'كل الكلمات (متتالية)',
   matchTypeAny: 'بعض الكلمات',
   maxLengthErrorTemplate: 'يجب ألا يتجاوز النص {n} حرفًا',
+  poemsSectionTitle: 'القصائد',
+  poetsSectionTitle: 'الشعراء',
 } as const;
 
 export const ERAS_NOUN_FORMS = {

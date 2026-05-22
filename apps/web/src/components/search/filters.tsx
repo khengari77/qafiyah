@@ -3,13 +3,13 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
-import { BinaryToggleButton } from '@/components/ui/toggle-button';
 import {
   ERAS_NOUN_FORMS,
   METERS_NOUN_FORMS,
   RHYMES_NOUN_FORMS,
   SEARCH_TEXTS,
   type SelectOption,
+  searchTypeOptions,
   THEMES_NOUN_FORMS,
 } from '@/constants';
 import { cn } from '@/lib/utils';
@@ -22,10 +22,9 @@ type MultiFilter = {
 
 type Props = {
   readonly filters: {
-    readonly searchType: {
-      readonly value: string;
-      readonly options: readonly [SelectOption, SelectOption];
-      readonly onChange: (v: string) => void;
+    readonly types: {
+      readonly selected: readonly string[];
+      readonly onChange: (v: string[]) => void;
     };
     readonly matchType: {
       readonly value: string;
@@ -37,20 +36,57 @@ type Props = {
     readonly themes: MultiFilter;
     readonly rhymes: MultiFilter;
   };
-  readonly isPoemsMode: boolean;
+  readonly wantPoems: boolean;
 };
 
-export function Filters({ filters, isPoemsMode }: Props) {
+function TypesToggle({
+  selected,
+  onChange,
+}: {
+  readonly selected: readonly string[];
+  readonly onChange: (next: string[]) => void;
+}) {
+  const toggle = (value: string) => {
+    const next = selected.includes(value)
+      ? selected.filter((v) => v !== value)
+      : [...selected, value];
+    // keep at least one type active
+    if (next.length === 0) return;
+    onChange([...next]);
+  };
+
+  return (
+    <div className="flex gap-2">
+      {searchTypeOptions.map((option) => {
+        const isActive = selected.includes(option.value);
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => toggle(option.value)}
+            className={cn(
+              'flex h-10 items-center justify-center rounded-md border-0 px-4 text-base ring-1 transition-colors duration-150 focus:outline-none focus-visible:ring-zinc-800/40',
+              isActive
+                ? 'bg-zinc-800 text-zinc-50 ring-zinc-800'
+                : 'bg-white text-zinc-600 ring-zinc-300/40 hover:bg-zinc-50'
+            )}
+            aria-pressed={isActive}
+          >
+            {option.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+export function Filters({ filters, wantPoems }: Props) {
   return (
     <div className="relative flex flex-between flex-col gap-14 rounded-xl border border-zinc-300/40 bg-white px-8 py-10 lg:px-10 lg:py-10">
       <div className="grid h-full w-full flex-1 grid-cols-1 gap-8 sm:grid-cols-2 md:grid-cols-3 lg:gap-10">
         <div className="flex flex-col items-start justify-start gap-2">
           <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.searchTypeLabel}</p>
-          <BinaryToggleButton
-            value={filters.searchType.value}
-            onToggle={filters.searchType.onChange}
-            options={filters.searchType.options}
-          />
+          <TypesToggle selected={filters.types.selected} onChange={filters.types.onChange} />
         </div>
 
         <div className="flex flex-col items-start justify-start gap-2">
@@ -75,7 +111,7 @@ export function Filters({ filters, isPoemsMode }: Props) {
           />
         </div>
 
-        {isPoemsMode && (
+        {wantPoems && (
           <>
             <div className="flex flex-col items-start justify-start gap-2">
               <p className="block font-bold text-base text-zinc-700">{SEARCH_TEXTS.metersLabel}</p>

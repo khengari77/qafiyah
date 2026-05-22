@@ -58,7 +58,10 @@ function splitCsvIds(value: string | readonly string[]): readonly string[] {
 }
 
 function parseTypes(raw: string): SearchType[] {
-  const parts = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  const parts = raw
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
   const valid = parts.filter(isValidSearchType);
   return valid.length > 0 ? valid : [...SEARCH_TYPE_VALUES];
 }

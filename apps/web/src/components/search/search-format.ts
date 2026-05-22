@@ -1,4 +1,4 @@
-import { type MatchType, NON_ARABIC_BASIC_REGEX, type SearchType } from '@qafiyah/constants';
+import { type MatchType, NON_ARABIC_BASIC_REGEX } from '@qafiyah/constants';
 import { type ArabicNounForms, formatArabicCount } from 'arabic-count-format';
 import {
   MATCH_TYPE_LABELS,
@@ -24,25 +24,23 @@ export function getNoResultsText({
   return `لم يُعثر على نتيجة لـ "${cleaned}${query.length > QUERY_DISPLAY_TRUNCATE_LENGTH ? '...' : ''}"`;
 }
 
-export function getResultText({
+export function getSectionResultText({
   count,
   query,
-  searchType,
+  sectionLabel,
   matchType,
   hasCommittedQuery,
 }: {
   readonly count: number;
   readonly query: string;
-  readonly searchType: SearchType;
+  readonly sectionLabel: string;
   readonly matchType: MatchType;
   readonly hasCommittedQuery: boolean;
 }): string {
-  const searchTypeText =
-    searchType === 'poems' ? SEARCH_TEXTS.poemSingular : SEARCH_TEXTS.poetSingular;
   const resultsText = formatArabicCount({ count, nounForms: RESULTS_NOUN_FORMS });
 
   if (!hasCommittedQuery) {
-    return `عثر على ${resultsText} ${SEARCH_TEXTS.filterOnlyResultLabel} بحثًا عن «${searchTypeText}»`;
+    return `عثر على ${resultsText} ${SEARCH_TEXTS.filterOnlyResultLabel} بحثًا عن «${sectionLabel}»`;
   }
 
   const matchTypeText = MATCH_TYPE_LABELS[matchType];
@@ -53,5 +51,5 @@ export function getResultText({
       ? `${cleanedInput.slice(0, RESULT_TEXT_TRUNCATE_LENGTH)}...`
       : cleanedInput;
 
-  return `عثر على ${resultsText} لـ "${shortenedInputText}" بحثًا عن «${searchTypeText}» بحثَ (${matchTypeText})`;
+  return `عثر على ${resultsText} لـ "${shortenedInputText}" بحثًا عن «${sectionLabel}» بحثَ (${matchTypeText})`;
 }

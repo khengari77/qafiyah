@@ -1,6 +1,10 @@
 'use client';
 
-import { getBadgeCount, getNoResultsText, getResultText } from '@/components/search/search-format';
+import {
+  getBadgeCount,
+  getNoResultsText,
+  getSectionResultText,
+} from '@/components/search/search-format';
 import { useSearch } from '@/components/search/use-search';
 import { Card } from '@/components/ui/card';
 import {
@@ -12,16 +16,41 @@ import {
   RHYMES_NOUN_FORMS,
   rhymesOptions,
   SEARCH_TEXTS,
-  searchTypeOptions,
   THEMES_NOUN_FORMS,
   themesOptions,
 } from '@/constants';
 import { FilterBadges, Filters, FiltersButton } from './filters';
-import { ResultList } from './result-list';
 import { SearchInput } from './search-input';
+import { SearchSection } from './sections';
 
 export function SearchContainer() {
-  const { state, flags, selection, handlers, refs } = useSearch();
+  const { input, sections, flags, selection, handlers } = useSearch();
+
+  const isQuerying = flags.hasCommittedQuery || flags.hasFilters;
+  const noResultsText = getNoResultsText({
+    hasCommittedQuery: flags.hasCommittedQuery,
+    query: input.query,
+  });
+
+  const poemsResultText = getSectionResultText({
+    count: sections.poems.total,
+    query: input.query,
+    sectionLabel: SEARCH_TEXTS.poemSingular,
+    matchType: input.matchType,
+    hasCommittedQuery: flags.hasCommittedQuery,
+  });
+
+  const poetsResultText = getSectionResultText({
+    count: sections.poets.total,
+    query: input.query,
+    sectionLabel: SEARCH_TEXTS.poetSingular,
+    matchType: input.matchType,
+    hasCommittedQuery: flags.hasCommittedQuery,
+  });
+
+  const placeholder = flags.wantPoems
+    ? SEARCH_TEXTS.poemsSearchPlaceholder
+    : SEARCH_TEXTS.poetsSearchPlaceholder;
 
   return (
     <section className="items mx-auto flex h-full w-full max-w-2xl flex-1 flex-col justify-start pb-24">
@@ -36,14 +65,10 @@ export function SearchContainer() {
           <div className="bg p-0">
             <div className="flex flex-col gap-4">
               <SearchInput
-                placeholder={
-                  state.searchType === 'poems'
-                    ? SEARCH_TEXTS.poemsSearchPlaceholder
-                    : SEARCH_TEXTS.poetsSearchPlaceholder
-                }
+                placeholder={placeholder}
                 searchLabel={SEARCH_TEXTS.search}
-                inputValue={state.inputValue}
-                validationError={state.validationError}
+                inputValue={input.inputValue}
+                validationError={input.validationError}
                 onKeyDown={handlers.onKeyDown}
                 onInputChange={handlers.onInputChange}
                 onReset={handlers.onReset}
@@ -70,13 +95,12 @@ export function SearchContainer() {
               {flags.filtersVisible && (
                 <Filters
                   filters={{
-                    searchType: {
-                      value: state.searchParams.search_type,
-                      options: searchTypeOptions,
-                      onChange: handlers.onSearchTypeChange,
+                    types: {
+                      selected: input.selectedTypes,
+                      onChange: handlers.onTypesChange,
                     },
                     matchType: {
-                      value: state.searchParams.match_type,
+                      value: input.matchType,
                       options: matchTypeOptions,
                       onChange: handlers.onMatchTypeChange,
                     },
@@ -101,32 +125,36 @@ export function SearchContainer() {
                       onChange: handlers.onRhymesChange,
                     },
                   }}
-                  isPoemsMode={state.searchType === 'poems'}
+                  wantPoems={flags.wantPoems}
                 />
               )}
             </div>
           </div>
         </Card>
 
-        <ResultList
-          status={state.status}
-          loadMoreRef={refs.loadMore}
-          hasCommittedQuery={flags.hasCommittedQuery}
-          hasFilters={flags.hasFilters}
-          errorMessage={SEARCH_TEXTS.errorMessage}
-          refreshText={SEARCH_TEXTS.refreshThePage}
-          noResultsText={getNoResultsText({
-            hasCommittedQuery: flags.hasCommittedQuery,
-            query: state.searchParams.q || '',
-          })}
-          resultText={getResultText({
-            count: state.totalResults,
-            query: state.searchParams.q || '',
-            searchType: state.searchType,
-            matchType: state.matchType,
-            hasCommittedQuery: flags.hasCommittedQuery,
-          })}
-        />
+        <div className="flex flex-col gap-10">
+          {flags.wantPoems && (
+            <SearchSection
+              title={SEARCH_TEXTS.poemsSectionTitle}
+              status={sections.poems.status}
+              loadMoreRef={sections.poems.loadMoreRef}
+              isQuerying={isQuerying}
+              noResultsText={noResultsText}
+              resultText={poemsResultText}
+            />
+          )}
+
+          {flags.wantPoets && (
+            <SearchSection
+              title={SEARCH_TEXTS.poetsSectionTitle}
+              status={sections.poets.status}
+              loadMoreRef={sections.poets.loadMoreRef}
+              isQuerying={isQuerying}
+              noResultsText={noResultsText}
+              resultText={poetsResultText}
+            />
+          )}
+        </div>
       </div>
     </section>
   );
