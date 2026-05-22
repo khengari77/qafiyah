@@ -1,10 +1,10 @@
 export type { DbClient } from './client';
 export { createDb } from './client';
 export * as erasQueries from './eras.queries';
+export * as indexingQueries from './indexing.queries';
 export * as metersQueries from './meters.queries';
 export * as poemsQueries from './poems.queries';
 export * as poetsQueries from './poets.queries';
 export * as rhymesQueries from './rhymes.queries';
 export type { PoemListRow } from './row-schemas';
-export * as searchQueries from './search.queries';
 export * as themesQueries from './themes.queries';
