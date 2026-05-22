@@ -17,6 +17,8 @@ COPY packages/constants/package.json packages/constants/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/typescript/package.json packages/typescript/package.json
+COPY packages/search/package.json packages/search/package.json
+COPY apps/worker/package.json apps/worker/package.json
 RUN bun install --frozen-lockfile
 
 # --- build: astro build (NO DB, NO snapshot). Needs devDependencies + esbuild's
@@ -35,6 +37,8 @@ COPY packages/constants/package.json packages/constants/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/typescript/package.json packages/typescript/package.json
+COPY packages/search/package.json packages/search/package.json
+COPY apps/worker/package.json apps/worker/package.json
 # --ignore-scripts: the root `prepare` (husky, a devDep) fails under
 # --production. Only the runtime install uses it — the `deps`/`build` stage
 # must keep scripts so esbuild's postinstall runs for `astro build`.

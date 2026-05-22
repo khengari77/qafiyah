@@ -35,10 +35,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     environment:
       # Internal network: service name `db`, internal port 5432. Credentials are
       # composed from the same vars the db service uses.
       DATABASE_URL: postgresql://${POSTGRES_USER:-qafiyah}:${POSTGRES_PASSWORD:-qafiyah}@db:5432/${POSTGRES_DB:-qafiyah}
+      ELASTICSEARCH_URL: http://elasticsearch:9200
       ENVIRONMENT: ${ENVIRONMENT:-production}
       PORT: "8787"
     ports:
@@ -90,6 +93,27 @@ services:
       timeout: 10s
       retries: 30
       start_period: 60s
+
+  worker:
+    build:
+      context: .
+      dockerfile: apps/worker/Dockerfile
+    container_name: qafiyah-worker
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-qafiyah}:${POSTGRES_PASSWORD:-qafiyah}@db:5432/${POSTGRES_DB:-qafiyah}
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      WORKER_PORT: "8088"
+      # Empty by default in dev; set in the prod .env so /reconcile is authenticated.
+      RECONCILE_TOKEN: ${RECONCILE_TOKEN:-}
+    ports:
+      # Loopback only; a Cloudflare Tunnel hostname fronts /reconcile + /healthz.
+      - "127.0.0.1:8088:8088"
 
 volumes:
   db_data:
