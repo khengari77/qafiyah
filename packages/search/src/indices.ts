@@ -6,7 +6,10 @@ const arabicText = {
   type: 'text',
   analyzer: 'arabic_normalized',
   fields: {
-    exact: { type: 'keyword' },
+    // ignore_above: long fields (content, bio) exceed Lucene's keyword term
+    // limit; over-limit values skip the keyword index (no error) while short
+    // titles/names stay exact-matchable for the exact-boost clause.
+    exact: { type: 'keyword', ignore_above: 256 },
     stemmed: { type: 'text', analyzer: 'arabic_stemmed' },
   },
 } as const;

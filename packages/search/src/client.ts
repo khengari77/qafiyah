@@ -1,4 +1,4 @@
-import { Client } from '@elastic/elasticsearch';
+import { Client, HttpConnection } from '@elastic/elasticsearch';
 import { err, ok, type Result } from 'neverthrow';
 
 export type SearchClient = Client;
@@ -29,5 +29,16 @@ export function createSearchClient(
       message: `Unsupported protocol: ${parsed.protocol}`,
     });
   }
-  return ok(new Client({ node: parsed.toString(), requestTimeout: 10_000, maxRetries: 2 }));
+  // @WARN: Connection: HttpConnection is REQUIRED under the Bun runtime — the
+  // client's default undici-based transport throws "response.headers undefined"
+  // on every request under Bun. The Node-http connection works under both Bun
+  // (api + worker runtimes) and Node (vitest). Do not remove.
+  return ok(
+    new Client({
+      node: parsed.toString(),
+      Connection: HttpConnection,
+      requestTimeout: 10_000,
+      maxRetries: 2,
+    })
+  );
 }
