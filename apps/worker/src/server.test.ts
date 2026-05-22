@@ -1,11 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createHealthHandler } from './server';
 
-function makeState(overrides: Partial<{
-  lastReindexAt: string | null;
-  lastReconcileAt: string | null;
-  lastError: string | null;
-}> = {}) {
+function makeState(
+  overrides: Partial<{
+    lastReindexAt: string | null;
+    lastReconcileAt: string | null;
+    lastError: string | null;
+  }> = {}
+) {
   return {
     lastReindexAt: null,
     lastReconcileAt: null,
@@ -24,7 +26,7 @@ describe('createHealthHandler', () => {
         triggerReconcile: vi.fn(),
       });
 
-      const res = await handler(new Request('http://worker/healthz', { method: 'GET' }));
+      const res = handler(new Request('http://worker/healthz', { method: 'GET' }));
       expect(res.status).toBe(200);
       const body = (await res.json()) as Record<string, unknown>;
       expect(body['status']).toBe('ok');
@@ -40,7 +42,7 @@ describe('createHealthHandler', () => {
         triggerReconcile: vi.fn(),
       });
 
-      const res = await handler(new Request('http://worker/healthz', { method: 'GET' }));
+      const res = handler(new Request('http://worker/healthz', { method: 'GET' }));
       expect(res.status).toBe(200);
       const body = (await res.json()) as Record<string, unknown>;
       expect(body['status']).toBe('ok');
@@ -57,11 +59,11 @@ describe('createHealthHandler', () => {
         triggerReconcile,
       });
 
-      const res = await handler(
+      const res = handler(
         new Request('http://worker/reconcile', {
           method: 'POST',
           headers: { authorization: 'Bearer my-secret' },
-        }),
+        })
       );
       expect(res.status).toBe(202);
       const body = await res.text();
@@ -77,11 +79,11 @@ describe('createHealthHandler', () => {
         triggerReconcile,
       });
 
-      const res = await handler(
+      const res = handler(
         new Request('http://worker/reconcile', {
           method: 'POST',
           headers: { authorization: 'Bearer wrong' },
-        }),
+        })
       );
       expect(res.status).toBe(401);
       expect(triggerReconcile).not.toHaveBeenCalled();
@@ -95,9 +97,7 @@ describe('createHealthHandler', () => {
         triggerReconcile,
       });
 
-      const res = await handler(
-        new Request('http://worker/reconcile', { method: 'POST' }),
-      );
+      const res = handler(new Request('http://worker/reconcile', { method: 'POST' }));
       expect(res.status).toBe(401);
       expect(triggerReconcile).not.toHaveBeenCalled();
     });
@@ -110,11 +110,11 @@ describe('createHealthHandler', () => {
         triggerReconcile,
       });
 
-      const res = await handler(
+      const res = handler(
         new Request('http://worker/reconcile', {
           method: 'POST',
           headers: { authorization: 'Bearer anything' },
-        }),
+        })
       );
       expect(res.status).toBe(401);
       expect(triggerReconcile).not.toHaveBeenCalled();
@@ -129,7 +129,7 @@ describe('createHealthHandler', () => {
         triggerReconcile: vi.fn(),
       });
 
-      const res = await handler(new Request('http://worker/unknown', { method: 'GET' }));
+      const res = handler(new Request('http://worker/unknown', { method: 'GET' }));
       expect(res.status).toBe(404);
     });
 
@@ -140,7 +140,7 @@ describe('createHealthHandler', () => {
         triggerReconcile: vi.fn(),
       });
 
-      const res = await handler(new Request('http://worker/other', { method: 'POST' }));
+      const res = handler(new Request('http://worker/other', { method: 'POST' }));
       expect(res.status).toBe(404);
     });
   });

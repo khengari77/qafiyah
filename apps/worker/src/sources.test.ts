@@ -10,9 +10,9 @@ vi.mock('@qafiyah/db', () => ({
   },
 }));
 
-import { ok } from 'neverthrow';
-import { indexingQueries } from '@qafiyah/db';
 import type { DbClient } from '@qafiyah/db';
+import { indexingQueries } from '@qafiyah/db';
+import { ok } from 'neverthrow';
 import { poemDocFetcher, poemSourceKeys } from './sources';
 
 const POEM_SOURCE = {
@@ -46,9 +46,10 @@ describe('poemDocFetcher', () => {
   });
 
   it('throws when streamPoemBatch returns an error', async () => {
-    vi.mocked(indexingQueries.streamPoemBatch).mockResolvedValueOnce(
-      { isErr: () => true, error: { kind: 'sql_error', message: 'fail' } } as never,
-    );
+    vi.mocked(indexingQueries.streamPoemBatch).mockResolvedValueOnce({
+      isErr: () => true,
+      error: { kind: 'sql_error', message: 'fail' },
+    } as never);
     const fetcher = poemDocFetcher(fakeDb());
     await expect(fetcher(0)).rejects.toThrow('streamPoemBatch');
   });

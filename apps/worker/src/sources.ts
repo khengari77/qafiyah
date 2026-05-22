@@ -50,7 +50,7 @@ export async function poetSourceKeys(db: DbClient): Promise<ReadonlyMap<string, 
 
 export async function fetchPoemDocsBySlugs(
   db: DbClient,
-  slugs: readonly string[],
+  slugs: readonly string[]
 ): Promise<readonly PoemDoc[]> {
   const r = await indexingQueries.getPoemsBySlugs(db, slugs);
   if (r.isErr()) throw new Error(`getPoemsBySlugs: ${JSON.stringify(r.error)}`);
@@ -59,7 +59,7 @@ export async function fetchPoemDocsBySlugs(
 
 export async function fetchPoetDocsBySlugs(
   db: DbClient,
-  slugs: readonly string[],
+  slugs: readonly string[]
 ): Promise<readonly PoetDoc[]> {
   const r = await indexingQueries.getPoetsBySlugs(db, slugs);
   if (r.isErr()) throw new Error(`getPoetsBySlugs: ${JSON.stringify(r.error)}`);

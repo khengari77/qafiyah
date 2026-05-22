@@ -358,6 +358,19 @@
       }
     },
     {
+      "includes": ["apps/worker/**"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConsole": "off"
+          },
+          "style": {
+            "noProcessEnv": "off"
+          }
+        }
+      }
+    },
+    {
       "includes": [
         "**/env.ts",
         "**/src/env.ts",
@@ -379,7 +392,8 @@
         "rules": {
           "suspicious": {
             "noExplicitAny": "off",
-            "noEmptyBlockStatements": "off"
+            "noEmptyBlockStatements": "off",
+            "useAwait": "off"
           },
           "style": {
             "noNonNullAssertion": "off",

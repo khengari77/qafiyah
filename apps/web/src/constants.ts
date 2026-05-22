@@ -300,7 +300,7 @@ export const MATCH_TYPE_LABELS = {
   any: SEARCH_TEXTS.matchTypeAny,
 } as const satisfies Record<(typeof MATCH_TYPE_VALUES)[number], string>;
 
-// BinaryToggleButton requires a 2-tuple, which `.map` does not preserve.
+// The search-type toggle requires a 2-tuple, which `.map` does not preserve.
 const [SEARCH_TYPE_POEMS, SEARCH_TYPE_POETS] = SEARCH_TYPE_VALUES;
 export const searchTypeOptions: readonly [SelectOption, SelectOption] = [
   { value: SEARCH_TYPE_POEMS, label: SEARCH_TYPE_LABELS[SEARCH_TYPE_POEMS] },

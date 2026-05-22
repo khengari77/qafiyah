@@ -22,7 +22,7 @@ export async function runReconcile(env: {
         stage: 'reconcile_init',
         db: dbResult.isErr() ? dbResult.error : null,
         es: esResult.isErr() ? esResult.error : null,
-      }),
+      })
     );
     return false;
   }
@@ -46,7 +46,7 @@ export async function runReconcile(env: {
       stage: 'reconcile',
       poems: poems.isOk() ? poems.value : poems.error,
       poets: poets.isOk() ? poets.value : poets.error,
-    }),
+    })
   );
   return poems.isOk() && poets.isOk();
 }

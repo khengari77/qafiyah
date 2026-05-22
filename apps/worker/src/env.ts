@@ -9,10 +9,14 @@ const schema = v.object({
 });
 
 export type WorkerEnv = v.InferOutput<typeof schema>;
-export type ParseWorkerEnvError = { readonly kind: 'invalid_env'; readonly issues: readonly string[] };
+export type ParseWorkerEnvError = {
+  readonly kind: 'invalid_env';
+  readonly issues: readonly string[];
+};
 
 export function parseWorkerEnv(raw: unknown): Result<WorkerEnv, ParseWorkerEnvError> {
   const result = v.safeParse(schema, raw);
-  if (!result.success) return err({ kind: 'invalid_env', issues: result.issues.map((i) => i.message) });
+  if (!result.success)
+    return err({ kind: 'invalid_env', issues: result.issues.map((i) => i.message) });
   return ok(result.output);
 }

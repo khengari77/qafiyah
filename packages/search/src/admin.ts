@@ -133,7 +133,9 @@ export type ReindexConfig<TDoc extends { readonly slug: string; readonly id?: nu
 
 // Build a fresh versioned index, bulk-load it, then atomically point the alias at
 // it and drop the previous versions — zero-downtime reindex.
-export async function reindexFromSource<TDoc extends { readonly slug: string; readonly id?: number }>(
+export async function reindexFromSource<
+  TDoc extends { readonly slug: string; readonly id?: number },
+>(
   client: SearchClient,
   config: ReindexConfig<TDoc>
 ): Promise<Result<{ readonly index: string; readonly count: number }, AdminError>> {

@@ -15,7 +15,7 @@ export function createHealthHandler(deps: {
   reconcileToken: string | undefined;
   triggerReconcile: () => void;
 }) {
-  return async (req: Request): Promise<Response> => {
+  return (req: Request): Response => {
     const url = new URL(req.url);
     if (req.method === 'GET' && url.pathname === '/healthz') {
       return Response.json({ status: 'ok', ...deps.getState() });
@@ -63,7 +63,7 @@ async function boot(env: WorkerEnv): Promise<void> {
     getState: () => state,
     reconcileToken: env.RECONCILE_TOKEN,
     triggerReconcile: () => {
-      void reconcileNow();
+      reconcileNow().catch(() => undefined);
     },
   });
   Bun.serve({ port: Number(env.WORKER_PORT ?? WORKER_HEALTH_PORT), fetch: handler });
@@ -72,7 +72,7 @@ async function boot(env: WorkerEnv): Promise<void> {
       source: 'worker',
       stage: 'ready',
       port: Number(env.WORKER_PORT ?? WORKER_HEALTH_PORT),
-    }),
+    })
   );
 }
 

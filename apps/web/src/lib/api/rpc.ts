@@ -24,4 +24,3 @@ type PoemsSection = NonNullable<SearchResponse['poems']>;
 type PoetsSection = NonNullable<SearchResponse['poets']>;
 export type PoemSearchResult = PoemsSection['data'][number];
 export type PoetSearchResult = PoetsSection['data'][number];
-export type SearchPagination = PoemsSection['pagination'];

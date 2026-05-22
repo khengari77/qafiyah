@@ -5,7 +5,12 @@ import {
   POETS_INDEX_PREFIX,
 } from '@qafiyah/constants';
 import { createDb } from '@qafiyah/db';
-import { POEMS_INDEX_BODY, POETS_INDEX_BODY, createSearchClient, reindexFromSource } from '@qafiyah/search';
+import {
+  createSearchClient,
+  POEMS_INDEX_BODY,
+  POETS_INDEX_BODY,
+  reindexFromSource,
+} from '@qafiyah/search';
 import { parseWorkerEnv } from './env';
 import { poemDocFetcher, poetDocFetcher } from './sources';
 
@@ -22,7 +27,7 @@ export async function runReindex(env: {
         stage: 'reindex_init',
         db: dbResult.isErr() ? dbResult.error : null,
         es: esResult.isErr() ? esResult.error : null,
-      }),
+      })
     );
     return false;
   }
@@ -50,7 +55,7 @@ export async function runReindex(env: {
       stage: 'reindex',
       poems: poems.isOk() ? poems.value : poems.error,
       poets: poets.isOk() ? poets.value : poets.error,
-    }),
+    })
   );
   return poems.isOk() && poets.isOk();
 }
