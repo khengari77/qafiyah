@@ -1,0 +1,26 @@
+name: weekly-reconcile
+
+# GitHub runners can't reach the loopback-bound DB/ES on the VPS, so this cron
+# triggers reconciliation by POSTing to the worker's authenticated /reconcile
+# endpoint through its Cloudflare Tunnel hostname. The worker drains the diff
+# between Postgres and Elasticsearch and repairs any drift. Mirrors the bot cron.
+#
+# Required repo secrets:
+#   WORKER_RECONCILE_URL  e.g. https://worker.qafiyah.com/reconcile
+#   RECONCILE_TOKEN       must match RECONCILE_TOKEN in the VPS .env (worker service)
+
+on:
+  schedule:
+    - cron: "0 4 * * 0" # Sundays 04:00 UTC
+  workflow_dispatch:
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Trigger worker reconciliation
+        run: |
+          curl -fsS -X POST "${{ secrets.WORKER_RECONCILE_URL }}" \
+            -H "Authorization: Bearer ${{ secrets.RECONCILE_TOKEN }}" \
+            --max-time 60
