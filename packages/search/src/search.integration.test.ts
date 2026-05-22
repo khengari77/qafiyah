@@ -5,9 +5,7 @@ import { createSearchClient, type SearchClient } from './client';
 import { toPoemDoc, toPoetDoc } from './documents';
 import { POEMS_INDEX_BODY, POETS_INDEX_BODY } from './indices';
 import { searchPoems, searchPoets } from './search';
-
-const ES_URL = process.env['ELASTICSEARCH_URL'] ?? 'http://127.0.0.1:9200';
-let client: SearchClient;
+import { ES_TEST_URL, RUN_ES_INTEGRATION } from './test-utils';
 
 // ES 8.x defaults destructive_requires_name=true which blocks wildcard deletes.
 // We toggle it off transiently for setup/teardown only.
@@ -22,64 +20,66 @@ async function deleteTestIndices(c: SearchClient) {
   });
 }
 
-beforeAll(async () => {
-  client = createSearchClient(ES_URL)._unsafeUnwrap();
-  await deleteTestIndices(client);
-  (await ensureIndex(client, 'poems_v1', POEMS_INDEX_BODY))._unsafeUnwrap();
-  (await ensureIndex(client, 'poets_v1', POETS_INDEX_BODY))._unsafeUnwrap();
-  (
-    await bulkIndex(client, 'poems_v1', [
-      toPoemDoc({
-        id: 1,
-        slug: 'poem-1',
-        title: 'قصيدةٌ في الحُبِّ',
-        content: 'أحبُّكِ يا ليلى*وأهوى',
-        poetName: 'المُتنبّي',
-        poetSlug: 'mutanabbi',
-        eraName: 'عباسي',
-        eraSlug: 'abbasid',
-        meterName: 'الطويل',
-        meterSlug: 'tawil',
-        themeSlug: 'love',
-        rhymeSlug: 'meem',
-      }),
-      toPoemDoc({
-        id: 2,
-        slug: 'poem-2',
-        title: 'الحماسة',
-        content: 'إلى الحربِ*سِرنا',
-        poetName: 'أبو تمام',
-        poetSlug: 'abu-tammam',
-        eraName: 'عباسي',
-        eraSlug: 'abbasid',
-        meterName: 'الكامل',
-        meterSlug: 'kamil',
-        themeSlug: 'war',
-        rhymeSlug: 'baa',
-      }),
-    ])
-  )._unsafeUnwrap();
-  (
-    await bulkIndex(client, 'poets_v1', [
-      toPoetDoc({
-        id: 1,
-        slug: 'mutanabbi',
-        name: 'المُتنبّي',
-        bio: 'أحمد بن الحسين',
-        eraName: 'عباسي',
-        eraSlug: 'abbasid',
-      }),
-    ])
-  )._unsafeUnwrap();
-  (await swapAlias(client, POEMS_INDEX_ALIAS, 'poems_v1'))._unsafeUnwrap();
-  (await swapAlias(client, POETS_INDEX_ALIAS, 'poets_v1'))._unsafeUnwrap();
-}, 60_000);
+describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () => {
+  let client: SearchClient;
 
-afterAll(async () => {
-  if (client) await deleteTestIndices(client);
-});
+  beforeAll(async () => {
+    client = createSearchClient(ES_TEST_URL)._unsafeUnwrap();
+    await deleteTestIndices(client);
+    (await ensureIndex(client, 'poems_v1', POEMS_INDEX_BODY))._unsafeUnwrap();
+    (await ensureIndex(client, 'poets_v1', POETS_INDEX_BODY))._unsafeUnwrap();
+    (
+      await bulkIndex(client, 'poems_v1', [
+        toPoemDoc({
+          id: 1,
+          slug: 'poem-1',
+          title: 'قصيدةٌ في الحُبِّ',
+          content: 'أحبُّكِ يا ليلى*وأهوى',
+          poetName: 'المُتنبّي',
+          poetSlug: 'mutanabbi',
+          eraName: 'عباسي',
+          eraSlug: 'abbasid',
+          meterName: 'الطويل',
+          meterSlug: 'tawil',
+          themeSlug: 'love',
+          rhymeSlug: 'meem',
+        }),
+        toPoemDoc({
+          id: 2,
+          slug: 'poem-2',
+          title: 'الحماسة',
+          content: 'إلى الحربِ*سِرنا',
+          poetName: 'أبو تمام',
+          poetSlug: 'abu-tammam',
+          eraName: 'عباسي',
+          eraSlug: 'abbasid',
+          meterName: 'الكامل',
+          meterSlug: 'kamil',
+          themeSlug: 'war',
+          rhymeSlug: 'baa',
+        }),
+      ])
+    )._unsafeUnwrap();
+    (
+      await bulkIndex(client, 'poets_v1', [
+        toPoetDoc({
+          id: 1,
+          slug: 'mutanabbi',
+          name: 'المُتنبّي',
+          bio: 'أحمد بن الحسين',
+          eraName: 'عباسي',
+          eraSlug: 'abbasid',
+        }),
+      ])
+    )._unsafeUnwrap();
+    (await swapAlias(client, POEMS_INDEX_ALIAS, 'poems_v1'))._unsafeUnwrap();
+    (await swapAlias(client, POETS_INDEX_ALIAS, 'poets_v1'))._unsafeUnwrap();
+  }, 60_000);
 
-describe('elasticsearch search (integration)', () => {
+  afterAll(async () => {
+    if (client) await deleteTestIndices(client);
+  });
+
   it('matches an Arabic query ignoring diacritics on the input', async () => {
     const page = (
       await searchPoems(client, {

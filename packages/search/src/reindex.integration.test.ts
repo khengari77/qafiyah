@@ -3,12 +3,11 @@ import { indexHealth, listIndicesForAlias, reindexFromSource } from './admin';
 import { createSearchClient, type SearchClient } from './client';
 import { toPoemDoc } from './documents';
 import { POEMS_INDEX_BODY } from './indices';
+import { ES_TEST_URL, RUN_ES_INTEGRATION } from './test-utils';
 
-const ES_URL = process.env['ELASTICSEARCH_URL'] ?? 'http://127.0.0.1:9200';
 // Use a test-only prefix/alias to avoid colliding with search.integration.test.ts.
 const TEST_PREFIX = 'rx_poems_v';
 const TEST_ALIAS = 'rx_poems';
-let client: SearchClient;
 
 function sampleDoc(id: number) {
   return toPoemDoc({
@@ -33,16 +32,18 @@ async function cleanupTestIndices(c: SearchClient) {
   await c.cluster.putSettings({ transient: { 'action.destructive_requires_name': null } });
 }
 
-beforeAll(async () => {
-  client = createSearchClient(ES_URL)._unsafeUnwrap();
-  await cleanupTestIndices(client);
-});
+describe.skipIf(!RUN_ES_INTEGRATION)('reindexFromSource (integration)', () => {
+  let client: SearchClient;
 
-afterAll(async () => {
-  if (client) await cleanupTestIndices(client);
-});
+  beforeAll(async () => {
+    client = createSearchClient(ES_TEST_URL)._unsafeUnwrap();
+    await cleanupTestIndices(client);
+  }, 60_000);
 
-describe('reindexFromSource (integration)', () => {
+  afterAll(async () => {
+    if (client) await cleanupTestIndices(client);
+  });
+
   it('builds a versioned index, bulk-loads, swaps the alias, and is queryable', async () => {
     const docs = [sampleDoc(1), sampleDoc(2)];
     let served = false;
