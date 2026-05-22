@@ -20,7 +20,8 @@ export type Poem = DataField<ApiOutputs['poems']['getPoemBySlug']>;
 
 // Search
 type SearchResponse = ApiOutputs['search']['search'];
-type PoemsSearchEnvelope = Extract<SearchResponse, { searchType: 'poems' }>;
-type PoetsSearchEnvelope = Extract<SearchResponse, { searchType: 'poets' }>;
-export type PoemSearchResult = DataField<PoemsSearchEnvelope>[number];
-export type PoetSearchResult = DataField<PoetsSearchEnvelope>[number];
+type PoemsSection = NonNullable<SearchResponse['poems']>;
+type PoetsSection = NonNullable<SearchResponse['poets']>;
+export type PoemSearchResult = PoemsSection['data'][number];
+export type PoetSearchResult = PoetsSection['data'][number];
+export type SearchPagination = PoemsSection['pagination'];
