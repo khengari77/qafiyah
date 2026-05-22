@@ -16,6 +16,7 @@ const IGNORED_DIRS = new Set([
   '.turbo',
   '.next',
   '.wrangler',
+  '.expo',
 ]);
 
 const importRe =

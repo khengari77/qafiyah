@@ -15,6 +15,7 @@ const IGNORED_DIRS = new Set([
   '.turbo',
   '.wrangler',
   '.next',
+  '.expo',
   '.husky',
   '.github',
   '.vscode',

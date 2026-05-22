@@ -1,0 +1,16 @@
+{
+  "expo": {
+    "name": "Qafiyah",
+    "slug": "qafiyah-mobile",
+    "scheme": "qafiyah",
+    "version": "0.0.0",
+    "orientation": "portrait",
+    "platforms": ["ios", "android"],
+    "updates": {
+      "enabled": false
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    }
+  }
+}

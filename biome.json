@@ -19,6 +19,7 @@
       "!**/bun.lock",
       "!**/dumps",
       "!**/env.d.ts",
+      "!**/expo-env.d.ts",
       "!**/worker-configuration.d.ts",
       "!apps/web/.astro"
     ]
@@ -410,6 +411,7 @@
       "linter": {
         "rules": {
           "style": {
+            "noCommonJs": "off",
             "noDefaultExport": "off",
             "noProcessEnv": "off"
           },

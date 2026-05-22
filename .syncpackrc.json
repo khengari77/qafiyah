@@ -1,0 +1,10 @@
+{
+  "versionGroups": [
+    {
+      "label": "Expo SDK owns these versions in @qafiyah/mobile",
+      "packages": ["@qafiyah/mobile"],
+      "dependencies": ["expo", "react", "react-native", "@babel/core", "babel-preset-expo"],
+      "isIgnored": true
+    }
+  ]
+}

@@ -1,5 +1,10 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreWorkspaces": ["packages/typescript"],
-  "ignoreBinaries": ["pkill"]
+  "ignoreBinaries": ["pkill"],
+  "workspaces": {
+    "apps/mobile": {
+      "ignoreDependencies": ["@babel/core"]
+    }
+  }
 }

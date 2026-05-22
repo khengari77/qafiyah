@@ -16,7 +16,7 @@ const IGNORED_DIRS = new Set([
   '.wrangler',
 ]);
 
-const SCAN_DIRS = ['apps/web/src', 'apps/api/src', 'apps/bot/src'];
+const SCAN_DIRS = ['apps/web/src', 'apps/api/src', 'apps/bot/src', 'apps/mobile/src'];
 
 const TEST_FILE_RE = /\.(test|spec)\.[tj]sx?$/;
 
