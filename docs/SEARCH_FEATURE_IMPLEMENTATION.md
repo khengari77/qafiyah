@@ -2,292 +2,67 @@
 
 ## About This Document
 
-This document is a reference for the PostgreSQL Full-Text Search (FTS) implementation in Qafiyah. It records the schema changes, SQL functions, and design decisions made during implementation. It is not a step-by-step setup guide for local development, use `bun run dev` for that.
+Reference for Qafiyah's **Elasticsearch**-based search. It replaced the previous
+custom PostgreSQL Full-Text Search (FTS) implementation (diacritic-normalizing SQL
+functions, `tsvector` generated columns, GIN indexes, and `search_poems`/`search_poets`
+stored procedures), all of which have been removed — see `scripts/sql/0001_drop_search.sql`
+and the `0004` baseline dump.
 
-## Status
+## Architecture
 
-The PostgreSQL Full-Text Search implementation described in this document is deployed in production. The `search_vector` generated columns and GIN indexes are present on the `poems` and `poets` tables in the production database. The `search_poems` and `search_poets` functions are live.
-
-The semantic/AI search extension is not yet deployed.
-
-## Overview
-
-This document outlines the implementation of a search feature for the Qafiyah website using PostgreSQL Full-Text Search (FTS). The search allows users to find poems by content or title, and poets by name, with filtering options by era, meter, rhyme pattern, and theme.
-
-## Data Structure
-
-The database contains the following key entities:
-
-- Poems (with content, title, and metadata)
-- Poets (with biographical information)
-- Supporting entities: Eras, Meters, Rhymes, Themes
-
-Poems are stored with full diacritics. Each poem's content is a sequence of verses (أبيات) separated by asterisks (`*`). Each verse consists of two hemistiches (شطران).
-
-## Arabic Text Considerations
-
-1. **Diacritics handling**: Poems are stored with diacritics, but searches are performed without them. The `normalize_arabic_text` function strips diacritics before indexing and before matching.
-2. **Verse separator**: Verses are separated by `*` in the stored content. The `*` character is replaced with a space during normalization to prevent token merging across verse boundaries.
-
-## Sample Data
-
-### Poems Table
-
-```sql
-SELECT * FROM poems LIMIT 1;
+```
+Postgres (source of truth)  ──reindex/reconcile──▶  Elasticsearch  ◀──query──  apps/api  ◀── apps/web
+        (apps/worker reads via @qafiyah/db)         (poems / poets aliases)     (/v1/search)   (island)
 ```
 
-| id  | title                  | meter_id | num_verses | theme_id | poet_id | filename        | content                                                                                                                                                      | rhyme_id | type_id |
-| --- | ---------------------- | -------- | ---------- | -------- | ------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- | ------- |
-| 18  | من مبلغ عني المثلم آية | 19       | 2          | 12       | 3095    | poem103882.html | مَن مُبلِغٌ عَنّي المُثَلَّمَ آيَةً*وَسَهلاً فَقَد نَفَّرتُم الوَحشَ أَجمَعا*هُمُ إِخوَتي ديناً فَلا تَقرُبَنَّهُم\*أَبا حَشرَج وَأَفحَصَ لِجَنبَيكَ مَضجَعا | 36       | 2       |
+- **`packages/search` (`@qafiyah/search`)** — all Elasticsearch logic, **Postgres-free**: client factory, explicit index mappings + Arabic analyzers, document mappers, query builders, and admin primitives (ensure-index, bulk, reindex, alias-swap, reconcile). Both `apps/api` and `apps/worker` depend on it.
+- **`apps/api`** — queries Elasticsearch (never Postgres) for search via a cached `es` middleware. Returns grouped results.
+- **`apps/worker` (`@qafiyah/worker`)** — long-lived container: reads Postgres via `@qafiyah/db`, maps rows with `@qafiyah/search`, bulk-indexes into ES on boot (if empty), and reconciles weekly. Exposes `/healthz` + an authenticated `/reconcile`.
 
-### Poets Table
+## Index design
 
-```sql
-SELECT * FROM poets LIMIT 1;
+Two versioned indices behind stable aliases for zero-downtime reindex: `poems_v{N}` → alias `poems`, `poets_v{N}` → alias `poets`. Mappings are **explicit** (`dynamic: "strict"`).
+
+Each Arabic text field is multi-field (`packages/search/src/indices.ts`):
+
+- the analyzed field (`arabic_normalized`: diacritics stripped, alef/ya/ta-marbuta folded, tatweel removed),
+- `.exact` — a `keyword` sub-field (`ignore_above: 256`) for exact whole-value matches (titles/names; long content/bio skip it),
+- `.stemmed` — `arabic_stemmed` (adds Arabic stopwords + stemmer) for recall.
+
+Original (diacritic-bearing) text is stored in `*Display` fields for display; the matching/highlight copy is diacritic-stripped (`packages/search/src/documents.ts`). Analyzers live in `packages/search/src/analysis.ts`.
+
+**Query** (`packages/search/src/query.ts`): filters (poet/era/meter/rhyme/theme slugs for poems; era for poets) are ES **filter clauses** (`bool.filter` `terms`) so they're cacheable and don't affect scoring. Text matches are boosted exact (^5) > normalized (^3) > stemmed (^1); `matchType` maps to phrase (`exact`) / AND (`all`) / OR (`any`). Highlighting (`<mark>`) is enabled on `content`/`title` (poems) and `bio`/`name` (poets).
+
+## Search API
+
+Single endpoint `GET /v1/search` (`apps/api/src/procedures/search.procedures.ts`, contract in `packages/contracts/src/search.ts`). Input: `q`, `types` (`['poems','poets']` default), `poemsPage`/`poetsPage`, `matchType`, and slug filters. It queries the requested types **in parallel** and returns grouped, independently-paginated sections:
+
+```json
+{ "q": "...", "poems": { "data": [...], "pagination": {...} } | null,
+                "poets": { "data": [...], "pagination": {...} } | null }
 ```
 
-| id   | name             | slug                | era_id | bio                                                        |
-| ---- | ---------------- | ------------------- | ------ | ---------------------------------------------------------- |
-| 2630 | أبو محمد الفقعسي | abu-mohammed-faqasi | 1      | عبد الله بن ربعي بن خالد الحذلمي الفقعسي الأسدي، أبو محمد. |
+A section is `null` when its type isn't requested (so the same endpoint serves "poems only" / "poets only").
 
-## Implementation Steps
+## Sync model (no outbox)
 
-### 1. Normalize Arabic Text
+The dataset is read-only at runtime and ships via curated DB dumps, so there is **no outbox/transactional enqueue**. Sync is:
 
-Removes diacritics and tatweel, and filters out non-Arabic characters. Optionally preserves `*`.
+1. **Bulk reindex** — `bun run reindex` (or `docker compose run --rm worker bun run src/reindex.ts`): builds a fresh `*_v{N+1}` index, bulk-loads from Postgres, atomically swaps the alias, drops the old version. Run on deploy / after loading a new dump.
+2. **Weekly reconciliation** — the worker scrolls ES (slug→content-hash), diffs against Postgres, and upserts changed/missing + deletes orphaned docs. Triggered weekly by `.github/workflows/reconcile.yml` POSTing the worker's authenticated `/reconcile` (GitHub runners can't reach the loopback DB/ES, so they go through the worker's Cloudflare Tunnel hostname).
 
-```sql
--- Normalize Arabic text:
--- 1. Strip diacritics and tatweel
--- 2. Keep only Arabic letters, spaces, and optionally '*'
-CREATE OR REPLACE FUNCTION normalize_arabic_text(input_text TEXT, keep_asterisk BOOLEAN)
-RETURNS TEXT AS $$
-DECLARE
-  pattern TEXT;
-  cleaned TEXT;
-BEGIN
-  cleaned := regexp_replace(
-    input_text,
-    '[ً-ْٰۣۖۜ۟۠ۡۢۤۥۦۧۨ۩۪ۭ۫۬ۮۯ۰-ۿ]',
-    '',
-    'g'
-  );
+## Operations
 
-  IF keep_asterisk THEN
-    pattern := '[^؀-ۿݐ-ݿࢠ-ࣿء *]';
-  ELSE
-    pattern := '[^؀-ۿݐ-ݿࢠ-ࣿء ]';
-  END IF;
+- Local: `bun run es:up` (single-node ES on `127.0.0.1:9200`), then `bun run reindex`.
+- Health: `GET http://127.0.0.1:8088/healthz` (worker) reports `lastReindexAt` / `lastReconcileAt` / `lastError`.
 
-  RETURN regexp_replace(cleaned, pattern, '', 'g');
-END;
-$$
-LANGUAGE plpgsql IMMUTABLE SECURITY DEFINER;
-```
+## Gotchas
 
-### 2. Add Full-Text Search Columns (Generated)
+- **Bun + `@elastic/elasticsearch`**: the client's default (undici) transport throws `response.headers undefined` under Bun. `createSearchClient` forces `Connection: HttpConnection` (Node-http), which works under both Bun (api + worker runtimes) and Node (vitest). Do not remove.
+- **Keyword term limit**: long fields (`content`, `bio`) exceed Lucene's 32 KB keyword limit; the `.exact` sub-field uses `ignore_above: 256` so they index without error.
+- **Integration tests** share one ES instance — `packages/search/vitest.config.ts` sets `fileParallelism: false` so test files don't race on indices/aliases.
 
-#### Poems Table
+## Environment
 
-```sql
-ALTER TABLE poems
-DROP COLUMN IF EXISTS search_vector;
-
--- Arabic text is normalized: diacritics are removed,
--- only Arabic letters and spaces are kept.
--- The '*' verse separator is replaced with a space to prevent token merging.
--- The 'simple' configuration is used because PostgreSQL's default parser
--- does not handle Arabic tokenization.
-ALTER TABLE poems
-ADD COLUMN search_vector tsvector
-GENERATED ALWAYS AS (
-  setweight(
-    to_tsvector('simple', replace(normalize_arabic_text(title, TRUE), '*', ' ')),
-    'A'
-  ) ||
-  setweight(
-    to_tsvector('simple', replace(normalize_arabic_text(content, TRUE), '*', ' ')),
-    'B'
-  )
-) STORED;
-```
-
-#### Poets Table
-
-```sql
-ALTER TABLE poets
-DROP COLUMN IF EXISTS search_vector;
-
-ALTER TABLE poets
-ADD COLUMN search_vector tsvector
-GENERATED ALWAYS AS (
-  setweight(to_tsvector('simple', normalize_arabic_text(name, FALSE)), 'A')
-) STORED;
-```
-
-### 3. Add GIN Indexes
-
-```sql
-DROP INDEX IF EXISTS poems_search_idx;
-DROP INDEX IF EXISTS poets_search_idx;
-
-CREATE INDEX poems_search_idx ON poems USING GIN (search_vector);
-CREATE INDEX poets_search_idx ON poets USING GIN (search_vector);
-```
-
-### 4. Search Functions
-
-#### search_poems
-
-```sql
-CREATE OR REPLACE FUNCTION search_poems(
-  query_text TEXT,
-  page_number INTEGER,
-  match_type TEXT, -- 'exact', 'all', or 'any'
-  meter_ids INTEGER[] DEFAULT NULL,
-  era_ids INTEGER[] DEFAULT NULL,
-  theme_ids INTEGER[] DEFAULT NULL,
-  rhyme_ids INTEGER[] DEFAULT NULL
-) RETURNS TABLE (
-  poet_name TEXT,
-  poet_era TEXT,
-  poet_slug TEXT,
-  poem_title TEXT,
-  poem_snippet TEXT,
-  poem_meter TEXT,
-  poem_slug UUID,
-  relevance REAL,
-  total_count BIGINT
-) AS
-$$
-DECLARE
-  processed_query TEXT;
-  tsquery_obj tsquery;
-  results_per_page INTEGER := 5;
-  total_results BIGINT;
-BEGIN
-  processed_query := normalize_arabic_text(query_text, FALSE);
-
-  IF match_type = 'exact' THEN
-    tsquery_obj := phraseto_tsquery('simple', processed_query);
-  ELSIF match_type = 'all' THEN
-    tsquery_obj := to_tsquery('simple', regexp_replace(processed_query, '\s+', ' & ', 'g'));
-  ELSIF match_type = 'any' THEN
-    tsquery_obj := to_tsquery('simple', regexp_replace(processed_query, '\s+', ' | ', 'g'));
-  ELSE
-    tsquery_obj := to_tsquery('simple', regexp_replace(processed_query, '\s+', ' & ', 'g'));
-  END IF;
-
-  SELECT COUNT(*) INTO total_results
-  FROM poems p
-  JOIN poets pt ON p.poet_id = pt.id
-  JOIN meters m ON p.meter_id = m.id
-  JOIN eras e ON pt.era_id = e.id
-  WHERE p.search_vector @@ tsquery_obj
-  AND (meter_ids IS NULL OR p.meter_id = ANY(meter_ids))
-  AND (era_ids IS NULL OR pt.era_id = ANY(era_ids))
-  AND (theme_ids IS NULL OR p.theme_id = ANY(theme_ids))
-  AND (rhyme_ids IS NULL OR p.rhyme_id = ANY(rhyme_ids));
-
-  RETURN QUERY
-  SELECT
-    pt.name,
-    e.name,
-    pt.slug,
-    p.title,
-    ts_headline('simple', normalize_arabic_text(p.content, TRUE), tsquery_obj,
-      'StartSel=<mark>, StopSel=</mark>, MaxFragments=1, MaxWords=30'),
-    m.name,
-    p.slug,
-    ts_rank(p.search_vector, tsquery_obj),
-    total_results
-  FROM poems p
-  JOIN poets pt ON p.poet_id = pt.id
-  JOIN meters m ON p.meter_id = m.id
-  JOIN eras e ON pt.era_id = e.id
-  WHERE p.search_vector @@ tsquery_obj
-  AND (meter_ids IS NULL OR p.meter_id = ANY(meter_ids))
-  AND (era_ids IS NULL OR pt.era_id = ANY(era_ids))
-  AND (theme_ids IS NULL OR p.theme_id = ANY(theme_ids))
-  AND (rhyme_ids IS NULL OR p.rhyme_id = ANY(rhyme_ids))
-  ORDER BY relevance DESC
-  LIMIT results_per_page
-  OFFSET (page_number - 1) * results_per_page;
-END;
-$$
-LANGUAGE plpgsql SECURITY DEFINER;
-```
-
-#### search_poets
-
-```sql
-CREATE OR REPLACE FUNCTION search_poets(
-  query_text TEXT,
-  page_number INTEGER,
-  match_type TEXT, -- 'exact', 'all', or 'any'
-  era_ids INTEGER[] DEFAULT NULL
-) RETURNS TABLE (
-  poet_name TEXT,
-  poet_era TEXT,
-  poet_slug TEXT,
-  poet_bio TEXT,
-  relevance DOUBLE PRECISION,
-  total_count BIGINT
-) AS
-$$
-DECLARE
-  processed_query TEXT;
-  tsquery_obj tsquery;
-  results_per_page INTEGER := 10;
-  total_results BIGINT;
-  weight_config REAL[] := ARRAY[0.1, 0.2, 0.4, 1.0];
-BEGIN
-  processed_query := normalize_arabic_text(query_text, FALSE);
-
-  IF match_type = 'exact' THEN
-    tsquery_obj := phraseto_tsquery('simple', processed_query);
-  ELSIF match_type = 'all' THEN
-    tsquery_obj := to_tsquery('simple', regexp_replace(processed_query, '\s+', ' & ', 'g'));
-  ELSIF match_type = 'any' THEN
-    tsquery_obj := to_tsquery('simple', regexp_replace(processed_query, '\s+', ' | ', 'g'));
-  ELSE
-    tsquery_obj := to_tsquery('simple', regexp_replace(processed_query, '\s+', ' & ', 'g'));
-  END IF;
-
-  SELECT COUNT(*) INTO total_results
-  FROM poets p
-  JOIN eras e ON p.era_id = e.id
-  WHERE p.search_vector @@ tsquery_obj
-    AND (era_ids IS NULL OR p.era_id = ANY(era_ids));
-
-  RETURN QUERY
-  SELECT
-    p.name,
-    e.name,
-    p.slug,
-    ts_headline('simple', normalize_arabic_text(p.bio, FALSE), tsquery_obj,
-                'StartSel=<mark>, StopSel=</mark>, MaxFragments=1, MaxWords=50'),
-    CASE
-      WHEN normalize_arabic_text(p.name, FALSE) = processed_query THEN 10.0
-      WHEN normalize_arabic_text(p.name, FALSE) ILIKE '%' || processed_query || '%' THEN
-        5.0 + ts_rank_cd(weight_config, p.search_vector, tsquery_obj)
-      ELSE
-        ts_rank_cd(weight_config, p.search_vector, tsquery_obj)
-    END,
-    total_results
-  FROM poets p
-  JOIN eras e ON p.era_id = e.id
-  WHERE p.search_vector @@ tsquery_obj
-    AND (era_ids IS NULL OR p.era_id = ANY(era_ids))
-  ORDER BY
-    normalize_arabic_text(p.name, FALSE) = processed_query DESC,
-    normalize_arabic_text(p.name, FALSE) ILIKE '%' || processed_query || '%' DESC,
-    relevance DESC
-  LIMIT results_per_page
-  OFFSET (page_number - 1) * results_per_page;
-
-END;
-$$
-LANGUAGE plpgsql SECURITY DEFINER;
-```
+- `ELASTICSEARCH_URL` — optional for `apps/api` (defaults to `http://localhost:9200`; prod sets `http://elasticsearch:9200` via compose); required for `apps/worker`.
+- `RECONCILE_TOKEN` — shared secret the worker requires on `/reconcile`; set in the VPS `.env` and as a GitHub Actions secret (with `WORKER_RECONCILE_URL`).
