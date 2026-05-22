@@ -25,6 +25,8 @@ export type DomainFields = {
   readonly error_kind?: string | undefined;
   readonly error_stage?: string | undefined;
   readonly error_detail?: string | undefined;
+  readonly poems_count?: number | undefined;
+  readonly poets_count?: number | undefined;
 };
 
 type ServiceMeta = {

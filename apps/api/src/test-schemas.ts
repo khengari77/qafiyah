@@ -8,7 +8,6 @@
  * matches a brand.
  */
 
-import { SEARCH_TYPE_VALUES } from '@qafiyah/constants';
 import { namedSlugRef, pagination, slugWithPoemCount } from '@qafiyah/contracts';
 import * as v from 'valibot';
 
@@ -45,15 +44,15 @@ export const poemDetailResponseSchema = v.object({
   }),
 });
 
-export const searchBodySchema = v.object({
-  searchType: v.picklist(SEARCH_TYPE_VALUES),
-  data: v.array(
-    v.object({
-      type: v.string(),
-      slug: v.optional(slug),
-    })
-  ),
+const section = v.object({
+  data: v.array(v.object({ type: v.string(), slug: v.optional(slug) })),
   pagination,
+});
+
+export const groupedSearchBodySchema = v.object({
+  q: v.string(),
+  poems: v.nullable(section),
+  poets: v.nullable(section),
 });
 
 export const problemDetailSchema = v.object({

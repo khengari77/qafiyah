@@ -1,149 +1,116 @@
 import { SEARCH_POEMS_PER_PAGE, SEARCH_POETS_PER_PAGE } from '@qafiyah/constants';
-import type { poemSearchResult, poetSearchResult } from '@qafiyah/contracts';
-import { searchQueries } from '@qafiyah/db';
-import { match } from 'ts-pattern';
+import type {
+  EraSlug,
+  MeterSlug,
+  PoemSlug,
+  PoetSlug,
+  poemSearchResult,
+  poetSearchResult,
+} from '@qafiyah/contracts';
+import { type PoemHit, type PoetHit, searchPoems, searchPoets } from '@qafiyah/search';
 import type * as v from 'valibot';
 import { publicProcedure } from './base';
 import { buildPagination } from './envelope';
 
-type PoemSearchResult = v.InferOutput<typeof poemSearchResult>;
-type PoetSearchResult = v.InferOutput<typeof poetSearchResult>;
+type PoemResult = v.InferOutput<typeof poemSearchResult>;
+type PoetResult = v.InferOutput<typeof poetSearchResult>;
 
-function toPoemSearchResult(row: searchQueries.PoemSearchRow): PoemSearchResult {
-  return {
-    type: 'poem',
-    title: row.poemTitle,
-    slug: row.poemSlug,
-    snippet: row.poemSnippet,
-    poet: { name: row.poetName, slug: row.poetSlug },
-    meter: { name: row.poemMeter, slug: row.poemMeterSlug },
-    era: { name: row.poetEra, slug: row.poetEraSlug },
-    relevance: row.relevance,
-  };
-}
+// ES documents carry trusted slugs from the indexed DB records; brand casts are safe here.
+const toPoemResult = (h: PoemHit): PoemResult => ({
+  type: 'poem',
+  title: h.title,
+  slug: h.slug as PoemSlug,
+  snippet: h.snippet,
+  poet: { name: h.poet.name, slug: h.poet.slug as PoetSlug },
+  meter: { name: h.meter.name, slug: h.meter.slug as MeterSlug },
+  era: { name: h.era.name, slug: h.era.slug as EraSlug },
+  relevance: h.relevance,
+});
 
-function toPoetSearchResult(row: searchQueries.PoetSearchRow): PoetSearchResult {
-  return {
-    type: 'poet',
-    name: row.poetName,
-    slug: row.poetSlug,
-    bio: row.poetBio,
-    era: { name: row.poetEra, slug: row.poetEraSlug },
-    relevance: row.relevance,
-  };
-}
+const toPoetResult = (h: PoetHit): PoetResult => ({
+  type: 'poet',
+  name: h.name,
+  slug: h.slug as PoetSlug,
+  bio: h.bio,
+  era: { name: h.era.name, slug: h.era.slug as EraSlug },
+  relevance: h.relevance,
+});
 
-function arrayOrNull<T>(arr: readonly T[]): readonly T[] | null {
-  return arr.length > 0 ? arr : null;
-}
+export const search = publicProcedure.search.search.handler(async ({ context, input, errors }) => {
+  const wantPoems = input.types.includes('poems');
+  const wantPoets = input.types.includes('poets');
 
-function describeSearchError(error: searchQueries.SearchError): {
-  readonly kind: string;
-  readonly detail: string;
-} {
-  return match(error)
-    .with({ kind: 'sql_error' }, ({ kind, message }) => ({ kind, detail: message }))
-    .with({ kind: 'invalid_payload_shape' }, ({ kind, issues }) => ({
-      kind,
-      detail: issues.join('; '),
-    }))
-    .with({ kind: 'missing_total' }, ({ kind, source }) => ({ kind, detail: `source=${source}` }))
-    .with({ kind: 'non_finite_total' }, ({ kind, source, raw }) => ({
-      kind,
-      detail: `source=${source}; raw=${String(raw)}`,
-    }))
-    .exhaustive();
-}
+  const [poemsRes, poetsRes] = await Promise.all([
+    wantPoems
+      ? searchPoems(context.es, {
+          q: input.q,
+          matchType: input.matchType,
+          page: input.poemsPage,
+          poetSlugs: input.poetSlugs,
+          eraSlugs: input.eraSlugs,
+          meterSlugs: input.meterSlugs,
+          themeSlugs: input.themeSlugs,
+          rhymeSlugs: input.rhymeSlugs,
+        })
+      : null,
+    wantPoets
+      ? searchPoets(context.es, {
+          q: input.q,
+          matchType: input.matchType,
+          page: input.poetsPage,
+          eraSlugs: input.eraSlugs,
+        })
+      : null,
+  ]);
 
-export const search = publicProcedure.search.search.handler(({ context, input, errors }) => {
-  const query = input.q;
-  const hasText = query.length > 0;
+  if (poemsRes?.isErr()) {
+    context.log?.({
+      error_kind: poemsRes.error.kind,
+      error_stage: 'searchPoems',
+      error_detail: poemsRes.error.message,
+    });
+    throw errors.INTERNAL_SERVER_ERROR();
+  }
+  if (poetsRes?.isErr()) {
+    context.log?.({
+      error_kind: poetsRes.error.kind,
+      error_stage: 'searchPoets',
+      error_detail: poetsRes.error.message,
+    });
+    throw errors.INTERNAL_SERVER_ERROR();
+  }
 
-  const meterSlugs = arrayOrNull(input.meterSlugs);
-  const eraSlugs = arrayOrNull(input.eraSlugs);
-  const themeSlugs = arrayOrNull(input.themeSlugs);
-  const rhymeSlugs = arrayOrNull(input.rhymeSlugs);
+  // At this point both results are either null (not requested) or Ok — isErr() guards above exit early.
+  const poemsPage = poemsRes?.isOk() ? poemsRes.value : null;
+  const poetsPage = poetsRes?.isOk() ? poetsRes.value : null;
 
-  return match(input.searchType)
-    .with('poems', async () => {
-      const stage = hasText ? 'searchPoems' : 'browsePoemsByFilters';
-      const queryResult = hasText
-        ? await searchQueries.searchPoems({
-            db: context.db,
-            query,
-            page: input.page,
-            matchType: input.matchType,
-            filters: { meterSlugs, eraSlugs, themeSlugs, rhymeSlugs },
-          })
-        : await searchQueries.browsePoemsByFilters({
-            db: context.db,
-            page: input.page,
-            filters: { meterSlugs, eraSlugs, themeSlugs, rhymeSlugs },
-          });
-      if (queryResult.isErr()) {
-        const { kind, detail } = describeSearchError(queryResult.error);
-        context.log?.({ error_kind: kind, error_stage: stage, error_detail: detail });
-        throw errors.INTERNAL_SERVER_ERROR();
-      }
-      const { rows, totalCount } = queryResult.value;
-      context.log?.({
-        query_text: query || undefined,
-        query_length: hasText ? query.length : undefined,
-        result_count: rows.length,
-        search_type: hasText ? 'fulltext' : undefined,
-        page: input.page,
-        page_size: SEARCH_POEMS_PER_PAGE,
-        total_pages: Math.max(1, Math.ceil(totalCount / SEARCH_POEMS_PER_PAGE)),
-      });
-      return {
-        searchType: 'poems' as const,
-        data: rows.map(toPoemSearchResult),
+  const poems = poemsPage
+    ? {
+        data: poemsPage.hits.map(toPoemResult),
         pagination: buildPagination({
-          page: input.page,
+          page: input.poemsPage,
           pageSize: SEARCH_POEMS_PER_PAGE,
-          totalItems: totalCount,
+          totalItems: poemsPage.total,
         }),
-      };
-    })
-    .with('poets', async () => {
-      const stage = hasText ? 'searchPoets' : 'browsePoetsByFilters';
-      const queryResult = hasText
-        ? await searchQueries.searchPoets({
-            db: context.db,
-            query,
-            page: input.page,
-            matchType: input.matchType,
-            eraSlugs,
-          })
-        : await searchQueries.browsePoetsByFilters({
-            db: context.db,
-            page: input.page,
-            eraSlugs,
-          });
-      if (queryResult.isErr()) {
-        const { kind, detail } = describeSearchError(queryResult.error);
-        context.log?.({ error_kind: kind, error_stage: stage, error_detail: detail });
-        throw errors.INTERNAL_SERVER_ERROR();
       }
-      const { rows, totalCount } = queryResult.value;
-      context.log?.({
-        query_text: query || undefined,
-        query_length: hasText ? query.length : undefined,
-        result_count: rows.length,
-        search_type: hasText ? 'fulltext' : undefined,
-        page: input.page,
-        page_size: SEARCH_POETS_PER_PAGE,
-        total_pages: Math.max(1, Math.ceil(totalCount / SEARCH_POETS_PER_PAGE)),
-      });
-      return {
-        searchType: 'poets' as const,
-        data: rows.map(toPoetSearchResult),
+    : null;
+
+  const poets = poetsPage
+    ? {
+        data: poetsPage.hits.map(toPoetResult),
         pagination: buildPagination({
-          page: input.page,
+          page: input.poetsPage,
           pageSize: SEARCH_POETS_PER_PAGE,
-          totalItems: totalCount,
+          totalItems: poetsPage.total,
         }),
-      };
-    })
-    .exhaustive();
+      }
+    : null;
+
+  context.log?.({
+    query_text: input.q || undefined,
+    poems_count: poems?.data.length ?? 0,
+    poets_count: poets?.data.length ?? 0,
+  });
+
+  return { q: input.q, poems, poets };
 });

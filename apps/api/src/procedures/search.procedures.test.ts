@@ -1,26 +1,16 @@
 import { Hono } from 'hono';
-import { ok } from 'neverthrow';
+import { okAsync } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { searchBodySchema } from '@/test-schemas';
+import { groupedSearchBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const searchPoemsMock = vi.fn();
 const searchPoetsMock = vi.fn();
-const browsePoemsByFiltersMock = vi.fn();
-const browsePoetsByFiltersMock = vi.fn();
 
-vi.mock('@qafiyah/db', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@qafiyah/db')>();
-  return {
-    ...actual,
-    searchQueries: {
-      searchPoems: searchPoemsMock,
-      searchPoets: searchPoetsMock,
-      browsePoemsByFilters: browsePoemsByFiltersMock,
-      browsePoetsByFilters: browsePoetsByFiltersMock,
-    },
-  };
+vi.mock('@qafiyah/search', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@qafiyah/search')>();
+  return { ...actual, searchPoems: searchPoemsMock, searchPoets: searchPoetsMock };
 });
 
 async function buildOrpcApp() {
@@ -28,11 +18,10 @@ async function buildOrpcApp() {
   const { router } = await import('@/router');
   const { transformOrpcResponse } = await import('@/lib/problem');
   const orpcHandler = new OpenAPIHandler(router);
-
   const app = new Hono<AppContext>();
   app.use('/v1/*', async (c, next) => {
     const result = await orpcHandler.handle(c.req.raw, {
-      context: { db: c.get('db') },
+      context: { db: c.get('db'), es: c.get('es') },
       prefix: '/v1',
     });
     if (!result.matched) return next();
@@ -41,100 +30,64 @@ async function buildOrpcApp() {
   return app;
 }
 
-const samplePoemRow = {
-  poetName: 'p',
-  poetEra: 'e',
-  poetEraSlug: 'e-slug',
-  poetSlug: 'p-slug',
-  poemTitle: 't',
-  poemSnippet: 'x',
-  poemMeter: 'm',
-  poemMeterSlug: 'm-slug',
-  poemSlug: 'poem-slug',
-  relevance: 0,
+const poemHit = {
+  type: 'poem',
+  title: 't',
+  slug: '00000000-0000-0000-0000-000000000000',
+  snippet: '<mark>x</mark>',
+  poet: { name: 'p', slug: 'ps' },
+  meter: { name: 'm', slug: 'ms' },
+  era: { name: 'e', slug: 'abbasid' },
+  relevance: 1.2,
+};
+const poetHit = {
+  type: 'poet',
+  name: 'n',
+  slug: 'ns',
+  bio: 'b',
+  era: { name: 'e', slug: 'abbasid' },
+  relevance: 0.9,
 };
 
-const samplePoetRow = {
-  poetName: 'p',
-  poetEra: 'e',
-  poetEraSlug: 'e-slug',
-  poetSlug: 'p-slug',
-  poetBio: '',
-  relevance: 0,
-};
-
-describe('search procedure', () => {
+describe('grouped search procedure', () => {
   beforeEach(() => {
     searchPoemsMock.mockReset();
     searchPoetsMock.mockReset();
-    browsePoemsByFiltersMock.mockReset();
-    browsePoetsByFiltersMock.mockReset();
   });
-  afterEach(() => {
-    vi.clearAllMocks();
-  });
+  afterEach(() => vi.clearAllMocks());
 
-  it('rejects empty q with no filters (400)', async () => {
+  it('returns both sections in parallel by default', async () => {
+    searchPoemsMock.mockReturnValue(okAsync({ hits: [poemHit], total: 1 }));
+    searchPoetsMock.mockReturnValue(okAsync({ hits: [poetHit], total: 3 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
-    const res = await client.$get('/v1/search?searchType=poems');
-    expect(res.status).toBe(400);
-  });
-
-  it('returns matching poems for a text-only Arabic query', async () => {
-    searchPoemsMock.mockResolvedValue(ok({ rows: [samplePoemRow], totalCount: 1 }));
-    const app = await buildOrpcApp();
-    const client = createTestClient(app, { db: createMockDb() });
-    const res = await client.$get('/v1/search?searchType=poems&q=%D9%82%D8%B5%D9%8A%D8%AF%D8%A9');
+    const res = await client.$get('/v1/search?q=%D8%AD%D8%A8');
     expect(res.status).toBe(200);
-    const body = await parseJson(res, searchBodySchema);
-    expect(body.searchType).toBe('poems');
-    expect(body.pagination.totalItems).toBe(1);
-    expect(body.data).toHaveLength(1);
-    expect(body.data[0]?.type).toBe('poem');
+    const body = await parseJson(res, groupedSearchBodySchema);
+    expect(body.poems?.data[0]?.type).toBe('poem');
+    expect(body.poems?.pagination.totalItems).toBe(1);
+    expect(body.poets?.data[0]?.type).toBe('poet');
+    expect(body.poets?.pagination.totalItems).toBe(3);
   });
 
-  it('returns poems for a filter-only request', async () => {
-    browsePoemsByFiltersMock.mockResolvedValue(ok({ rows: [samplePoemRow], totalCount: 1 }));
+  it('omits the poets section when types=poems only', async () => {
+    searchPoemsMock.mockReturnValue(okAsync({ hits: [], total: 0 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
-    const res = await client.$get('/v1/search?searchType=poems&eraSlugs%5B0%5D=abbasid');
+    const res = await client.$get('/v1/search?q=%D8%AD%D8%A8&types%5B0%5D=poems');
     expect(res.status).toBe(200);
-    const body = await parseJson(res, searchBodySchema);
-    expect(body.searchType).toBe('poems');
-    expect(body.data).toHaveLength(1);
-    expect(body.data[0]?.type).toBe('poem');
+    const body = await parseJson(res, groupedSearchBodySchema);
+    expect(body.poets).toBeNull();
+    expect(searchPoetsMock).not.toHaveBeenCalled();
   });
 
-  it('runs a text search for any non-empty q (no server-side Arabic cleaning)', async () => {
-    searchPoemsMock.mockResolvedValue(ok({ rows: [], totalCount: 0 }));
+  it('returns 500 when the poems search errors', async () => {
+    const { errAsync } = await import('neverthrow');
+    searchPoemsMock.mockReturnValue(errAsync({ kind: 'es_error', message: 'boom' }));
+    searchPoetsMock.mockReturnValue(okAsync({ hits: [], total: 0 }));
     const app = await buildOrpcApp();
     const client = createTestClient(app, { db: createMockDb() });
-    const res = await client.$get('/v1/search?searchType=poems&q=hello&eraSlugs%5B0%5D=abbasid');
-    expect(res.status).toBe(200);
-    const body = await parseJson(res, searchBodySchema);
-    expect(body.pagination.totalItems).toBe(0);
-  });
-
-  it('returns poets for a filter-only request', async () => {
-    browsePoetsByFiltersMock.mockResolvedValue(ok({ rows: [samplePoetRow], totalCount: 1 }));
-    const app = await buildOrpcApp();
-    const client = createTestClient(app, { db: createMockDb() });
-    const res = await client.$get('/v1/search?searchType=poets&eraSlugs%5B0%5D=abbasid');
-    expect(res.status).toBe(200);
-    const body = await parseJson(res, searchBodySchema);
-    expect(body.searchType).toBe('poets');
-    expect(body.data[0]?.type).toBe('poet');
-  });
-
-  it('returns matching poets for a text query', async () => {
-    searchPoetsMock.mockResolvedValue(ok({ rows: [samplePoetRow], totalCount: 1 }));
-    const app = await buildOrpcApp();
-    const client = createTestClient(app, { db: createMockDb() });
-    const res = await client.$get('/v1/search?searchType=poets&q=%D9%82%D8%B5%D9%8A%D8%AF%D8%A9');
-    expect(res.status).toBe(200);
-    const body = await parseJson(res, searchBodySchema);
-    expect(body.searchType).toBe('poets');
-    expect(body.data[0]?.type).toBe('poet');
+    const res = await client.$get('/v1/search?q=%D8%AD%D8%A8');
+    expect(res.status).toBe(500);
   });
 });
