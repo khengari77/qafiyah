@@ -44,7 +44,6 @@ const poetHit = {
   type: 'poet',
   name: 'n',
   slug: 'ns',
-  bio: 'b',
   era: { name: 'e', slug: 'abbasid' },
   relevance: 0.9,
 };

@@ -31,7 +31,6 @@ const toPoetResult = (h: PoetHit): PoetResult => ({
   type: 'poet',
   name: h.name,
   slug: h.slug as PoetSlug,
-  bio: h.bio,
   era: { name: h.era.name, slug: h.era.slug as EraSlug },
   relevance: h.relevance,
 });

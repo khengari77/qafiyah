@@ -27,7 +27,6 @@ export type PoetSource = {
   readonly id: number;
   readonly slug: string;
   readonly name: string;
-  readonly bio: string;
   readonly eraName: string;
   readonly eraSlug: string;
 };
@@ -55,7 +54,6 @@ export type PoetDoc = {
   slug: string;
   hash: string;
   name: string;
-  bio: string;
   nameDisplay: string;
   eraSlug: string;
   eraName: string;
@@ -86,7 +84,6 @@ export function toPoetDoc(src: PoetSource): PoetDoc {
     id: src.id,
     slug: src.slug,
     name: stripTashkeel(src.name),
-    bio: stripTashkeel(src.bio),
     nameDisplay: src.name,
     eraSlug: src.eraSlug,
     eraName: src.eraName,

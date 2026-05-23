@@ -66,7 +66,6 @@ describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () =>
           id: 1,
           slug: 'mutanabbi',
           name: 'المُتنبّي',
-          bio: 'أحمد بن الحسين',
           eraName: 'عباسي',
           eraSlug: 'abbasid',
         }),

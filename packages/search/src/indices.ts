@@ -6,7 +6,7 @@ const arabicText = {
   type: 'text',
   analyzer: 'arabic_normalized',
   fields: {
-    // ignore_above: long fields (content, bio) exceed Lucene's keyword term
+    // ignore_above: long fields like content exceed Lucene's keyword term
     // limit; over-limit values skip the keyword index (no error) while short
     // titles/names stay exact-matchable for the exact-boost clause.
     exact: { type: 'keyword', ignore_above: 256 },
@@ -49,7 +49,6 @@ export const POETS_INDEX_BODY = {
       slug: { type: 'keyword' },
       hash: { type: 'keyword', index: false },
       name: arabicText,
-      bio: arabicText,
       nameDisplay: { type: 'keyword', index: false },
       eraSlug: { type: 'keyword' },
       eraName: { type: 'keyword', index: false },

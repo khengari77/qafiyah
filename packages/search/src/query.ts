@@ -72,9 +72,7 @@ export function buildPoetSearchBody(params: {
 }) {
   const hasText = params.q.length > 0;
   const filter = termFilters({ eraSlug: params.eraSlugs });
-  const must = hasText
-    ? [textClauses(params.q, ['name', 'bio'], params.matchType)]
-    : [{ match_all: {} }];
+  const must = hasText ? [textClauses(params.q, ['name'], params.matchType)] : [{ match_all: {} }];
   return {
     from: (params.page - 1) * SEARCH_POETS_PER_PAGE,
     size: SEARCH_POETS_PER_PAGE,
@@ -86,7 +84,7 @@ export function buildPoetSearchBody(params: {
       post_tags: ['</mark>'],
       number_of_fragments: 1,
       fragment_size: 200,
-      fields: { bio: {}, name: {} },
+      fields: { name: {} },
     },
   };
 }

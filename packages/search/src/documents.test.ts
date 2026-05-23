@@ -33,12 +33,11 @@ describe('toPoemDoc', () => {
 });
 
 describe('toPoetDoc', () => {
-  it('maps name/bio with display + filter fields', () => {
+  it('maps name with display + filter fields', () => {
     const doc = toPoetDoc({
       id: 2630,
       slug: 'abu-mohammed-faqasi',
       name: 'أبو محمد',
-      bio: 'عبدُ اللهِ',
       eraName: 'إسلامي',
       eraSlug: 'islamic',
     });

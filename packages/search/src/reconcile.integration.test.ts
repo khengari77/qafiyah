@@ -10,7 +10,7 @@ const TEST_INDEX = 'rc_poets_v1';
 const TEST_ALIAS = 'rc_poets';
 
 function poet(id: number, name: string): PoetDoc {
-  return toPoetDoc({ id, slug: `pt-${id}`, name, bio: 'b', eraName: 'عباسي', eraSlug: 'abbasid' });
+  return toPoetDoc({ id, slug: `pt-${id}`, name, eraName: 'عباسي', eraSlug: 'abbasid' });
 }
 
 describe.skipIf(!RUN_ES_INTEGRATION)('reconcileFromSource (integration)', () => {

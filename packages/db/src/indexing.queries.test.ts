@@ -34,7 +34,7 @@ describe('indexing queries', () => {
   });
 
   it('streamPoetBatch maps a row to PoetSource', async () => {
-    const db = mockDb([{ id: 2, slug: 'p', name: 'n', bio: 'b', era_name: 'e', era_slug: 'es' }]);
+    const db = mockDb([{ id: 2, slug: 'p', name: 'n', era_name: 'e', era_slug: 'es' }]);
     expect((await streamPoetBatch(db, 0, 1000))._unsafeUnwrap()[0]).toMatchObject({
       id: 2,
       eraSlug: 'es',

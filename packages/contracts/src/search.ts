@@ -38,7 +38,6 @@ export const poetSearchResult = v.object({
   type: v.literal('poet'),
   name: v.string(),
   slug: poetSlugSchema,
-  bio: v.string(),
   era: namedSlugRef(eraSlugSchema),
   relevance: v.number(),
 });

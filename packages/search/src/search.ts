@@ -20,7 +20,6 @@ export type PoetHit = {
   readonly type: 'poet';
   readonly name: string;
   readonly slug: string;
-  readonly bio: string;
   readonly era: { readonly name: string; readonly slug: string };
   readonly relevance: number;
 };
@@ -46,7 +45,6 @@ type PoetRaw = {
   slug?: string;
   name?: string;
   nameDisplay?: string;
-  bio?: string;
   eraName?: string;
   eraSlug?: string;
 };
@@ -111,9 +109,8 @@ export function searchPoets(
         const s = h._source as PoetRaw;
         return {
           type: 'poet',
-          name: s.nameDisplay ?? s.name ?? '',
+          name: firstHighlight(h.highlight, 'name') ?? s.nameDisplay ?? s.name ?? '',
           slug: s.slug ?? '',
-          bio: firstHighlight(h.highlight, 'bio') ?? s.bio ?? '',
           era: { name: s.eraName ?? '', slug: s.eraSlug ?? '' },
           relevance: h._score ?? 0,
         };

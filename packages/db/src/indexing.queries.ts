@@ -24,7 +24,6 @@ const poetRowSchema = v.object({
   id: v.number(),
   slug: v.string(),
   name: v.string(),
-  bio: v.string(),
   era_name: v.string(),
   era_slug: v.string(),
 });
@@ -56,7 +55,6 @@ function toPoetSource(row: v.InferOutput<typeof poetRowSchema>): PoetSource {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    bio: row.bio,
     eraName: row.era_name,
     eraSlug: row.era_slug,
   };
@@ -101,7 +99,7 @@ export async function streamPoetBatch(
   const rows = await executeAs(
     db,
     sql`
-      SELECT pt.id AS id, pt.slug AS slug, pt.name AS name, COALESCE(pt.bio, '') AS bio,
+      SELECT pt.id AS id, pt.slug AS slug, pt.name AS name,
              e.name AS era_name, e.slug AS era_slug
       FROM public.poets pt
       JOIN public.eras e ON pt.era_id = e.id
@@ -139,7 +137,7 @@ export async function getPoetsBySlugs(
   const rows = await executeAs(
     db,
     sql`
-      SELECT pt.id AS id, pt.slug AS slug, pt.name AS name, COALESCE(pt.bio, '') AS bio,
+      SELECT pt.id AS id, pt.slug AS slug, pt.name AS name,
              e.name AS era_name, e.slug AS era_slug
       FROM public.poets pt JOIN public.eras e ON pt.era_id = e.id
       WHERE pt.slug::text = ANY(${literal}::text[])
