@@ -13,7 +13,6 @@ import { match } from 'ts-pattern';
 import * as v from 'valibot';
 import { asPoemSlug } from './brand';
 import type { DbClient } from './client';
-import { TASHKEEL_REGEX } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
 import type { PoemListRow } from './row-schemas';
 import { poemsFullData } from './schema';
@@ -34,10 +33,6 @@ type ParsedPoemContent = {
   readonly keywords: string;
 };
 
-export function removeTashkeel(text: string): string {
-  return text.replace(TASHKEEL_REGEX, '');
-}
-
 export function parsePoemContent(content: string): ParsedPoemContent {
   const cleanContent = content.replace(DOUBLE_QUOTE_REGEX, '');
 
@@ -53,11 +48,8 @@ export function parsePoemContent(content: string): ParsedPoemContent {
 
   const verseCount = verses.length;
 
-  const firstThreeLines = lines.slice(0, 3).join(' * ');
-  const sample = removeTashkeel(firstThreeLines);
-
-  const allText = lines.join(' ');
-  const keywords = removeTashkeel(allText.split(' ').join(','));
+  const sample = lines.slice(0, 3).join(' * ');
+  const keywords = lines.join(' ').split(' ').join(',');
 
   return {
     verses,

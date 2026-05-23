@@ -66,7 +66,7 @@ export function toPoemDoc(src: PoemSource): PoemDoc {
     id: src.id,
     slug: src.slug,
     title: stripTashkeel(src.title),
-    content: stripTashkeel(src.content),
+    content: src.content,
     poetName: stripTashkeel(src.poetName),
     titleDisplay: src.title,
     poetNameDisplay: src.poetName,

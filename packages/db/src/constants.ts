@@ -49,9 +49,3 @@ export const FORMAL_METERS = [
   'المتقارب',
   'المتدارك',
 ] as const;
-
-// Arabic diacritical marks (tashkeel):
-//   U+0610–U+061A  extended Arabic signs (sallallahou, etc.)
-//   U+064B–U+065F  vowel marks (fathatan, kasratan, fatha, damma, kasra, shadda, sukun, …)
-//   U+06D6–U+06ED  Quranic annotation marks
-export const TASHKEEL_REGEX = /[ؐ-ًؚ-ٟۖ-ۭ]/g;

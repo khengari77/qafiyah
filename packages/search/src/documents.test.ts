@@ -8,7 +8,7 @@ const poemSource = {
   id: 18,
   slug: '00000000-0000-0000-0000-000000000000',
   title: 'مَن مُبلِغٌ',
-  content: 'الشطرُ الأولُ*الشطرُ الثاني',
+  content: 'الشطر الأول*الشطر الثاني',
   poetName: 'المُتنبّي',
   poetSlug: 'mutanabbi',
   eraName: 'عباسي',
