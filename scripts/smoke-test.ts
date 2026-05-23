@@ -15,7 +15,7 @@ const URLS = [
   `${BASE}/meters/albasit/page/1`,
   `${BASE}/rhymes/c963daa2-e902-406e-8e4b-2143e2c47a35/page/1`,
   `${BASE}/themes`,
-  `${BASE}/themes/39c7975b-86b0-46a7-9426-c03de72faf03/page/1`,
+  `${BASE}/themes/3b8126d1-467c-4291-a787-fac831be5eee/page/1`,
   `${BASE}/poems/3f946247-47a1-4ccd-b08c-2419ee729e2a`,
   `${BASE}/?q=%D9%8A%D8%A7+%D8%B1%D8%A8`,
   `${BASE}/?q=%D9%8A%D8%A7+%D8%B1%D8%A8&match_type=exact&rhyme_ids=15`,
