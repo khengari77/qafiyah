@@ -8,7 +8,7 @@ const BASE = 'http://localhost:4321';
 const URLS = [
   `${BASE}/`,
   `${BASE}/poets/page/1`,
-  `${BASE}/poets/amna-bnt-otaiba/page/1`,
+  `${BASE}/poets/abn-rumi/page/1`,
   `${BASE}/eras`,
   `${BASE}/eras/jahili/page/1`,
   `${BASE}/meters`,
