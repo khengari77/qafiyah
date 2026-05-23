@@ -13,7 +13,7 @@ const URLS = [
   `${BASE}/eras/jahili/page/1`,
   `${BASE}/meters`,
   `${BASE}/meters/albasit/page/1`,
-  `${BASE}/rhymes/b7241a08-64be-45ae-ae44-484f211980b3/page/1`,
+  `${BASE}/rhymes/c963daa2-e902-406e-8e4b-2143e2c47a35/page/1`,
   `${BASE}/themes`,
   `${BASE}/themes/39c7975b-86b0-46a7-9426-c03de72faf03/page/1`,
   `${BASE}/poems/3f946247-47a1-4ccd-b08c-2419ee729e2a`,
