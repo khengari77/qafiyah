@@ -172,16 +172,12 @@ export const RESULTS_NOUN_FORMS = {
 type SearchOption = { readonly id: number; readonly name: string };
 
 const ERAS_OPTIONS = [
-  { id: 1, name: 'إسلامي' },
-  { id: 2, name: 'عباسي' },
-  { id: 3, name: 'متأخر' },
-  { id: 4, name: 'أموي' },
   { id: 5, name: 'جاهلي' },
-  { id: 6, name: 'مخضرم' },
+  { id: 1, name: 'إسلامي' },
+  { id: 4, name: 'أموي' },
+  { id: 2, name: 'عباسي' },
   { id: 7, name: 'أندلسي' },
-  { id: 8, name: 'مملوكي' },
-  { id: 9, name: 'عثماني' },
-  { id: 10, name: 'أيوبي' },
+  { id: 11, name: 'متأخر' },
 ] as const satisfies readonly SearchOption[];
 
 const METERS_OPTIONS = [

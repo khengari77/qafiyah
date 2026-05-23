@@ -1,15 +1,4 @@
-export const ERAS_SORT_ORDER = [
-  'جاهلي',
-  'مخضرم',
-  'إسلامي',
-  'أموي',
-  'عباسي',
-  'أندلسي',
-  'أيوبي',
-  'مملوكي',
-  'عثماني',
-  'متأخر',
-] as const;
+export const ERAS_SORT_ORDER = ['جاهلي', 'إسلامي', 'أموي', 'عباسي', 'أندلسي', 'متأخر'] as const;
 
 export const ARABIC_LETTERS_MAP = new Map<string, string[]>([
   ['ألف', ['ا', 'أ', 'إ', 'آ', 'ء', 'الف', 'ألف', 'الالف', 'الألف']],

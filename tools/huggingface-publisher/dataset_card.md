@@ -19,7 +19,7 @@ task_categories:
 
 ## Dataset Summary
 
-Qafiyah is a comprehensive dataset of classical Arabic poetry, containing 85,342 poems and 944,844 verses from 932 poets across 10 historical eras. Each entry includes the full poem text, individual verses, and rich metadata such as poet details, era, meter, themes, and rhyme patterns.
+Qafiyah is a comprehensive dataset of classical Arabic poetry, containing 81,232 poems and 901,728 verses from 921 poets across 6 historical eras. Each entry includes the full poem text, individual verses, and rich metadata such as poet details, era, meter, themes, and rhyme patterns.
 
 The dataset is derived from the open-source [Qafiyah project](https://qafiyah.com), which provides a public website, REST API, and database dumps for Arabic poetry research.
 
@@ -50,7 +50,7 @@ The dataset is derived from the open-source [Qafiyah project](https://qafiyah.co
 
 | Split | Examples |
 | ----- | -------- |
-| train | 85,342   |
+| train | 81,232   |
 
 ## Usage
 
@@ -89,18 +89,14 @@ print(f"Found {len(tawil_poems)} poems in Tawil meter")
 
 ## Historical Eras
 
-The dataset covers the following 10 historical periods of Arabic poetry:
+The dataset covers the following 6 historical periods of Arabic poetry:
 
 1. **Pre-Islamic / Jahili (الجاهلي)**, Before 622 CE
-2. **Mukhadram (المخضرم)**, Transitional era; poets who lived in both the pre-Islamic and early Islamic periods (~600–661 CE)
-3. **Early Islamic (الإسلامي)**, 622–750 CE
-4. **Umayyad (الأموي)**, 661–750 CE
-5. **Abbasid (العباسي)**, 750–1258 CE
-6. **Andalusian (الأندلسي)**, 711–1492 CE
-7. **Ayyubid (الأيوبي)**, 1171–1341 CE
-8. **Mamluk (المملوكي)**, 1250–1517 CE
-9. **Ottoman (العثماني)**, 1517–1798 CE
-10. **Late / Post-classical (المتأخر)**, 18th century onward
+2. **Early Islamic (الإسلامي)**, ~600–750 CE (includes transitional / Mukhadram poets)
+3. **Umayyad (الأموي)**, 661–750 CE
+4. **Abbasid (العباسي)**, 750–1258 CE
+5. **Andalusian (الأندلسي)**, 711–1492 CE
+6. **Late / Post-classical (المتأخر)**, 1171 CE onward (Ayyubid, Mamluk, Ottoman, and later)
 
 ## Licensing Information
 
