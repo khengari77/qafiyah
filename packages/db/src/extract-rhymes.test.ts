@@ -60,8 +60,8 @@ describe('extractRhymeLetter', () => {
     expect(extractRhymeLetter('a*xب*c*yر*e*zر')).toBe('ر');
   });
 
-  it('returns null when ajuz finals never repeat', () => {
-    expect(extractRhymeLetter('a*xب*c*yم*e*zر')).toBeNull();
+  it('falls back to the first ajuz letter when finals never repeat', () => {
+    expect(extractRhymeLetter('a*xب*c*yم*e*zر')).toBe('ب');
   });
 
   it('ignores ajuz lines whose final char is not a rhyme letter', () => {
