@@ -9,6 +9,7 @@
     ".": "./src/index.ts"
   },
   "scripts": {
+    "extract-rhymes": "bun run src/extract-rhymes.run.ts",
     "types": "tsc --noEmit --pretty",
     "lint": "biome check --write .",
     "test": "vitest run"

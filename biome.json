@@ -407,7 +407,7 @@
       }
     },
     {
-      "includes": ["**/*.config.{ts,js,mjs}", "**/scripts/**"],
+      "includes": ["**/*.config.{ts,js,mjs}", "**/scripts/**", "**/*.run.ts"],
       "linter": {
         "rules": {
           "style": {
