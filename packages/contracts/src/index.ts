@@ -1,3 +1,4 @@
+import { collectionsContract } from './collections';
 import { erasContract } from './eras';
 import { metersContract } from './meters';
 import { poemsContract } from './poems';
@@ -7,6 +8,7 @@ import { searchContract } from './search';
 import { themesContract } from './themes';
 
 export const contract = {
+  collections: collectionsContract,
   eras: erasContract,
   meters: metersContract,
   poems: poemsContract,
@@ -19,6 +21,8 @@ export const contract = {
 export type AppContract = typeof contract;
 
 export {
+  type CollectionSlug,
+  collectionSlugSchema,
   type EraSlug,
   eraSlugSchema,
   type MeterSlug,

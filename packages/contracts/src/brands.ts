@@ -21,3 +21,6 @@ export type RhymeSlug = v.InferOutput<typeof rhymeSlugSchema>;
 
 export const themeSlugSchema = v.pipe(v.string(), v.brand('ThemeSlug'));
 export type ThemeSlug = v.InferOutput<typeof themeSlugSchema>;
+
+export const collectionSlugSchema = v.pipe(v.string(), v.brand('CollectionSlug'));
+export type CollectionSlug = v.InferOutput<typeof collectionSlugSchema>;

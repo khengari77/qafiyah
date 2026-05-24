@@ -6,6 +6,7 @@ export const EXAMPLE_POET_SLUG = 'abu-nawas';
 export const EXAMPLE_POEM_SLUG = '887d1dcd-fb04-4f09-a448-d08287dface0';
 export const EXAMPLE_RHYME_SLUG = 'meem';
 export const EXAMPLE_THEME_SLUG = '61a2570d-9acc-493d-a05d-7dd2404c17ff';
+export const EXAMPLE_COLLECTION_SLUG = '11111111-1111-1111-1111-111111111111';
 
 export const inputValidationErrorMap = {
   INPUT_VALIDATION_FAILED: { status: 400, message: 'Input validation failed' },

@@ -1,4 +1,5 @@
 import { publicProcedure } from './procedures/base';
+import { listCollectionPoems, listCollections } from './procedures/collections.procedures';
 import { listEraPoems, listEras } from './procedures/eras.procedures';
 import { listMeterPoems, listMeters } from './procedures/meters.procedures';
 import { getPoemBySlug, listPoemSlugs } from './procedures/poems.procedures';
@@ -8,6 +9,10 @@ import { search } from './procedures/search.procedures';
 import { listThemePoems, listThemes } from './procedures/themes.procedures';
 
 const routes = {
+  collections: {
+    list: listCollections,
+    listPoems: listCollectionPoems,
+  },
   eras: {
     list: listEras,
     listPoems: listEraPoems,

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { collectionsContract } from './collections';
 import { erasContract } from './eras';
 import { contract } from './index';
 import { metersContract } from './meters';
@@ -9,6 +10,11 @@ import { searchContract } from './search';
 import { themesContract } from './themes';
 
 describe('contract structure', () => {
+  it('collectionsContract has list and listPoems', () => {
+    expect(collectionsContract).toHaveProperty('list');
+    expect(collectionsContract).toHaveProperty('listPoems');
+  });
+
   it('erasContract has list and listPoems', () => {
     expect(erasContract).toHaveProperty('list');
     expect(erasContract).toHaveProperty('listPoems');
@@ -44,6 +50,7 @@ describe('contract structure', () => {
   });
 
   it('root contract assembles all domain contracts', () => {
+    expect(contract).toHaveProperty('collections');
     expect(contract).toHaveProperty('eras');
     expect(contract).toHaveProperty('meters');
     expect(contract).toHaveProperty('poems');
