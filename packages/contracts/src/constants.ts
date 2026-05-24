@@ -1,6 +1,6 @@
 export const DEFAULT_PAGE = '1';
 
-export const EXAMPLE_ERA_SLUG = 'abbasid';
+export const EXAMPLE_ERA_SLUG = 'abbasi';
 export const EXAMPLE_METER_SLUG = 'altawil';
 export const EXAMPLE_POET_SLUG = 'abu-nawas';
 export const EXAMPLE_POEM_SLUG = 'aBcD';
