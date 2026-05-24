@@ -15,6 +15,7 @@ export type DomainFields = {
   readonly meter?: string | undefined;
   readonly rhyme?: string | undefined;
   readonly theme?: string | undefined;
+  readonly collection?: string | undefined;
   readonly verse_id?: string | undefined;
   readonly query_text?: string | undefined;
   readonly query_length?: number | undefined;
