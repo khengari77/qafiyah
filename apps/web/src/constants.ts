@@ -71,7 +71,7 @@ export const NAV_LINKS = [
   { name: 'البحور', href: '/meters', isExternal: false },
   { name: 'القوافي', href: '/rhymes', isExternal: false },
   { name: 'الأغراض', href: '/themes', isExternal: false },
-  { name: 'المجموعات', href: '/collections', isExternal: false },
+  { name: 'الدواوين', href: '/collections', isExternal: false },
 ] as const satisfies readonly NavLink[];
 
 export const SEARCH_RESULTS_STALE_TIME_MS = 5 * 60 * 1000;
@@ -109,8 +109,8 @@ export const SEARCH_TEXTS = {
   metersPlaceholder: 'بحر أو عدة بحور',
   themesLabel: 'الأغراض',
   themesPlaceholder: 'غرض أو عدة أغراض',
-  collectionsLabel: 'المجموعات',
-  collectionsPlaceholder: 'مجموعة أو عدة مجموعات',
+  collectionsLabel: 'الدواوين',
+  collectionsPlaceholder: 'ديوان أو عدة دواوين',
   rhymesLabel: 'القوافي',
   rhymesPlaceholder: 'قافية أو عدة قوافي',
   searchTypeLabel: 'المجال',
@@ -161,9 +161,9 @@ export const RHYMES_NOUN_FORMS = {
 } as const satisfies ArabicNounForms;
 
 export const COLLECTIONS_NOUN_FORMS = {
-  singular: 'مجموعة',
-  dual: 'مجموعتان',
-  plural: 'مجموعات',
+  singular: 'ديوان',
+  dual: 'ديوانان',
+  plural: 'دواوين',
 } as const satisfies ArabicNounForms;
 
 export const POEMS_NOUN_FORMS = {

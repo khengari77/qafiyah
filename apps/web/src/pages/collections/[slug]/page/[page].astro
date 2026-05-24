@@ -28,18 +28,18 @@ const nextPageUrl = `/collections/${slug}/page/${pageNumber + 1}`;
 const prevPageUrl = `/collections/${slug}/page/${pageNumber - 1}`;
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 
-const title = `${SITE_NAME_AR} | قصائد مجموعة ${collection.name} | صفحة (${toArabicDigits(pageNumber.toString())})`;
-const description = `قصائد مجموعة ${collection.name} على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}، ${toArabicDigits(collection.poemsCount)} قصيدة.`;
+const title = `${SITE_NAME_AR} | قصائد ديوان ${collection.name} | صفحة (${toArabicDigits(pageNumber.toString())})`;
+const description = `قصائد ديوان ${collection.name} على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}، ${toArabicDigits(collection.poemsCount)} قصيدة.`;
 
 const collectionJsonLd = {
   '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'Collection',
-  name: `قصائد مجموعة ${collection.name}`,
+  name: `قصائد ديوان ${collection.name}`,
   url: `${SITE_URL}/collections/${slug}/page/${pageNumber}`,
-  description: `مجموعة قصائد من مجموعة ${collection.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
+  description: `مجموعة قصائد من ديوان ${collection.name} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   mainEntityOfPage: {
     '@type': 'CollectionPage',
-    name: `قصائد مجموعة ${collection.name}`,
+    name: `قصائد ديوان ${collection.name}`,
     url: `${SITE_URL}/collections/${slug}/page/1`,
   },
   numberOfItems: collection.poemsCount,
@@ -52,7 +52,7 @@ const collectionJsonLd = {
 
 const crumbItems = [
   { name: SITE_NAME_AR, path: '/' },
-  { name: 'المجموعات', path: '/collections' },
+  { name: 'الدواوين', path: '/collections' },
   { name: collection.name, path: `/collections/${slug}/page/1` },
 ];
 const crumbsJsonLd = breadcrumbListJsonLd(crumbItems);
@@ -86,7 +86,7 @@ const crumbsJsonLd = breadcrumbListJsonLd(crumbItems);
             </p>
           </a>
         )) : (
-          <p class="text-center text-zinc-500">لا توجد قصائد في هذه المجموعة.</p>
+          <p class="text-center text-zinc-500">لا توجد قصائد في هذا الديوان.</p>
         )}
       </div>
       {totalPages > 1 && (
