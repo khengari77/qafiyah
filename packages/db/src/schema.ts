@@ -26,8 +26,9 @@ export const poetStats = pgView('poet_stats', {
 
 export const rhymeStats = pgView('rhyme_stats', {
   id: integer('id').notNull(),
-  pattern: text('pattern').notNull(),
-  slug: uuid('slug').notNull(),
+  letter: text('letter').notNull(),
+  slug: text('slug').notNull(),
+  name: text('name').notNull(),
   poemsCount: integer('poems_count').notNull(),
   poetsCount: integer('poets_count').notNull(),
 }).existing();

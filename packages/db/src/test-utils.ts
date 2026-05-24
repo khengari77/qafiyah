@@ -3,6 +3,7 @@ import { createDb, type DbClient } from './client';
 
 type DrizzleChain = {
   readonly where: (...args: readonly unknown[]) => DrizzleChain;
+  readonly orderBy: (...args: readonly unknown[]) => DrizzleChain;
   readonly limit: (...args: readonly unknown[]) => DrizzleChain;
   readonly offset: (...args: readonly unknown[]) => DrizzleChain;
   readonly then: Promise<unknown>['then'];
@@ -14,6 +15,7 @@ export function makeChain(data: readonly unknown[]): DrizzleChain {
   const promise = Promise.resolve(data);
   const chain: DrizzleChain = {
     where: vi.fn(() => chain),
+    orderBy: vi.fn(() => chain),
     limit: vi.fn(() => chain),
     offset: vi.fn(() => chain),
     // biome-ignore lint/suspicious/noThenProperty: intentional thenable for drizzle chain mock

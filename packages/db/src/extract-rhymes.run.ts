@@ -64,11 +64,12 @@ async function runExtraction(): Promise<void> {
       }
 
       if (updates.length > 0) {
+        const poemIds = updates.map((u) => u.poem_id);
+        const rhymeIds = updates.map((u) => u.rhyme_id);
         await client`
           UPDATE poems p
           SET rhyme_id = u.rhyme_id
-          FROM (VALUES ${client(updates.map((u) => [u.poem_id, u.rhyme_id]))})
-            AS u(poem_id, rhyme_id)
+          FROM unnest(${poemIds}::int[], ${rhymeIds}::int[]) AS u(poem_id, rhyme_id)
           WHERE p.id = u.poem_id
         `;
       }
