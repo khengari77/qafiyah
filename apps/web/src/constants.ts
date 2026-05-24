@@ -71,6 +71,7 @@ export const NAV_LINKS = [
   { name: 'البحور', href: '/meters', isExternal: false },
   { name: 'القوافي', href: '/rhymes', isExternal: false },
   { name: 'الأغراض', href: '/themes', isExternal: false },
+  { name: 'المجموعات', href: '/collections', isExternal: false },
 ] as const satisfies readonly NavLink[];
 
 export const SEARCH_RESULTS_STALE_TIME_MS = 5 * 60 * 1000;
