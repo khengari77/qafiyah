@@ -2,7 +2,6 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignoreWorkspaces": ["packages/typescript"],
   "ignoreBinaries": ["pkill"],
-  "ignoreFiles": ["scripts/extract-rhymes.ts", "scripts/extract-rhymes.test.ts"],
   "workspaces": {
     "apps/mobile": {
       "ignoreDependencies": ["@babel/core"]
