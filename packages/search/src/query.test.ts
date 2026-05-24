@@ -81,7 +81,9 @@ describe('buildPoemSearchBody', () => {
       rhymeSlugs: [],
       collectionSlugs: ['muallaqat-uuid'],
     });
-    const filters = (body.query.bool.filter ?? []) as Array<{ terms: Record<string, readonly string[]> }>;
+    const filters = (body.query.bool.filter ?? []) as Array<{
+      terms: Record<string, readonly string[]>;
+    }>;
     expect(filters.some((f) => 'collectionSlug' in f.terms)).toBe(true);
   });
 });

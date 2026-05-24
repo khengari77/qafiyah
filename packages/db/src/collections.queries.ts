@@ -123,7 +123,9 @@ export type ListAllCollectionPoemsError = ExecuteAsError;
 
 export async function listAllCollectionPoems(
   db: DbClient
-): Promise<Result<ReadonlyMap<CollectionSlug, readonly PoemListRow[]>, ListAllCollectionPoemsError>> {
+): Promise<
+  Result<ReadonlyMap<CollectionSlug, readonly PoemListRow[]>, ListAllCollectionPoemsError>
+> {
   const rawPoemsResult = await executeAs(
     db,
     sql`
