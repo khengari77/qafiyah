@@ -21,6 +21,7 @@ export type PoemSource = {
   readonly meterSlug: string;
   readonly themeSlug: string;
   readonly rhymeSlug: string;
+  readonly collectionSlug: string;
 };
 
 export type PoetSource = {
@@ -47,6 +48,7 @@ export type PoemDoc = {
   meterName: string;
   themeSlug: string;
   rhymeSlug: string;
+  collectionSlug: string;
 };
 
 export type PoetDoc = {
@@ -75,6 +77,7 @@ export function toPoemDoc(src: PoemSource): PoemDoc {
     meterName: src.meterName,
     themeSlug: src.themeSlug,
     rhymeSlug: src.rhymeSlug,
+    collectionSlug: src.collectionSlug,
   };
   return { ...doc, hash: docHash(doc) };
 }

@@ -28,6 +28,7 @@ const POEM_SOURCE = {
   meterSlug: 'test-meter',
   themeSlug: 'test-theme',
   rhymeSlug: 'test-rhyme',
+  collectionSlug: '',
 } as const;
 
 function fakeDb(): DbClient {

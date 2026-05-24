@@ -23,6 +23,7 @@ function sampleDoc(id: number) {
     meterSlug: 'tawil',
     themeSlug: 'love',
     rhymeSlug: 'meem',
+    collectionSlug: '',
   });
 }
 

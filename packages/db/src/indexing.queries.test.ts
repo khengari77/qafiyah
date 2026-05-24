@@ -22,6 +22,7 @@ describe('indexing queries', () => {
         meter_slug: 'ms',
         theme_slug: 'th',
         rhyme_slug: 'rh',
+        collection_slug: '',
       },
     ]);
     const res = await streamPoemBatch(db, 0, 1000);
@@ -72,6 +73,7 @@ describe('indexing queries', () => {
         meter_slug: 'meter-a',
         theme_slug: 'theme-a',
         rhyme_slug: 'rhyme-a',
+        collection_slug: 'muallaqat',
       },
       {
         id: 11,
@@ -86,6 +88,7 @@ describe('indexing queries', () => {
         meter_slug: 'meter-b',
         theme_slug: '',
         rhyme_slug: '',
+        collection_slug: '',
       },
     ]);
     const res = await getPoemsBySlugs(db, ['slug-a', 'slug-b']);

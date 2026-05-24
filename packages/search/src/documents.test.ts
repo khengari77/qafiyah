@@ -17,6 +17,7 @@ const poemSource = {
   meterSlug: 'tawil',
   themeSlug: 'love',
   rhymeSlug: 'meem',
+  collectionSlug: '',
 };
 
 describe('toPoemDoc', () => {

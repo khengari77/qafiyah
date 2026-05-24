@@ -18,6 +18,7 @@ const poemRowSchema = v.object({
   meter_slug: v.string(),
   theme_slug: v.string(),
   rhyme_slug: v.string(),
+  collection_slug: v.string(),
 });
 
 const poetRowSchema = v.object({
@@ -47,6 +48,7 @@ function toPoemSource(row: v.InferOutput<typeof poemRowSchema>): PoemSource {
     meterSlug: row.meter_slug,
     themeSlug: row.theme_slug,
     rhymeSlug: row.rhyme_slug,
+    collectionSlug: row.collection_slug,
   };
 }
 
@@ -67,13 +69,15 @@ const POEM_SELECT = sql`
     e.name AS era_name, e.slug AS era_slug,
     m.name AS meter_name, m.slug AS meter_slug,
     COALESCE(t.slug::text, '') AS theme_slug,
-    COALESCE(r.slug::text, '') AS rhyme_slug
+    COALESCE(r.slug::text, '') AS rhyme_slug,
+    COALESCE(c.slug::text, '') AS collection_slug
   FROM public.poems p
   JOIN public.poets pt ON p.poet_id = pt.id
   JOIN public.eras e ON pt.era_id = e.id
   JOIN public.meters m ON p.meter_id = m.id
   LEFT JOIN public.themes t ON p.theme_id = t.id
   LEFT JOIN public.rhymes r ON p.rhyme_id = r.id
+  LEFT JOIN public.collections c ON p.collection_id = c.id
 `;
 
 // Keyset-paged batch for full reindex + reconcile hashing.

@@ -36,6 +36,7 @@ export function buildPoemSearchBody(params: {
   readonly meterSlugs: readonly string[];
   readonly themeSlugs: readonly string[];
   readonly rhymeSlugs: readonly string[];
+  readonly collectionSlugs: readonly string[];
 }) {
   const hasText = params.q.length > 0;
   const filter = termFilters({
@@ -44,6 +45,7 @@ export function buildPoemSearchBody(params: {
     meterSlug: params.meterSlugs,
     themeSlug: params.themeSlugs,
     rhymeSlug: params.rhymeSlugs,
+    collectionSlug: params.collectionSlugs,
   });
   const must = hasText
     ? [textClauses(params.q, ['title', 'content', 'poetName'], params.matchType)]

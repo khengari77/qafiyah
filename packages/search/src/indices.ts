@@ -36,6 +36,7 @@ export const POEMS_INDEX_BODY = {
       meterName: { type: 'keyword', index: false },
       themeSlug: { type: 'keyword' },
       rhymeSlug: { type: 'keyword' },
+      collectionSlug: { type: 'keyword' },
     },
   },
 } as const;

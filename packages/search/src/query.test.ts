@@ -12,6 +12,7 @@ describe('buildPoemSearchBody', () => {
       meterSlugs: ['tawil'],
       themeSlugs: [],
       rhymeSlugs: [],
+      collectionSlugs: [],
     });
     expect(body.query.bool.filter).toEqual(
       expect.arrayContaining([
@@ -31,6 +32,7 @@ describe('buildPoemSearchBody', () => {
       meterSlugs: [],
       themeSlugs: [],
       rhymeSlugs: [],
+      collectionSlugs: [],
     });
     expect(JSON.stringify(body.query.bool.must)).toContain('match_phrase');
   });
@@ -44,6 +46,7 @@ describe('buildPoemSearchBody', () => {
       meterSlugs: [],
       themeSlugs: [],
       rhymeSlugs: [],
+      collectionSlugs: [],
     });
     const s = JSON.stringify(body.query.bool.must);
     expect(s).toContain('title.exact');
@@ -60,10 +63,26 @@ describe('buildPoemSearchBody', () => {
       meterSlugs: [],
       themeSlugs: [],
       rhymeSlugs: [],
+      collectionSlugs: [],
     });
     expect(body.query.bool.must).toEqual([{ match_all: {} }]);
     expect(body.sort).toEqual([{ id: 'desc' }]);
     expect(body.from).toBe(5); // (2-1) * SEARCH_POEMS_PER_PAGE (=5)
+  });
+  it('includes a collectionSlug terms filter when collectionSlugs is non-empty', () => {
+    const body = buildPoemSearchBody({
+      q: '',
+      matchType: 'any',
+      page: 1,
+      poetSlugs: [],
+      eraSlugs: [],
+      meterSlugs: [],
+      themeSlugs: [],
+      rhymeSlugs: [],
+      collectionSlugs: ['muallaqat-uuid'],
+    });
+    const filters = (body.query.bool.filter ?? []) as Array<{ terms: Record<string, readonly string[]> }>;
+    expect(filters.some((f) => 'collectionSlug' in f.terms)).toBe(true);
   });
 });
 

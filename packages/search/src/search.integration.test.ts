@@ -43,6 +43,7 @@ describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () =>
           meterSlug: 'tawil',
           themeSlug: 'love',
           rhymeSlug: 'meem',
+          collectionSlug: '',
         }),
         toPoemDoc({
           id: 2,
@@ -57,6 +58,7 @@ describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () =>
           meterSlug: 'kamil',
           themeSlug: 'war',
           rhymeSlug: 'baa',
+          collectionSlug: '',
         }),
       ])
     )._unsafeUnwrap();
@@ -90,6 +92,7 @@ describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () =>
         meterSlugs: [],
         themeSlugs: [],
         rhymeSlugs: [],
+        collectionSlugs: [],
       })
     )._unsafeUnwrap();
     expect(page.total).toBeGreaterThanOrEqual(1);
@@ -107,6 +110,7 @@ describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () =>
         meterSlugs: ['kamil'],
         themeSlugs: [],
         rhymeSlugs: [],
+        collectionSlugs: [],
       })
     )._unsafeUnwrap();
     expect(page.hits.map((h) => h.slug)).toEqual(['poem-2']);
@@ -122,6 +126,7 @@ describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () =>
         meterSlugs: [],
         themeSlugs: [],
         rhymeSlugs: [],
+        collectionSlugs: [],
       })
     )._unsafeUnwrap();
     expect(page.hits[0]?.snippet).toContain('<mark>');
