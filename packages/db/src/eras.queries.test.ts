@@ -33,9 +33,9 @@ describe('listEraPoems', () => {
     const parentRow = { name: 'العصر العباسي', poems_count: 50 };
     const poemRow = {
       title: 'قصيدة',
-      slug: 'poem-slug',
+      slug: 'abcd',
       poet_name: 'المتنبي',
-      poet_slug: 'al-mutanabbi',
+      poet_slug: 'almutanabbi',
       meter_name: 'الطويل',
       meter_slug: 'taweel',
     };
@@ -48,7 +48,7 @@ describe('listEraPoems', () => {
     const value = result._unsafeUnwrap();
     expect(value.parent).toEqual({ name: 'العصر العباسي', slug: 'abbasid', poemsCount: 50 });
     expect(value.total).toBe(50);
-    expect(value.poems[0]?.poetSlug).toBe('al-mutanabbi');
+    expect(value.poems[0]?.poetSlug).toBe('almutanabbi');
     expect(value.poems[0]?.meterSlug).toBe('taweel');
   });
 

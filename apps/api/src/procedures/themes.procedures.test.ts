@@ -40,7 +40,7 @@ async function buildOrpcApp() {
 const sampleTheme = { name: 'الغزل', slug: 'love', poemsCount: 400 };
 const samplePoemRow = {
   title: 'قصيدة',
-  slug: 'poem-1',
+  slug: 'pone',
   poetName: 'شاعر',
   poetSlug: 'shaer',
   meterName: 'الطويل',

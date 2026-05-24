@@ -38,9 +38,9 @@ describe('listRhymePoems', () => {
     const parentRow = { name: 'ميم', poems_count: 30 };
     const poemRow = {
       title: 'قصيدة',
-      slug: 'poem-slug',
+      slug: 'abcd',
       poet_name: 'شاعر',
-      poet_slug: 'poet-1',
+      poet_slug: 'poet-a',
       meter_name: 'الطويل',
       meter_slug: 'altawil',
     };
@@ -51,7 +51,7 @@ describe('listRhymePoems', () => {
     const result = await listRhymePoems(mockDb, asRhymeSlug('meem'), 1);
     const value = result._unsafeUnwrap();
     expect(value.parent.name).toBe('ميم');
-    expect(value.poems[0]?.poetSlug).toBe('poet-1');
+    expect(value.poems[0]?.poetSlug).toBe('poet-a');
   });
 
   it('returns not_found err when rhyme is not found', async () => {

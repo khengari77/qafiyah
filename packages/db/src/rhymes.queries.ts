@@ -79,7 +79,7 @@ export async function listRhymePoems(
     sql`
       SELECT
         p.title AS title,
-        p.slug::TEXT AS slug,
+        p.slug AS slug,
         pt.name AS poet_name,
         pt.slug AS poet_slug,
         m.name AS meter_name,
@@ -122,9 +122,9 @@ export async function listAllRhymePoems(
     db,
     sql`
       SELECT
-        r.slug::TEXT AS parent_slug,
+        r.slug AS parent_slug,
         p.title AS title,
-        p.slug::TEXT AS slug,
+        p.slug AS slug,
         pt.name AS poet_name,
         pt.slug AS poet_slug,
         m.name AS meter_name,

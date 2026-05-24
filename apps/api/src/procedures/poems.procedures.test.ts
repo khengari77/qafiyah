@@ -58,7 +58,7 @@ const samplePoemData = {
   relatedPoems: [
     {
       title: 'قصيدة أخرى',
-      slug: 'other-poem',
+      slug: 'opem',
       poetName: 'شاعر',
       poetSlug: 'shaer',
       meterName: 'الكامل',
@@ -78,7 +78,7 @@ describe('poems procedures', () => {
 
   describe('listPoemSlugs', () => {
     it('returns slugs list wrapped in envelope', async () => {
-      listAllPoemSlugsMock.mockResolvedValue(ok(['poem-1', 'poem-2']));
+      listAllPoemSlugsMock.mockResolvedValue(ok(['pone', 'ptwo']));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -86,7 +86,7 @@ describe('poems procedures', () => {
 
       expect(res.status).toBe(200);
       const body = await parseJson(res, slugListResponseSchema);
-      expect(body.data).toEqual(['poem-1', 'poem-2']);
+      expect(body.data).toEqual(['pone', 'ptwo']);
       expect(body.pagination.totalItems).toBe(2);
     });
 
@@ -110,12 +110,12 @@ describe('poems procedures', () => {
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poems/my-poem');
+      const res = await client.$get('/v1/poems/mypm');
 
       expect(res.status).toBe(200);
       const body = await parseJson(res, poemDetailResponseSchema);
       expect(body.data.title).toBe('قصيدة في الحب');
-      expect(body.data.slug).toBe('my-poem');
+      expect(body.data.slug).toBe('mypm');
       expect(body.data.poet).toEqual({ name: 'المتنبي', slug: 'mutanabbi' });
       expect(body.data.meter).toEqual({ name: 'الطويل', slug: 'tawil' });
       expect(body.data.theme).toEqual({ name: 'الغزل', slug: 'love' });
@@ -123,33 +123,33 @@ describe('poems procedures', () => {
     });
 
     it('returns 404 when poem not found', async () => {
-      getPoemBySlugMock.mockResolvedValue(err({ kind: 'not_found', slug: 'nonexistent-poem' }));
+      getPoemBySlugMock.mockResolvedValue(err({ kind: 'not_found', slug: 'nope' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poems/nonexistent-poem');
+      const res = await client.$get('/v1/poems/nope');
 
       expect(res.status).toBe(404);
     });
 
     it('returns 500 when poem parse error occurs', async () => {
       getPoemBySlugMock.mockResolvedValue(
-        err({ kind: 'sql_error', slug: 'bad-poem', message: 'Invalid content' })
+        err({ kind: 'sql_error', slug: 'bdpm', message: 'Invalid content' })
       );
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poems/bad-poem');
+      const res = await client.$get('/v1/poems/bdpm');
 
       expect(res.status).toBe(500);
     });
 
     it('returns 500 when incomplete_poem_data', async () => {
-      getPoemBySlugMock.mockResolvedValue(err({ kind: 'incomplete_poem_data', slug: 'bad-poem' }));
+      getPoemBySlugMock.mockResolvedValue(err({ kind: 'incomplete_poem_data', slug: 'bdpm' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
-      const res = await client.$get('/v1/poems/bad-poem');
+      const res = await client.$get('/v1/poems/bdpm');
 
       expect(res.status).toBe(500);
     });

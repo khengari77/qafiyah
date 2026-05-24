@@ -301,9 +301,7 @@ const THEMES_OPTIONS = [
   { id: 27, name: 'وطن' },
 ] as const satisfies readonly SearchOption[];
 
-const COLLECTIONS_OPTIONS = [
-  { id: 1, name: 'المعلقات', slug: '3848b67c-77c5-4ca2-ba11-19ea68cf5a23' },
-] as const;
+const COLLECTIONS_OPTIONS = [{ id: 1, name: 'المعلقات', slug: 'almuallaqat' }] as const;
 
 const SEARCH_TYPE_LABELS = {
   poems: SEARCH_TEXTS.poemsSearchTypeLabel,

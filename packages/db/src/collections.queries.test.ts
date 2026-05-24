@@ -37,7 +37,7 @@ describe('listCollectionPoems', () => {
     const parentRow = { name: 'المعلقات', poems_count: 10 };
     const poemRow = {
       title: 'قفا نبك',
-      slug: 'poem-slug',
+      slug: 'abcd',
       poet_name: 'امرؤ القيس',
       poet_slug: 'imru-l-qais',
       meter_name: 'الطويل',

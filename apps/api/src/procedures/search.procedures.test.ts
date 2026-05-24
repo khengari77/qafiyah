@@ -33,7 +33,7 @@ async function buildOrpcApp() {
 const poemHit = {
   type: 'poem',
   title: 't',
-  slug: '00000000-0000-0000-0000-000000000000',
+  slug: 'srch',
   snippet: '<mark>x</mark>',
   poet: { name: 'p', slug: 'ps' },
   meter: { name: 'm', slug: 'ms' },

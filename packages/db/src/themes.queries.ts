@@ -66,7 +66,7 @@ export async function listThemePoems(
 
   const parentRowsResult = await executeAs(
     db,
-    sql`SELECT name, poems_count FROM theme_stats WHERE slug = ${slug}::UUID LIMIT 1`,
+    sql`SELECT name, poems_count FROM theme_stats WHERE slug = ${slug} LIMIT 1`,
     parentStatsRowSchema
   );
   if (parentRowsResult.isErr()) return err(parentRowsResult.error);
@@ -81,7 +81,7 @@ export async function listThemePoems(
     sql`
       SELECT
         p.title AS title,
-        p.slug::TEXT AS slug,
+        p.slug AS slug,
         pt.name AS poet_name,
         pt.slug AS poet_slug,
         m.name AS meter_name,
@@ -90,7 +90,7 @@ export async function listThemePoems(
       JOIN public.poets pt ON p.poet_id = pt.id
       JOIN public.meters m ON p.meter_id = m.id
       JOIN public.themes th ON p.theme_id = th.id
-      WHERE th.slug = ${slug}::UUID
+      WHERE th.slug = ${slug}
       ORDER BY p.id
       LIMIT ${limit} OFFSET ${offset}
     `,
@@ -124,9 +124,9 @@ export async function listAllThemePoems(
     db,
     sql`
       SELECT
-        th.slug::TEXT AS parent_slug,
+        th.slug AS parent_slug,
         p.title AS title,
-        p.slug::TEXT AS slug,
+        p.slug AS slug,
         pt.name AS poet_name,
         pt.slug AS poet_slug,
         m.name AS meter_name,

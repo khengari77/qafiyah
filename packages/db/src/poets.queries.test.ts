@@ -35,9 +35,9 @@ describe('listPoetPoems', () => {
     const parentRow = { name: 'المتنبي', poems_count: 50 };
     const poemRow = {
       title: 'قصيدة',
-      slug: 'poem-slug',
+      slug: 'abcd',
       poet_name: 'المتنبي',
-      poet_slug: 'al-mutanabbi',
+      poet_slug: 'almutanabbi',
       meter_name: 'الطويل',
       meter_slug: 'altawil',
     };

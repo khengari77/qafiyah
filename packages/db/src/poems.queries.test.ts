@@ -118,12 +118,12 @@ describe('listAllPoemSlugs', () => {
   it('returns all slugs and total count', async () => {
     const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({
-        from: vi.fn().mockReturnValue(makeChain([{ slug: 'slug-1' }, { slug: 'slug-2' }])),
+        from: vi.fn().mockReturnValue(makeChain([{ slug: 'abcd' }, { slug: 'efgh' }])),
       }),
     });
 
     const value = (await listAllPoemSlugs(mockDb))._unsafeUnwrap();
-    expect(value).toEqual(['slug-1', 'slug-2']);
+    expect(value).toEqual(['abcd', 'efgh']);
   });
 
   it('returns empty slugs when no poems exist', async () => {
@@ -230,13 +230,11 @@ describe('getRandomPoemExcerpt', () => {
 describe('getRandomPoemSlug', () => {
   it('returns slug from a valid response', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 'test-slug-uuid' } }]),
+      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 'abcd' } }]),
     });
 
     const result = await getRandomPoemSlug(mockDb);
-    expect(result._unsafeUnwrap()).toBe('test-slug-uuid');
+    expect(result._unsafeUnwrap()).toBe('abcd');
   });
 
   it('returns no_eligible_poem_slug when execute returns empty array', async () => {
@@ -291,12 +289,12 @@ describe('getRandomPoemSlug', () => {
 
 const fullPoemData = {
   poem: {
-    slug: 'poem-slug',
+    slug: 'abcd',
     title: '"قصيدة المتنبي"',
     content: POEM_CONTENT,
     verse_count: 1,
     poet_name: 'المتنبي',
-    poet_slug: 'al-mutanabbi',
+    poet_slug: 'almutanabbi',
     meter_name: 'الطويل',
     theme_name: 'فخر',
     era_name: 'عباسي',
@@ -304,7 +302,7 @@ const fullPoemData = {
   },
   related_poems: [
     {
-      poem_slug: 'related-slug',
+      poem_slug: 'efgh',
       poet_name: 'شاعر آخر',
       meter_name: 'البسيط',
       poem_title: 'قصيدة أخرى',
@@ -321,7 +319,7 @@ describe('getPoemBySlug', () => {
         .mockResolvedValueOnce([{ slug: 'altawil' }]) // meter
         .mockResolvedValueOnce([{ slug: 'fakhr' }]) // theme
         .mockResolvedValueOnce([
-          { poem_slug: 'related-slug', poet_slug: 'other-poet', meter_slug: 'albasit' },
+          { poem_slug: 'efgh', poet_slug: 'other-poet', meter_slug: 'albasit' },
         ]),
     });
 
@@ -403,29 +401,13 @@ describe('getPoemBySlug', () => {
         {
           get_poem_with_related: {
             error: 'Not Found',
-            message: 'No poem found with slug: 00000000-0000-0000-0000-000000000000',
+            message: 'No poem found with slug: zzzz',
           },
         },
       ]),
     });
 
-    const result = await getPoemBySlug(mockDb, asPoemSlug('00000000-0000-0000-0000-000000000000'));
-    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
-  });
-
-  it('returns not_found when the function reports "Invalid UUID format"', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([
-        {
-          get_poem_with_related: {
-            error: 'Invalid UUID format',
-            message: 'The provided slug is not a valid UUID: nope',
-          },
-        },
-      ]),
-    });
-
-    const result = await getPoemBySlug(mockDb, asPoemSlug('nope'));
+    const result = await getPoemBySlug(mockDb, asPoemSlug('zzzz'));
     expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
@@ -441,7 +423,7 @@ describe('getPoemBySlug', () => {
         meter_name: '',
         theme_name: '',
         era_name: '',
-        era_slug: '',
+        era_slug: 'abbasid',
       },
       related_poems: [],
     };

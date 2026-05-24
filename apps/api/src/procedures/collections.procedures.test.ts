@@ -40,7 +40,7 @@ async function buildOrpcApp() {
 const sampleCollection = { name: 'المعلقات', slug: 'muallaqat-uuid', poemsCount: 10 };
 const samplePoemRow = {
   title: 'قفا نبك',
-  slug: 'poem-1',
+  slug: 'pone',
   poetName: 'امرؤ القيس',
   poetSlug: 'imru-l-qais',
   meterName: 'الطويل',

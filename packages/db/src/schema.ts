@@ -1,9 +1,9 @@
-import { integer, pgMaterializedView, pgView, text, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgMaterializedView, pgView, text } from 'drizzle-orm/pg-core';
 
 export const collectionStats = pgView('collection_stats', {
   id: integer('id').notNull(),
   name: text('name').notNull(),
-  slug: uuid('slug').notNull(),
+  slug: text('slug').notNull(),
   poemsCount: integer('poems_count').notNull(),
   poetsCount: integer('poets_count').notNull(),
 }).existing();
@@ -44,7 +44,7 @@ export const rhymeStats = pgView('rhyme_stats', {
 export const themeStats = pgView('theme_stats', {
   id: integer('id').notNull(),
   name: text('name').notNull(),
-  slug: uuid('slug').notNull(),
+  slug: text('slug').notNull(),
   poemsCount: integer('poems_count').notNull(),
   poetsCount: integer('poets_count').notNull(),
 }).existing();
@@ -61,5 +61,5 @@ export const poemsFullData = pgMaterializedView('poem_full_data', {
   eraName: text('era_name'),
   eraSlug: text('era_slug'),
   collectionName: text('collection_name'),
-  collectionSlug: uuid('collection_slug'),
+  collectionSlug: text('collection_slug'),
 }).existing();

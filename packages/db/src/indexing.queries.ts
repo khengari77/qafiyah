@@ -68,9 +68,9 @@ const POEM_SELECT = sql`
     pt.name AS poet_name, pt.slug AS poet_slug,
     e.name AS era_name, e.slug AS era_slug,
     m.name AS meter_name, m.slug AS meter_slug,
-    COALESCE(t.slug::text, '') AS theme_slug,
-    COALESCE(r.slug::text, '') AS rhyme_slug,
-    COALESCE(c.slug::text, '') AS collection_slug
+    COALESCE(t.slug, '') AS theme_slug,
+    COALESCE(r.slug, '') AS rhyme_slug,
+    COALESCE(c.slug, '') AS collection_slug
   FROM public.poems p
   JOIN public.poets pt ON p.poet_id = pt.id
   JOIN public.eras e ON pt.era_id = e.id
@@ -124,8 +124,7 @@ export async function getPoemsBySlugs(
   const literal = formatPgTextArrayLiteral(slugs);
   const rows = await executeAs(
     db,
-    // p.slug is a UUID column — cast to text to compare against the text[] param.
-    sql`${POEM_SELECT} WHERE p.slug::text = ANY(${literal}::text[])`,
+    sql`${POEM_SELECT} WHERE p.slug = ANY(${literal}::text[])`,
     poemRowSchema
   );
   if (rows.isErr()) return err(rows.error);
@@ -144,7 +143,7 @@ export async function getPoetsBySlugs(
       SELECT pt.id AS id, pt.slug AS slug, pt.name AS name,
              e.name AS era_name, e.slug AS era_slug
       FROM public.poets pt JOIN public.eras e ON pt.era_id = e.id
-      WHERE pt.slug::text = ANY(${literal}::text[])
+      WHERE pt.slug = ANY(${literal}::text[])
     `,
     poetRowSchema
   );

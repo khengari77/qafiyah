@@ -33,9 +33,9 @@ describe('listThemePoems', () => {
     const parentRow = { name: 'غزل', poems_count: 40 };
     const poemRow = {
       title: 'قصيدة',
-      slug: 'poem-slug',
+      slug: 'abcd',
       poet_name: 'شاعر',
-      poet_slug: 'poet-1',
+      poet_slug: 'poet-a',
       meter_name: 'الطويل',
       meter_slug: 'altawil',
     };

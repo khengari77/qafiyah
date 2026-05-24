@@ -380,10 +380,7 @@ async function loadPoemWithRelated(
   if (success.success) return ok(success.output);
   const sqlError = v.safeParse(poemRelatedSqlErrorSchema, payload);
   if (sqlError.success) {
-    // get_poem_with_related signals a non-resolvable slug via these error codes
-    // (a missing poem, or a malformed UUID) — both mean "no such poem" → not_found
-    // (so the API returns 404, not 500). Any other error payload is unexpected → sql_error.
-    if (sqlError.output.error === 'Not Found' || sqlError.output.error === 'Invalid UUID format') {
+    if (sqlError.output.error === 'Not Found') {
       return err({ kind: 'not_found', slug });
     }
     return err({
@@ -456,13 +453,13 @@ async function loadPoemSlugEnrichment(
           db,
           sql`
             SELECT
-              p.slug::TEXT AS poem_slug,
+              p.slug AS poem_slug,
               pt.slug AS poet_slug,
               m.slug AS meter_slug
             FROM public.poems p
             JOIN public.poets pt ON p.poet_id = pt.id
             JOIN public.meters m ON p.meter_id = m.id
-            WHERE p.slug::TEXT = ANY(${formatPgTextArrayLiteral(relatedSlugs)}::TEXT[])
+            WHERE p.slug = ANY(${formatPgTextArrayLiteral(relatedSlugs)}::TEXT[])
           `,
           relatedEnrichmentRowSchema
         ),

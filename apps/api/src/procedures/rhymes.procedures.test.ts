@@ -40,7 +40,7 @@ async function buildOrpcApp() {
 const sampleRhyme = { name: 'الميم', slug: 'meem', poemsCount: 150, poetsCount: 80 };
 const samplePoemRow = {
   title: 'قصيدة',
-  slug: 'poem-1',
+  slug: 'pone',
   poetName: 'شاعر',
   poetSlug: 'shaer',
   meterName: 'الطويل',

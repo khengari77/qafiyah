@@ -33,9 +33,9 @@ describe('listMeterPoems', () => {
     const parentRow = { name: 'الطويل', poems_count: 100 };
     const poemRow = {
       title: 'قصيدة',
-      slug: 'poem-slug',
+      slug: 'abcd',
       poet_name: 'شاعر',
-      poet_slug: 'poet-1',
+      poet_slug: 'poet-a',
       meter_name: 'الطويل',
       meter_slug: 'altawil',
     };
@@ -46,7 +46,7 @@ describe('listMeterPoems', () => {
     const result = await listMeterPoems(mockDb, asMeterSlug('altawil'), 1);
     const value = result._unsafeUnwrap();
     expect(value.parent).toEqual({ name: 'الطويل', slug: 'altawil', poemsCount: 100 });
-    expect(value.poems[0]?.poetSlug).toBe('poet-1');
+    expect(value.poems[0]?.poetSlug).toBe('poet-a');
   });
 
   it('returns not_found err when meter is not found', async () => {

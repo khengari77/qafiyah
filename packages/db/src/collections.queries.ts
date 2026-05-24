@@ -70,7 +70,7 @@ export async function listCollectionPoems(
 
   const parentRowsResult = await executeAs(
     db,
-    sql`SELECT name, poems_count FROM collection_stats WHERE slug = ${slug}::UUID LIMIT 1`,
+    sql`SELECT name, poems_count FROM collection_stats WHERE slug = ${slug} LIMIT 1`,
     parentStatsRowSchema
   );
   if (parentRowsResult.isErr()) return err(parentRowsResult.error);
@@ -85,7 +85,7 @@ export async function listCollectionPoems(
     sql`
       SELECT
         p.title AS title,
-        p.slug::TEXT AS slug,
+        p.slug AS slug,
         pt.name AS poet_name,
         pt.slug AS poet_slug,
         m.name AS meter_name,
@@ -94,7 +94,7 @@ export async function listCollectionPoems(
       JOIN public.poets pt ON p.poet_id = pt.id
       JOIN public.meters m ON p.meter_id = m.id
       JOIN public.collections c ON p.collection_id = c.id
-      WHERE c.slug = ${slug}::UUID
+      WHERE c.slug = ${slug}
       ORDER BY p.id
       LIMIT ${limit} OFFSET ${offset}
     `,
@@ -130,9 +130,9 @@ export async function listAllCollectionPoems(
     db,
     sql`
       SELECT
-        c.slug::TEXT AS parent_slug,
+        c.slug AS parent_slug,
         p.title AS title,
-        p.slug::TEXT AS slug,
+        p.slug AS slug,
         pt.name AS poet_name,
         pt.slug AS poet_slug,
         m.name AS meter_name,
