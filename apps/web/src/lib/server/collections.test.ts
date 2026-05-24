@@ -56,7 +56,7 @@ describe('getCollectionPoemsPage', () => {
 
   it('returns null on NOT_FOUND (unknown slug)', async () => {
     collectionsListPoemsMock.mockRejectedValue(
-      new ORPCError('NOT_FOUND', { defined: true, status: 404 }),
+      new ORPCError('NOT_FOUND', { defined: true, status: 404 })
     );
     expect(await getCollectionPoemsPage('missing' as CollectionSlug, 1)).toBeNull();
   });

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { SelectMulti } from '@/components/ui/select-multi';
 import { SelectSingle } from '@/components/ui/select-single';
 import {
+  COLLECTIONS_NOUN_FORMS,
   ERAS_NOUN_FORMS,
   METERS_NOUN_FORMS,
   RHYMES_NOUN_FORMS,
@@ -35,6 +36,7 @@ type Props = {
     readonly meters: MultiFilter;
     readonly themes: MultiFilter;
     readonly rhymes: MultiFilter;
+    readonly collections: MultiFilter;
   };
   readonly wantPoems: boolean;
 };
@@ -148,6 +150,20 @@ export function Filters({ filters, wantPoems }: Props) {
                 multiple={true}
               />
             </div>
+
+            <div className="flex flex-col items-start justify-start gap-2">
+              <p className="block font-bold text-base text-zinc-700">
+                {SEARCH_TEXTS.collectionsLabel}
+              </p>
+              <SelectMulti
+                options={filters.collections.options}
+                value={filters.collections.selected}
+                placeholderNounForms={COLLECTIONS_NOUN_FORMS}
+                onChange={filters.collections.onChange}
+                placeholder={SEARCH_TEXTS.collectionsPlaceholder}
+                multiple={true}
+              />
+            </div>
           </>
         )}
       </div>
@@ -191,10 +207,12 @@ type FilterBadgesProps = {
   readonly selectedMetersLength: number;
   readonly selectedRhymesLength: number;
   readonly selectedThemesLength: number;
+  readonly selectedCollectionsLength: number;
   readonly erasCount: string;
   readonly metersCount: string;
   readonly themesCount: string;
   readonly rhymesCount: string;
+  readonly collectionsCount: string;
 };
 
 export function FilterBadges({
@@ -202,10 +220,12 @@ export function FilterBadges({
   selectedMetersLength,
   selectedRhymesLength,
   selectedThemesLength,
+  selectedCollectionsLength,
   erasCount,
   metersCount,
   themesCount,
   rhymesCount,
+  collectionsCount,
 }: FilterBadgesProps) {
   const badgeClassname = 'text-xs md:text-sm font-normal text-zinc-600 border-zinc-300/50 bg-white';
   return (
@@ -228,6 +248,11 @@ export function FilterBadges({
       {selectedRhymesLength > 0 && (
         <Badge variant="outline" className={badgeClassname}>
           {rhymesCount}
+        </Badge>
+      )}
+      {selectedCollectionsLength > 0 && (
+        <Badge variant="outline" className={badgeClassname}>
+          {collectionsCount}
         </Badge>
       )}
     </div>

@@ -13,7 +13,9 @@ import { stripQuotes } from '@/lib/utils';
 const page = parsePageParam(Astro.params.page);
 const slugParam = Astro.params.slug;
 const data =
-  page === null || !slugParam ? null : await getCollectionPoemsPage(slugParam as CollectionSlug, page);
+  page === null || !slugParam
+    ? null
+    : await getCollectionPoemsPage(slugParam as CollectionSlug, page);
 if (!data) return Astro.rewrite('/404');
 Astro.response.headers.set('Cache-Control', CACHE_LIST);
 const { poems, collection, pagination } = data;

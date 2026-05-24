@@ -125,6 +125,7 @@ export function useSearch() {
   const [meterIds, setMeterIds] = useQueryState('meter_ids', { defaultValue: '' });
   const [rhymeIds, setRhymeIds] = useQueryState('rhyme_ids', { defaultValue: '' });
   const [themeIds, setThemeIds] = useQueryState('theme_ids', { defaultValue: '' });
+  const [collectionIds, setCollectionIds] = useQueryState('collection_ids', { defaultValue: '' });
 
   const [inputValue, setInputValue] = useState(query);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -144,12 +145,14 @@ export function useSearch() {
   const selectedRhymes = splitCsvIds(rhymeIds);
   const selectedMeters = splitCsvIds(meterIds);
   const selectedThemes = splitCsvIds(themeIds);
+  const selectedCollections = splitCsvIds(collectionIds);
 
   const hasFilters =
     selectedEras.length > 0 ||
     selectedRhymes.length > 0 ||
     selectedMeters.length > 0 ||
-    selectedThemes.length > 0;
+    selectedThemes.length > 0 ||
+    selectedCollections.length > 0;
   const hasCommittedQuery = query.trim().length > 0;
   const hasInputText = inputValue.trim().length > 0;
   const canSearch = hasCommittedQuery || hasFilters;
@@ -167,6 +170,7 @@ export function useSearch() {
         meterSlugs: [...splitCsvIds(meterIds)],
         rhymeSlugs: [...splitCsvIds(rhymeIds)],
         themeSlugs: [...splitCsvIds(themeIds)],
+        collectionSlugs: [...splitCsvIds(collectionIds)],
         poetSlugs: [],
       }),
       initialPageParam: 1,
@@ -193,6 +197,7 @@ export function useSearch() {
         meterSlugs: [],
         rhymeSlugs: [],
         themeSlugs: [],
+        collectionSlugs: [],
         poetSlugs: [],
       }),
       initialPageParam: 1,
@@ -258,6 +263,7 @@ export function useSearch() {
   const handleMetersChange = createCsvFilterSetter(setMeterIds);
   const handleRhymesChange = createCsvFilterSetter(setRhymeIds);
   const handleThemesChange = createCsvFilterSetter(setThemeIds);
+  const handleCollectionsChange = createCsvFilterSetter(setCollectionIds);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value;
@@ -277,6 +283,7 @@ export function useSearch() {
       setMeterIds('');
       setThemeIds('');
       setRhymeIds('');
+      setCollectionIds('');
     }
     setTypesRaw(valid.length > 0 ? valid.join(',') : SEARCH_TYPE_VALUES.join(','));
     setValidationError(null);
@@ -319,6 +326,7 @@ export function useSearch() {
     setMeterIds('');
     setRhymeIds('');
     setThemeIds('');
+    setCollectionIds('');
     setInputValue('');
     setValidationError(null);
   };
@@ -368,6 +376,7 @@ export function useSearch() {
       meters: selectedMeters,
       themes: selectedThemes,
       rhymes: selectedRhymes,
+      collections: selectedCollections,
     },
     handlers: {
       onInputChange: handleInputChange,
@@ -379,6 +388,7 @@ export function useSearch() {
       onMetersChange: handleMetersChange,
       onThemesChange: handleThemesChange,
       onRhymesChange: handleRhymesChange,
+      onCollectionsChange: handleCollectionsChange,
       onToggleFilters: handleToggleFilters,
       onReset: handleReset,
     },

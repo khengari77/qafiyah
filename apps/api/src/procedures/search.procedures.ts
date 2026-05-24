@@ -50,7 +50,7 @@ export const search = publicProcedure.search.search.handler(async ({ context, in
           meterSlugs: input.meterSlugs,
           themeSlugs: input.themeSlugs,
           rhymeSlugs: input.rhymeSlugs,
-          collectionSlugs: [],
+          collectionSlugs: input.collectionSlugs,
         })
       : null,
     wantPoets

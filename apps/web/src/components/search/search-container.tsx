@@ -8,6 +8,8 @@ import {
 import { useSearch } from '@/components/search/use-search';
 import { Card } from '@/components/ui/card';
 import {
+  COLLECTIONS_NOUN_FORMS,
+  collectionsOptions,
   ERAS_NOUN_FORMS,
   erasOptions,
   METERS_NOUN_FORMS,
@@ -85,10 +87,15 @@ export function SearchContainer() {
                   metersCount={getBadgeCount(selection.meters.length || 0, METERS_NOUN_FORMS)}
                   themesCount={getBadgeCount(selection.themes.length || 0, THEMES_NOUN_FORMS)}
                   rhymesCount={getBadgeCount(selection.rhymes.length || 0, RHYMES_NOUN_FORMS)}
+                  collectionsCount={getBadgeCount(
+                    selection.collections.length || 0,
+                    COLLECTIONS_NOUN_FORMS
+                  )}
                   selectedErasLength={selection.eras.length}
                   selectedMetersLength={selection.meters.length}
                   selectedRhymesLength={selection.rhymes.length}
                   selectedThemesLength={selection.themes.length}
+                  selectedCollectionsLength={selection.collections.length}
                 />
               </div>
 
@@ -123,6 +130,11 @@ export function SearchContainer() {
                       selected: selection.rhymes,
                       options: rhymesOptions,
                       onChange: handlers.onRhymesChange,
+                    },
+                    collections: {
+                      selected: selection.collections,
+                      options: collectionsOptions,
+                      onChange: handlers.onCollectionsChange,
                     },
                   }}
                   wantPoems={flags.wantPoems}

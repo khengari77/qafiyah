@@ -108,6 +108,8 @@ export const SEARCH_TEXTS = {
   metersPlaceholder: 'بحر أو عدة بحور',
   themesLabel: 'الأغراض',
   themesPlaceholder: 'غرض أو عدة أغراض',
+  collectionsLabel: 'المجموعات',
+  collectionsPlaceholder: 'مجموعة أو عدة مجموعات',
   rhymesLabel: 'القوافي',
   rhymesPlaceholder: 'قافية أو عدة قوافي',
   searchTypeLabel: 'المجال',
@@ -155,6 +157,12 @@ export const RHYMES_NOUN_FORMS = {
   singular: 'قافية',
   dual: 'قافيتان',
   plural: 'قوافي',
+} as const satisfies ArabicNounForms;
+
+export const COLLECTIONS_NOUN_FORMS = {
+  singular: 'مجموعة',
+  dual: 'مجموعتان',
+  plural: 'مجموعات',
 } as const satisfies ArabicNounForms;
 
 export const POEMS_NOUN_FORMS = {
@@ -292,6 +300,10 @@ const THEMES_OPTIONS = [
   { id: 27, name: 'وطن' },
 ] as const satisfies readonly SearchOption[];
 
+const COLLECTIONS_OPTIONS = [
+  { id: 1, name: 'المعلقات', slug: '3848b67c-77c5-4ca2-ba11-19ea68cf5a23' },
+] as const;
+
 const SEARCH_TYPE_LABELS = {
   poems: SEARCH_TEXTS.poemsSearchTypeLabel,
   poets: SEARCH_TEXTS.poetsSearchTypeLabel,
@@ -333,4 +345,9 @@ export const metersOptions: readonly SelectOption[] = METERS_OPTIONS.map((meter)
 export const themesOptions: readonly SelectOption[] = THEMES_OPTIONS.map((theme) => ({
   value: theme.id.toString(),
   label: theme.name,
+}));
+
+export const collectionsOptions: readonly SelectOption[] = COLLECTIONS_OPTIONS.map((c) => ({
+  value: c.slug,
+  label: c.name,
 }));

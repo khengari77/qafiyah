@@ -8,6 +8,7 @@ import {
 } from '@qafiyah/constants';
 import * as v from 'valibot';
 import {
+  collectionSlugSchema,
   eraSlugSchema,
   meterSlugSchema,
   poemSlugSchema,
@@ -56,6 +57,7 @@ export const searchInputSchema = v.object({
   meterSlugs: optionalSlugs(meterSlugSchema),
   rhymeSlugs: optionalSlugs(rhymeSlugSchema),
   themeSlugs: optionalSlugs(themeSlugSchema),
+  collectionSlugs: optionalSlugs(collectionSlugSchema),
 });
 
 const poemsSection = v.object({ data: v.array(poemSearchResult), pagination });

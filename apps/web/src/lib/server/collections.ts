@@ -14,15 +14,13 @@ export async function allCollections(): Promise<ApiOutputs['collections']['list'
 
 export async function getCollectionPoemsPage(
   slug: CollectionSlug,
-  page: number,
+  page: number
 ): Promise<{
   poems: CollectionPoems['data'];
   collection: CollectionPoems['meta'];
   pagination: CollectionPoems['pagination'];
 } | null> {
-  const { error, data } = await safe(
-    apiServer.collections.listPoems({ slug, page: String(page) }),
-  );
+  const { error, data } = await safe(apiServer.collections.listPoems({ slug, page: String(page) }));
   if (error) {
     if (errorStatus(error) === 404) return null;
     throw error;
