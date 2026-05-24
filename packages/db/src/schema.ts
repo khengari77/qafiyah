@@ -12,6 +12,7 @@ export const eraStats = pgView('era_stats', {
   id: integer('id').notNull(),
   name: text('name').notNull(),
   slug: text('slug').notNull(),
+  sortOrder: integer('sort_order').notNull(),
   poetsCount: integer('poets_count').notNull(),
   poemsCount: integer('poems_count').notNull(),
 }).existing();
