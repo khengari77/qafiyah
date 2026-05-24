@@ -78,7 +78,7 @@ const rawPoemRowSchema = v.object({
   slug: poemSlugSchema,
   title: v.string(),
   content: v.string(),
-  verse_count: v.nullable(v.number()),
+  verse_count: v.number(),
   poet_name: v.string(),
   poet_slug: poetSlugSchema,
   meter_name: v.string(),
@@ -298,7 +298,7 @@ export type PoemDetail = {
     readonly themeSlug: ThemeSlug;
   };
   readonly displayTitle: string;
-  readonly verseCount: number | null;
+  readonly verseCount: number;
   readonly parsedContent: ReturnType<typeof parsePoemContent>;
   readonly relatedPoems: readonly PoemListRow[];
 };

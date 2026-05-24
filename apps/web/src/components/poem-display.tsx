@@ -109,7 +109,7 @@ export function PoemDisplay({
           <div className="flex w-full items-center justify-between rounded-full border border-zinc-300/80 px-2.5 text-[10px] text-zinc-600 xxs:text-xs md:w-8/12 md:px-8 md:text-sm lg:px-16 lg:text-base xl:text-lg 2xl:text-xl">
             <p className="flex-1 border-l py-0.5 md:py-1 lg:py-1.5">{meter.name || ''}</p>
             <p className="flex-1 border-l py-0.5 md:py-1 lg:py-1.5">
-              {verseCount === null ? '' : formatVerseCount(verseCount)}
+              {formatVerseCount(verseCount)}
             </p>
             <p className="flex-1 py-0.5 md:py-1 lg:py-1.5">{theme.name || ''}</p>
           </div>
