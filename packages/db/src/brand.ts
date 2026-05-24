@@ -1,4 +1,5 @@
 import type {
+  CollectionSlug,
   EraSlug,
   MeterSlug,
   PoemSlug,
@@ -17,3 +18,4 @@ export const asPoemSlug = (value: string): PoemSlug => value as PoemSlug;
 export const asPoetSlug = (value: string): PoetSlug => value as PoetSlug;
 export const asRhymeSlug = (value: string): RhymeSlug => value as RhymeSlug;
 export const asThemeSlug = (value: string): ThemeSlug => value as ThemeSlug;
+export const asCollectionSlug = (value: string): CollectionSlug => value as CollectionSlug;

@@ -1,5 +1,13 @@
 import { integer, pgMaterializedView, pgView, text, uuid } from 'drizzle-orm/pg-core';
 
+export const collectionStats = pgView('collection_stats', {
+  id: integer('id').notNull(),
+  name: text('name').notNull(),
+  slug: uuid('slug').notNull(),
+  poemsCount: integer('poems_count').notNull(),
+  poetsCount: integer('poets_count').notNull(),
+}).existing();
+
 export const eraStats = pgView('era_stats', {
   id: integer('id').notNull(),
   name: text('name').notNull(),
@@ -52,4 +60,6 @@ export const poemsFullData = pgMaterializedView('poem_full_data', {
   themeName: text('theme_name'),
   eraName: text('era_name'),
   eraSlug: text('era_slug'),
+  collectionName: text('collection_name'),
+  collectionSlug: uuid('collection_slug'),
 }).existing();

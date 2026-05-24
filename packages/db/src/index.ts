@@ -1,5 +1,6 @@
 export type { DbClient } from './client';
 export { createDb } from './client';
+export * as collectionsQueries from './collections.queries';
 export * as erasQueries from './eras.queries';
 export { extractRhymeLetter, RHYME_LETTERS } from './extract-rhymes';
 export * as indexingQueries from './indexing.queries';
