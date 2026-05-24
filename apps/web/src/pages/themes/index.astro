@@ -4,7 +4,7 @@ import Layout from '@/layouts/layout.astro';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { CACHE_INDEX } from '@/lib/server/cache';
-import { allThemes } from '@/lib/server/collections';
+import { allThemes } from '@/lib/server/taxonomies';
 import { stripQuotes } from '@/lib/utils';
 
 const themes = await allThemes();

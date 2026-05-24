@@ -5,7 +5,7 @@ import Layout from '@/layouts/layout.astro';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { CACHE_INDEX } from '@/lib/server/cache';
-import { allEras } from '@/lib/server/collections';
+import { allEras } from '@/lib/server/taxonomies';
 import { stripQuotes } from '@/lib/utils';
 
 const eras = await allEras();

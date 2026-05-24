@@ -9,7 +9,7 @@ export const GET: APIRoute = async () => {
   const paths = [
     ...Array.from({ length: poemShards }, (_, i) => `/sitemap/poems/${i + 1}.xml`),
     '/sitemap/poets.xml',
-    '/sitemap/collections.xml',
+    '/sitemap/taxonomies.xml',
   ];
   return new Response(sitemapIndexXml(paths), {
     headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': CACHE_SITEMAP },

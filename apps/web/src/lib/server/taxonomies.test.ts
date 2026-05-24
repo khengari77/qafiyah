@@ -12,7 +12,7 @@ vi.mock('./client', () => ({
 }));
 
 import { apiServer } from './client';
-import { allEras, getEraPoemsPage, getMeterPoemsPage } from './collections';
+import { allEras, getEraPoemsPage, getMeterPoemsPage } from './taxonomies';
 
 const erasListMock = apiServer.eras.list as unknown as ReturnType<typeof vi.fn>;
 const eraPoemsMock = apiServer.eras.listPoems as unknown as ReturnType<typeof vi.fn>;

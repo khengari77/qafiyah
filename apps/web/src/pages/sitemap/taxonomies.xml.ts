@@ -1,8 +1,8 @@
 import { PROD_SITE_URL } from '@qafiyah/constants';
 import type { APIRoute } from 'astro';
 import { CACHE_SITEMAP } from '@/lib/server/cache';
-import { allEras, allMeters, allRhymes, allThemes } from '@/lib/server/collections';
 import { urlsetXml } from '@/lib/server/sitemap';
+import { allEras, allMeters, allRhymes, allThemes } from '@/lib/server/taxonomies';
 
 export const GET: APIRoute = async () => {
   const [eras, meters, rhymes, themes] = await Promise.all([
