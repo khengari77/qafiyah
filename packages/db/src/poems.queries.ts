@@ -28,7 +28,6 @@ export type RandomPoemLines = {
 
 type ParsedPoemContent = {
   readonly verses: readonly (readonly [string, string])[];
-  readonly verseCount: number;
   readonly sample: string;
   readonly keywords: string;
 };
@@ -46,14 +45,11 @@ export function parsePoemContent(content: string): ParsedPoemContent {
     verses[j] = [lines[i] || '', lines[i + 1] || ''];
   }
 
-  const verseCount = verses.length;
-
   const sample = lines.slice(0, 3).join(' * ');
   const keywords = lines.join(' ').split(' ').join(',');
 
   return {
     verses,
-    verseCount,
     sample,
     keywords,
   };
@@ -82,6 +78,7 @@ const rawPoemRowSchema = v.object({
   slug: poemSlugSchema,
   title: v.string(),
   content: v.string(),
+  verse_count: v.nullable(v.number()),
   poet_name: v.string(),
   poet_slug: poetSlugSchema,
   meter_name: v.string(),
@@ -301,6 +298,7 @@ export type PoemDetail = {
     readonly themeSlug: ThemeSlug;
   };
   readonly displayTitle: string;
+  readonly verseCount: number | null;
   readonly parsedContent: ReturnType<typeof parsePoemContent>;
   readonly relatedPoems: readonly PoemListRow[];
 };
@@ -527,6 +525,7 @@ function buildPoemResource(
       themeSlug,
     },
     displayTitle: poem.title.replace(DOUBLE_QUOTE_REGEX, ''),
+    verseCount: poem.verse_count,
     parsedContent: parsePoemContent(poem.content),
     relatedPoems,
   };

@@ -37,11 +37,6 @@ describe('parsePoemContent', () => {
     ]);
   });
 
-  it('reports correct verseCount', () => {
-    const { verseCount } = parsePoemContent('أ*ب*ج*د');
-    expect(verseCount).toBe(2);
-  });
-
   it('strips double quotes from content', () => {
     const { verses } = parsePoemContent('"أ"*"ب"');
     expect(verses).toEqual([['أ', 'ب']]);
@@ -64,9 +59,8 @@ describe('parsePoemContent', () => {
   });
 
   it('handles a single line (one verse with empty second half)', () => {
-    const { verses, verseCount } = parsePoemContent('بيت');
+    const { verses } = parsePoemContent('بيت');
     expect(verses).toEqual([['بيت', '']]);
-    expect(verseCount).toBe(1);
   });
 });
 
@@ -300,6 +294,7 @@ const fullPoemData = {
     slug: 'poem-slug',
     title: '"قصيدة المتنبي"',
     content: POEM_CONTENT,
+    verse_count: 1,
     poet_name: 'المتنبي',
     poet_slug: 'al-mutanabbi',
     meter_name: 'الطويل',
@@ -440,6 +435,7 @@ describe('getPoemBySlug', () => {
         slug: 'slug',
         title: '',
         content: 'a*b',
+        verse_count: 1,
         poet_name: 'شاعر',
         poet_slug: 'poet',
         meter_name: '',

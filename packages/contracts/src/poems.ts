@@ -19,7 +19,7 @@ export const poemDetail = v.object({
   title: v.string(),
   slug: poemSlugSchema,
   verses: v.array(v.tuple([v.string(), v.string()])),
-  verseCount: v.number(),
+  verseCount: v.nullable(v.number()),
   sample: v.string(),
   keywords: v.string(),
   poet: namedSlugRef(poetSlugSchema),

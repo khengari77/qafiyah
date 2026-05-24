@@ -49,9 +49,9 @@ const samplePoemData = {
     themeSlug: 'love',
   },
   displayTitle: 'قصيدة في الحب',
+  verseCount: 1,
   parsedContent: {
     verses: [['الشطر الأول', 'الشطر الثاني']],
-    verseCount: 1,
     sample: 'الشطر الأول',
     keywords: 'قصيدة',
   },

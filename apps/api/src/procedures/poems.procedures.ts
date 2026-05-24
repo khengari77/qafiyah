@@ -13,7 +13,7 @@ function toPoemDetail(slug: PoemSlug, data: poemsQueries.PoemDetail): PoemDetail
     title: data.displayTitle,
     slug,
     verses: data.parsedContent.verses.map((verse) => [verse[0], verse[1]] as [string, string]),
-    verseCount: data.parsedContent.verseCount,
+    verseCount: data.verseCount,
     sample: data.parsedContent.sample,
     keywords: data.parsedContent.keywords,
     poet: { name: data.metadata.poetName, slug: data.metadata.poetSlug },

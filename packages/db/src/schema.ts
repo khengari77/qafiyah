@@ -45,6 +45,7 @@ export const poemsFullData = pgMaterializedView('poem_full_data', {
   slug: text('slug').notNull(),
   title: text('title'),
   content: text('content'),
+  verseCount: integer('verse_count'),
   poetName: text('poet_name'),
   poetSlug: text('poet_slug'),
   meterName: text('meter_name'),
