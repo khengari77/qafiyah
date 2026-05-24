@@ -4,10 +4,10 @@ import { listAllEraPoems, listEraPoems, listEras } from './eras.queries';
 import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 
 describe('listEras', () => {
-  it('returns rows sorted by ERAS_SORT_ORDER', async () => {
+  it('returns rows in DB order (sort_order delegated to DB)', async () => {
     const rows = [
-      { name: 'عباسي', slug: 'abbasid', poetsCount: 10, poemsCount: 100 },
       { name: 'جاهلي', slug: 'pre-islamic', poetsCount: 5, poemsCount: 50 },
+      { name: 'عباسي', slug: 'abbasid', poetsCount: 10, poemsCount: 100 },
     ];
     const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),

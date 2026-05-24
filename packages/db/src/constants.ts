@@ -1,5 +1,3 @@
-export const ERAS_SORT_ORDER = ['جاهلي', 'إسلامي', 'أموي', 'عباسي', 'أندلسي', 'متأخر'] as const;
-
 export const FORMAL_METERS = [
   'الطويل',
   'المديد',

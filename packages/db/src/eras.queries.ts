@@ -1,10 +1,9 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { EraSlug } from '@qafiyah/contracts';
-import { sql } from 'drizzle-orm';
+import { asc, sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asEraSlug } from './brand';
 import type { DbClient } from './client';
-import { ERAS_SORT_ORDER } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
 import {
   type PoemListRow,
@@ -13,8 +12,6 @@ import {
   rawPoemRowSchema,
 } from './row-schemas';
 import { eraStats } from './schema';
-
-const ERAS_SORT_INDEX = new Map<string, number>(ERAS_SORT_ORDER.map((name, i) => [name, i]));
 
 export type EraStatsRow = {
   readonly name: string;
@@ -47,20 +44,15 @@ export async function listEras(
         poetsCount: eraStats.poetsCount,
         poemsCount: eraStats.poemsCount,
       })
-      .from(eraStats),
+      .from(eraStats)
+      .orderBy(asc(eraStats.sortOrder)),
     (cause): ListErasError => ({
       kind: 'sql_error',
       message: cause instanceof Error ? cause.message : String(cause),
     })
   );
   if (queryResult.isErr()) return err(queryResult.error);
-  const getSortIndex = (name: string): number =>
-    ERAS_SORT_INDEX.get(name) ?? Number.MAX_SAFE_INTEGER;
-  return ok(
-    queryResult.value
-      .map((row) => ({ ...row, slug: asEraSlug(row.slug) }))
-      .sort((a, b) => getSortIndex(a.name) - getSortIndex(b.name))
-  );
+  return ok(queryResult.value.map((row) => ({ ...row, slug: asEraSlug(row.slug) })));
 }
 
 export async function listEraPoems(
