@@ -1,7 +1,17 @@
 {
   "extends": "../packages/typescript/bun.json",
   "compilerOptions": {
-    "types": ["bun"]
+    "types": ["bun"],
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
+    "paths": {
+      "@qafiyah/db": ["../packages/db/src/index.ts"],
+      "@qafiyah/search": ["../packages/search/src/index.ts"],
+      "@qafiyah/contracts": ["../packages/contracts/src/index.ts"],
+      "@qafiyah/constants": ["../packages/constants/src/index.ts"],
+      "@qafiyah/typescript": ["../packages/typescript/bun.json"],
+      "postgres": ["../node_modules/.bun/postgres@3.4.9/node_modules/postgres/types/index.d.ts"]
+    }
   },
   "include": ["./**/*.ts"]
 }
