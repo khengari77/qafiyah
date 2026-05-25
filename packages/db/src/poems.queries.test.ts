@@ -1,11 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asPoemSlug } from './brand';
-import {
-  getPoemBySlug,
-  getRandomPoem,
-  listAllPoemSlugs,
-  parsePoemContent,
-} from './poems.queries';
+import { getPoemBySlug, getRandomPoem, listAllPoemSlugs, parsePoemContent } from './poems.queries';
 import { castPartialAsDbClient, makeChain } from './test-utils';
 
 describe('parsePoemContent', () => {
@@ -92,7 +87,9 @@ describe('getRandomPoem', () => {
 
   it('parses a JSON string result', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(RANDOM_POEM_DATA) }]),
+      execute: vi
+        .fn()
+        .mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(RANDOM_POEM_DATA) }]),
     });
 
     const poem = (await getRandomPoem(mockDb))._unsafeUnwrap();
@@ -113,7 +110,11 @@ describe('getRandomPoem', () => {
 
   it('returns invalid_payload_shape when slug field is missing', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT } }]),
+      execute: vi
+        .fn()
+        .mockResolvedValue([
+          { get_random_eligible_poem: { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT } },
+        ]),
     });
     expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
   });
