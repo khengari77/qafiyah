@@ -17,23 +17,18 @@ import type { AppContext } from '@/types';
 
 type RandomPoemError =
   | { readonly kind: 'poem_error'; readonly cause: poemsQueries.GetRandomPoemError }
-  | { readonly kind: 'excerpt_error'; readonly cause: BuildPoemExcerptError }
-  | { readonly kind: 'slug_error'; readonly cause: poemsQueries.GetRandomPoemSlugError };
+  | { readonly kind: 'excerpt_error'; readonly cause: BuildPoemExcerptError };
 
 async function fetchRandomPoemBody(
   db: DbClient,
   format: RandomPoemOption
 ): Promise<Result<string, RandomPoemError>> {
-  if (format === 'lines') {
-    const poemResult = await poemsQueries.getRandomPoem(db);
-    if (poemResult.isErr()) return err({ kind: 'poem_error', cause: poemResult.error });
-    const excerptResult = buildPoemExcerpt(poemResult.value);
-    if (excerptResult.isErr()) return err({ kind: 'excerpt_error', cause: excerptResult.error });
-    return ok(excerptResult.value);
-  }
-  const slugResult = await poemsQueries.getRandomPoemSlug(db);
-  if (slugResult.isErr()) return err({ kind: 'slug_error', cause: slugResult.error });
-  return ok(slugResult.value);
+  const poemResult = await poemsQueries.getRandomPoem(db);
+  if (poemResult.isErr()) return err({ kind: 'poem_error', cause: poemResult.error });
+  if (format === 'slug') return ok(poemResult.value.slug);
+  const excerptResult = buildPoemExcerpt(poemResult.value);
+  if (excerptResult.isErr()) return err({ kind: 'excerpt_error', cause: excerptResult.error });
+  return ok(excerptResult.value);
 }
 
 const optionSchema = v.optional(v.picklist(RANDOM_POEM_OPTIONS), 'slug');

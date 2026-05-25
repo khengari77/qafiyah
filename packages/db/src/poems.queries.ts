@@ -23,6 +23,7 @@ export type RandomPoemLines = {
   readonly poemId: PoemId;
   readonly poetName: string;
   readonly content: string;
+  readonly slug: PoemSlug;
 };
 
 type ParsedPoemContent = {
@@ -78,12 +79,14 @@ const randomPoemPayloadSchema = v.pipe(
     ),
     poet_name: v.string(),
     content: v.string(),
+    slug: poemSlugSchema,
   }),
   v.transform(
     (payload): RandomPoemLines => ({
       poemId: payload.poem_id,
       poetName: payload.poet_name,
       content: payload.content,
+      slug: payload.slug,
     })
   )
 );
@@ -155,42 +158,6 @@ export async function getRandomPoem(
   }
 
   return ok(poem);
-}
-
-export type GetRandomPoemSlugError =
-  | { readonly kind: 'no_eligible_poem_slug' }
-  | { readonly kind: 'invalid_payload_shape'; readonly raw: unknown }
-  | { readonly kind: 'query_failed'; readonly message: string };
-
-export async function getRandomPoemSlug(
-  db: DbClient
-): Promise<Result<PoemSlug, GetRandomPoemSlugError>> {
-  const queryResult = await ResultAsync.fromPromise(
-    db.execute(sql`SELECT get_random_eligible_poem_slug()`),
-    (cause): { kind: 'query_failed'; message: string } => ({
-      kind: 'query_failed',
-      message: cause instanceof Error ? cause.message : String(cause),
-    })
-  );
-  if (queryResult.isErr()) return err(queryResult.error);
-  const result = queryResult.value;
-  const row = result?.[0];
-
-  if (!row?.['get_random_eligible_poem_slug']) {
-    return err({ kind: 'no_eligible_poem_slug' });
-  }
-
-  const value = row['get_random_eligible_poem_slug'];
-  if (
-    typeof value !== 'object' ||
-    value === null ||
-    !('slug' in value) ||
-    typeof value.slug !== 'string'
-  ) {
-    return err({ kind: 'invalid_payload_shape', raw: value });
-  }
-
-  return ok(asPoemSlug(value.slug));
 }
 
 const relatedPoemItemSchema = v.object({

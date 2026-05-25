@@ -3,7 +3,6 @@ import { asPoemSlug } from './brand';
 import {
   getPoemBySlug,
   getRandomPoem,
-  getRandomPoemSlug,
   listAllPoemSlugs,
   parsePoemContent,
 } from './poems.queries';
@@ -77,137 +76,62 @@ describe('listAllPoemSlugs', () => {
   });
 });
 
+const RANDOM_POEM_DATA = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT, slug: 'abcd' };
+
 describe('getRandomPoem', () => {
-  it('returns RandomPoemLines for a JSON object result', async () => {
-    const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
+  it('returns RandomPoemLines including slug for a JSON object result', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
+      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: RANDOM_POEM_DATA }]),
     });
 
-    const result = await getRandomPoem(mockDb);
-    const poem = result._unsafeUnwrap();
+    const poem = (await getRandomPoem(mockDb))._unsafeUnwrap();
     expect(poem.poetName).toBe('شاعر');
     expect(poem.content).toBe(POEM_CONTENT);
+    expect(poem.slug).toBe('abcd');
   });
 
   it('parses a JSON string result', async () => {
-    const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(poemData) }]),
+      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(RANDOM_POEM_DATA) }]),
     });
 
-    const result = await getRandomPoem(mockDb);
-    expect(result._unsafeUnwrap().content).toBe(POEM_CONTENT);
+    const poem = (await getRandomPoem(mockDb))._unsafeUnwrap();
+    expect(poem.slug).toBe('abcd');
   });
 
   it('returns no_eligible_poem when execute returns empty array', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([]),
-    });
-
-    const result = await getRandomPoem(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
+    const mockDb = castPartialAsDbClient({ execute: vi.fn().mockResolvedValue([]) });
+    expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
   });
 
   it('returns no_eligible_poem when get_random_eligible_poem is falsy', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: null }]),
     });
-
-    const result = await getRandomPoem(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
+    expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
   });
 
-  it('returns invalid_payload_shape when content field is missing from payload', async () => {
-    const poemData = { poem_id: 1, poet_name: 'شاعر' };
+  it('returns invalid_payload_shape when slug field is missing', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
+      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT } }]),
     });
-
-    const result = await getRandomPoem(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
+    expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
   });
 
   it('returns invalid_json when string payload is malformed', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: '{not-json' }]),
     });
-
-    const result = await getRandomPoem(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('invalid_json');
+    expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('invalid_json');
   });
 
   it('returns query_failed when db.execute rejects', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockRejectedValue(new Error('connection lost')),
     });
-
-    const result = await getRandomPoem(mockDb);
-    const error = result._unsafeUnwrapErr();
+    const error = (await getRandomPoem(mockDb))._unsafeUnwrapErr();
     expect(error.kind).toBe('query_failed');
-    if (error.kind === 'query_failed') {
-      expect(error.message).toBe('connection lost');
-    }
-  });
-});
-
-describe('getRandomPoemSlug', () => {
-  it('returns slug from a valid response', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 'abcd' } }]),
-    });
-
-    const result = await getRandomPoemSlug(mockDb);
-    expect(result._unsafeUnwrap()).toBe('abcd');
-  });
-
-  it('returns no_eligible_poem_slug when execute returns empty array', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([]),
-    });
-
-    const result = await getRandomPoemSlug(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('no_eligible_poem_slug');
-  });
-
-  it('returns no_eligible_poem_slug when get_random_eligible_poem_slug is null', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: null }]),
-    });
-
-    const result = await getRandomPoemSlug(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('no_eligible_poem_slug');
-  });
-
-  it('returns invalid_payload_shape when value is not an object', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: 'just-a-string' }]),
-    });
-
-    const result = await getRandomPoemSlug(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
-  });
-
-  it('returns invalid_payload_shape when slug property is missing', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { other: 'field' } }]),
-    });
-
-    const result = await getRandomPoemSlug(mockDb);
-    const error = result._unsafeUnwrapErr();
-    expect(error.kind).toBe('invalid_payload_shape');
-    if (error.kind === 'invalid_payload_shape') {
-      expect(error.raw).toEqual({ other: 'field' });
-    }
-  });
-
-  it('returns invalid_payload_shape when slug is not a string', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem_slug: { slug: 42 } }]),
-    });
-
-    const result = await getRandomPoemSlug(mockDb);
-    expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
+    if (error.kind === 'query_failed') expect(error.message).toBe('connection lost');
   });
 });
 

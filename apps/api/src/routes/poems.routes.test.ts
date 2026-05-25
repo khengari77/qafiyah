@@ -11,43 +11,35 @@ import poems from './poems.routes';
 
 describe('poems routes', () => {
   it('defaults to slug when no option query param is provided', async () => {
-    const mockResult = [{ get_random_eligible_poem_slug: { slug: 'default-slug' } }];
+    const mockPoem = { poem_id: 1, poet_name: 'شاعر', content: 'Line 1*Line 2', slug: 'abcd' };
     const db = createMockDb();
-    db.execute = vi.fn().mockResolvedValue(mockResult);
+    db.execute = vi.fn().mockResolvedValue([{ get_random_eligible_poem: mockPoem }]);
 
     const client = createTestClient(poems, { db });
     const res = await client.$get('/random');
 
     expect(res.status).toBe(200);
-    expect(await res.text()).toBe('default-slug');
+    expect(await res.text()).toBe('abcd');
   });
 
   it('should return random poem slug', async () => {
-    const mockResult = [
-      {
-        get_random_eligible_poem_slug: { slug: 'test-poem-slug' },
-      },
-    ];
-
+    const mockPoem = { poem_id: 1, poet_name: 'شاعر', content: 'Line 1*Line 2', slug: 'efgh' };
     const db = createMockDb();
-    db.execute = vi.fn().mockResolvedValue(mockResult);
+    db.execute = vi.fn().mockResolvedValue([{ get_random_eligible_poem: mockPoem }]);
 
     const client = createTestClient(poems, { db });
-
     const res = await client.$get('/random?option=slug');
 
     expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toBe('test-poem-slug');
+    expect(await res.text()).toBe('efgh');
     expect(res.headers.get('Cache-Control')).toBe('no-store');
   });
 
-  it('should fail with 500 when database returns no slug', async () => {
+  it('should fail with 500 when database returns no eligible poem for slug', async () => {
     const db = createMockDb();
     db.execute = vi.fn().mockResolvedValue([{}]);
 
     const client = createTestClient(poems, { db });
-
     const res = await client.$get('/random?option=slug');
 
     expect(res.status).toBe(500);
@@ -58,6 +50,7 @@ describe('poems routes', () => {
       poem_id: 1,
       poet_name: 'Test Poet',
       content: 'Line 1*Line 2*Line 3*Line 4',
+      slug: 'abcd',
     };
 
     const mockResult = [
