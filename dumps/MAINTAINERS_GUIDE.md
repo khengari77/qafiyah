@@ -26,6 +26,19 @@ Create a new dump when any of the following conditions are met:
 2. Create a new directory named `{N+1:04d}_{DD}_{MM}_{YYYY}`, for example, `0004_15_05_2026`.
 3. Run `pg_dump` with the output file named `qafiyah_public_{YYYYMMDD}_{HHMMSS}.dump` inside that directory.
 
+## Pre-Dump: Populate Derived Tables
+
+Some tables contain precomputed data that must be refreshed before each dump.
+Run these scripts **before** `pg_dump`:
+
+```bash
+# Recompute 5 related poems per poem (poem_relations table)
+psql -h <PROD_DB_HOST> -U qafiyah -d qafiyah \
+  -f scripts/sql/populate_related_poems.sql
+```
+
+This script is idempotent (TRUNCATE + INSERT) and takes ~30 seconds on ~79K poems.
+
 ## Create a Dump
 
 ```bash
