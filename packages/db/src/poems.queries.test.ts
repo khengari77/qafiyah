@@ -287,165 +287,116 @@ describe('getRandomPoemSlug', () => {
   });
 });
 
-const fullPoemData = {
-  poem: {
-    slug: 'abcd',
-    title: '"قصيدة المتنبي"',
-    content: POEM_CONTENT,
-    verse_count: 1,
-    poet_name: 'المتنبي',
-    poet_slug: 'almutanabbi',
-    meter_name: 'الطويل',
-    theme_name: 'فخر',
-    era_name: 'عباسي',
-    era_slug: 'abbasid',
-  },
+const fullPoemRow = {
+  slug: 'abcd',
+  title: '"قصيدة المتنبي"',
+  content: POEM_CONTENT,
+  verse_count: 1,
+  poet_name: 'المتنبي',
+  poet_slug: 'almutanabbi',
+  meter_name: 'الطويل',
+  meter_slug: 'altawil',
+  theme_name: 'فخر',
+  theme_slug: 'fakhr',
+  era_name: 'عباسي',
+  era_slug: 'abbasid',
   related_poems: [
     {
-      poem_slug: 'efgh',
+      title: 'قصيدة أخرى',
+      slug: 'efgh',
       poet_name: 'شاعر آخر',
+      poet_slug: 'other-poet',
       meter_name: 'البسيط',
-      poem_title: 'قصيدة أخرى',
+      meter_slug: 'albasit',
     },
   ],
 };
 
 describe('getPoemBySlug', () => {
-  it('returns ok result with enriched slugs for poem and related', async () => {
+  it('returns ok with poem detail and related poems', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
-        .mockResolvedValueOnce([{ slug: 'altawil' }]) // meter
-        .mockResolvedValueOnce([{ slug: 'fakhr' }]) // theme
-        .mockResolvedValueOnce([
-          { poem_slug: 'efgh', poet_slug: 'other-poet', meter_slug: 'albasit' },
-        ]),
+      execute: vi.fn().mockResolvedValueOnce([fullPoemRow]),
     });
 
-    const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
+    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
     const data = result._unsafeUnwrap();
     expect(data.displayTitle).toBe('قصيدة المتنبي');
     expect(data.metadata.poetName).toBe('المتنبي');
+    expect(data.metadata.poetSlug).toBe('almutanabbi');
     expect(data.metadata.meterSlug).toBe('altawil');
     expect(data.metadata.themeSlug).toBe('fakhr');
+    expect(data.metadata.eraSlug).toBe('abbasid');
+    expect(data.relatedPoems).toHaveLength(1);
     expect(data.relatedPoems[0]?.poetSlug).toBe('other-poet');
     expect(data.relatedPoems[0]?.meterSlug).toBe('albasit');
   });
 
   it('strips double quotes from title', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
-        .mockResolvedValueOnce([{ slug: 'altawil' }])
-        .mockResolvedValueOnce([{ slug: 'fakhr' }])
-        .mockResolvedValueOnce([]),
+      execute: vi.fn().mockResolvedValueOnce([fullPoemRow]),
     });
 
-    const result = await getPoemBySlug(mockDb, asPoemSlug('poem-slug'));
+    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
     expect(result._unsafeUnwrap().displayTitle).not.toContain('"');
   });
 
-  it('returns not_found when execute returns empty array', async () => {
+  it('returns empty relatedPoems when related_poems is empty', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([]),
+      execute: vi.fn().mockResolvedValueOnce([{ ...fullPoemRow, related_poems: [] }]),
     });
 
-    const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
+    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
+    expect(result._unsafeUnwrap().relatedPoems).toHaveLength(0);
+  });
+
+  it('returns not_found when query returns empty array', async () => {
+    const mockDb = castPartialAsDbClient({
+      execute: vi.fn().mockResolvedValueOnce([]),
+    });
+
+    const result = await getPoemBySlug(mockDb, asPoemSlug('missing'));
     expect(result._unsafeUnwrapErr().kind).toBe('not_found');
   });
 
-  it('returns not_found when get_poem_with_related is falsy', async () => {
+  it('returns sql_error when db.execute rejects', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_poem_with_related: null }]),
+      execute: vi.fn().mockRejectedValueOnce(new Error('connection lost')),
     });
 
-    const result = await getPoemBySlug(mockDb, asPoemSlug('missing-slug'));
-    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
+    const error = result._unsafeUnwrapErr();
+    expect(error.kind).toBe('sql_error');
+    if (error.kind === 'sql_error') {
+      expect(error.message).toBe('connection lost');
+    }
   });
 
-  it('returns sql_error when data has error field with message', async () => {
+  it('returns incomplete_poem_data when theme_name is null', async () => {
     const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
-        .mockResolvedValue([
-          { get_poem_with_related: { error: 'not_found', message: 'Poem not found' } },
-        ]),
+        .mockResolvedValueOnce([{ ...fullPoemRow, theme_name: null, theme_slug: null }]),
     });
 
-    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    const error = result._unsafeUnwrapErr();
-    expect(error.kind).toBe('sql_error');
-    if (error.kind === 'sql_error') {
-      expect(error.message).toBe('Poem not found');
-    }
-  });
-
-  it('falls back to error field when message is missing', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_poem_with_related: { error: 'not_found' } }]),
-    });
-
-    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    const error = result._unsafeUnwrapErr();
-    expect(error.kind).toBe('sql_error');
-    if (error.kind === 'sql_error') {
-      expect(error.message).toBe('not_found');
-    }
-  });
-
-  it('returns not_found when the function reports "Not Found" (missing poem)', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([
-        {
-          get_poem_with_related: {
-            error: 'Not Found',
-            message: 'No poem found with slug: zzzz',
-          },
-        },
-      ]),
-    });
-
-    const result = await getPoemBySlug(mockDb, asPoemSlug('zzzz'));
-    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
-  });
-
-  it('returns incomplete_poem_data when poem is missing required fields', async () => {
-    const incompleteData = {
-      poem: {
-        slug: 'slug',
-        title: '',
-        content: 'a*b',
-        verse_count: 1,
-        poet_name: 'شاعر',
-        poet_slug: 'poet',
-        meter_name: '',
-        theme_name: '',
-        era_name: '',
-        era_slug: 'abbasid',
-      },
-      related_poems: [],
-    };
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_poem_with_related: incompleteData }]),
-    });
-
-    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
+    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
     expect(result._unsafeUnwrapErr().kind).toBe('incomplete_poem_data');
   });
 
-  it('returns incomplete_enrichment when meter slug enrichment is missing', async () => {
+  it('returns incomplete_poem_data when title is null', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValueOnce([{ get_poem_with_related: fullPoemData }])
-        .mockResolvedValueOnce([]) // meter lookup empty
-        .mockResolvedValueOnce([{ slug: 'fakhr' }])
-        .mockResolvedValueOnce([]),
+      execute: vi.fn().mockResolvedValueOnce([{ ...fullPoemRow, title: null }]),
     });
 
-    const result = await getPoemBySlug(mockDb, asPoemSlug('slug'));
-    expect(result._unsafeUnwrapErr().kind).toBe('incomplete_enrichment');
+    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
+    expect(result._unsafeUnwrapErr().kind).toBe('incomplete_poem_data');
+  });
+
+  it('returns invalid_payload_shape when row shape is wrong', async () => {
+    const mockDb = castPartialAsDbClient({
+      execute: vi.fn().mockResolvedValueOnce([{ not_a_poem: true }]),
+    });
+
+    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
+    expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
   });
 });

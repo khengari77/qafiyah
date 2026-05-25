@@ -1,6 +1,5 @@
 import type { PoemSlug, poemDetail } from '@qafiyah/contracts';
 import { poemsQueries } from '@qafiyah/db';
-import { match } from 'ts-pattern';
 import type * as v from 'valibot';
 import { publicProcedure } from './base';
 import { listEnvelope } from './envelope';
@@ -43,19 +42,12 @@ export const getPoemBySlug = publicProcedure.poems.getPoemBySlug.handler(
   async ({ context, input, errors }) => {
     const result = await poemsQueries.getPoemBySlug(context.db, input.slug);
     if (result.isErr()) {
-      throw match(result.error)
-        .with({ kind: 'not_found' }, () => errors.NOT_FOUND())
-        .with({ kind: 'sql_error' }, ({ message }) => errors.POEM_PARSE_ERROR({ message }))
-        .with({ kind: 'invalid_payload_shape' }, ({ issues }) =>
-          errors.POEM_PARSE_ERROR({ message: issues.join('; ') })
-        )
-        .with({ kind: 'incomplete_poem_data' }, () =>
-          errors.POEM_PARSE_ERROR({ message: 'Incomplete poem data' })
-        )
-        .with({ kind: 'incomplete_enrichment' }, () =>
-          errors.POEM_PARSE_ERROR({ message: 'Incomplete poem data' })
-        )
-        .exhaustive();
+      const e = result.error;
+      if (e.kind === 'not_found') throw errors.NOT_FOUND();
+      if (e.kind === 'sql_error') throw errors.POEM_PARSE_ERROR({ message: e.message });
+      if (e.kind === 'invalid_payload_shape')
+        throw errors.POEM_PARSE_ERROR({ message: e.issues.join('; ') });
+      throw errors.POEM_PARSE_ERROR({ message: 'Incomplete poem data' });
     }
     const poem = toPoemDetail(input.slug, result.value);
     context.log?.({

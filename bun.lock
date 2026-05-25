@@ -173,7 +173,6 @@
         "drizzle-orm": "^0.45.2",
         "neverthrow": "^8.2.0",
         "postgres": "^3.4.9",
-        "ts-pattern": "^5.9.0",
         "valibot": "^1.4.0",
       },
       "devDependencies": {
