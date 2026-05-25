@@ -1,24 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { asPoemSlug } from './brand';
 import {
-  extractPoemExcerpt,
   getPoemBySlug,
-  getRandomPoemExcerpt,
+  getRandomPoem,
   getRandomPoemSlug,
   listAllPoemSlugs,
-  type PoemId,
   parsePoemContent,
-  type RandomPoemLines,
 } from './poems.queries';
 import { castPartialAsDbClient, makeChain } from './test-utils';
-
-// test-only: brand a literal number as a PoemId for fixture construction.
-const asPoemId = (n: number): PoemId => n as PoemId;
-const makeRandomPoem = (content: string): RandomPoemLines => ({
-  poemId: asPoemId(1),
-  poetName: 'شاعر',
-  content,
-});
 
 describe('parsePoemContent', () => {
   it('splits an even number of lines into verse pairs', () => {
@@ -64,54 +53,6 @@ describe('parsePoemContent', () => {
   });
 });
 
-describe('extractPoemExcerpt', () => {
-  it('returns the two lines at startIndex plus the poet name', () => {
-    const result = extractPoemExcerpt(makeRandomPoem('شطر أول*شطر ثانٍ*شطر ثالث*شطر رابع'), 0);
-    expect(result.isOk()).toBe(true);
-    expect(result._unsafeUnwrap()).toBe('شطر أول\nشطر ثانٍ\n\nشاعر');
-  });
-
-  it('returns insufficient_content error when poem has fewer than two lines', () => {
-    const result = extractPoemExcerpt(makeRandomPoem('شطر واحد'), 0);
-    expect(result.isErr()).toBe(true);
-    const error = result._unsafeUnwrapErr();
-    expect(error.kind).toBe('insufficient_content');
-    expect(error.lineCount).toBe(1);
-    expect(error.poemId).toBe(1);
-  });
-
-  it('strips double quotes from output', () => {
-    const result = extractPoemExcerpt(makeRandomPoem('"شطر أول"*"شطر ثانٍ"'), 0);
-    expect(result._unsafeUnwrap()).toBe('شطر أول\nشطر ثانٍ\n\nشاعر');
-  });
-
-  it('includes the poet name in the output', () => {
-    const p: RandomPoemLines = { poemId: asPoemId(2), poetName: 'المتنبي', content: 'أ*ب' };
-    expect(extractPoemExcerpt(p, 0)._unsafeUnwrap()).toContain('المتنبي');
-  });
-
-  it('uses empty string fallback when lines[startIndex] is empty', () => {
-    const result = extractPoemExcerpt(makeRandomPoem('*شطر ثانٍ*شطر ثالث*شطر رابع'), 0);
-    expect(result._unsafeUnwrap()).toContain('شاعر');
-  });
-
-  it('uses empty string fallback when lines[startIndex + 1] is empty', () => {
-    const result = extractPoemExcerpt(makeRandomPoem('شطر أول**شطر ثالث*شطر رابع'), 0);
-    expect(result._unsafeUnwrap()).toContain('شاعر');
-  });
-
-  it('returns a valid pair for any even startIndex in range', () => {
-    const lines = ['أ', 'ب', 'ج', 'د', 'هـ', 'و'];
-    const content = lines.join('*');
-    for (let startIndex = 0; startIndex < lines.length - 1; startIndex += 2) {
-      const result = extractPoemExcerpt(makeRandomPoem(content), startIndex);
-      const unwrapped = result._unsafeUnwrap();
-      expect(unwrapped).toBeTruthy();
-      expect(unwrapped.split('\n').length).toBeGreaterThanOrEqual(2);
-    }
-  });
-});
-
 const POEM_CONTENT = 'شطر أول*شطر ثانٍ';
 
 describe('listAllPoemSlugs', () => {
@@ -136,36 +77,27 @@ describe('listAllPoemSlugs', () => {
   });
 });
 
-describe('getRandomPoemExcerpt', () => {
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
-  it('returns structured excerpt for a JSON object result', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0);
+describe('getRandomPoem', () => {
+  it('returns RandomPoemLines for a JSON object result', async () => {
     const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
     });
 
-    const result = await getRandomPoemExcerpt(mockDb);
-    const excerpt = result._unsafeUnwrap();
-    expect(excerpt.lines[0]).toBe('شطر أول');
-    expect(excerpt.lines[1]).toBe('شطر ثانٍ');
-    expect(excerpt.poetName).toBe('شاعر');
-    expect(excerpt.excerpt).toContain('شطر أول');
-    expect(excerpt.excerpt).toContain('شاعر');
+    const result = await getRandomPoem(mockDb);
+    const poem = result._unsafeUnwrap();
+    expect(poem.poetName).toBe('شاعر');
+    expect(poem.content).toBe(POEM_CONTENT);
   });
 
   it('parses a JSON string result', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0);
     const poemData = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT };
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(poemData) }]),
     });
 
-    const result = await getRandomPoemExcerpt(mockDb);
-    expect(result._unsafeUnwrap().excerpt).toContain('شطر أول');
+    const result = await getRandomPoem(mockDb);
+    expect(result._unsafeUnwrap().content).toBe(POEM_CONTENT);
   });
 
   it('returns no_eligible_poem when execute returns empty array', async () => {
@@ -173,7 +105,7 @@ describe('getRandomPoemExcerpt', () => {
       execute: vi.fn().mockResolvedValue([]),
     });
 
-    const result = await getRandomPoemExcerpt(mockDb);
+    const result = await getRandomPoem(mockDb);
     expect(result._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
   });
 
@@ -182,17 +114,17 @@ describe('getRandomPoemExcerpt', () => {
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: null }]),
     });
 
-    const result = await getRandomPoemExcerpt(mockDb);
+    const result = await getRandomPoem(mockDb);
     expect(result._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
   });
 
-  it('returns invalid_payload_shape when poem content field is missing from payload', async () => {
+  it('returns invalid_payload_shape when content field is missing from payload', async () => {
     const poemData = { poem_id: 1, poet_name: 'شاعر' };
     const mockDb = castPartialAsDbClient({
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
     });
 
-    const result = await getRandomPoemExcerpt(mockDb);
+    const result = await getRandomPoem(mockDb);
     expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
   });
 
@@ -201,28 +133,20 @@ describe('getRandomPoemExcerpt', () => {
       execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: '{not-json' }]),
     });
 
-    const result = await getRandomPoemExcerpt(mockDb);
+    const result = await getRandomPoem(mockDb);
     expect(result._unsafeUnwrapErr().kind).toBe('invalid_json');
   });
 
-  it('returns excerpt_too_long when excerpt exceeds MAX_TWEET_LENGTH', async () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0);
-    const longLine = 'أ'.repeat(141);
-    const poemData = {
-      poem_id: 1,
-      poet_name: 'شاعر',
-      content: `${longLine}*${longLine}`,
-    };
+  it('returns query_failed when db.execute rejects', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: poemData }]),
+      execute: vi.fn().mockRejectedValue(new Error('connection lost')),
     });
 
-    const result = await getRandomPoemExcerpt(mockDb);
+    const result = await getRandomPoem(mockDb);
     const error = result._unsafeUnwrapErr();
-    expect(error.kind).toBe('excerpt_too_long');
-    if (error.kind === 'excerpt_too_long') {
-      expect(error.length).toBeGreaterThan(error.max);
-      expect(error.poemId).toBe(1);
+    expect(error.kind).toBe('query_failed');
+    if (error.kind === 'query_failed') {
+      expect(error.message).toBe('connection lost');
     }
   });
 });

@@ -1,4 +1,4 @@
-import { DOUBLE_QUOTE_REGEX, MAX_TWEET_LENGTH } from '@qafiyah/constants';
+import { DOUBLE_QUOTE_REGEX } from '@qafiyah/constants';
 import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
 import {
   eraSlugSchema,
@@ -54,25 +54,6 @@ export function parsePoemContent(content: string): ParsedPoemContent {
   };
 }
 
-export type ExtractExcerptError = {
-  readonly kind: 'insufficient_content';
-  readonly poemId: PoemId;
-  readonly lineCount: number;
-};
-
-export function extractPoemExcerpt(
-  poem: RandomPoemLines,
-  startIndex: number
-): Result<string, ExtractExcerptError> {
-  const lines = poem.content.split('*');
-  if (lines.length < 2) {
-    return err({ kind: 'insufficient_content', poemId: poem.poemId, lineCount: lines.length });
-  }
-  const line1 = lines[startIndex] || '';
-  const line2 = lines[startIndex + 1] || '';
-  return ok(`${line1}\n${line2}\n\n${poem.poetName}`.replace(DOUBLE_QUOTE_REGEX, '').trim());
-}
-
 export type ListAllPoemSlugsError = { readonly kind: 'sql_error'; readonly message: string };
 
 export async function listAllPoemSlugs(
@@ -107,36 +88,6 @@ const randomPoemPayloadSchema = v.pipe(
   )
 );
 
-function pickExcerptStartIndex(content: string): number {
-  const lineCount = content.split('*').length;
-  const maxStartIndex = Math.max(0, lineCount - 2);
-  return Math.floor(Math.random() * (maxStartIndex / 2)) * 2;
-}
-
-export type RandomPoemExcerpt = {
-  readonly lines: readonly [string, string];
-  readonly poetName: string;
-  readonly excerpt: string;
-};
-
-export type GetRandomPoemExcerptError =
-  | { readonly kind: 'no_eligible_poem' }
-  | { readonly kind: 'invalid_json'; readonly raw: string; readonly message: string }
-  | {
-      readonly kind: 'invalid_payload_shape';
-      readonly raw: unknown;
-      readonly issues: readonly string[];
-    }
-  | { readonly kind: 'missing_content_field'; readonly poemId: PoemId }
-  | { readonly kind: 'query_failed'; readonly message: string }
-  | ExtractExcerptError
-  | {
-      readonly kind: 'excerpt_too_long';
-      readonly poemId: PoemId;
-      readonly length: number;
-      readonly max: number;
-    };
-
 function safeJsonParse(
   raw: string
 ): Result<unknown, { kind: 'invalid_json'; raw: string; message: string }> {
@@ -151,9 +102,20 @@ function safeJsonParse(
   }
 }
 
-export async function getRandomPoemExcerpt(
+export type GetRandomPoemError =
+  | { readonly kind: 'no_eligible_poem' }
+  | { readonly kind: 'invalid_json'; readonly raw: string; readonly message: string }
+  | {
+      readonly kind: 'invalid_payload_shape';
+      readonly raw: unknown;
+      readonly issues: readonly string[];
+    }
+  | { readonly kind: 'missing_content_field'; readonly poemId: PoemId }
+  | { readonly kind: 'query_failed'; readonly message: string };
+
+export async function getRandomPoem(
   db: DbClient
-): Promise<Result<RandomPoemExcerpt, GetRandomPoemExcerptError>> {
+): Promise<Result<RandomPoemLines, GetRandomPoemError>> {
   const queryResult = await ResultAsync.fromPromise(
     db.execute(sql`SELECT get_random_eligible_poem()`),
     (cause): { kind: 'query_failed'; message: string } => ({
@@ -177,6 +139,7 @@ export async function getRandomPoemExcerpt(
   } else {
     parsed = poemJson;
   }
+
   const schemaResult = v.safeParse(randomPoemPayloadSchema, parsed);
   if (!schemaResult.success) {
     return err({
@@ -185,34 +148,13 @@ export async function getRandomPoemExcerpt(
       issues: schemaResult.issues.map((i) => i.message),
     });
   }
-  const poem: RandomPoemLines = schemaResult.output;
 
+  const poem: RandomPoemLines = schemaResult.output;
   if (!poem.content) {
     return err({ kind: 'missing_content_field', poemId: poem.poemId });
   }
 
-  const startIndex = pickExcerptStartIndex(poem.content);
-  const allLines = poem.content.split('*');
-  const line1 = allLines[startIndex] || '';
-  const line2 = allLines[startIndex + 1] || '';
-  const excerptResult = extractPoemExcerpt(poem, startIndex);
-  if (excerptResult.isErr()) return err(excerptResult.error);
-  const excerpt = excerptResult.value;
-
-  if (excerpt.length > MAX_TWEET_LENGTH) {
-    return err({
-      kind: 'excerpt_too_long',
-      poemId: poem.poemId,
-      length: excerpt.length,
-      max: MAX_TWEET_LENGTH,
-    });
-  }
-
-  return ok({
-    lines: [line1, line2] as const,
-    poetName: poem.poetName,
-    excerpt,
-  });
+  return ok(poem);
 }
 
 export type GetRandomPoemSlugError =

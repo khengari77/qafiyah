@@ -11,11 +11,13 @@ import {
   HTTP_NOT_FOUND,
   NO_STORE_CACHE_CONTROL,
 } from '@/constants';
+import { type BuildPoemExcerptError, buildPoemExcerpt } from '@/lib/poem-excerpt';
 import { makeProblem, sendProblem } from '@/lib/problem';
 import type { AppContext } from '@/types';
 
 type RandomPoemError =
-  | { readonly kind: 'excerpt_error'; readonly cause: poemsQueries.GetRandomPoemExcerptError }
+  | { readonly kind: 'poem_error'; readonly cause: poemsQueries.GetRandomPoemError }
+  | { readonly kind: 'excerpt_error'; readonly cause: BuildPoemExcerptError }
   | { readonly kind: 'slug_error'; readonly cause: poemsQueries.GetRandomPoemSlugError };
 
 async function fetchRandomPoemBody(
@@ -23,9 +25,11 @@ async function fetchRandomPoemBody(
   format: RandomPoemOption
 ): Promise<Result<string, RandomPoemError>> {
   if (format === 'lines') {
-    const result = await poemsQueries.getRandomPoemExcerpt(db);
-    if (result.isErr()) return err({ kind: 'excerpt_error', cause: result.error });
-    return ok(result.value.excerpt);
+    const poemResult = await poemsQueries.getRandomPoem(db);
+    if (poemResult.isErr()) return err({ kind: 'poem_error', cause: poemResult.error });
+    const excerptResult = buildPoemExcerpt(poemResult.value);
+    if (excerptResult.isErr()) return err({ kind: 'excerpt_error', cause: excerptResult.error });
+    return ok(excerptResult.value);
   }
   const slugResult = await poemsQueries.getRandomPoemSlug(db);
   if (slugResult.isErr()) return err({ kind: 'slug_error', cause: slugResult.error });
