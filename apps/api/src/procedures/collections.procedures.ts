@@ -1,5 +1,5 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
-import { collectionsQueries } from '@qafiyah/db';
+import { collectionsQueries, poemsQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
 import { publicProcedure } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
@@ -20,27 +20,26 @@ export const listCollections = publicProcedure.collections.list.handler(
   }
 );
 
+// @NOTE: interim impl using get{Type}BySlug + listPoems; fully rewired in Tasks 5-7
 export const listCollectionPoems = publicProcedure.collections.listPoems.handler(
   async ({ context, input, errors }) => {
-    const queryResult = await collectionsQueries.listCollectionPoems(
+    const collectionResult = await collectionsQueries.getCollectionBySlug(context.db, input.slug);
+    if (collectionResult.isErr()) {
+      throw match(collectionResult.error)
+        .with({ kind: 'not_found' }, () => errors.NOT_FOUND())
+        .otherwise(({ kind, ...rest }) => {
+          context.log?.({ error_kind: kind, ...rest });
+          return errors.INTERNAL_SERVER_ERROR();
+        });
+    }
+    const collection = collectionResult.value;
+    const poemsResult = await poemsQueries.listPoems(
       context.db,
-      input.slug,
+      { collectionSlugs: [input.slug] },
       input.page
     );
-    if (queryResult.isErr()) {
-      throw match(queryResult.error)
-        .with({ kind: 'not_found' }, () => errors.NOT_FOUND())
-        .with({ kind: 'sql_error' }, ({ kind, message }) => {
-          context.log?.({ error_kind: kind, error_detail: message });
-          return errors.INTERNAL_SERVER_ERROR();
-        })
-        .with({ kind: 'invalid_payload_shape' }, ({ kind, issues }) => {
-          context.log?.({ error_kind: kind, error_detail: issues.join('; ') });
-          return errors.INTERNAL_SERVER_ERROR();
-        })
-        .exhaustive();
-    }
-    const result = queryResult.value;
+    if (poemsResult.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+    const result = poemsResult.value;
     context.log?.({
       collection: input.slug,
       result_count: result.total,
@@ -53,7 +52,7 @@ export const listCollectionPoems = publicProcedure.collections.listPoems.handler
       totalItems: result.total,
       page: input.page,
       pageSize: POEMS_PER_PAGE,
-      meta: result.parent,
+      meta: collection,
     });
   }
 );

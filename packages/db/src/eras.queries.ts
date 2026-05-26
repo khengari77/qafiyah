@@ -1,16 +1,10 @@
-import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { EraSlug } from '@qafiyah/contracts';
 import { asc, sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
+import * as v from 'valibot';
 import { asEraSlug } from './brand';
 import type { DbClient } from './client';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import {
-  type PoemListRow,
-  parentScopedPoemRowSchema,
-  parentStatsRowSchema,
-  rawPoemRowSchema,
-} from './row-schemas';
 import { eraStats } from './schema';
 
 export type EraStatsRow = {
@@ -21,17 +15,6 @@ export type EraStatsRow = {
 };
 
 export type ListErasError = { readonly kind: 'sql_error'; readonly message: string };
-
-export type ListEraPoemsResult = {
-  readonly parent: { readonly name: string; readonly slug: EraSlug; readonly poemsCount: number };
-  readonly poems: readonly PoemListRow[];
-  readonly total: number;
-  readonly totalPages: number;
-};
-
-export type ListEraPoemsError =
-  | { readonly kind: 'not_found'; readonly slug: EraSlug }
-  | ExecuteAsError;
 
 export async function listEras(
   db: DbClient
@@ -55,105 +38,33 @@ export async function listEras(
   return ok(queryResult.value.map((row) => ({ ...row, slug: asEraSlug(row.slug) })));
 }
 
-export async function listEraPoems(
+const eraStatsRowSchema = v.object({
+  name: v.string(),
+  slug: v.string(),
+  poems_count: v.union([v.number(), v.string()]),
+  poets_count: v.union([v.number(), v.string()]),
+});
+
+export type GetEraBySlugError =
+  | { readonly kind: 'not_found'; readonly slug: EraSlug }
+  | ExecuteAsError;
+
+export async function getEraBySlug(
   db: DbClient,
-  slug: EraSlug,
-  page: number
-): Promise<Result<ListEraPoemsResult, ListEraPoemsError>> {
-  const limit = POEMS_PER_PAGE;
-  const offset = (page - 1) * limit;
-
-  const parentRowsResult = await executeAs(
+  slug: EraSlug
+): Promise<Result<EraStatsRow, GetEraBySlugError>> {
+  const rowsResult = await executeAs(
     db,
-    sql`SELECT name, poems_count FROM era_stats WHERE slug = ${slug} LIMIT 1`,
-    parentStatsRowSchema
+    sql`SELECT name, slug, poems_count, poets_count FROM era_stats WHERE slug = ${slug} LIMIT 1`,
+    eraStatsRowSchema
   );
-  if (parentRowsResult.isErr()) return err(parentRowsResult.error);
-  const parentRows = parentRowsResult.value;
-
-  if (parentRows.length === 0 || !parentRows[0]) return err({ kind: 'not_found', slug });
-
-  const total = Number(parentRows[0].poems_count);
-
-  const rawPoemsResult = await executeAs(
-    db,
-    sql`
-      SELECT
-        p.title AS title,
-        p.slug AS slug,
-        pt.name AS poet_name,
-        pt.slug AS poet_slug,
-        m.name AS meter_name,
-        m.slug AS meter_slug
-      FROM public.poems p
-      JOIN public.poets pt ON p.poet_id = pt.id
-      JOIN public.meters m ON p.meter_id = m.id
-      JOIN public.eras e ON pt.era_id = e.id
-      WHERE e.slug = ${slug}
-      ORDER BY p.id
-      LIMIT ${limit} OFFSET ${offset}
-    `,
-    rawPoemRowSchema
-  );
-  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
-
-  const poems: readonly PoemListRow[] = rawPoemsResult.value.map((row) => ({
-    title: row.title,
-    slug: row.slug,
-    poetName: row.poet_name,
-    poetSlug: row.poet_slug,
-    meterName: row.meter_name,
-    meterSlug: row.meter_slug,
-  }));
-
+  if (rowsResult.isErr()) return err(rowsResult.error);
+  const row = rowsResult.value[0];
+  if (!row) return err({ kind: 'not_found', slug });
   return ok({
-    parent: { name: parentRows[0].name, slug, poemsCount: total },
-    poems,
-    total,
-    totalPages: Math.ceil(total / limit),
+    name: row.name,
+    slug: asEraSlug(row.slug),
+    poemsCount: Number(row.poems_count),
+    poetsCount: Number(row.poets_count),
   });
-}
-
-export type ListAllEraPoemsError = ExecuteAsError;
-
-export async function listAllEraPoems(
-  db: DbClient
-): Promise<Result<ReadonlyMap<EraSlug, readonly PoemListRow[]>, ListAllEraPoemsError>> {
-  const rawPoemsResult = await executeAs(
-    db,
-    sql`
-      SELECT
-        e.slug AS parent_slug,
-        p.title AS title,
-        p.slug AS slug,
-        pt.name AS poet_name,
-        pt.slug AS poet_slug,
-        m.name AS meter_name,
-        m.slug AS meter_slug
-      FROM public.poems p
-      JOIN public.poets pt ON p.poet_id = pt.id
-      JOIN public.meters m ON p.meter_id = m.id
-      JOIN public.eras e ON pt.era_id = e.id
-      ORDER BY e.slug, p.id
-    `,
-    parentScopedPoemRowSchema
-  );
-  if (rawPoemsResult.isErr()) return err(rawPoemsResult.error);
-
-  const grouped = new Map<EraSlug, PoemListRow[]>();
-  for (const row of rawPoemsResult.value) {
-    const eraSlug = asEraSlug(row.parent_slug);
-    const list = grouped.get(eraSlug);
-    const entry: PoemListRow = {
-      title: row.title,
-      slug: row.slug,
-      poetName: row.poet_name,
-      poetSlug: row.poet_slug,
-      meterName: row.meter_name,
-      meterSlug: row.meter_slug,
-    };
-    if (list) list.push(entry);
-    else grouped.set(eraSlug, [entry]);
-  }
-  return ok(grouped);
 }

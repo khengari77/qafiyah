@@ -1,5 +1,5 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
-import { rhymesQueries } from '@qafiyah/db';
+import { poemsQueries, rhymesQueries } from '@qafiyah/db';
 import { match } from 'ts-pattern';
 import { publicProcedure } from './base';
 import { listEnvelope, listEnvelopeWithMeta } from './envelope';
@@ -18,23 +18,26 @@ export const listRhymes = publicProcedure.rhymes.list.handler(async ({ context, 
   });
 });
 
+// @NOTE: interim impl using get{Type}BySlug + listPoems; fully rewired in Tasks 5-7
 export const listRhymePoems = publicProcedure.rhymes.listPoems.handler(
   async ({ context, input, errors }) => {
-    const queryResult = await rhymesQueries.listRhymePoems(context.db, input.slug, input.page);
-    if (queryResult.isErr()) {
-      throw match(queryResult.error)
+    const rhymeResult = await rhymesQueries.getRhymeBySlug(context.db, input.slug);
+    if (rhymeResult.isErr()) {
+      throw match(rhymeResult.error)
         .with({ kind: 'not_found' }, () => errors.NOT_FOUND())
-        .with({ kind: 'sql_error' }, ({ kind, message }) => {
-          context.log?.({ error_kind: kind, error_detail: message });
+        .otherwise(({ kind, ...rest }) => {
+          context.log?.({ error_kind: kind, ...rest });
           return errors.INTERNAL_SERVER_ERROR();
-        })
-        .with({ kind: 'invalid_payload_shape' }, ({ kind, issues }) => {
-          context.log?.({ error_kind: kind, error_detail: issues.join('; ') });
-          return errors.INTERNAL_SERVER_ERROR();
-        })
-        .exhaustive();
+        });
     }
-    const result = queryResult.value;
+    const rhyme = rhymeResult.value;
+    const poemsResult = await poemsQueries.listPoems(
+      context.db,
+      { rhymeSlugs: [input.slug] },
+      input.page
+    );
+    if (poemsResult.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+    const result = poemsResult.value;
     context.log?.({
       rhyme: input.slug,
       result_count: result.total,
@@ -47,7 +50,7 @@ export const listRhymePoems = publicProcedure.rhymes.listPoems.handler(
       totalItems: result.total,
       page: input.page,
       pageSize: POEMS_PER_PAGE,
-      meta: result.parent,
+      meta: { name: rhyme.name, slug: rhyme.slug, poemsCount: rhyme.poemsCount },
     });
   }
 );

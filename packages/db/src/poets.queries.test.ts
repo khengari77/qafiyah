@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { asPoetSlug } from './brand';
-import { listAllPoetPoems, listPoetPoems, listPoets } from './poets.queries';
+import { getPoetBySlug, listPoets } from './poets.queries';
 import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 
 describe('listPoets', () => {
@@ -30,66 +30,24 @@ describe('listPoets', () => {
   });
 });
 
-describe('listPoetPoems', () => {
-  it('returns parent and poems with nested slugs', async () => {
-    const parentRow = { name: 'المتنبي', poems_count: 50 };
-    const poemRow = {
-      title: 'قصيدة',
-      slug: 'abcd',
-      poet_name: 'المتنبي',
-      poet_slug: 'almutanabbi',
-      meter_name: 'الطويل',
-      meter_slug: 'altawil',
-    };
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([poemRow]),
-    });
-
-    const result = await listPoetPoems(mockDb, asPoetSlug('al-mutanabbi'), 1);
-    const value = result._unsafeUnwrap();
-    expect(value.parent.name).toBe('المتنبي');
-    expect(value.poems[0]?.meterSlug).toBe('altawil');
-  });
-
-  it('returns not_found err when poet is not found', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValueOnce([]),
-    });
-
-    const result = await listPoetPoems(mockDb, asPoetSlug('nonexistent'), 1);
-    expect(result._unsafeUnwrapErr().kind).toBe('not_found');
-  });
-
-  it('computes totalPages correctly', async () => {
-    const parentRow = { name: 'شاعر', poems_count: 31 };
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValueOnce([parentRow]).mockResolvedValueOnce([]),
-    });
-
-    const result = await listPoetPoems(mockDb, asPoetSlug('poet-slug'), 1);
-    expect(result._unsafeUnwrap().totalPages).toBe(2);
-  });
-});
-
-describe('listAllPoetPoems', () => {
-  it('returns a Map keyed by poet slug containing all poems for that poet', async () => {
+describe('getPoetBySlug (integration)', () => {
+  it('returns the matching poet stats row', async () => {
     await withTestDb(async (db) => {
-      const result = await listAllPoetPoems(db);
+      const result = await getPoetBySlug(db, asPoetSlug('alasha'));
       expect(result.isOk()).toBe(true);
       if (result.isErr()) return;
-      const map = result.value;
-      expect(map.size).toBeGreaterThan(0);
-      for (const [, poems] of map) {
-        expect(poems.length).toBeGreaterThan(0);
-        expect(poems[0]).toMatchObject({
-          title: expect.any(String),
-          slug: expect.any(String),
-          poetName: expect.any(String),
-          poetSlug: expect.any(String),
-          meterName: expect.any(String),
-          meterSlug: expect.any(String),
-        });
-      }
+      expect(result.value.slug).toBe('alasha');
+      expect(typeof result.value.name).toBe('string');
+      expect(result.value.poemsCount).toBeGreaterThan(0);
+    });
+  });
+
+  it('returns not_found for an unknown slug', async () => {
+    await withTestDb(async (db) => {
+      const result = await getPoetBySlug(db, asPoetSlug('not-a-real-poet-slug-zzz'));
+      expect(result.isErr()).toBe(true);
+      if (result.isOk()) return;
+      expect(result.error.kind).toBe('not_found');
     });
   });
 });
