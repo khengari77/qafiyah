@@ -23,6 +23,7 @@ import type { DbClient } from './client';
 import { type ExecuteAsError, executeAs } from './execute-as';
 import { type PoemListRow, rawPoemRowSchema } from './row-schemas';
 import { poemsFullData } from './schema';
+import { formatPgTextArrayLiteral } from './sql-utils';
 
 declare const PoemIdBrand: unique symbol;
 export type PoemId = number & { readonly [PoemIdBrand]: 'PoemId' };
@@ -360,11 +361,6 @@ function nonEmpty<T>(arr: readonly T[] | undefined): arr is readonly T[] {
   return arr !== undefined && arr.length > 0;
 }
 
-function formatPgTextArrayLiteral(values: readonly string[]): string {
-  const escaped = values.map((val) => `"${val.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
-  return `{${escaped.join(',')}}`;
-}
-
 export async function listPoems(
   db: DbClient,
   filters: PoemFilters,
@@ -406,36 +402,37 @@ export async function listPoems(
   const whereClause =
     wherePieces.length === 0 ? sql`` : sql`WHERE ${sql.join(wherePieces, sql` AND `)}`;
 
-  const rowsResult = await executeAs(
-    db,
-    sql`
-      SELECT
-        p.title       AS title,
-        p.slug        AS slug,
-        pt.name       AS poet_name,
-        pt.slug       AS poet_slug,
-        m.name        AS meter_name,
-        m.slug        AS meter_slug
-      FROM public.poems p
-      ${joinClause}
-      ${whereClause}
-      ORDER BY p.id
-      LIMIT ${limit} OFFSET ${offset}
-    `,
-    rawPoemRowSchema
-  );
+  const [rowsResult, countResult] = await Promise.all([
+    executeAs(
+      db,
+      sql`
+        SELECT
+          p.title       AS title,
+          p.slug        AS slug,
+          pt.name       AS poet_name,
+          pt.slug       AS poet_slug,
+          m.name        AS meter_name,
+          m.slug        AS meter_slug
+        FROM public.poems p
+        ${joinClause}
+        ${whereClause}
+        ORDER BY p.id
+        LIMIT ${limit} OFFSET ${offset}
+      `,
+      rawPoemRowSchema
+    ),
+    executeAs(
+      db,
+      sql`
+        SELECT COUNT(*)::int AS total
+        FROM public.poems p
+        ${joinClause}
+        ${whereClause}
+      `,
+      v.object({ total: v.number() })
+    ),
+  ]);
   if (rowsResult.isErr()) return err(rowsResult.error);
-
-  const countResult = await executeAs(
-    db,
-    sql`
-      SELECT COUNT(*)::int AS total
-      FROM public.poems p
-      ${joinClause}
-      ${whereClause}
-    `,
-    v.object({ total: v.number() })
-  );
   if (countResult.isErr()) return err(countResult.error);
 
   const total = countResult.value[0]?.total ?? 0;

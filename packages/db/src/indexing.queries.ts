@@ -4,6 +4,7 @@ import { err, ok, type Result } from 'neverthrow';
 import * as v from 'valibot';
 import type { DbClient } from './client';
 import { type ExecuteAsError, executeAs } from './execute-as';
+import { formatPgTextArrayLiteral } from './sql-utils';
 
 const poemRowSchema = v.object({
   id: v.number(),
@@ -28,11 +29,6 @@ const poetRowSchema = v.object({
   era_name: v.string(),
   era_slug: v.string(),
 });
-
-function formatPgTextArrayLiteral(values: readonly string[]): string {
-  const escaped = values.map((value) => `"${value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
-  return `{${escaped.join(',')}}`;
-}
 
 function toPoemSource(row: v.InferOutput<typeof poemRowSchema>): PoemSource {
   return {
