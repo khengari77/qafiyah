@@ -82,9 +82,7 @@ describe('getRandomPoem', () => {
 
   it('parses a JSON string result', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi
-        .fn()
-        .mockResolvedValue([{ random_poem_json: JSON.stringify(RANDOM_POEM_DATA) }]),
+      execute: vi.fn().mockResolvedValue([{ random_poem_json: JSON.stringify(RANDOM_POEM_DATA) }]),
     });
 
     const poem = (await getRandomPoem(mockDb))._unsafeUnwrap();
