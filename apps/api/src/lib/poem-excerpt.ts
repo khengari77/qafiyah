@@ -1,4 +1,4 @@
-import { DOUBLE_QUOTE_REGEX, MAX_TWEET_LENGTH } from '@qafiyah/constants';
+import { MAX_TWEET_LENGTH } from '@qafiyah/constants';
 import { err, ok, type Result } from 'neverthrow';
 
 type PoemWithContent = {
@@ -19,7 +19,7 @@ export function buildPoemExcerpt(poem: PoemWithContent): Result<string, BuildPoe
   const startIndex = Math.floor(Math.random() * (maxStartIndex / 2)) * 2;
   const line1 = lines[startIndex] || '';
   const line2 = lines[startIndex + 1] || '';
-  const excerpt = `${line1}\n${line2}\n\n${poem.poetName}`.replace(DOUBLE_QUOTE_REGEX, '').trim();
+  const excerpt = `${line1}\n${line2}\n\n${poem.poetName}`.trim();
   if (excerpt.length > MAX_TWEET_LENGTH) {
     return err({ kind: 'excerpt_too_long', length: excerpt.length, max: MAX_TWEET_LENGTH });
   }

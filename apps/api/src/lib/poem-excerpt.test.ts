@@ -12,12 +12,6 @@ describe('buildPoemExcerpt', () => {
     expect(result._unsafeUnwrap()).toBe('شطر أول\nشطر ثانٍ\n\nشاعر');
   });
 
-  it('strips double quotes from output', () => {
-    vi.spyOn(Math, 'random').mockReturnValue(0);
-    const result = buildPoemExcerpt(makePoem('"شطر أول"*"شطر ثانٍ"'));
-    expect(result._unsafeUnwrap()).toBe('شطر أول\nشطر ثانٍ\n\nشاعر');
-  });
-
   it('uses empty string fallback when a line is empty', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0);
     const result = buildPoemExcerpt(makePoem('*شطر ثانٍ'));

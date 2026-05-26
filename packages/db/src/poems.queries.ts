@@ -1,4 +1,3 @@
-import { DOUBLE_QUOTE_REGEX } from '@qafiyah/constants';
 import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
 import {
   eraSlugSchema,
@@ -33,9 +32,7 @@ type ParsedPoemContent = {
 };
 
 export function parsePoemContent(content: string): ParsedPoemContent {
-  const cleanContent = content.replace(DOUBLE_QUOTE_REGEX, '');
-
-  const lines = cleanContent.split('*');
+  const lines = content.split('*');
   const lineCount = lines.length;
 
   // @WARN: verses is built mutably for performance, then projected as readonly on return.
@@ -319,7 +316,7 @@ export async function getPoemBySlug(
       themeName: row.theme_name,
       themeSlug: row.theme_slug,
     },
-    displayTitle: row.title.replace(DOUBLE_QUOTE_REGEX, ''),
+    displayTitle: row.title,
     verseCount: row.verse_count,
     parsedContent: parsePoemContent(row.content),
     relatedPoems: row.related_poems.map((r) => ({

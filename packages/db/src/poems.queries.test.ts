@@ -20,11 +20,6 @@ describe('parsePoemContent', () => {
     ]);
   });
 
-  it('strips double quotes from content', () => {
-    const { verses } = parsePoemContent('"أ"*"ب"');
-    expect(verses).toEqual([['أ', 'ب']]);
-  });
-
   it('builds sample from first three lines joined with " * "', () => {
     const { sample } = parsePoemContent('أول*ثاني*ثالث*رابع');
     expect(sample).toBe('أول * ثاني * ثالث');
@@ -138,7 +133,7 @@ describe('getRandomPoem', () => {
 
 const fullPoemRow = {
   slug: 'abcd',
-  title: '"قصيدة المتنبي"',
+  title: 'قصيدة المتنبي',
   content: POEM_CONTENT,
   verse_count: 1,
   poet_name: 'المتنبي',
@@ -178,15 +173,6 @@ describe('getPoemBySlug', () => {
     expect(data.relatedPoems).toHaveLength(1);
     expect(data.relatedPoems[0]?.poetSlug).toBe('other-poet');
     expect(data.relatedPoems[0]?.meterSlug).toBe('albasit');
-  });
-
-  it('strips double quotes from title', async () => {
-    const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValueOnce([fullPoemRow]),
-    });
-
-    const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
-    expect(result._unsafeUnwrap().displayTitle).not.toContain('"');
   });
 
   it('returns empty relatedPoems when related_poems is empty', async () => {

@@ -28,8 +28,6 @@ export const NON_ARABIC_BASIC_REGEX = /[^؀-ۿ\s]/g;
 
 export const WHITESPACE_RUN_REGEX = /\s+/g;
 
-export const DOUBLE_QUOTE_REGEX = /"/g;
-
 export const MAX_QUERY_LENGTH = 50;
 
 export const SEARCH_TYPE_VALUES = ['poems', 'poets'] as const;
