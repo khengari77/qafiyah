@@ -1,4 +1,13 @@
-import type { EraSlug, MeterSlug, PoemSlug, PoetSlug, ThemeSlug } from '@qafiyah/contracts';
+import { POEMS_PER_PAGE } from '@qafiyah/constants';
+import type {
+  CollectionSlug,
+  EraSlug,
+  MeterSlug,
+  PoemSlug,
+  PoetSlug,
+  RhymeSlug,
+  ThemeSlug,
+} from '@qafiyah/contracts';
 import {
   eraSlugSchema,
   meterSlugSchema,
@@ -6,13 +15,13 @@ import {
   poetSlugSchema,
   themeSlugSchema,
 } from '@qafiyah/contracts';
-import { sql } from 'drizzle-orm';
+import { type SQL, sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import * as v from 'valibot';
 import { asPoemSlug } from './brand';
 import type { DbClient } from './client';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import type { PoemListRow } from './row-schemas';
+import { type PoemListRow, rawPoemRowSchema } from './row-schemas';
 import { poemsFullData } from './schema';
 
 declare const PoemIdBrand: unique symbol;
@@ -327,5 +336,121 @@ export async function getPoemBySlug(
       meterName: r.meter_name,
       meterSlug: r.meter_slug,
     })),
+  });
+}
+
+export type PoemFilters = {
+  readonly poetSlugs?: readonly PoetSlug[];
+  readonly eraSlugs?: readonly EraSlug[];
+  readonly themeSlugs?: readonly ThemeSlug[];
+  readonly meterSlugs?: readonly MeterSlug[];
+  readonly rhymeSlugs?: readonly RhymeSlug[];
+  readonly collectionSlugs?: readonly CollectionSlug[];
+};
+
+export type ListPoemsResult = {
+  readonly poems: readonly PoemListRow[];
+  readonly total: number;
+  readonly totalPages: number;
+};
+
+export type ListPoemsError = ExecuteAsError;
+
+function nonEmpty<T>(arr: readonly T[] | undefined): arr is readonly T[] {
+  return arr !== undefined && arr.length > 0;
+}
+
+function formatPgTextArrayLiteral(values: readonly string[]): string {
+  const escaped = values.map((val) => `"${val.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`);
+  return `{${escaped.join(',')}}`;
+}
+
+export async function listPoems(
+  db: DbClient,
+  filters: PoemFilters,
+  page: number
+): Promise<Result<ListPoemsResult, ListPoemsError>> {
+  const limit = POEMS_PER_PAGE;
+  const offset = (page - 1) * limit;
+
+  const wantEra = nonEmpty(filters.eraSlugs);
+  const wantTheme = nonEmpty(filters.themeSlugs);
+  const wantRhyme = nonEmpty(filters.rhymeSlugs);
+  const wantCollection = nonEmpty(filters.collectionSlugs);
+
+  const joinParts: SQL[] = [
+    sql`JOIN public.poets pt ON p.poet_id = pt.id`,
+    sql`JOIN public.meters m ON p.meter_id = m.id`,
+  ];
+  if (wantEra) joinParts.push(sql`JOIN public.eras e ON pt.era_id = e.id`);
+  if (wantTheme) joinParts.push(sql`JOIN public.themes th ON p.theme_id = th.id`);
+  if (wantRhyme) joinParts.push(sql`JOIN public.rhymes r ON p.rhyme_id = r.id`);
+  if (wantCollection) joinParts.push(sql`JOIN public.collections c ON p.collection_id = c.id`);
+  const joinClause = sql.join(joinParts, sql` `);
+
+  const { poetSlugs, eraSlugs, meterSlugs, themeSlugs, rhymeSlugs, collectionSlugs } = filters;
+  const wherePieces: SQL[] = [];
+  if (nonEmpty(poetSlugs))
+    wherePieces.push(sql`pt.slug = ANY(${formatPgTextArrayLiteral(poetSlugs)}::text[])`);
+  if (nonEmpty(eraSlugs))
+    wherePieces.push(sql`e.slug = ANY(${formatPgTextArrayLiteral(eraSlugs)}::text[])`);
+  if (nonEmpty(meterSlugs))
+    wherePieces.push(sql`m.slug = ANY(${formatPgTextArrayLiteral(meterSlugs)}::text[])`);
+  if (nonEmpty(themeSlugs))
+    wherePieces.push(sql`th.slug = ANY(${formatPgTextArrayLiteral(themeSlugs)}::text[])`);
+  if (nonEmpty(rhymeSlugs))
+    wherePieces.push(sql`r.slug = ANY(${formatPgTextArrayLiteral(rhymeSlugs)}::text[])`);
+  if (nonEmpty(collectionSlugs))
+    wherePieces.push(sql`c.slug = ANY(${formatPgTextArrayLiteral(collectionSlugs)}::text[])`);
+
+  const whereClause =
+    wherePieces.length === 0 ? sql`` : sql`WHERE ${sql.join(wherePieces, sql` AND `)}`;
+
+  const rowsResult = await executeAs(
+    db,
+    sql`
+      SELECT
+        p.title       AS title,
+        p.slug        AS slug,
+        pt.name       AS poet_name,
+        pt.slug       AS poet_slug,
+        m.name        AS meter_name,
+        m.slug        AS meter_slug
+      FROM public.poems p
+      ${joinClause}
+      ${whereClause}
+      ORDER BY p.id
+      LIMIT ${limit} OFFSET ${offset}
+    `,
+    rawPoemRowSchema
+  );
+  if (rowsResult.isErr()) return err(rowsResult.error);
+
+  const countResult = await executeAs(
+    db,
+    sql`
+      SELECT COUNT(*)::int AS total
+      FROM public.poems p
+      ${joinClause}
+      ${whereClause}
+    `,
+    v.object({ total: v.number() })
+  );
+  if (countResult.isErr()) return err(countResult.error);
+
+  const total = countResult.value[0]?.total ?? 0;
+  const poems: readonly PoemListRow[] = rowsResult.value.map((row) => ({
+    title: row.title,
+    slug: row.slug,
+    poetName: row.poet_name,
+    poetSlug: row.poet_slug,
+    meterName: row.meter_name,
+    meterSlug: row.meter_slug,
+  }));
+
+  return ok({
+    poems,
+    total,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
   });
 }

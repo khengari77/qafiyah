@@ -1,7 +1,21 @@
 import { describe, expect, it, vi } from 'vitest';
-import { asPoemSlug } from './brand';
-import { getPoemBySlug, getRandomPoem, listAllPoemSlugs, parsePoemContent } from './poems.queries';
-import { castPartialAsDbClient, makeChain } from './test-utils';
+import {
+  asCollectionSlug,
+  asEraSlug,
+  asMeterSlug,
+  asPoemSlug,
+  asPoetSlug,
+  asRhymeSlug,
+  asThemeSlug,
+} from './brand';
+import {
+  getPoemBySlug,
+  getRandomPoem,
+  listAllPoemSlugs,
+  listPoems,
+  parsePoemContent,
+} from './poems.queries';
+import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 
 describe('parsePoemContent', () => {
   it('splits an even number of lines into verse pairs', () => {
@@ -231,5 +245,122 @@ describe('getPoemBySlug', () => {
 
     const result = await getPoemBySlug(mockDb, asPoemSlug('abcd'));
     expect(result._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
+  });
+});
+
+describe('listPoems (integration)', () => {
+  it('returns paginated poems with stable id order when no filters are provided', async () => {
+    await withTestDb(async (db) => {
+      const result = await listPoems(db, {}, 1);
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+      const { poems, total, totalPages } = result.value;
+      expect(poems.length).toBe(30);
+      expect(total).toBeGreaterThan(30);
+      expect(totalPages).toBeGreaterThan(1);
+      expect(poems[0]).toMatchObject({
+        title: expect.any(String),
+        slug: expect.any(String),
+        poetName: expect.any(String),
+        meterName: expect.any(String),
+      });
+    });
+  });
+
+  it('filters by a single poet slug', async () => {
+    await withTestDb(async (db) => {
+      const result = await listPoems(db, { poetSlugs: [asPoetSlug('alasha')] }, 1);
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+      for (const p of result.value.poems) {
+        expect(p.poetSlug).toBe('alasha');
+      }
+      expect(result.value.total).toBeGreaterThan(0);
+    });
+  });
+
+  it('filters by era transitively through poets', async () => {
+    await withTestDb(async (db) => {
+      const result = await listPoems(db, { eraSlugs: [asEraSlug('islami')] }, 1);
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+      expect(result.value.total).toBeGreaterThan(0);
+    });
+  });
+
+  it('ORs within a single repeated filter (poetSlugs: [a, b])', async () => {
+    await withTestDb(async (db) => {
+      const single = await listPoems(db, { poetSlugs: [asPoetSlug('abn-rumi')] }, 1);
+      const other = await listPoems(db, { poetSlugs: [asPoetSlug('abn-nbath')] }, 1);
+      const both = await listPoems(
+        db,
+        { poetSlugs: [asPoetSlug('abn-rumi'), asPoetSlug('abn-nbath')] },
+        1
+      );
+      expect(single.isOk() && other.isOk() && both.isOk()).toBe(true);
+      if (single.isErr() || other.isErr() || both.isErr()) return;
+      expect(both.value.total).toBe(single.value.total + other.value.total);
+    });
+  });
+
+  it('ANDs across distinct filters (poet AND meter narrows the result)', async () => {
+    await withTestDb(async (db) => {
+      const poetOnly = await listPoems(db, { poetSlugs: [asPoetSlug('alasha')] }, 1);
+      const intersection = await listPoems(
+        db,
+        {
+          poetSlugs: [asPoetSlug('alasha')],
+          meterSlugs: [asMeterSlug('albasit')],
+        },
+        1
+      );
+      expect(poetOnly.isOk() && intersection.isOk()).toBe(true);
+      if (poetOnly.isErr() || intersection.isErr()) return;
+      expect(intersection.value.total).toBeLessThanOrEqual(poetOnly.value.total);
+    });
+  });
+
+  it('returns an empty page (total 0) for an unknown slug — NOT a not_found error', async () => {
+    await withTestDb(async (db) => {
+      const result = await listPoems(
+        db,
+        { poetSlugs: [asPoetSlug('not-a-real-poet-slug-zzz')] },
+        1
+      );
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+      expect(result.value.poems).toEqual([]);
+      expect(result.value.total).toBe(0);
+      expect(result.value.totalPages).toBe(1);
+    });
+  });
+
+  it('honors page parameter (page 2 differs from page 1)', async () => {
+    await withTestDb(async (db) => {
+      const p1 = await listPoems(db, {}, 1);
+      const p2 = await listPoems(db, {}, 2);
+      expect(p1.isOk() && p2.isOk()).toBe(true);
+      if (p1.isErr() || p2.isErr()) return;
+      const firstSlugP1 = p1.value.poems[0]?.slug;
+      const firstSlugP2 = p2.value.poems[0]?.slug;
+      expect(firstSlugP1).not.toBe(firstSlugP2);
+    });
+  });
+
+  it('combines theme + rhyme + collection filters honestly', async () => {
+    await withTestDb(async (db) => {
+      const result = await listPoems(
+        db,
+        {
+          themeSlugs: [asThemeSlug('almadih')],
+          rhymeSlugs: [asRhymeSlug('lam')],
+          collectionSlugs: [asCollectionSlug('almuallaqat')],
+        },
+        1
+      );
+      expect(result.isOk()).toBe(true);
+      if (result.isErr()) return;
+      expect(result.value.totalPages).toBeGreaterThanOrEqual(1);
+    });
   });
 });
