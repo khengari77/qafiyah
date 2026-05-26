@@ -1,10 +1,9 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { MeterSlug } from '@qafiyah/contracts';
-import { inArray, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asMeterSlug } from './brand';
 import type { DbClient } from './client';
-import { FORMAL_METERS } from './constants';
 import { type ExecuteAsError, executeAs } from './execute-as';
 import {
   type PoemListRow,
@@ -17,6 +16,7 @@ import { meterStats } from './schema';
 export type MeterStatsRow = {
   readonly name: string;
   readonly slug: MeterSlug;
+  readonly isFormal: boolean;
   readonly poemsCount: number;
   readonly poetsCount: number;
 };
@@ -42,22 +42,19 @@ export async function listMeters(
       .select({
         name: meterStats.name,
         slug: meterStats.slug,
+        isFormal: meterStats.isFormal,
         poemsCount: meterStats.poemsCount,
         poetsCount: meterStats.poetsCount,
       })
       .from(meterStats)
-      .where(inArray(meterStats.name, FORMAL_METERS)),
+      .where(eq(meterStats.isFormal, true)),
     (cause): ListMetersError => ({
       kind: 'sql_error',
       message: cause instanceof Error ? cause.message : String(cause),
     })
   );
   if (queryResult.isErr()) return err(queryResult.error);
-  return ok(
-    queryResult.value
-      .map((row) => ({ ...row, slug: asMeterSlug(row.slug) }))
-      .sort((a, b) => a.name.localeCompare(b.name, 'ar'))
-  );
+  return ok(queryResult.value.map((row) => ({ ...row, slug: asMeterSlug(row.slug) })));
 }
 
 export async function listMeterPoems(

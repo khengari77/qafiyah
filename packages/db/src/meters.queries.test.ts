@@ -4,10 +4,10 @@ import { listAllMeterPoems, listMeterPoems, listMeters } from './meters.queries'
 import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 
 describe('listMeters', () => {
-  it('returns meters sorted alphabetically in Arabic', async () => {
+  it('returns meters in DB order', async () => {
     const rows = [
-      { name: 'الوافر', slug: 'alwafir', poemsCount: 20, poetsCount: 5 },
-      { name: 'الطويل', slug: 'altawil', poemsCount: 100, poetsCount: 30 },
+      { name: 'الطويل', slug: 'altawil', poemsCount: 100, poetsCount: 30, isFormal: true },
+      { name: 'الوافر', slug: 'alwafir', poemsCount: 20, poetsCount: 5, isFormal: true },
     ];
     const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
