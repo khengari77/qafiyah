@@ -1,4 +1,4 @@
-import { boolean, integer, pgMaterializedView, pgView, text } from 'drizzle-orm/pg-core';
+import { integer, pgMaterializedView, pgView, text } from 'drizzle-orm/pg-core';
 
 export const collectionStats = pgView('collection_stats', {
   id: integer('id').notNull(),
@@ -21,7 +21,6 @@ export const meterStats = pgView('meter_stats', {
   id: integer('id').notNull(),
   name: text('name').notNull(),
   slug: text('slug').notNull(),
-  isFormal: boolean('is_formal').notNull(),
   poemsCount: integer('poems_count').notNull(),
   poetsCount: integer('poets_count').notNull(),
 }).existing();

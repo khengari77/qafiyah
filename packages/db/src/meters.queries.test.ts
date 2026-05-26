@@ -6,8 +6,8 @@ import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 describe('listMeters', () => {
   it('returns meters in DB order', async () => {
     const rows = [
-      { name: 'الطويل', slug: 'altawil', poemsCount: 100, poetsCount: 30, isFormal: true },
-      { name: 'الوافر', slug: 'alwafir', poemsCount: 20, poetsCount: 5, isFormal: true },
+      { name: 'الطويل', slug: 'altawil', poemsCount: 100, poetsCount: 30 },
+      { name: 'الوافر', slug: 'alwafir', poemsCount: 20, poetsCount: 5 },
     ];
     const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(rows)) }),
@@ -16,7 +16,6 @@ describe('listMeters', () => {
     const value = (await listMeters(mockDb))._unsafeUnwrap();
     expect(value.length).toBe(2);
     expect(value[0]?.name).toBe('الطويل');
-    expect(value[0]?.isFormal).toBe(true);
   });
 
   it('returns empty array when no meters exist', async () => {
