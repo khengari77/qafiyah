@@ -71,7 +71,7 @@ const RANDOM_POEM_DATA = { poem_id: 1, poet_name: 'شاعر', content: POEM_CONT
 describe('getRandomPoem', () => {
   it('returns RandomPoemLines including slug for a JSON object result', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: RANDOM_POEM_DATA }]),
+      execute: vi.fn().mockResolvedValue([{ random_poem_json: RANDOM_POEM_DATA }]),
     });
 
     const poem = (await getRandomPoem(mockDb))._unsafeUnwrap();
@@ -84,7 +84,7 @@ describe('getRandomPoem', () => {
     const mockDb = castPartialAsDbClient({
       execute: vi
         .fn()
-        .mockResolvedValue([{ get_random_eligible_poem: JSON.stringify(RANDOM_POEM_DATA) }]),
+        .mockResolvedValue([{ random_poem_json: JSON.stringify(RANDOM_POEM_DATA) }]),
     });
 
     const poem = (await getRandomPoem(mockDb))._unsafeUnwrap();
@@ -96,9 +96,9 @@ describe('getRandomPoem', () => {
     expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
   });
 
-  it('returns no_eligible_poem when get_random_eligible_poem is falsy', async () => {
+  it('returns no_eligible_poem when random_poem_json is falsy', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: null }]),
+      execute: vi.fn().mockResolvedValue([{ random_poem_json: null }]),
     });
     expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('no_eligible_poem');
   });
@@ -108,7 +108,7 @@ describe('getRandomPoem', () => {
       execute: vi
         .fn()
         .mockResolvedValue([
-          { get_random_eligible_poem: { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT } },
+          { random_poem_json: { poem_id: 1, poet_name: 'شاعر', content: POEM_CONTENT } },
         ]),
     });
     expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('invalid_payload_shape');
@@ -116,7 +116,7 @@ describe('getRandomPoem', () => {
 
   it('returns invalid_json when string payload is malformed', async () => {
     const mockDb = castPartialAsDbClient({
-      execute: vi.fn().mockResolvedValue([{ get_random_eligible_poem: '{not-json' }]),
+      execute: vi.fn().mockResolvedValue([{ random_poem_json: '{not-json' }]),
     });
     expect((await getRandomPoem(mockDb))._unsafeUnwrapErr().kind).toBe('invalid_json');
   });

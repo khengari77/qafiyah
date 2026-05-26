@@ -13,7 +13,7 @@ describe('poems routes', () => {
   it('defaults to slug when no option query param is provided', async () => {
     const mockPoem = { poem_id: 1, poet_name: 'شاعر', content: 'Line 1*Line 2', slug: 'abcd' };
     const db = createMockDb();
-    db.execute = vi.fn().mockResolvedValue([{ get_random_eligible_poem: mockPoem }]);
+    db.execute = vi.fn().mockResolvedValue([{ random_poem_json: mockPoem }]);
 
     const client = createTestClient(poems, { db });
     const res = await client.$get('/random');
@@ -25,7 +25,7 @@ describe('poems routes', () => {
   it('should return random poem slug', async () => {
     const mockPoem = { poem_id: 1, poet_name: 'شاعر', content: 'Line 1*Line 2', slug: 'efgh' };
     const db = createMockDb();
-    db.execute = vi.fn().mockResolvedValue([{ get_random_eligible_poem: mockPoem }]);
+    db.execute = vi.fn().mockResolvedValue([{ random_poem_json: mockPoem }]);
 
     const client = createTestClient(poems, { db });
     const res = await client.$get('/random?option=slug');
@@ -55,7 +55,7 @@ describe('poems routes', () => {
 
     const mockResult = [
       {
-        get_random_eligible_poem: JSON.stringify(mockPoem),
+        random_poem_json: JSON.stringify(mockPoem),
       },
     ];
 

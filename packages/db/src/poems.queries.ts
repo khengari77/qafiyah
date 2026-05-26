@@ -117,7 +117,7 @@ export async function getRandomPoem(
   db: DbClient
 ): Promise<Result<RandomPoemLines, GetRandomPoemError>> {
   const queryResult = await ResultAsync.fromPromise(
-    db.execute(sql`SELECT get_random_eligible_poem()`),
+    db.execute(sql`SELECT random_poem_json()`),
     (cause): { kind: 'query_failed'; message: string } => ({
       kind: 'query_failed',
       message: cause instanceof Error ? cause.message : String(cause),
@@ -126,11 +126,11 @@ export async function getRandomPoem(
   if (queryResult.isErr()) return err(queryResult.error);
   const result = queryResult.value;
 
-  if (!result || result.length === 0 || !result[0]?.['get_random_eligible_poem']) {
+  if (!result || result.length === 0 || !result[0]?.['random_poem_json']) {
     return err({ kind: 'no_eligible_poem' });
   }
 
-  const poemJson = result[0]['get_random_eligible_poem'];
+  const poemJson = result[0]['random_poem_json'];
   let parsed: unknown;
   if (typeof poemJson === 'string') {
     const jsonResult = safeJsonParse(poemJson);
