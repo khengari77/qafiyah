@@ -1,6 +1,6 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { MeterSlug } from '@qafiyah/contracts';
-import { eq, sql } from 'drizzle-orm';
+import { asc, eq, sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import { asMeterSlug } from './brand';
 import type { DbClient } from './client';
@@ -47,7 +47,8 @@ export async function listMeters(
         poetsCount: meterStats.poetsCount,
       })
       .from(meterStats)
-      .where(eq(meterStats.isFormal, true)),
+      .where(eq(meterStats.isFormal, true))
+      .orderBy(asc(meterStats.name)),
     (cause): ListMetersError => ({
       kind: 'sql_error',
       message: cause instanceof Error ? cause.message : String(cause),

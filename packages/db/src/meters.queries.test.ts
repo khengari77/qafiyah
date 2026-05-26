@@ -16,6 +16,7 @@ describe('listMeters', () => {
     const value = (await listMeters(mockDb))._unsafeUnwrap();
     expect(value.length).toBe(2);
     expect(value[0]?.name).toBe('الطويل');
+    expect(value[0]?.isFormal).toBe(true);
   });
 
   it('returns empty array when no meters exist', async () => {
