@@ -4,7 +4,7 @@ import { errorStatus } from './api-error';
 import { apiServer } from './client';
 import type { ApiOutputs } from './types';
 
-type CollectionPoems = ApiOutputs['collections']['listPoems'];
+export type Collection = ApiOutputs['collections']['get']['data'];
 
 export async function allCollections(): Promise<ApiOutputs['collections']['list']['data']> {
   const { error, data } = await safe(apiServer.collections.list());
@@ -12,19 +12,11 @@ export async function allCollections(): Promise<ApiOutputs['collections']['list'
   return data.data;
 }
 
-export async function getCollectionPoemsPage(
-  slug: CollectionSlug,
-  page: number
-): Promise<{
-  poems: CollectionPoems['data'];
-  collection: CollectionPoems['meta'];
-  pagination: CollectionPoems['pagination'];
-} | null> {
-  const { error, data } = await safe(apiServer.collections.listPoems({ slug, page: String(page) }));
+export async function getCollection(slug: CollectionSlug): Promise<Collection | null> {
+  const { error, data } = await safe(apiServer.collections.get({ slug }));
   if (error) {
     if (errorStatus(error) === 404) return null;
     throw error;
   }
-  if (page > data.pagination.totalPages) return null;
-  return { poems: data.data, collection: data.meta, pagination: data.pagination };
+  return data.data;
 }

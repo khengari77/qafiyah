@@ -4,7 +4,7 @@ import { apiServer } from '@/lib/server/client';
 import { SITEMAP_POEMS_PER_SHARD, shardCount, sitemapIndexXml } from '@/lib/server/sitemap';
 
 export const GET: APIRoute = async () => {
-  const slugs = await apiServer.poems.listPoemSlugs();
+  const slugs = await apiServer.poems.listSlugs();
   const poemShards = shardCount(slugs.data.length, SITEMAP_POEMS_PER_SHARD);
   const paths = [
     ...Array.from({ length: poemShards }, (_, i) => `/sitemap/poems/${i + 1}.xml`),

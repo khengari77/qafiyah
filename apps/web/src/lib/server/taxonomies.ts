@@ -4,10 +4,10 @@ import { errorStatus } from './api-error';
 import { apiServer } from './client';
 import type { ApiOutputs } from './types';
 
-type EraPoems = ApiOutputs['eras']['listPoems'];
-type MeterPoems = ApiOutputs['meters']['listPoems'];
-type RhymePoems = ApiOutputs['rhymes']['listPoems'];
-type ThemePoems = ApiOutputs['themes']['listPoems'];
+export type Era = ApiOutputs['eras']['get']['data'];
+export type Meter = ApiOutputs['meters']['get']['data'];
+export type Rhyme = ApiOutputs['rhymes']['get']['data'];
+export type Theme = ApiOutputs['themes']['get']['data'];
 
 export async function allEras(): Promise<ApiOutputs['eras']['list']['data']> {
   const { error, data } = await safe(apiServer.eras.list());
@@ -30,70 +30,38 @@ export async function allThemes(): Promise<ApiOutputs['themes']['list']['data']>
   return data.data;
 }
 
-export async function getEraPoemsPage(
-  slug: EraSlug,
-  page: number
-): Promise<{
-  poems: EraPoems['data'];
-  era: EraPoems['meta'];
-  pagination: EraPoems['pagination'];
-} | null> {
-  const { error, data } = await safe(apiServer.eras.listPoems({ slug, page: String(page) }));
+export async function getEra(slug: EraSlug): Promise<Era | null> {
+  const { error, data } = await safe(apiServer.eras.get({ slug }));
   if (error) {
     if (errorStatus(error) === 404) return null;
     throw error;
   }
-  if (page > data.pagination.totalPages) return null;
-  return { poems: data.data, era: data.meta, pagination: data.pagination };
+  return data.data;
 }
 
-export async function getMeterPoemsPage(
-  slug: MeterSlug,
-  page: number
-): Promise<{
-  poems: MeterPoems['data'];
-  meter: MeterPoems['meta'];
-  pagination: MeterPoems['pagination'];
-} | null> {
-  const { error, data } = await safe(apiServer.meters.listPoems({ slug, page: String(page) }));
+export async function getMeter(slug: MeterSlug): Promise<Meter | null> {
+  const { error, data } = await safe(apiServer.meters.get({ slug }));
   if (error) {
     if (errorStatus(error) === 404) return null;
     throw error;
   }
-  if (page > data.pagination.totalPages) return null;
-  return { poems: data.data, meter: data.meta, pagination: data.pagination };
+  return data.data;
 }
 
-export async function getRhymePoemsPage(
-  slug: RhymeSlug,
-  page: number
-): Promise<{
-  poems: RhymePoems['data'];
-  rhyme: RhymePoems['meta'];
-  pagination: RhymePoems['pagination'];
-} | null> {
-  const { error, data } = await safe(apiServer.rhymes.listPoems({ slug, page: String(page) }));
+export async function getRhyme(slug: RhymeSlug): Promise<Rhyme | null> {
+  const { error, data } = await safe(apiServer.rhymes.get({ slug }));
   if (error) {
     if (errorStatus(error) === 404) return null;
     throw error;
   }
-  if (page > data.pagination.totalPages) return null;
-  return { poems: data.data, rhyme: data.meta, pagination: data.pagination };
+  return data.data;
 }
 
-export async function getThemePoemsPage(
-  slug: ThemeSlug,
-  page: number
-): Promise<{
-  poems: ThemePoems['data'];
-  theme: ThemePoems['meta'];
-  pagination: ThemePoems['pagination'];
-} | null> {
-  const { error, data } = await safe(apiServer.themes.listPoems({ slug, page: String(page) }));
+export async function getTheme(slug: ThemeSlug): Promise<Theme | null> {
+  const { error, data } = await safe(apiServer.themes.get({ slug }));
   if (error) {
     if (errorStatus(error) === 404) return null;
     throw error;
   }
-  if (page > data.pagination.totalPages) return null;
-  return { poems: data.data, theme: data.meta, pagination: data.pagination };
+  return data.data;
 }

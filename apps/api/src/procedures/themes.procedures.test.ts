@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
-import { ok } from 'neverthrow';
+import { err, ok } from 'neverthrow';
+import * as v from 'valibot';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listThemesMock = vi.fn();
+const getThemeBySlugMock = vi.fn();
 
 vi.mock('@qafiyah/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@qafiyah/db')>();
@@ -13,6 +15,7 @@ vi.mock('@qafiyah/db', async (importOriginal) => {
     ...actual,
     themesQueries: {
       listThemes: listThemesMock,
+      getThemeBySlug: getThemeBySlugMock,
     },
   };
 });
@@ -37,9 +40,18 @@ async function buildOrpcApp() {
 
 const sampleTheme = { name: 'الغزل', slug: 'love', poemsCount: 400 };
 
+const singletonBodySchema = v.object({
+  data: v.object({
+    name: v.string(),
+    slug: v.string(),
+    poemsCount: v.number(),
+  }),
+});
+
 describe('themes procedures', () => {
   beforeEach(() => {
     listThemesMock.mockReset();
+    getThemeBySlugMock.mockReset();
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -69,6 +81,40 @@ describe('themes procedures', () => {
       expect(res.status).toBe(200);
       const body = await parseJson(res, listBodySchema);
       expect(body.data).toHaveLength(0);
+    });
+  });
+
+  describe('getThemeBySlug', () => {
+    it('returns theme singleton wrapped in { data } on success', async () => {
+      getThemeBySlugMock.mockResolvedValue(ok(sampleTheme));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/themes/love');
+
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, singletonBodySchema);
+      expect(body.data).toEqual(sampleTheme);
+    });
+
+    it('returns 404 when theme not found', async () => {
+      getThemeBySlugMock.mockResolvedValue(err({ kind: 'not_found', slug: 'nope' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/themes/nope');
+
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 500 on sql_error', async () => {
+      getThemeBySlugMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/themes/boom');
+
+      expect(res.status).toBe(500);
     });
   });
 });

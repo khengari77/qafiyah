@@ -4,35 +4,28 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./client', () => ({
   apiServer: {
-    collections: { list: vi.fn(), listPoems: vi.fn() },
+    collections: { list: vi.fn(), get: vi.fn() },
   },
 }));
 
 import { apiServer } from './client';
-import { allCollections, getCollectionPoemsPage } from './collections';
+import { allCollections, getCollection } from './collections';
 
 const collectionsListMock = apiServer.collections.list as unknown as ReturnType<typeof vi.fn>;
-const collectionsListPoemsMock = apiServer.collections.listPoems as unknown as ReturnType<
-  typeof vi.fn
->;
+const collectionsGetMock = apiServer.collections.get as unknown as ReturnType<typeof vi.fn>;
 
-const POEM = {
-  title: 'ت',
-  slug: 'p1',
-  poet: { name: 'ش', slug: 'poet-x' },
-  meter: { name: 'م', slug: 'meter-x' },
-};
 const PAGINATION = { page: 1, pageSize: 50, totalPages: 1, totalItems: 10 };
+const COLLECTION = { name: 'المعلقات', slug: 'almuallaqat' as CollectionSlug, poemsCount: 10 };
 
 beforeEach(() => {
   collectionsListMock.mockReset();
-  collectionsListPoemsMock.mockReset();
+  collectionsGetMock.mockReset();
 });
 
 describe('allCollections', () => {
   it('returns the list data', async () => {
     collectionsListMock.mockResolvedValue({
-      data: [{ name: 'المعلقات', slug: 'almuallaqat', poemsCount: 10 }],
+      data: [COLLECTION],
       pagination: PAGINATION,
     });
     const collections = await allCollections();
@@ -41,32 +34,18 @@ describe('allCollections', () => {
   });
 });
 
-describe('getCollectionPoemsPage', () => {
-  it('maps data/meta/pagination', async () => {
-    collectionsListPoemsMock.mockResolvedValue({
-      data: [POEM],
-      pagination: PAGINATION,
-      meta: { name: 'المعلقات', slug: 'almuallaqat', poemsCount: 10 },
-    });
-    const result = await getCollectionPoemsPage('almuallaqat' as CollectionSlug, 1);
-    expect(result?.poems).toHaveLength(1);
-    expect(result?.collection.slug).toBe('almuallaqat');
-    expect(result?.pagination.totalPages).toBe(1);
+describe('getCollection', () => {
+  it('returns the unwrapped collection on success', async () => {
+    collectionsGetMock.mockResolvedValue({ data: COLLECTION });
+    const collection = await getCollection('almuallaqat' as CollectionSlug);
+    expect(collection).toEqual(COLLECTION);
+    expect(collectionsGetMock).toHaveBeenCalledWith({ slug: 'almuallaqat' });
   });
 
-  it('returns null on NOT_FOUND (unknown slug)', async () => {
-    collectionsListPoemsMock.mockRejectedValue(
+  it('returns null on NOT_FOUND', async () => {
+    collectionsGetMock.mockRejectedValue(
       new ORPCError('NOT_FOUND', { defined: true, status: 404 })
     );
-    expect(await getCollectionPoemsPage('missing' as CollectionSlug, 1)).toBeNull();
-  });
-
-  it('returns null when page is past the last page', async () => {
-    collectionsListPoemsMock.mockResolvedValue({
-      data: [],
-      pagination: { page: 99, pageSize: 50, totalPages: 1, totalItems: 10 },
-      meta: { name: 'المعلقات', slug: 'almuallaqat', poemsCount: 10 },
-    });
-    expect(await getCollectionPoemsPage('almuallaqat' as CollectionSlug, 99)).toBeNull();
+    expect(await getCollection('missing' as CollectionSlug)).toBeNull();
   });
 });

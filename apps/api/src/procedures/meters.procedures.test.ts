@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
-import { ok } from 'neverthrow';
+import { err, ok } from 'neverthrow';
+import * as v from 'valibot';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listMetersMock = vi.fn();
+const getMeterBySlugMock = vi.fn();
 
 vi.mock('@qafiyah/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@qafiyah/db')>();
@@ -13,6 +15,7 @@ vi.mock('@qafiyah/db', async (importOriginal) => {
     ...actual,
     metersQueries: {
       listMeters: listMetersMock,
+      getMeterBySlug: getMeterBySlugMock,
     },
   };
 });
@@ -37,9 +40,19 @@ async function buildOrpcApp() {
 
 const sampleMeter = { name: 'الطويل', slug: 'tawil', poemsCount: 500, poetsCount: 200 };
 
+const singletonBodySchema = v.object({
+  data: v.object({
+    name: v.string(),
+    slug: v.string(),
+    poemsCount: v.number(),
+    poetsCount: v.number(),
+  }),
+});
+
 describe('meters procedures', () => {
   beforeEach(() => {
     listMetersMock.mockReset();
+    getMeterBySlugMock.mockReset();
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -69,6 +82,40 @@ describe('meters procedures', () => {
       expect(res.status).toBe(200);
       const body = await parseJson(res, listBodySchema);
       expect(body.data).toHaveLength(0);
+    });
+  });
+
+  describe('getMeterBySlug', () => {
+    it('returns meter singleton wrapped in { data } on success', async () => {
+      getMeterBySlugMock.mockResolvedValue(ok(sampleMeter));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/meters/tawil');
+
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, singletonBodySchema);
+      expect(body.data).toEqual(sampleMeter);
+    });
+
+    it('returns 404 when meter not found', async () => {
+      getMeterBySlugMock.mockResolvedValue(err({ kind: 'not_found', slug: 'nope' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/meters/nope');
+
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 500 on sql_error', async () => {
+      getMeterBySlugMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/meters/boom');
+
+      expect(res.status).toBe(500);
     });
   });
 });

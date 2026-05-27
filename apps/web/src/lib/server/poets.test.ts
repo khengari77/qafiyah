@@ -3,27 +3,25 @@ import type { PoetSlug } from '@qafiyah/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./client', () => ({
-  apiServer: { poets: { list: vi.fn(), listPoems: vi.fn() } },
+  apiServer: { poets: { list: vi.fn(), get: vi.fn() } },
 }));
 
 import { apiServer } from './client';
-import { getPoetPoemsPage, getPoetsPage } from './poets';
+import { getPoet, getPoetsPage } from './poets';
 
 const listMock = apiServer.poets.list as unknown as ReturnType<typeof vi.fn>;
-const poemsMock = apiServer.poets.listPoems as unknown as ReturnType<typeof vi.fn>;
+const getMock = apiServer.poets.get as unknown as ReturnType<typeof vi.fn>;
 const PAGINATION = { page: 1, pageSize: 30, totalPages: 1, totalItems: 1 };
+const POET = { name: 'ش', slug: 'poet-x' as PoetSlug, poemsCount: 3 };
 
 beforeEach(() => {
   listMock.mockReset();
-  poemsMock.mockReset();
+  getMock.mockReset();
 });
 
 describe('getPoetsPage', () => {
   it('maps poets + pagination', async () => {
-    listMock.mockResolvedValue({
-      data: [{ name: 'ش', slug: 'poet-x', poemsCount: 3 }],
-      pagination: PAGINATION,
-    });
+    listMock.mockResolvedValue({ data: [POET], pagination: PAGINATION });
     const result = await getPoetsPage(1);
     expect(result?.poets).toHaveLength(1);
     expect(result?.pagination.totalItems).toBe(1);
@@ -34,26 +32,21 @@ describe('getPoetsPage', () => {
   });
 });
 
-describe('getPoetPoemsPage', () => {
-  it('maps poems/poet/pagination', async () => {
-    poemsMock.mockResolvedValue({
-      data: [
-        {
-          title: 'ت',
-          slug: 'p1',
-          poet: { name: 'ش', slug: 'poet-x' },
-          meter: { name: 'م', slug: 'meter-x' },
-        },
-      ],
-      pagination: PAGINATION,
-      meta: { name: 'ش', slug: 'poet-x', poemsCount: 3 },
-    });
-    const result = await getPoetPoemsPage('poet-x' as PoetSlug, 1);
-    expect(result?.poet.slug).toBe('poet-x');
-    expect(result?.poems).toHaveLength(1);
+describe('getPoet', () => {
+  it('returns the unwrapped poet on success', async () => {
+    getMock.mockResolvedValue({ data: POET });
+    const result = await getPoet('poet-x' as PoetSlug);
+    expect(result).toEqual(POET);
+    expect(getMock).toHaveBeenCalledWith({ slug: 'poet-x' });
   });
+
   it('returns null on NOT_FOUND', async () => {
-    poemsMock.mockRejectedValue(new ORPCError('NOT_FOUND', { defined: true, status: 404 }));
-    expect(await getPoetPoemsPage('missing' as PoetSlug, 1)).toBeNull();
+    getMock.mockRejectedValue(new ORPCError('NOT_FOUND', { defined: true, status: 404 }));
+    expect(await getPoet('missing' as PoetSlug)).toBeNull();
+  });
+
+  it('rethrows on a 500', async () => {
+    getMock.mockRejectedValue(new ORPCError('INTERNAL_SERVER_ERROR', { status: 500 }));
+    await expect(getPoet('boom' as PoetSlug)).rejects.toThrow();
   });
 });

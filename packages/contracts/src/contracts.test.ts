@@ -10,39 +10,40 @@ import { searchContract } from './search';
 import { themesContract } from './themes';
 
 describe('contract structure', () => {
-  it('collectionsContract has list and listPoems', () => {
+  it('collectionsContract has list and get', () => {
     expect(collectionsContract).toHaveProperty('list');
-    expect(collectionsContract).toHaveProperty('listPoems');
+    expect(collectionsContract).toHaveProperty('get');
   });
 
-  it('erasContract has list and listPoems', () => {
+  it('erasContract has list and get', () => {
     expect(erasContract).toHaveProperty('list');
-    expect(erasContract).toHaveProperty('listPoems');
+    expect(erasContract).toHaveProperty('get');
   });
 
-  it('metersContract has list and listPoems', () => {
+  it('metersContract has list and get', () => {
     expect(metersContract).toHaveProperty('list');
-    expect(metersContract).toHaveProperty('listPoems');
+    expect(metersContract).toHaveProperty('get');
   });
 
-  it('poemsContract has listPoemSlugs and getPoemBySlug', () => {
-    expect(poemsContract).toHaveProperty('listPoemSlugs');
-    expect(poemsContract).toHaveProperty('getPoemBySlug');
+  it('poemsContract has list, get and listSlugs', () => {
+    expect(poemsContract).toHaveProperty('list');
+    expect(poemsContract).toHaveProperty('get');
+    expect(poemsContract).toHaveProperty('listSlugs');
   });
 
-  it('poetsContract has list and listPoems', () => {
+  it('poetsContract has list and get', () => {
     expect(poetsContract).toHaveProperty('list');
-    expect(poetsContract).toHaveProperty('listPoems');
+    expect(poetsContract).toHaveProperty('get');
   });
 
-  it('rhymesContract has list and listPoems', () => {
+  it('rhymesContract has list and get', () => {
     expect(rhymesContract).toHaveProperty('list');
-    expect(rhymesContract).toHaveProperty('listPoems');
+    expect(rhymesContract).toHaveProperty('get');
   });
 
-  it('themesContract has list and listPoems', () => {
+  it('themesContract has list and get', () => {
     expect(themesContract).toHaveProperty('list');
-    expect(themesContract).toHaveProperty('listPoems');
+    expect(themesContract).toHaveProperty('get');
   });
 
   it('searchContract has search', () => {

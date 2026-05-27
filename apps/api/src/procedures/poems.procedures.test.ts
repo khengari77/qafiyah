@@ -1,12 +1,13 @@
 import { Hono } from 'hono';
 import { err, ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { poemDetailResponseSchema, slugListResponseSchema } from '@/test-schemas';
+import { listBodySchema, poemDetailResponseSchema, slugListResponseSchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listAllPoemSlugsMock = vi.fn();
 const getPoemBySlugMock = vi.fn();
+const listPoemsMock = vi.fn();
 
 vi.mock('@qafiyah/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@qafiyah/db')>();
@@ -15,6 +16,7 @@ vi.mock('@qafiyah/db', async (importOriginal) => {
     poemsQueries: {
       listAllPoemSlugs: listAllPoemSlugsMock,
       getPoemBySlug: getPoemBySlugMock,
+      listPoems: listPoemsMock,
     },
   };
 });
@@ -67,16 +69,26 @@ const samplePoemData = {
   ],
 };
 
+const samplePoemRow = {
+  title: 'قصيدة في الحب',
+  slug: 'mypm',
+  poetName: 'المتنبي',
+  poetSlug: 'mutanabbi',
+  meterName: 'الطويل',
+  meterSlug: 'tawil',
+};
+
 describe('poems procedures', () => {
   beforeEach(() => {
     listAllPoemSlugsMock.mockReset();
     getPoemBySlugMock.mockReset();
+    listPoemsMock.mockReset();
   });
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('listPoemSlugs', () => {
+  describe('listSlugs', () => {
     it('returns slugs list wrapped in envelope', async () => {
       listAllPoemSlugsMock.mockResolvedValue(ok(['pone', 'ptwo']));
       const app = await buildOrpcApp();
@@ -104,7 +116,7 @@ describe('poems procedures', () => {
     });
   });
 
-  describe('getPoemBySlug', () => {
+  describe('get', () => {
     it('returns poem resource wrapped in { data } envelope', async () => {
       getPoemBySlugMock.mockResolvedValue(ok(samplePoemData));
       const app = await buildOrpcApp();
@@ -152,6 +164,81 @@ describe('poems procedures', () => {
       const res = await client.$get('/v1/poems/bdpm');
 
       expect(res.status).toBe(500);
+    });
+  });
+
+  describe('list', () => {
+    it('returns paginated envelope with no filters', async () => {
+      listPoemsMock.mockResolvedValue(ok({ poems: [samplePoemRow], total: 1, totalPages: 1 }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems');
+
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.data).toHaveLength(1);
+      expect(body.pagination.page).toBe(1);
+      expect(listPoemsMock).toHaveBeenCalledWith(
+        expect.anything(),
+        {
+          poetSlugs: [],
+          eraSlugs: [],
+          themeSlugs: [],
+          meterSlugs: [],
+          rhymeSlugs: [],
+          collectionSlugs: [],
+        },
+        1
+      );
+    });
+
+    it('forwards repeated poet filters as an array', async () => {
+      listPoemsMock.mockResolvedValue(ok({ poems: [], total: 0, totalPages: 1 }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems?poet%5B0%5D=a&poet%5B1%5D=b');
+
+      expect(res.status).toBe(200);
+      expect(listPoemsMock).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ poetSlugs: ['a', 'b'] }),
+        1
+      );
+    });
+
+    it('forwards the requested page', async () => {
+      listPoemsMock.mockResolvedValue(ok({ poems: [], total: 0, totalPages: 5 }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems?page=3');
+
+      expect(res.status).toBe(200);
+      expect(listPoemsMock).toHaveBeenCalledWith(expect.anything(), expect.any(Object), 3);
+    });
+
+    it('returns 500 when listPoems fails', async () => {
+      listPoemsMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems');
+
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 200 with empty data for an unknown filter slug', async () => {
+      listPoemsMock.mockResolvedValue(ok({ poems: [], total: 0, totalPages: 1 }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems?poet%5B0%5D=nobody');
+
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.data).toHaveLength(0);
     });
   });
 });

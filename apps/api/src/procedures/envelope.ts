@@ -31,13 +31,3 @@ export function listEnvelope<T>(args: {
     pagination: buildPagination(args),
   };
 }
-
-export function listEnvelopeWithMeta<T, M>(args: {
-  readonly data: readonly T[];
-  readonly page: number;
-  readonly pageSize: number;
-  readonly totalItems: number;
-  readonly meta: M;
-}): { data: T[]; pagination: Pagination; meta: M } {
-  return { ...listEnvelope(args), meta: args.meta };
-}

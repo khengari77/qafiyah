@@ -43,18 +43,12 @@ export const slugInput = <TSlug extends v.GenericSchema<string, string>>(
   example: string
 ) => v.object({ slug: v.pipe(slug, v.examples([example])) });
 
-export const slugAndPageInput = <TSlug extends v.GenericSchema<string, string>>(
-  slug: TSlug,
-  example: string
-) =>
-  v.object({
-    slug: v.pipe(slug, v.examples([example])),
-    page: v.optional(pageParam, DEFAULT_PAGE),
-  });
-
 export const pageQueryInput = v.object({
   page: v.optional(pageParam, DEFAULT_PAGE),
 });
+
+export const optionalSlugs = <S extends v.GenericSchema<string, string>>(s: S) =>
+  v.optional(v.array(s), []);
 
 export const pagination = v.object({
   page: v.number(),
@@ -65,8 +59,3 @@ export const pagination = v.object({
 
 export const listResponse = <TItem extends v.GenericSchema>(item: TItem) =>
   v.object({ data: v.array(item), pagination });
-
-export const listResponseWithMeta = <TItem extends v.GenericSchema, TMeta extends v.GenericSchema>(
-  item: TItem,
-  meta: TMeta
-) => v.object({ data: v.array(item), pagination, meta });

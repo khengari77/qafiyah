@@ -1,45 +1,26 @@
 import { publicProcedure } from './procedures/base';
-import { listCollectionPoems, listCollections } from './procedures/collections.procedures';
-import { listEraPoems, listEras } from './procedures/eras.procedures';
-import { listMeterPoems, listMeters } from './procedures/meters.procedures';
-import { getPoemBySlug, listPoemSlugs } from './procedures/poems.procedures';
-import { listPoetPoems, listPoets } from './procedures/poets.procedures';
-import { listRhymePoems, listRhymes } from './procedures/rhymes.procedures';
+import { get as getCollection, list as listCollections } from './procedures/collections.procedures';
+import { get as getEra, list as listEras } from './procedures/eras.procedures';
+import { get as getMeter, list as listMeters } from './procedures/meters.procedures';
+import {
+  get as getPoem,
+  listSlugs as listPoemSlugs,
+  list as listPoems,
+} from './procedures/poems.procedures';
+import { get as getPoet, list as listPoets } from './procedures/poets.procedures';
+import { get as getRhyme, list as listRhymes } from './procedures/rhymes.procedures';
 import { search } from './procedures/search.procedures';
-import { listThemePoems, listThemes } from './procedures/themes.procedures';
+import { get as getTheme, list as listThemes } from './procedures/themes.procedures';
 
 const routes = {
-  collections: {
-    list: listCollections,
-    listPoems: listCollectionPoems,
-  },
-  eras: {
-    list: listEras,
-    listPoems: listEraPoems,
-  },
-  meters: {
-    list: listMeters,
-    listPoems: listMeterPoems,
-  },
-  poems: {
-    listPoemSlugs,
-    getPoemBySlug,
-  },
-  poets: {
-    list: listPoets,
-    listPoems: listPoetPoems,
-  },
-  rhymes: {
-    list: listRhymes,
-    listPoems: listRhymePoems,
-  },
-  themes: {
-    list: listThemes,
-    listPoems: listThemePoems,
-  },
-  search: {
-    search,
-  },
+  collections: { list: listCollections, get: getCollection },
+  eras: { list: listEras, get: getEra },
+  meters: { list: listMeters, get: getMeter },
+  poems: { list: listPoems, get: getPoem, listSlugs: listPoemSlugs },
+  poets: { list: listPoets, get: getPoet },
+  rhymes: { list: listRhymes, get: getRhyme },
+  themes: { list: listThemes, get: getTheme },
+  search: { search },
 };
 
 export const router = publicProcedure.router(routes);

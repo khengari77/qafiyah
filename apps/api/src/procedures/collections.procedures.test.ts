@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
-import { ok } from 'neverthrow';
+import { err, ok } from 'neverthrow';
+import * as v from 'valibot';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listCollectionsMock = vi.fn();
+const getCollectionBySlugMock = vi.fn();
 
 vi.mock('@qafiyah/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@qafiyah/db')>();
@@ -13,6 +15,7 @@ vi.mock('@qafiyah/db', async (importOriginal) => {
     ...actual,
     collectionsQueries: {
       listCollections: listCollectionsMock,
+      getCollectionBySlug: getCollectionBySlugMock,
     },
   };
 });
@@ -35,11 +38,20 @@ async function buildOrpcApp() {
   return app;
 }
 
-const sampleCollection = { name: 'المعلقات', slug: 'muallaqat-uuid', poemsCount: 10 };
+const sampleCollection = { name: 'المعلقات', slug: 'almuallaqat', poemsCount: 10 };
+
+const singletonBodySchema = v.object({
+  data: v.object({
+    name: v.string(),
+    slug: v.string(),
+    poemsCount: v.number(),
+  }),
+});
 
 describe('collections procedures', () => {
   beforeEach(() => {
     listCollectionsMock.mockReset();
+    getCollectionBySlugMock.mockReset();
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -69,6 +81,40 @@ describe('collections procedures', () => {
       expect(res.status).toBe(200);
       const body = await parseJson(res, listBodySchema);
       expect(body.data).toHaveLength(0);
+    });
+  });
+
+  describe('getCollectionBySlug', () => {
+    it('returns collection singleton wrapped in { data } on success', async () => {
+      getCollectionBySlugMock.mockResolvedValue(ok(sampleCollection));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/collections/almuallaqat');
+
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, singletonBodySchema);
+      expect(body.data).toEqual(sampleCollection);
+    });
+
+    it('returns 404 when collection not found', async () => {
+      getCollectionBySlugMock.mockResolvedValue(err({ kind: 'not_found', slug: 'nope' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/collections/nope');
+
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 500 on sql_error', async () => {
+      getCollectionBySlugMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/collections/boom');
+
+      expect(res.status).toBe(500);
     });
   });
 });

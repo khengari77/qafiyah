@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
-import { ok } from 'neverthrow';
+import { err, ok } from 'neverthrow';
+import * as v from 'valibot';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBodySchema } from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
 const listPoetsMock = vi.fn();
+const getPoetBySlugMock = vi.fn();
 
 vi.mock('@qafiyah/db', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@qafiyah/db')>();
@@ -13,6 +15,7 @@ vi.mock('@qafiyah/db', async (importOriginal) => {
     ...actual,
     poetsQueries: {
       listPoets: listPoetsMock,
+      getPoetBySlug: getPoetBySlugMock,
     },
   };
 });
@@ -37,9 +40,18 @@ async function buildOrpcApp() {
 
 const samplePoet = { name: 'المتنبي', slug: 'mutanabbi', poemsCount: 300 };
 
+const singletonBodySchema = v.object({
+  data: v.object({
+    name: v.string(),
+    slug: v.string(),
+    poemsCount: v.number(),
+  }),
+});
+
 describe('poets procedures', () => {
   beforeEach(() => {
     listPoetsMock.mockReset();
+    getPoetBySlugMock.mockReset();
   });
   afterEach(() => {
     vi.clearAllMocks();
@@ -104,6 +116,40 @@ describe('poets procedures', () => {
       expect(res.status).toBe(200);
       const body = await parseJson(res, listBodySchema);
       expect(body.pagination.page).toBe(3);
+    });
+  });
+
+  describe('getPoetBySlug', () => {
+    it('returns poet singleton wrapped in { data } on success', async () => {
+      getPoetBySlugMock.mockResolvedValue(ok(samplePoet));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poets/mutanabbi');
+
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, singletonBodySchema);
+      expect(body.data).toEqual(samplePoet);
+    });
+
+    it('returns 404 when poet not found', async () => {
+      getPoetBySlugMock.mockResolvedValue(err({ kind: 'not_found', slug: 'nope' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poets/nope');
+
+      expect(res.status).toBe(404);
+    });
+
+    it('returns 500 on sql_error', async () => {
+      getPoetBySlugMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poets/boom');
+
+      expect(res.status).toBe(500);
     });
   });
 });

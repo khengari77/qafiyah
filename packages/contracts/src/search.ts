@@ -17,7 +17,7 @@ import {
   themeSlugSchema,
 } from './brands';
 import { DEFAULT_PAGE, inputValidationErrorMap, internalServerErrorMap } from './constants';
-import { namedSlugRef, pageParam, pagination } from './schemas';
+import { namedSlugRef, optionalSlugs, pageParam, pagination } from './schemas';
 
 // Live-typing sanitizer kept for the web input (UX); not applied server-side.
 export function sanitizeArabicInput(raw: string): string {
@@ -42,9 +42,6 @@ export const poetSearchResult = v.object({
   era: namedSlugRef(eraSlugSchema),
   relevance: v.number(),
 });
-
-const optionalSlugs = <S extends v.GenericSchema<string, string>>(s: S) =>
-  v.optional(v.array(s), []);
 
 export const searchInputSchema = v.object({
   q: v.optional(v.pipe(v.string(), v.maxLength(MAX_QUERY_LENGTH), v.examples(['المتنبي'])), ''),

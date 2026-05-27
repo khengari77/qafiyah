@@ -7,14 +7,19 @@ import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { parsePageParam } from '@/lib/page-numbers';
 import { CACHE_LIST } from '@/lib/server/cache';
-import { getEraPoemsPage } from '@/lib/server/taxonomies';
+import { listPoems } from '@/lib/server/poems';
+import { getEra } from '@/lib/server/taxonomies';
 
 const page = parsePageParam(Astro.params.page);
 const slugParam = Astro.params.slug;
-const data = page === null || !slugParam ? null : await getEraPoemsPage(slugParam as EraSlug, page);
-if (!data) return Astro.rewrite('/404');
+const eraSlug = slugParam as EraSlug | undefined;
+const [era, list] =
+  page === null || !eraSlug
+    ? [null, null]
+    : await Promise.all([getEra(eraSlug), listPoems({ eraSlugs: [eraSlug] }, page)]);
+if (!(era && list)) return Astro.rewrite('/404');
 Astro.response.headers.set('Cache-Control', CACHE_LIST);
-const { poems, era, pagination } = data;
+const { poems, pagination } = list;
 const slug = era.slug;
 const pageNumber = pagination.page;
 const totalPages = pagination.totalPages;

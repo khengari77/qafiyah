@@ -1,41 +1,34 @@
 import { ORPCError } from '@orpc/client';
-import type { EraSlug, MeterSlug } from '@qafiyah/contracts';
+import type { EraSlug } from '@qafiyah/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./client', () => ({
   apiServer: {
-    eras: { list: vi.fn(), listPoems: vi.fn() },
-    meters: { list: vi.fn(), listPoems: vi.fn() },
-    rhymes: { list: vi.fn(), listPoems: vi.fn() },
-    themes: { list: vi.fn(), listPoems: vi.fn() },
+    eras: { list: vi.fn(), get: vi.fn() },
+    meters: { list: vi.fn(), get: vi.fn() },
+    rhymes: { list: vi.fn(), get: vi.fn() },
+    themes: { list: vi.fn(), get: vi.fn() },
   },
 }));
 
 import { apiServer } from './client';
-import { allEras, getEraPoemsPage, getMeterPoemsPage } from './taxonomies';
+import { allEras, getEra } from './taxonomies';
 
 const erasListMock = apiServer.eras.list as unknown as ReturnType<typeof vi.fn>;
-const eraPoemsMock = apiServer.eras.listPoems as unknown as ReturnType<typeof vi.fn>;
-const meterPoemsMock = apiServer.meters.listPoems as unknown as ReturnType<typeof vi.fn>;
+const eraGetMock = apiServer.eras.get as unknown as ReturnType<typeof vi.fn>;
 
-const POEM = {
-  title: 'ت',
-  slug: 'p1',
-  poet: { name: 'ش', slug: 'poet-x' },
-  meter: { name: 'م', slug: 'meter-x' },
-};
 const PAGINATION = { page: 1, pageSize: 30, totalPages: 1, totalItems: 1 };
+const ERA = { name: 'الجاهلي', slug: 'jahili' as EraSlug, poemsCount: 31, poetsCount: 12 };
 
 beforeEach(() => {
   erasListMock.mockReset();
-  eraPoemsMock.mockReset();
-  meterPoemsMock.mockReset();
+  eraGetMock.mockReset();
 });
 
 describe('allEras', () => {
   it('returns the list data', async () => {
     erasListMock.mockResolvedValue({
-      data: [{ name: 'الجاهلي', slug: 'jahili', poemsCount: 31, poetsCount: 12 }],
+      data: [ERA],
       pagination: PAGINATION,
     });
     const eras = await allEras();
@@ -44,42 +37,16 @@ describe('allEras', () => {
   });
 });
 
-describe('getEraPoemsPage', () => {
-  it('maps data/meta/pagination', async () => {
-    eraPoemsMock.mockResolvedValue({
-      data: [POEM],
-      pagination: PAGINATION,
-      meta: { name: 'الجاهلي', slug: 'jahili', poemsCount: 31 },
-    });
-    const result = await getEraPoemsPage('jahili' as EraSlug, 1);
-    expect(result?.poems).toHaveLength(1);
-    expect(result?.era.slug).toBe('jahili');
-    expect(result?.pagination.totalPages).toBe(1);
+describe('getEra', () => {
+  it('returns the unwrapped era on success', async () => {
+    eraGetMock.mockResolvedValue({ data: ERA });
+    const era = await getEra('jahili' as EraSlug);
+    expect(era).toEqual(ERA);
+    expect(eraGetMock).toHaveBeenCalledWith({ slug: 'jahili' });
   });
 
-  it('returns null on NOT_FOUND (unknown slug)', async () => {
-    eraPoemsMock.mockRejectedValue(new ORPCError('NOT_FOUND', { defined: true, status: 404 }));
-    expect(await getEraPoemsPage('missing' as EraSlug, 1)).toBeNull();
-  });
-
-  it('returns null when page is past the last page', async () => {
-    eraPoemsMock.mockResolvedValue({
-      data: [],
-      pagination: { page: 99, pageSize: 30, totalPages: 2, totalItems: 31 },
-      meta: { name: 'الجاهلي', slug: 'jahili', poemsCount: 31 },
-    });
-    expect(await getEraPoemsPage('jahili' as EraSlug, 99)).toBeNull();
-  });
-});
-
-describe('getMeterPoemsPage', () => {
-  it('maps meter meta', async () => {
-    meterPoemsMock.mockResolvedValue({
-      data: [POEM],
-      pagination: PAGINATION,
-      meta: { name: 'البسيط', slug: 'albasit', poemsCount: 31 },
-    });
-    const result = await getMeterPoemsPage('albasit' as MeterSlug, 1);
-    expect(result?.meter.slug).toBe('albasit');
+  it('returns null on NOT_FOUND', async () => {
+    eraGetMock.mockRejectedValue(new ORPCError('NOT_FOUND', { defined: true, status: 404 }));
+    expect(await getEra('missing' as EraSlug)).toBeNull();
   });
 });

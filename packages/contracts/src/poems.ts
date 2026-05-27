@@ -1,16 +1,46 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
 import {
+  collectionSlugSchema,
   eraSlugSchema,
   meterSlugSchema,
   poemSlugSchema,
   poetSlugSchema,
+  rhymeSlugSchema,
   themeSlugSchema,
 } from './brands';
-import { EXAMPLE_POEM_SLUG, inputValidationErrorMap, internalServerErrorMap } from './constants';
-import { listResponse, namedSlugRef, poemListItem, slugInput } from './schemas';
+import {
+  DEFAULT_PAGE,
+  EXAMPLE_POEM_SLUG,
+  inputValidationErrorMap,
+  internalServerErrorMap,
+} from './constants';
+import {
+  listResponse,
+  namedSlugRef,
+  optionalSlugs,
+  pageParam,
+  poemListItem,
+  slugInput,
+} from './schemas';
 
-const listPoemSlugsContract = oc
+const listPoemsInput = v.object({
+  page: v.optional(pageParam, DEFAULT_PAGE),
+  poet: optionalSlugs(poetSlugSchema),
+  era: optionalSlugs(eraSlugSchema),
+  theme: optionalSlugs(themeSlugSchema),
+  meter: optionalSlugs(meterSlugSchema),
+  rhyme: optionalSlugs(rhymeSlugSchema),
+  collection: optionalSlugs(collectionSlugSchema),
+});
+
+const listContract = oc
+  .route({ method: 'GET', path: '/poems' })
+  .input(listPoemsInput)
+  .errors({ ...inputValidationErrorMap, ...internalServerErrorMap })
+  .output(listResponse(poemListItem));
+
+const listSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
   .errors({ ...internalServerErrorMap })
   .output(listResponse(poemSlugSchema));
@@ -29,7 +59,7 @@ export const poemDetail = v.object({
   relatedPoems: v.array(poemListItem),
 });
 
-const getPoemBySlugContract = oc
+const getContract = oc
   .route({ method: 'GET', path: '/poems/{slug}' })
   .input(slugInput(poemSlugSchema, EXAMPLE_POEM_SLUG))
   .errors({
@@ -40,6 +70,7 @@ const getPoemBySlugContract = oc
   .output(v.object({ data: poemDetail }));
 
 export const poemsContract = {
-  listPoemSlugs: listPoemSlugsContract,
-  getPoemBySlug: getPoemBySlugContract,
+  list: listContract,
+  get: getContract,
+  listSlugs: listSlugsContract,
 };

@@ -1,31 +1,27 @@
 import { oc } from '@orpc/contract';
+import * as v from 'valibot';
 import { rhymeSlugSchema } from './brands';
 import { EXAMPLE_RHYME_SLUG, inputValidationErrorMap, internalServerErrorMap } from './constants';
-import {
-  listResponse,
-  listResponseWithMeta,
-  poemListItem,
-  slugAndPageInput,
-  slugWithCounts,
-  slugWithPoemCount,
-} from './schemas';
+import { listResponse, slugInput, slugWithCounts } from './schemas';
 
-const listRhymesContract = oc
+const rhymeEntry = slugWithCounts(rhymeSlugSchema);
+
+const listContract = oc
   .route({ method: 'GET', path: '/rhymes' })
   .errors({ ...internalServerErrorMap })
-  .output(listResponse(slugWithCounts(rhymeSlugSchema)));
+  .output(listResponse(rhymeEntry));
 
-const listRhymePoemsContract = oc
-  .route({ method: 'GET', path: '/rhymes/{slug}/poems' })
-  .input(slugAndPageInput(rhymeSlugSchema, EXAMPLE_RHYME_SLUG))
+const getContract = oc
+  .route({ method: 'GET', path: '/rhymes/{slug}' })
+  .input(slugInput(rhymeSlugSchema, EXAMPLE_RHYME_SLUG))
   .errors({
     ...inputValidationErrorMap,
     ...internalServerErrorMap,
     NOT_FOUND: { status: 404, message: 'Rhyme not found' },
   })
-  .output(listResponseWithMeta(poemListItem, slugWithPoemCount(rhymeSlugSchema)));
+  .output(v.object({ data: rhymeEntry }));
 
 export const rhymesContract = {
-  list: listRhymesContract,
-  listPoems: listRhymePoemsContract,
+  list: listContract,
+  get: getContract,
 };
