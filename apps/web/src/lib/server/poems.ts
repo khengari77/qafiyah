@@ -52,10 +52,7 @@ export async function listPoems(
       collection: [...(filters.collectionSlugs ?? [])],
     })
   );
-  if (error) {
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
+  if (error) throw error;
   if (page > data.pagination.totalPages) return null;
   return { poems: data.data, pagination: data.pagination };
 }
