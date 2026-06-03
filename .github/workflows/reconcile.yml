@@ -14,6 +14,9 @@ on:
     - cron: "0 4 * * 0" # Sundays 04:00 UTC
   workflow_dispatch:
 
+# No GITHUB_TOKEN access needed: this job only POSTs to an external endpoint.
+permissions: {}
+
 jobs:
   reconcile:
     runs-on: ubuntu-latest
