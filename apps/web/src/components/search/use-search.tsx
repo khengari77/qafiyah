@@ -110,7 +110,7 @@ function useInfiniteScroll(
   return { loadMoreRef };
 }
 
-export type SectionViewModel = {
+type SectionViewModel = {
   readonly items: readonly (PoemSearchResult | PoetSearchResult)[];
   readonly total: number;
   readonly status: FetchStatus;
