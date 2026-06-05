@@ -1,8 +1,5 @@
 import { PROD_SITE_URL } from '@qafiyah/constants';
 
-// Sitemap protocol caps a file at 50,000 URLs. 45k leaves headroom.
-export const SITEMAP_POEMS_PER_SHARD = 45_000;
-
 export function shardCount(total: number, perShard: number): number {
   return Math.max(1, Math.ceil(total / perShard));
 }

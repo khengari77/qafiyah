@@ -1,4 +1,4 @@
-import { POEMS_PER_PAGE } from '@qafiyah/constants';
+import { POEMS_PER_PAGE, SITEMAP_POEMS_PER_SHARD } from '@qafiyah/constants';
 import type { PoemSlug, poemDetail } from '@qafiyah/contracts';
 import { poemsQueries } from '@qafiyah/db';
 import type * as v from 'valibot';
@@ -53,17 +53,26 @@ export const list = publicProcedure.poems.list.handler(async ({ context, input, 
   });
 });
 
-export const listSlugs = publicProcedure.poems.listSlugs.handler(async ({ context, errors }) => {
-  const result = await poemsQueries.listAllPoemSlugs(context.db);
+export const listSlugs = publicProcedure.poems.listSlugs.handler(
+  async ({ context, input, errors }) => {
+    const result = await poemsQueries.listPoemSlugs(
+      context.db,
+      input.page,
+      SITEMAP_POEMS_PER_SHARD
+    );
+    if (result.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+    const slugs = result.value;
+    context.log?.({ result_count: slugs.length, page: input.page });
+    return { data: [...slugs] };
+  }
+);
+
+export const count = publicProcedure.poems.count.handler(async ({ context, errors }) => {
+  const result = await poemsQueries.countPoems(context.db);
   if (result.isErr()) throw errors.INTERNAL_SERVER_ERROR();
-  const slugs = result.value;
-  context.log?.({ result_count: slugs.length });
-  return listEnvelope({
-    data: slugs,
-    totalItems: slugs.length,
-    page: 1,
-    pageSize: slugs.length || 1,
-  });
+  const total = result.value;
+  context.log?.({ result_count: total });
+  return { data: { total } };
 });
 
 export const get = publicProcedure.poems.get.handler(async ({ context, input, errors }) => {

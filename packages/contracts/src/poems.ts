@@ -20,6 +20,7 @@ import {
   namedSlugRef,
   optionalSlugs,
   pageParam,
+  pageQueryInput,
   poemListItem,
   slugInput,
 } from './schemas';
@@ -42,8 +43,14 @@ const listContract = oc
 
 const listSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
+  .input(pageQueryInput)
   .errors({ ...internalServerErrorMap })
-  .output(listResponse(poemSlugSchema));
+  .output(v.object({ data: v.array(poemSlugSchema) }));
+
+const countContract = oc
+  .route({ method: 'GET', path: '/poems/count' })
+  .errors({ ...internalServerErrorMap })
+  .output(v.object({ data: v.object({ total: v.number() }) }));
 
 export const poemDetail = v.object({
   title: v.string(),
@@ -73,4 +80,5 @@ export const poemsContract = {
   list: listContract,
   get: getContract,
   listSlugs: listSlugsContract,
+  count: countContract,
 };

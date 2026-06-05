@@ -1,11 +1,17 @@
 import { Hono } from 'hono';
 import { err, ok } from 'neverthrow';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { listBodySchema, poemDetailResponseSchema, slugListResponseSchema } from '@/test-schemas';
+import {
+  countResponseSchema,
+  listBodySchema,
+  poemDetailResponseSchema,
+  slugListResponseSchema,
+} from '@/test-schemas';
 import { createMockDb, createTestClient, parseJson } from '@/test-utils';
 import type { AppContext } from '@/types';
 
-const listAllPoemSlugsMock = vi.fn();
+const listPoemSlugsMock = vi.fn();
+const countPoemsMock = vi.fn();
 const getPoemBySlugMock = vi.fn();
 const listPoemsMock = vi.fn();
 
@@ -14,7 +20,8 @@ vi.mock('@qafiyah/db', async (importOriginal) => {
   return {
     ...actual,
     poemsQueries: {
-      listAllPoemSlugs: listAllPoemSlugsMock,
+      listPoemSlugs: listPoemSlugsMock,
+      countPoems: countPoemsMock,
       getPoemBySlug: getPoemBySlugMock,
       listPoems: listPoemsMock,
     },
@@ -80,7 +87,8 @@ const samplePoemRow = {
 
 describe('poems procedures', () => {
   beforeEach(() => {
-    listAllPoemSlugsMock.mockReset();
+    listPoemSlugsMock.mockReset();
+    countPoemsMock.mockReset();
     getPoemBySlugMock.mockReset();
     listPoemsMock.mockReset();
   });
@@ -89,8 +97,8 @@ describe('poems procedures', () => {
   });
 
   describe('listSlugs', () => {
-    it('returns slugs list wrapped in envelope', async () => {
-      listAllPoemSlugsMock.mockResolvedValue(ok(['pone', 'ptwo']));
+    it('returns the requested page of slugs', async () => {
+      listPoemSlugsMock.mockResolvedValue(ok(['pone', 'ptwo']));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -99,20 +107,51 @@ describe('poems procedures', () => {
       expect(res.status).toBe(200);
       const body = await parseJson(res, slugListResponseSchema);
       expect(body.data).toEqual(['pone', 'ptwo']);
-      expect(body.pagination.totalItems).toBe(2);
     });
 
-    it('returns empty list when no poems exist', async () => {
-      listAllPoemSlugsMock.mockResolvedValue(ok([]));
+    it('forwards the requested page to the paginated query', async () => {
+      listPoemSlugsMock.mockResolvedValue(ok([]));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems/slugs?page=2');
+
+      expect(res.status).toBe(200);
+      expect(listPoemSlugsMock).toHaveBeenCalledWith(expect.anything(), 2, expect.any(Number));
+    });
+
+    it('returns 500 when the slugs query fails', async () => {
+      listPoemSlugsMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
       const res = await client.$get('/v1/poems/slugs');
 
+      expect(res.status).toBe(500);
+    });
+  });
+
+  describe('count', () => {
+    it('returns the total poem count', async () => {
+      countPoemsMock.mockResolvedValue(ok(1234));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems/count');
+
       expect(res.status).toBe(200);
-      const body = await parseJson(res, slugListResponseSchema);
-      expect(body.data).toHaveLength(0);
-      expect(body.pagination.totalItems).toBe(0);
+      const body = await parseJson(res, countResponseSchema);
+      expect(body.data.total).toBe(1234);
+    });
+
+    it('returns 500 when the count query fails', async () => {
+      countPoemsMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems/count');
+
+      expect(res.status).toBe(500);
     });
   });
 

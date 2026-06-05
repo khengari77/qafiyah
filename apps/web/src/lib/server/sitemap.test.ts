@@ -1,5 +1,6 @@
+import { SITEMAP_POEMS_PER_SHARD } from '@qafiyah/constants';
 import { describe, expect, it } from 'vitest';
-import { SITEMAP_POEMS_PER_SHARD, shardCount, sitemapIndexXml, urlsetXml } from './sitemap';
+import { shardCount, sitemapIndexXml, urlsetXml } from './sitemap';
 
 describe('urlsetXml', () => {
   it('wraps locs in a urlset', () => {

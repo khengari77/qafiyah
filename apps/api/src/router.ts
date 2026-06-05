@@ -3,6 +3,7 @@ import { get as getCollection, list as listCollections } from './procedures/coll
 import { get as getEra, list as listEras } from './procedures/eras.procedures';
 import { get as getMeter, list as listMeters } from './procedures/meters.procedures';
 import {
+  count as countPoems,
   get as getPoem,
   listSlugs as listPoemSlugs,
   list as listPoems,
@@ -16,7 +17,7 @@ const routes = {
   collections: { list: listCollections, get: getCollection },
   eras: { list: listEras, get: getEra },
   meters: { list: listMeters, get: getMeter },
-  poems: { list: listPoems, get: getPoem, listSlugs: listPoemSlugs },
+  poems: { list: listPoems, get: getPoem, listSlugs: listPoemSlugs, count: countPoems },
   poets: { list: listPoets, get: getPoet },
   rhymes: { list: listRhymes, get: getRhyme },
   themes: { list: listThemes, get: getTheme },

@@ -25,10 +25,11 @@ describe('contract structure', () => {
     expect(metersContract).toHaveProperty('get');
   });
 
-  it('poemsContract has list, get and listSlugs', () => {
+  it('poemsContract has list, get, listSlugs and count', () => {
     expect(poemsContract).toHaveProperty('list');
     expect(poemsContract).toHaveProperty('get');
     expect(poemsContract).toHaveProperty('listSlugs');
+    expect(poemsContract).toHaveProperty('count');
   });
 
   it('poetsContract has list and get', () => {

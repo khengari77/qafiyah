@@ -62,20 +62,42 @@ export function parsePoemContent(content: string): ParsedPoemContent {
   };
 }
 
-export type ListAllPoemSlugsError = { readonly kind: 'sql_error'; readonly message: string };
+export type PoemSlugsError = { readonly kind: 'sql_error'; readonly message: string };
 
-export async function listAllPoemSlugs(
-  db: DbClient
-): Promise<Result<readonly PoemSlug[], ListAllPoemSlugsError>> {
+// Paginated so a single sitemap shard never pulls the whole table. ORDER BY slug is
+// deterministic (slug is unique + NOT NULL), so shards partition the set with no gaps
+// or overlap across requests.
+export async function listPoemSlugs(
+  db: DbClient,
+  page: number,
+  pageSize: number
+): Promise<Result<readonly PoemSlug[], PoemSlugsError>> {
   const queryResult = await ResultAsync.fromPromise(
-    db.select({ slug: poemsFullData.slug }).from(poemsFullData),
-    (cause): ListAllPoemSlugsError => ({
+    db
+      .select({ slug: poemsFullData.slug })
+      .from(poemsFullData)
+      .orderBy(poemsFullData.slug)
+      .limit(pageSize)
+      .offset((page - 1) * pageSize),
+    (cause): PoemSlugsError => ({
       kind: 'sql_error',
       message: cause instanceof Error ? cause.message : String(cause),
     })
   );
   if (queryResult.isErr()) return err(queryResult.error);
   return ok(queryResult.value.map((row) => asPoemSlug(row.slug)));
+}
+
+export async function countPoems(db: DbClient): Promise<Result<number, PoemSlugsError>> {
+  const queryResult = await ResultAsync.fromPromise(
+    db.select({ total: sql<number>`COUNT(*)::int` }).from(poemsFullData),
+    (cause): PoemSlugsError => ({
+      kind: 'sql_error',
+      message: cause instanceof Error ? cause.message : String(cause),
+    })
+  );
+  if (queryResult.isErr()) return err(queryResult.error);
+  return ok(queryResult.value[0]?.total ?? 0);
 }
 
 const randomPoemPayloadSchema = v.pipe(

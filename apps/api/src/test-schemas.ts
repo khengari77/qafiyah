@@ -22,7 +22,10 @@ export const listBodySchema = v.object({
 
 export const slugListResponseSchema = v.object({
   data: v.array(v.string()),
-  pagination,
+});
+
+export const countResponseSchema = v.object({
+  data: v.object({ total: v.number() }),
 });
 
 export const poemDetailResponseSchema = v.object({

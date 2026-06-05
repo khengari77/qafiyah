@@ -9,9 +9,10 @@ import {
   asThemeSlug,
 } from './brand';
 import {
+  countPoems,
   getPoemBySlug,
   getRandomPoem,
-  listAllPoemSlugs,
+  listPoemSlugs,
   listPoems,
   parsePoemContent,
 } from './poems.queries';
@@ -58,25 +59,43 @@ describe('parsePoemContent', () => {
 
 const POEM_CONTENT = 'شطر أول*شطر ثانٍ';
 
-describe('listAllPoemSlugs', () => {
-  it('returns all slugs and total count', async () => {
+describe('listPoemSlugs', () => {
+  it('returns the requested page of slugs', async () => {
     const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({
         from: vi.fn().mockReturnValue(makeChain([{ slug: 'abcd' }, { slug: 'efgh' }])),
       }),
     });
 
-    const value = (await listAllPoemSlugs(mockDb))._unsafeUnwrap();
+    const value = (await listPoemSlugs(mockDb, 1, 45_000))._unsafeUnwrap();
     expect(value).toEqual(['abcd', 'efgh']);
   });
 
-  it('returns empty slugs when no poems exist', async () => {
+  it('returns empty slugs when the page is beyond the last poem', async () => {
     const mockDb = castPartialAsDbClient({
       select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
     });
 
-    const value = (await listAllPoemSlugs(mockDb))._unsafeUnwrap();
+    const value = (await listPoemSlugs(mockDb, 99, 45_000))._unsafeUnwrap();
     expect(value).toEqual([]);
+  });
+});
+
+describe('countPoems', () => {
+  it('returns the total poem count', async () => {
+    const mockDb = castPartialAsDbClient({
+      select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([{ total: 2 }])) }),
+    });
+
+    expect((await countPoems(mockDb))._unsafeUnwrap()).toBe(2);
+  });
+
+  it('returns 0 when the count query yields no row', async () => {
+    const mockDb = castPartialAsDbClient({
+      select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain([])) }),
+    });
+
+    expect((await countPoems(mockDb))._unsafeUnwrap()).toBe(0);
   });
 });
 

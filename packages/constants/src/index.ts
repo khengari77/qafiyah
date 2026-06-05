@@ -4,6 +4,10 @@ export const MAX_TWEET_LENGTH = 280;
 
 export const POEMS_PER_PAGE = 30;
 export const SEARCH_POEMS_PER_PAGE = 5;
+
+// Sitemap protocol caps a file at 50,000 URLs. 45k leaves headroom.
+// Shared so the API paginates /poems/slugs in the same shards the web sitemap emits.
+export const SITEMAP_POEMS_PER_SHARD = 45_000;
 export const SEARCH_POETS_PER_PAGE = 10;
 
 export const PROD_DOMAIN = 'qafiyah.com';
