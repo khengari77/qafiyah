@@ -1,12 +1,12 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
-import type { PoetSlug } from '@qafiyah/contracts';
-import { sql } from 'drizzle-orm';
+import type { EraSlug, PoetSlug } from '@qafiyah/contracts';
+import { eq, sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import * as v from 'valibot';
 import { asPoetSlug } from './brand';
 import type { DbClient } from './client';
 import { type ExecuteAsError, executeAs } from './execute-as';
-import { poetStats } from './schema';
+import { eraStats, poetStats } from './schema';
 
 export type PoetStatsRow = {
   readonly name: string;
@@ -24,10 +24,17 @@ export type ListPoetsError = { readonly kind: 'sql_error'; readonly message: str
 
 export async function listPoets(
   db: DbClient,
-  page: number
+  page: number,
+  opts?: { readonly eraSlug?: EraSlug }
 ): Promise<Result<ListPoetsResult, ListPoetsError>> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
+  const where = opts?.eraSlug
+    ? eq(
+        poetStats.eraId,
+        sql`(SELECT ${eraStats.id} FROM ${eraStats} WHERE ${eraStats.slug} = ${opts.eraSlug})`
+      )
+    : undefined;
 
   const queryResult = await ResultAsync.fromPromise(
     Promise.all([
@@ -38,9 +45,10 @@ export async function listPoets(
           poemsCount: poetStats.poemsCount,
         })
         .from(poetStats)
+        .where(where)
         .limit(limit)
         .offset(offset),
-      db.$count(poetStats),
+      db.$count(poetStats, where),
     ]),
     (cause): ListPoetsError => ({
       kind: 'sql_error',

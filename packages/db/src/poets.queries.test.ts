@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
-import { asPoetSlug } from './brand';
+import { asEraSlug, asPoetSlug } from './brand';
+import { listEras } from './eras.queries';
 import { getPoetBySlug, listPoets } from './poets.queries';
 import { castPartialAsDbClient, makeChain, withTestDb } from './test-utils';
 
@@ -27,6 +28,32 @@ describe('listPoets', () => {
     expect(value.poets).toEqual([]);
     expect(value.total).toBe(0);
     expect(value.totalPages).toBe(0);
+  });
+
+  it('returns the filtered total when an era filter is passed', async () => {
+    const poetRows = [{ name: 'امرؤ القيس', slug: 'imru-al-qais', poemsCount: 50 }];
+    const mockDb = castPartialAsDbClient({
+      select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(poetRows)) }),
+      $count: vi.fn().mockResolvedValue(1),
+    });
+
+    const value = (await listPoets(mockDb, 1, { eraSlug: asEraSlug('jahili') }))._unsafeUnwrap();
+
+    expect(value.poets[0]?.slug).toBe('imru-al-qais');
+    expect(value.total).toBe(1);
+    expect(value.totalPages).toBe(1);
+  });
+});
+
+describe('listPoets era filter (integration)', () => {
+  it('filtered total equals the era poetsCount stat', async () => {
+    await withTestDb(async (db) => {
+      const eras = (await listEras(db))._unsafeUnwrap();
+      const era = eras[0];
+      if (!era) return;
+      const result = (await listPoets(db, 1, { eraSlug: era.slug }))._unsafeUnwrap();
+      expect(result.total).toBe(era.poetsCount);
+    });
   });
 });
 
