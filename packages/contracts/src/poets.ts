@@ -1,14 +1,24 @@
 import { oc } from '@orpc/contract';
 import * as v from 'valibot';
-import { poetSlugSchema } from './brands';
-import { EXAMPLE_POET_SLUG, inputValidationErrorMap, internalServerErrorMap } from './constants';
-import { listResponse, pageQueryInput, slugInput, slugWithPoemCount } from './schemas';
+import { eraSlugSchema, poetSlugSchema } from './brands';
+import {
+  DEFAULT_PAGE,
+  EXAMPLE_POET_SLUG,
+  inputValidationErrorMap,
+  internalServerErrorMap,
+} from './constants';
+import { listResponse, pageParam, slugInput, slugWithPoemCount } from './schemas';
 
 const poetEntry = slugWithPoemCount(poetSlugSchema);
 
+const listPoetsInput = v.object({
+  page: v.optional(pageParam, DEFAULT_PAGE),
+  era: v.optional(eraSlugSchema), // single — a poet has exactly one era
+});
+
 const listContract = oc
   .route({ method: 'GET', path: '/poets' })
-  .input(pageQueryInput)
+  .input(listPoetsInput)
   .errors({
     ...inputValidationErrorMap,
     ...internalServerErrorMap,
