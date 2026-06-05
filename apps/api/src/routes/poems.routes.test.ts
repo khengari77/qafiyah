@@ -33,6 +33,7 @@ describe('poems routes', () => {
     expect(res.status).toBe(200);
     expect(await res.text()).toBe('efgh');
     expect(res.headers.get('Cache-Control')).toBe('no-store');
+    expect(res.headers.get('ETag')).toBeNull();
   });
 
   it('should fail with 500 when database returns no eligible poem for slug', async () => {
@@ -93,6 +94,7 @@ describe('poems routes', () => {
 
     expect(res.status).toBe(500);
     expect(res.headers.get('Content-Type')).toBe('application/problem+json');
+    expect(res.headers.get('Cache-Control')).toBe('no-store');
     const body = (await res.json()) as { code: string };
     expect(body.code).toBe('INTERNAL_SERVER_ERROR');
   });

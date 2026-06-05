@@ -55,15 +55,19 @@ export const list = publicProcedure.poems.list.handler(async ({ context, input, 
 
 export const listSlugs = publicProcedure.poems.listSlugs.handler(
   async ({ context, input, errors }) => {
-    const result = await poemsQueries.listPoemSlugs(
-      context.db,
-      input.page,
-      SITEMAP_POEMS_PER_SHARD
-    );
-    if (result.isErr()) throw errors.INTERNAL_SERVER_ERROR();
-    const slugs = result.value;
+    const [slugsResult, countResult] = await Promise.all([
+      poemsQueries.listPoemSlugs(context.db, input.page, SITEMAP_POEMS_PER_SHARD),
+      poemsQueries.countPoems(context.db),
+    ]);
+    if (slugsResult.isErr() || countResult.isErr()) throw errors.INTERNAL_SERVER_ERROR();
+    const slugs = slugsResult.value;
     context.log?.({ result_count: slugs.length, page: input.page });
-    return { data: [...slugs] };
+    return listEnvelope({
+      data: [...slugs],
+      totalItems: countResult.value,
+      page: input.page,
+      pageSize: SITEMAP_POEMS_PER_SHARD,
+    });
   }
 );
 

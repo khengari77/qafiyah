@@ -22,6 +22,7 @@ export const listBodySchema = v.object({
 
 export const slugListResponseSchema = v.object({
   data: v.array(v.string()),
+  pagination,
 });
 
 export const countResponseSchema = v.object({

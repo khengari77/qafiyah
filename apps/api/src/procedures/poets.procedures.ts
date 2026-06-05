@@ -12,7 +12,9 @@ export const list = publicProcedure.poets.list.handler(async ({ context, input, 
   );
   if (queryResult.isErr()) throw errors.INTERNAL_SERVER_ERROR();
   const result = queryResult.value;
-  if (input.page > 1 && input.page > result.totalPages) throw errors.NOT_FOUND();
+  // A page past the last page is an empty page, not a missing resource — return
+  // 200 with empty data + pagination, consistent with /poems. (404 is reserved
+  // for a missing named resource, e.g. /poets/{slug}.)
   context.log?.({
     result_count: result.total,
     page: input.page,

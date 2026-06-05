@@ -11,6 +11,7 @@ export const ORPC_BYPASS_PATHS = new Set<string>(['/v1', '/v1/poems/random']);
 
 // HTTP status codes used only by the API
 export const REDIRECT_TO_DOCS_STATUS = 302;
+export const HTTP_NOT_MODIFIED = 304;
 export const HTTP_BAD_REQUEST = 400;
 export const HTTP_NOT_FOUND = 404;
 export const HTTP_INTERNAL_SERVER_ERROR = 500;
@@ -20,6 +21,7 @@ export const HTTP_SERVICE_UNAVAILABLE = 503;
 export const FAVICON_CACHE_CONTROL = 'public, max-age=2592000, immutable';
 export const LLMS_CACHE_CONTROL = 'public, max-age=3600';
 export const NO_STORE_CACHE_CONTROL = 'no-store';
+export const READ_CACHE_CONTROL = 'public, max-age=300, stale-while-revalidate=86400';
 export const CORS_MAX_AGE_SECONDS = 600;
 
 // Error type URL base (RFC 9457 `type` field)

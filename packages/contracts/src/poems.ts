@@ -21,6 +21,7 @@ import {
   optionalSlugs,
   pageParam,
   pageQueryInput,
+  pagination,
   poemListItem,
   slugInput,
 } from './schemas';
@@ -45,7 +46,7 @@ const listSlugsContract = oc
   .route({ method: 'GET', path: '/poems/slugs' })
   .input(pageQueryInput)
   .errors({ ...internalServerErrorMap })
-  .output(v.object({ data: v.array(poemSlugSchema) }));
+  .output(v.object({ data: v.array(poemSlugSchema), pagination }));
 
 const countContract = oc
   .route({ method: 'GET', path: '/poems/count' })

@@ -117,6 +117,7 @@ describe('transformOrpcResponse', () => {
 
     expect(result.status).toBe(404);
     expect(result.headers.get('Content-Type')).toBe('application/problem+json');
+    expect(result.headers.get('Cache-Control')).toBe('no-store');
     const body = await parseJson(result, problemDetailSchema);
     expect(body.code).toBe('NOT_FOUND');
     expect(body.type).toContain('not-found');

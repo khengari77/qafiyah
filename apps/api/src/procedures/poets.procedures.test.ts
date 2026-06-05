@@ -84,14 +84,17 @@ describe('poets procedures', () => {
       expect(body.pagination.totalItems).toBe(0);
     });
 
-    it('returns 404 when page exceeds totalPages', async () => {
+    it('returns 200 with an empty page (not 404) when page exceeds totalPages', async () => {
       listPoetsMock.mockResolvedValue(ok({ poets: [], total: 10, totalPages: 1 }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
       const res = await client.$get('/v1/poets?page=999');
 
-      expect(res.status).toBe(404);
+      expect(res.status).toBe(200);
+      const body = await parseJson(res, listBodySchema);
+      expect(body.data).toHaveLength(0);
+      expect(body.pagination.page).toBe(999);
     });
 
     it('defaults to page 1 when no page is provided', async () => {

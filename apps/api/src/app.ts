@@ -16,9 +16,12 @@ import {
   HTTP_NOT_FOUND,
   LICENSE_NAME,
   ORPC_BYPASS_PATHS,
+  READ_CACHE_CONTROL,
   SITE_NAME_EN,
 } from './constants';
+import { withReadCaching } from './lib/http-cache';
 import { type DomainFields, enrichContext, recordError } from './lib/logger';
+import { PROBLEM_DETAIL_SCHEMA } from './lib/openapi-problem';
 import { makeProblem, sendProblem, transformOrpcResponse } from './lib/problem';
 import { dbMiddleware } from './middlewares/db.middleware';
 import { esMiddleware } from './middlewares/es.middleware';
@@ -35,8 +38,8 @@ const app = new Hono<AppContext>();
 app.use(
   cors({
     origin: '*',
-    allowMethods: ['GET', 'OPTIONS'],
-    exposeHeaders: ['Content-Type'],
+    allowMethods: ['GET', 'HEAD', 'OPTIONS'],
+    exposeHeaders: ['Content-Type', 'ETag'],
     maxAge: CORS_MAX_AGE_SECONDS,
     credentials: false,
   })
@@ -64,6 +67,9 @@ const orpcHandler = new OpenAPIHandler(router, {
           license: { name: LICENSE_NAME },
         },
         servers: [{ url: `${request.url.origin}${API_V1_PREFIX}` }],
+        // Document the real RFC 9457 error body (lib/problem.ts) instead of
+        // oRPC's native error envelope. Applies to every error response.
+        customErrorResponseBodySchema: PROBLEM_DETAIL_SCHEMA,
       }),
     }),
   ],
@@ -71,7 +77,13 @@ const orpcHandler = new OpenAPIHandler(router, {
 
 app.use(`${API_V1_PREFIX}/*`, async (c, next) => {
   if (ORPC_BYPASS_PATHS.has(c.req.path)) return next();
-  const result = await orpcHandler.handle(c.req.raw, {
+  // HEAD parity: run the GET handler, then strip the body *after* the caching
+  // wrapper — so a HEAD still carries ETag/Cache-Control and can answer 304.
+  const isHead = c.req.method === 'HEAD';
+  const forward = isHead
+    ? new Request(c.req.raw.url, { method: 'GET', headers: c.req.raw.headers })
+    : c.req.raw;
+  const result = await orpcHandler.handle(forward, {
     context: {
       db: c.get('db'),
       es: c.get('es'),
@@ -80,7 +92,12 @@ app.use(`${API_V1_PREFIX}/*`, async (c, next) => {
     prefix: API_V1_PREFIX,
   });
   if (!result.matched) return next();
-  return transformOrpcResponse(result.response, c.req.path);
+  const transformed = await transformOrpcResponse(result.response, c.req.path);
+  const out =
+    transformed.status < 400
+      ? await withReadCaching(c.req.raw, transformed, READ_CACHE_CONTROL)
+      : transformed;
+  return isHead ? new Response(null, { status: out.status, headers: out.headers }) : out;
 });
 
 app

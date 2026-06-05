@@ -22,7 +22,6 @@ const listContract = oc
   .errors({
     ...inputValidationErrorMap,
     ...internalServerErrorMap,
-    NOT_FOUND: { status: 404, message: 'No poets found for this page' },
   })
   .output(listResponse(poetEntry));
 

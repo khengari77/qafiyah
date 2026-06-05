@@ -97,8 +97,9 @@ describe('poems procedures', () => {
   });
 
   describe('listSlugs', () => {
-    it('returns the requested page of slugs', async () => {
+    it('returns the requested page of slugs with pagination', async () => {
       listPoemSlugsMock.mockResolvedValue(ok(['pone', 'ptwo']));
+      countPoemsMock.mockResolvedValue(ok(2));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -107,10 +108,13 @@ describe('poems procedures', () => {
       expect(res.status).toBe(200);
       const body = await parseJson(res, slugListResponseSchema);
       expect(body.data).toEqual(['pone', 'ptwo']);
+      expect(body.pagination.totalItems).toBe(2);
+      expect(body.pagination.page).toBe(1);
     });
 
     it('forwards the requested page to the paginated query', async () => {
       listPoemSlugsMock.mockResolvedValue(ok([]));
+      countPoemsMock.mockResolvedValue(ok(0));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 
@@ -122,6 +126,18 @@ describe('poems procedures', () => {
 
     it('returns 500 when the slugs query fails', async () => {
       listPoemSlugsMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
+      countPoemsMock.mockResolvedValue(ok(0));
+      const app = await buildOrpcApp();
+      const client = createTestClient(app, { db: createMockDb() });
+
+      const res = await client.$get('/v1/poems/slugs');
+
+      expect(res.status).toBe(500);
+    });
+
+    it('returns 500 when the count query fails', async () => {
+      listPoemSlugsMock.mockResolvedValue(ok(['pone']));
+      countPoemsMock.mockResolvedValue(err({ kind: 'sql_error', message: 'boom' }));
       const app = await buildOrpcApp();
       const client = createTestClient(app, { db: createMockDb() });
 

@@ -26,9 +26,21 @@ describe('getPoetsPage', () => {
     expect(result?.poets).toHaveLength(1);
     expect(result?.pagination.totalItems).toBe(1);
   });
-  it('returns null on NOT_FOUND (page out of range)', async () => {
-    listMock.mockRejectedValue(new ORPCError('NOT_FOUND', { defined: true, status: 404 }));
+  it('returns null when the page exceeds the last page', async () => {
+    listMock.mockResolvedValue({
+      data: [],
+      pagination: { page: 999, pageSize: 30, totalPages: 5, totalItems: 150 },
+    });
     expect(await getPoetsPage(999)).toBeNull();
+  });
+  it('treats page 1 of an empty collection as a valid empty page', async () => {
+    listMock.mockResolvedValue({
+      data: [],
+      pagination: { page: 1, pageSize: 30, totalPages: 1, totalItems: 0 },
+    });
+    const result = await getPoetsPage(1);
+    expect(result).not.toBeNull();
+    expect(result?.poets).toEqual([]);
   });
 });
 

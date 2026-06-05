@@ -11,10 +11,8 @@ export async function getPoetsPage(
   page: number
 ): Promise<{ poets: PoetsList['data']; pagination: PoetsList['pagination'] } | null> {
   const { error, data } = await safe(apiServer.poets.list({ page: String(page) }));
-  if (error) {
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
+  if (error) throw error;
+  if (page > Math.max(1, data.pagination.totalPages)) return null;
   return { poets: data.data, pagination: data.pagination };
 }
 
@@ -23,12 +21,9 @@ export async function getPoetsByEraPage(
   page: number
 ): Promise<{ poets: PoetsList['data']; pagination: PoetsList['pagination'] } | null> {
   const { error, data } = await safe(apiServer.poets.list({ page: String(page), era: eraSlug }));
-  if (error) {
-    // A page past the last page returns 404 (the procedure's out-of-range guard);
-    // that is the only "nothing to render" case → null → /404. Other errors rethrow.
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
+  if (error) throw error;
+  // A page past the last page is an empty page, not a missing resource → null → /404.
+  if (page > Math.max(1, data.pagination.totalPages)) return null;
   return { poets: data.data, pagination: data.pagination };
 }
 

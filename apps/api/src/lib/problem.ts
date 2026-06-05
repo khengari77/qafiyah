@@ -2,7 +2,7 @@ import type { ContractErrorCode } from '@qafiyah/contracts';
 import type { Context } from 'hono';
 import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import { match, P } from 'ts-pattern';
-import { ERROR_BASE_URL } from '@/constants';
+import { ERROR_BASE_URL, NO_STORE_CACHE_CONTROL } from '@/constants';
 
 // @ANCHOR: ContractErrorCode keeps shared codes (NOT_FOUND, POEM_PARSE_ERROR,
 //   INPUT_VALIDATION_FAILED, INTERNAL_SERVER_ERROR) in sync with @qafiyah/contracts.
@@ -101,6 +101,7 @@ export function sendProblem(c: Context, problem: ProblemDetail): Response {
     problem.instance === undefined ? { ...problem, instance: c.req.path } : problem;
   return c.body(JSON.stringify(stripKind(withInstance)), parseHttpStatus(withInstance.status), {
     'Content-Type': 'application/problem+json',
+    'Cache-Control': NO_STORE_CACHE_CONTROL,
   });
 }
 
@@ -170,6 +171,9 @@ export async function transformOrpcResponse(
   const problem = orpcErrorToProblem(body, response.status, instance);
   return new Response(JSON.stringify(stripKind(problem)), {
     status: parseHttpStatus(problem.status),
-    headers: { 'Content-Type': 'application/problem+json' },
+    headers: {
+      'Content-Type': 'application/problem+json',
+      'Cache-Control': NO_STORE_CACHE_CONTROL,
+    },
   });
 }
