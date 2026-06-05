@@ -1,9 +1,10 @@
-import { PROD_SITE_URL } from '@qafiyah/constants';
 import type { APIRoute } from 'astro';
+import { SITE_URL } from '@/constants';
 import { CACHE_SITEMAP } from '@/lib/server/cache';
 import { allCollections } from '@/lib/server/collections';
 import { urlsetXml } from '@/lib/server/sitemap';
 import { allEras, allMeters, allRhymes, allThemes } from '@/lib/server/taxonomies';
+import { poetsUrl, taxonomyIndexUrl, taxonomyUrl } from '@/lib/urls';
 
 export const GET: APIRoute = async () => {
   const [eras, meters, rhymes, themes, collections] = await Promise.all([
@@ -14,18 +15,18 @@ export const GET: APIRoute = async () => {
     allCollections(),
   ]);
   const locs = [
-    `${PROD_SITE_URL}/`,
-    `${PROD_SITE_URL}/eras`,
-    `${PROD_SITE_URL}/meters`,
-    `${PROD_SITE_URL}/rhymes`,
-    `${PROD_SITE_URL}/themes`,
-    `${PROD_SITE_URL}/collections`,
-    `${PROD_SITE_URL}/poets/page/1`,
-    ...eras.map((e) => `${PROD_SITE_URL}/eras/${e.slug}/page/1`),
-    ...meters.map((m) => `${PROD_SITE_URL}/meters/${m.slug}/page/1`),
-    ...rhymes.map((r) => `${PROD_SITE_URL}/rhymes/${r.slug}/page/1`),
-    ...themes.map((t) => `${PROD_SITE_URL}/themes/${t.slug}/page/1`),
-    ...collections.map((c) => `${PROD_SITE_URL}/collections/${c.slug}/page/1`),
+    `${SITE_URL}/`,
+    `${SITE_URL}${taxonomyIndexUrl('eras')}`,
+    `${SITE_URL}${taxonomyIndexUrl('meters')}`,
+    `${SITE_URL}${taxonomyIndexUrl('rhymes')}`,
+    `${SITE_URL}${taxonomyIndexUrl('themes')}`,
+    `${SITE_URL}${taxonomyIndexUrl('collections')}`,
+    `${SITE_URL}${poetsUrl()}`,
+    ...eras.map((e) => `${SITE_URL}${taxonomyUrl('eras', e.slug)}`),
+    ...meters.map((m) => `${SITE_URL}${taxonomyUrl('meters', m.slug)}`),
+    ...rhymes.map((r) => `${SITE_URL}${taxonomyUrl('rhymes', r.slug)}`),
+    ...themes.map((t) => `${SITE_URL}${taxonomyUrl('themes', t.slug)}`),
+    ...collections.map((c) => `${SITE_URL}${taxonomyUrl('collections', c.slug)}`),
   ];
   return new Response(urlsetXml(locs), {
     headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': CACHE_SITEMAP },

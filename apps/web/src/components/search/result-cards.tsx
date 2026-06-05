@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
+import { poemUrl, poetUrl } from '@/lib/urls';
 import { HighlightedText } from './highlighted-text';
 
 const badgeClassname =
@@ -12,14 +13,14 @@ export function PoemCard({ item }: { item: PoemSearchResult }) {
       <div className="flex h-full w-full flex-col gap-4">
         <div className="flex flex-col gap-1.5">
           <a
-            href={`/poems/${slug}`}
+            href={poemUrl(slug)}
             className="font-bold text-base text-zinc-900 transition-colors hover:underline hover:underline-offset-4 group-hover:text-zinc-900 md:text-lg 2xl:text-xl"
           >
             {title}
           </a>
 
           <a
-            href={`/poets/${poet.slug}/page/1`}
+            href={poetUrl(poet.slug)}
             className="font-normal text-base text-zinc-900/80 hover:cursor-pointer hover:text-zinc-900 hover:underline hover:underline-offset-4 md:text-lg"
           >
             {poet.name || 'شاعر'}
@@ -53,10 +54,7 @@ export function PoetCard({ item }: { item: PoetSearchResult }) {
   const { name, slug, era } = item;
   return (
     <div className="group flex items-center justify-center overflow-hidden rounded-xl border-0 bg-white p-4 shadow-none ring-1 ring-zinc-300/50 transition-all duration-300 hover:border-zinc-200 md:p-6">
-      <a
-        className="items-centers flex w-full flex-row justify-between gap-2"
-        href={`/poets/${slug}/page/1`}
-      >
+      <a className="items-centers flex w-full flex-row justify-between gap-2" href={poetUrl(slug)}>
         <h2 className="flex-1 font-bold text-base text-zinc-900 transition-colors hover:underline hover:underline-offset-4 group-hover:text-zinc-900 md:text-lg 2xl:text-xl">
           {name || 'شاعر'}
         </h2>

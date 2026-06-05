@@ -1,9 +1,9 @@
-import { PROD_SITE_URL } from '@qafiyah/constants';
 import type { APIRoute } from 'astro';
-import { CAT_POET_PREFIX_REGEX } from '@/constants';
+import { SITE_URL } from '@/constants';
 import { CACHE_SITEMAP } from '@/lib/server/cache';
 import { getPoetsPage } from '@/lib/server/poets';
 import { urlsetXml } from '@/lib/server/sitemap';
+import { poetUrl } from '@/lib/urls';
 
 export const GET: APIRoute = async () => {
   const locs: string[] = [];
@@ -14,8 +14,7 @@ export const GET: APIRoute = async () => {
     const result = await getPoetsPage(page);
     if (!result) break;
     for (const poet of result.poets) {
-      const slug = String(poet.slug).toLowerCase().replace(CAT_POET_PREFIX_REGEX, '');
-      locs.push(`${PROD_SITE_URL}/poets/${slug}/page/1`);
+      locs.push(`${SITE_URL}${poetUrl(poet.slug ?? '')}`);
     }
     if (page >= result.pagination.totalPages) break;
     page += 1;

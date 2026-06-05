@@ -1,5 +1,3 @@
-import { PROD_SITE_URL } from '@qafiyah/constants';
-
 export function shardCount(total: number, perShard: number): number {
   return Math.max(1, Math.ceil(total / perShard));
 }
@@ -10,9 +8,9 @@ export function urlsetXml(locs: readonly string[]): string {
   return `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`;
 }
 
-export function sitemapIndexXml(sitemapPaths: readonly string[]): string {
+export function sitemapIndexXml(baseUrl: string, sitemapPaths: readonly string[]): string {
   const body = sitemapPaths
-    .map((path) => `<sitemap><loc>${PROD_SITE_URL}${path}</loc></sitemap>`)
+    .map((path) => `<sitemap><loc>${baseUrl}${path}</loc></sitemap>`)
     .join('');
   return `<?xml version="1.0" encoding="UTF-8"?><sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</sitemapindex>`;
 }

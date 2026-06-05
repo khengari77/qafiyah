@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { match } from 'ts-pattern';
 import { API_URL } from '@/constants';
 import { fetchRandomPoemSlug } from '@/lib/api/client';
+import { poemUrl } from '@/lib/urls';
 
 type RandomPoemStatus =
   | { readonly kind: 'idle' }
@@ -23,7 +24,7 @@ export function RandomPoemButton() {
       setStatus({ kind: 'error' });
       return;
     }
-    window.location.href = `/poems/${result.value}`;
+    window.location.href = poemUrl(result.value);
   };
 
   const isLoading = status.kind === 'loading';

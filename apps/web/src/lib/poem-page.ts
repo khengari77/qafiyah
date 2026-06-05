@@ -13,6 +13,7 @@ import {
 import type { Poem } from '@/lib/api/rpc';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { flattenVerses } from '@/lib/flatten-verses';
+import { poemUrl, poetsUrl, poetUrl, taxonomyUrl } from '@/lib/urls';
 
 function sanitizeMetaText(value: string): string {
   return value
@@ -39,20 +40,20 @@ function buildJsonLd(
   pageUrl: string,
   sanitizedKeywords: string
 ): readonly Readonly<Record<string, unknown>>[] {
-  const poetUrl = `${SITE_URL}/poets/${poem.poet.slug}/page/1`;
-  const eraUrl = `${SITE_URL}/eras/${poem.era.slug}/page/1`;
+  const poetHref = `${SITE_URL}${poetUrl(poem.poet.slug)}`;
+  const eraHref = `${SITE_URL}${taxonomyUrl('eras', poem.era.slug)}`;
   const article = {
     '@context': SCHEMA_ORG_CONTEXT,
     '@type': 'CreativeWork',
     name: sanitizeMetaText(poem.title),
     headline: sanitizeMetaText(`${poem.title} — ${poem.poet.name}`),
-    author: { '@type': 'Person', name: poem.poet.name, url: poetUrl },
+    author: { '@type': 'Person', name: poem.poet.name, url: poetHref },
     inLanguage: POEM_LANGUAGE,
     url: pageUrl,
     mainEntityOfPage: { '@type': 'WebPage', '@id': pageUrl },
     isPartOf: [
-      { '@type': 'Collection', name: poem.poet.name, url: poetUrl },
-      { '@type': 'Collection', name: poem.era.name, url: eraUrl },
+      { '@type': 'Collection', name: poem.poet.name, url: poetHref },
+      { '@type': 'Collection', name: poem.era.name, url: eraHref },
     ],
     description: sanitizeMetaText(poem.verses.flat().join(POEM_KEYWORDS_JOIN_SEPARATOR)),
     keywords: sanitizedKeywords,
@@ -69,9 +70,9 @@ function buildJsonLd(
   };
   const crumbs = breadcrumbListJsonLd([
     { name: SITE_NAME_AR, path: '/' },
-    { name: 'الشعراء', path: '/poets/page/1' },
-    { name: poem.poet.name, path: `/poets/${poem.poet.slug}/page/1` },
-    { name: poem.title || POEM_DEFAULT_TITLE, path: `/poems/${slug}` },
+    { name: 'الشعراء', path: poetsUrl() },
+    { name: poem.poet.name, path: poetUrl(poem.poet.slug) },
+    { name: poem.title || POEM_DEFAULT_TITLE, path: poemUrl(slug) },
   ]);
   return [article, crumbs];
 }
@@ -81,7 +82,7 @@ export function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
   const poetName = poem.poet.name || UNKNOWN_POET_NAME;
   const description = sanitizeMetaText(flattenVerses(poem.verses));
   const pageTitle = `${sanitizeMetaText(displayTitle)} — ${sanitizeMetaText(poetName)} | ${SITE_NAME_AR}`;
-  const pageUrl = `${SITE_URL}/poems/${slug}`;
+  const pageUrl = `${SITE_URL}${poemUrl(slug)}`;
   const twitterDescription = sanitizeMetaText(
     TWITTER_DESCRIPTION_TEMPLATE_AR.replace('{poet}', poetName)
   );
@@ -90,7 +91,7 @@ export function buildPoemLayout(poem: Poem, slug: PoemSlug): PoemLayoutProps {
     title: pageTitle,
     description,
     keywords: sanitizedKeywords,
-    canonical: `/poems/${slug}`,
+    canonical: poemUrl(slug),
     ogTitle: pageTitle,
     ogDescription: description,
     twitterTitle: pageTitle,

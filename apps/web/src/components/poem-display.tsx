@@ -12,6 +12,7 @@ import {
 } from '@/constants';
 import type { Poem } from '@/lib/api/rpc';
 import { formatVerseCount } from '@/lib/arabic';
+import { poemUrl, poetUrl, taxonomyUrl } from '@/lib/urls';
 
 function useFontSize(
   minSize = FONT_SIZE_MIN,
@@ -87,10 +88,10 @@ export function PoemDisplay({
             </h1>
 
             <h2 className="text-sm text-zinc-700 xxs:text-base md:text-2xl">
-              <a href={`/poets/${poet.slug}/page/1`} className="hover:underline">
+              <a href={poetUrl(poet.slug)} className="hover:underline">
                 {poet.name}
               </a>{' '}
-              <a href={`/eras/${era.slug}/page/1`} className="hover:underline">
+              <a href={taxonomyUrl('eras', era.slug)} className="hover:underline">
                 {`(${era.name})`}
               </a>
             </h2>
@@ -185,7 +186,7 @@ export function PoemDisplay({
                   key={`${item.slug} ${poet.slug}`}
                   title={item.title}
                   subtitle={item.poet.name}
-                  href={`/poems/${item.slug}`}
+                  href={poemUrl(item.slug)}
                 />
               ))
             ) : (

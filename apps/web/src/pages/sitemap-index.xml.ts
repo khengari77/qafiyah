@@ -1,5 +1,6 @@
 import { SITEMAP_POEMS_PER_SHARD } from '@qafiyah/constants';
 import type { APIRoute } from 'astro';
+import { SITE_URL } from '@/constants';
 import { CACHE_SITEMAP } from '@/lib/server/cache';
 import { apiServer } from '@/lib/server/client';
 import { shardCount, sitemapIndexXml } from '@/lib/server/sitemap';
@@ -12,7 +13,7 @@ export const GET: APIRoute = async () => {
     '/sitemap/poets.xml',
     '/sitemap/taxonomies.xml',
   ];
-  return new Response(sitemapIndexXml(paths), {
+  return new Response(sitemapIndexXml(SITE_URL, paths), {
     headers: { 'Content-Type': 'application/xml; charset=utf-8', 'Cache-Control': CACHE_SITEMAP },
   });
 };

@@ -13,11 +13,18 @@ describe('urlsetXml', () => {
 });
 
 describe('sitemapIndexXml', () => {
-  it('lists child sitemap URLs under PROD_SITE_URL', () => {
-    const xml = sitemapIndexXml(['/sitemap/poems/1.xml', '/sitemap/poets.xml']);
+  it('lists child sitemap URLs under the given base URL', () => {
+    const xml = sitemapIndexXml('https://qafiyah.com', [
+      '/sitemap/poems/1.xml',
+      '/sitemap/poets.xml',
+    ]);
     expect(xml).toContain('<sitemapindex');
     expect(xml).toContain('<sitemap><loc>https://qafiyah.com/sitemap/poems/1.xml</loc></sitemap>');
     expect(xml).toContain('<sitemap><loc>https://qafiyah.com/sitemap/poets.xml</loc></sitemap>');
+  });
+  it('uses whatever base URL it is given (env-aware caller)', () => {
+    const xml = sitemapIndexXml('http://localhost:4321', ['/sitemap/poets.xml']);
+    expect(xml).toContain('<sitemap><loc>http://localhost:4321/sitemap/poets.xml</loc></sitemap>');
   });
 });
 
