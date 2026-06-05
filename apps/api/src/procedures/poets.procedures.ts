@@ -5,7 +5,11 @@ import { publicProcedure } from './base';
 import { listEnvelope } from './envelope';
 
 export const list = publicProcedure.poets.list.handler(async ({ context, input, errors }) => {
-  const queryResult = await poetsQueries.listPoets(context.db, input.page);
+  const queryResult = await poetsQueries.listPoets(
+    context.db,
+    input.page,
+    input.era ? { eraSlug: input.era } : undefined
+  );
   if (queryResult.isErr()) throw errors.INTERNAL_SERVER_ERROR();
   const result = queryResult.value;
   if (input.page > 1 && input.page > result.totalPages) throw errors.NOT_FOUND();
