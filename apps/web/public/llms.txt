@@ -4,7 +4,7 @@
 
 ## Browse
 
-- [Poets](https://qafiyah.com/poets/page/1): Paginated index of poets
+- [Poets](https://qafiyah.com/poets): Paginated index of poets
 - [Meters](https://qafiyah.com/meters): Classical Arabic meters (al-ʿarūḍ)
 - [Rhymes](https://qafiyah.com/rhymes): Rhyme letters (qāfiyah)
 - [Themes](https://qafiyah.com/themes): Thematic categories
