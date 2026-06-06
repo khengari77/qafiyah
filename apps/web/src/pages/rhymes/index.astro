@@ -7,7 +7,7 @@ import { CACHE_INDEX } from '@/lib/server/cache';
 import { allRhymes } from '@/lib/server/taxonomies';
 import { taxonomyIndexUrl, taxonomyUrl } from '@/lib/urls';
 
-const rhymes = await allRhymes();
+const rhymes = (await allRhymes()).filter((rhyme) => rhyme.poemsCount > 0);
 Astro.response.headers.set('Cache-Control', CACHE_INDEX);
 
 const title = `${SITE_NAME_AR} | تصفح حسب القوافي`;

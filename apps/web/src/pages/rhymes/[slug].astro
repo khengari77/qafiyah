@@ -30,7 +30,7 @@ const nextPageUrl = taxonomyUrl('rhymes', slug, pageNumber + 1);
 const prevPageUrl = taxonomyUrl('rhymes', slug, pageNumber - 1);
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
 
-const title = `${SITE_NAME_AR} | قصائد على قافية ${rhyme.name} | صفحة (${toArabicDigits(pageNumber.toString())})`;
+const title = `${SITE_NAME_AR} | قصائد على قافية ${rhyme.name}`;
 const description = `قصائد على قافية ${rhyme.name} على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}، ${toArabicDigits(rhyme.poemsCount)} قصيدة.`;
 
 const collectionJsonLd = {
