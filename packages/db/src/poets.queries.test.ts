@@ -43,6 +43,19 @@ describe('listPoets', () => {
     expect(value.total).toBe(1);
     expect(value.totalPages).toBe(1);
   });
+
+  it('returns rows when a name query is passed', async () => {
+    const poetRows = [{ name: 'المتنبي', slug: 'al-mutanabbi', poemsCount: 200 }];
+    const mockDb = castPartialAsDbClient({
+      select: vi.fn().mockReturnValue({ from: vi.fn().mockReturnValue(makeChain(poetRows)) }),
+      $count: vi.fn().mockResolvedValue(1),
+    });
+
+    const value = (await listPoets(mockDb, 1, { q: 'متنبي' }))._unsafeUnwrap();
+
+    expect(value.poets[0]?.slug).toBe('al-mutanabbi');
+    expect(value.total).toBe(1);
+  });
 });
 
 describe('listPoets era filter (integration)', () => {
@@ -53,6 +66,25 @@ describe('listPoets era filter (integration)', () => {
       if (!era) return;
       const result = (await listPoets(db, 1, { eraSlug: era.slug }))._unsafeUnwrap();
       expect(result.total).toBe(era.poetsCount);
+    });
+  });
+});
+
+describe('listPoets name filter (integration)', () => {
+  it('matches a poet name after folding diacritics and alef/ya/ta-marbuta', async () => {
+    await withTestDb(async (db) => {
+      const poet = (await getPoetBySlug(db, asPoetSlug('alasha')))._unsafeUnwrap();
+      // Fully fold the real stored name exactly as the SQL does, then search it.
+      const folded = poet.name
+        .replace(/[ً-ْٰـ]/g, '')
+        .replace(/[أإآٱ]/g, 'ا')
+        .replace(/ى/g, 'ي')
+        .replace(/ة/g, 'ه');
+
+      const result = (await listPoets(db, 1, { q: folded }))._unsafeUnwrap();
+
+      expect(result.poets.some((p) => p.slug === 'alasha')).toBe(true);
+      expect(result.total).toBeGreaterThanOrEqual(1);
     });
   });
 });

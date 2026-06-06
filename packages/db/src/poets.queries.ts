@@ -1,6 +1,6 @@
 import { POEMS_PER_PAGE } from '@qafiyah/constants';
 import type { EraSlug, PoetSlug } from '@qafiyah/contracts';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, type SQL, sql } from 'drizzle-orm';
 import { err, ok, type Result, ResultAsync } from 'neverthrow';
 import * as v from 'valibot';
 import { asPoetSlug } from './brand';
@@ -22,19 +22,37 @@ export type ListPoetsResult = {
 
 export type ListPoetsError = { readonly kind: 'sql_error'; readonly message: string };
 
+// @NOTE: folding mirrors the @qafiyah/search Arabic analyzer so DB name search
+// feels the same as ES: strip harakat (U+064B–U+0652), superscript alef (U+0670)
+// and tatweel (U+0640), then fold alef forms→ا, ى→ي, ة→ه. `q` arrives
+// Arabic-sanitized at the boundary, so ILIKE wildcards (%, _) cannot appear.
+const HARAKAT_RE = '[ً-ْٰـ]';
+const FOLD_FROM = 'أإآٱىة'; // أ إ آ ٱ ى ة
+const FOLD_TO = 'اااايه'; //  ا ا ا ا ي ه
+
+function foldArabic(expr: SQL): SQL {
+  return sql`translate(regexp_replace(${expr}, ${HARAKAT_RE}, '', 'g'), ${FOLD_FROM}, ${FOLD_TO})`;
+}
+
+function poetNameMatches(q: string): SQL {
+  return sql`${foldArabic(sql`${poetStats.name}`)} ILIKE '%' || ${foldArabic(sql`${q}`)} || '%'`;
+}
+
 export async function listPoets(
   db: DbClient,
   page: number,
-  opts?: { readonly eraSlug?: EraSlug }
+  opts?: { readonly eraSlug?: EraSlug; readonly q?: string }
 ): Promise<Result<ListPoetsResult, ListPoetsError>> {
   const limit = POEMS_PER_PAGE;
   const offset = (page - 1) * limit;
-  const where = opts?.eraSlug
+  const eraWhere = opts?.eraSlug
     ? eq(
         poetStats.eraId,
         sql`(SELECT ${eraStats.id} FROM ${eraStats} WHERE ${eraStats.slug} = ${opts.eraSlug})`
       )
     : undefined;
+  const nameWhere = opts?.q ? poetNameMatches(opts.q) : undefined;
+  const where = and(eraWhere, nameWhere);
 
   const queryResult = await ResultAsync.fromPromise(
     Promise.all([
