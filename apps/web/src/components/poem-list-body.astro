@@ -5,7 +5,7 @@ import { ListCard } from '@/components/ui/list-card';
 import type { BreadcrumbItem } from '@/lib/breadcrumbs';
 import type { PaginationView } from '@/lib/pagination';
 
-export type ListCardItem = {
+type ListCardItem = {
   readonly title: string;
   readonly subtitle: string;
   readonly href: string;
@@ -29,17 +29,24 @@ const emptyClass =
   emptyVariant === 'error' ? 'text-red-500 text-center py-8' : 'text-center text-zinc-500';
 const showPagination = pagination !== undefined && pagination.totalPages > 1;
 ---
-<section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
+
+<section
+  class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28"
+>
   <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
     {crumbItems && <Breadcrumbs items={crumbItems} />}
     <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">{heading}</h1>
     <slot />
     <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
-      {items.length > 0 ? (
-        items.map((item) => <ListCard title={item.title} subtitle={item.subtitle} href={item.href} />)
-      ) : (
-        <p class={emptyClass}>{emptyText}</p>
-      )}
+      {
+        items.length > 0 ? (
+          items.map((item) => (
+            <ListCard title={item.title} subtitle={item.subtitle} href={item.href} />
+          ))
+        ) : (
+          <p class={emptyClass}>{emptyText}</p>
+        )
+      }
     </div>
     {showPagination && pagination && <Pagination {...pagination} />}
   </div>
