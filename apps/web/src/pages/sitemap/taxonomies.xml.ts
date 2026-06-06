@@ -3,12 +3,11 @@ import { SITE_URL } from '@/constants';
 import { CACHE_SITEMAP } from '@/lib/server/cache';
 import { allCollections } from '@/lib/server/collections';
 import { urlsetXml } from '@/lib/server/sitemap';
-import { allEras, allMeters, allRhymes, allThemes } from '@/lib/server/taxonomies';
+import { allMeters, allRhymes, allThemes } from '@/lib/server/taxonomies';
 import { poetsUrl, taxonomyIndexUrl, taxonomyUrl } from '@/lib/urls';
 
 export const GET: APIRoute = async () => {
-  const [eras, meters, rhymes, themes, collections] = await Promise.all([
-    allEras(),
+  const [meters, rhymes, themes, collections] = await Promise.all([
     allMeters(),
     allRhymes(),
     allThemes(),
@@ -16,13 +15,11 @@ export const GET: APIRoute = async () => {
   ]);
   const locs = [
     `${SITE_URL}/`,
-    `${SITE_URL}${taxonomyIndexUrl('eras')}`,
     `${SITE_URL}${taxonomyIndexUrl('meters')}`,
     `${SITE_URL}${taxonomyIndexUrl('rhymes')}`,
     `${SITE_URL}${taxonomyIndexUrl('themes')}`,
     `${SITE_URL}${taxonomyIndexUrl('collections')}`,
     `${SITE_URL}${poetsUrl()}`,
-    ...eras.map((e) => `${SITE_URL}${taxonomyUrl('eras', e.slug)}`),
     ...meters.map((m) => `${SITE_URL}${taxonomyUrl('meters', m.slug)}`),
     ...rhymes.map((r) => `${SITE_URL}${taxonomyUrl('rhymes', r.slug)}`),
     ...themes.map((t) => `${SITE_URL}${taxonomyUrl('themes', t.slug)}`),

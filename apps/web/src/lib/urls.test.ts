@@ -18,18 +18,18 @@ describe('normalizePoetSlug', () => {
 
 describe('taxonomyIndexUrl', () => {
   it('returns the bare section URL', () => {
-    expect(taxonomyIndexUrl('eras')).toBe('/eras');
+    expect(taxonomyIndexUrl('meters')).toBe('/meters');
     expect(taxonomyIndexUrl('collections')).toBe('/collections');
   });
 });
 
 describe('taxonomyUrl', () => {
   it('returns the bare term URL for the first page', () => {
-    expect(taxonomyUrl('eras', 'jahili')).toBe('/eras/jahili');
-    expect(taxonomyUrl('eras', 'jahili', 1)).toBe('/eras/jahili');
+    expect(taxonomyUrl('meters', 'tawil')).toBe('/meters/tawil');
+    expect(taxonomyUrl('meters', 'tawil', 1)).toBe('/meters/tawil');
   });
   it('appends ?page=N for pages beyond the first', () => {
-    expect(taxonomyUrl('meters', 'tawil', 3)).toBe('/meters/tawil?page=3');
+    expect(taxonomyUrl('rhymes', 'meem', 3)).toBe('/rhymes/meem?page=3');
   });
 });
 

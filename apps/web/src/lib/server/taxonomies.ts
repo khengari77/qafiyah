@@ -1,10 +1,9 @@
 import { safe } from '@orpc/client';
-import type { EraSlug, MeterSlug, RhymeSlug, ThemeSlug } from '@qafiyah/contracts';
+import type { MeterSlug, RhymeSlug, ThemeSlug } from '@qafiyah/contracts';
 import { errorStatus } from './api-error';
 import { apiServer } from './client';
 import type { ApiOutputs } from './types';
 
-export type Era = ApiOutputs['eras']['get']['data'];
 export type Meter = ApiOutputs['meters']['get']['data'];
 export type Rhyme = ApiOutputs['rhymes']['get']['data'];
 export type Theme = ApiOutputs['themes']['get']['data'];
@@ -27,15 +26,6 @@ export async function allRhymes(): Promise<ApiOutputs['rhymes']['list']['data']>
 export async function allThemes(): Promise<ApiOutputs['themes']['list']['data']> {
   const { error, data } = await safe(apiServer.themes.list());
   if (error) throw error;
-  return data.data;
-}
-
-export async function getEra(slug: EraSlug): Promise<Era | null> {
-  const { error, data } = await safe(apiServer.eras.get({ slug }));
-  if (error) {
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
   return data.data;
 }
 

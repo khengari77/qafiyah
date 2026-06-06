@@ -5,7 +5,6 @@
 ## Browse
 
 - [Poets](https://qafiyah.com/poets/page/1): Paginated index of poets
-- [Eras](https://qafiyah.com/eras): Historical eras (e.g. Jahili, Umayyad, Abbasid, modern)
 - [Meters](https://qafiyah.com/meters): Classical Arabic meters (al-ʿarūḍ)
 - [Rhymes](https://qafiyah.com/rhymes): Rhyme letters (qāfiyah)
 - [Themes](https://qafiyah.com/themes): Thematic categories

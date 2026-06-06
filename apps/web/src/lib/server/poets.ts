@@ -24,17 +24,6 @@ export async function getPoetsPage(
   return { poets: data.data, pagination: data.pagination };
 }
 
-export async function getPoetsByEraPage(
-  eraSlug: EraSlug,
-  page: number
-): Promise<{ poets: PoetsList['data']; pagination: PoetsList['pagination'] } | null> {
-  const { error, data } = await safe(apiServer.poets.list({ page: String(page), era: eraSlug }));
-  if (error) throw error;
-  // A page past the last page is an empty page, not a missing resource → null → /404.
-  if (page > Math.max(1, data.pagination.totalPages)) return null;
-  return { poets: data.data, pagination: data.pagination };
-}
-
 export async function getPoet(slug: PoetSlug): Promise<Poet | null> {
   const { error, data } = await safe(apiServer.poets.get({ slug }));
   if (error) {

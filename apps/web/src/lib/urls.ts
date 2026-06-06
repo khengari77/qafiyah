@@ -1,6 +1,6 @@
 import { CAT_POET_PREFIX_REGEX } from '@/constants';
 
-export type TaxonomySection = 'eras' | 'meters' | 'rhymes' | 'themes' | 'collections';
+export type TaxonomySection = 'meters' | 'rhymes' | 'themes' | 'collections';
 
 /**
  * Public poet slug: lowercased with the internal `cat-poet-` prefix stripped.
@@ -19,12 +19,12 @@ function withPage(path: string, page?: number): string {
   return page && page > 1 ? `${path}?page=${page}` : path;
 }
 
-/** Taxonomy index — the list of terms, e.g. `/eras`. */
+/** Taxonomy index — the list of terms, e.g. `/meters`. */
 export function taxonomyIndexUrl(section: TaxonomySection): string {
   return `/${section}`;
 }
 
-/** Poems under one taxonomy term, e.g. `/eras/jahili` or `/eras/jahili?page=3`. */
+/** Poems under one taxonomy term, e.g. `/meters/tawil` or `/meters/tawil?page=3`. */
 export function taxonomyUrl(section: TaxonomySection, slug: string, page?: number): string {
   return withPage(`/${section}/${slug}`, page);
 }
