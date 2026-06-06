@@ -16,12 +16,12 @@
     "envin": "^1.2.0",
     "neverthrow": "^8.2.0",
     "twitter-api-v2": "^1.29.0",
-    "valibot": "^1.4.0"
+    "valibot": "^1.4.1"
   },
   "devDependencies": {
     "@qafiyah/typescript": "workspace:*",
     "@types/bun": "^1.3.14",
     "typescript": "6.0.3",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.8"
   }
 }
