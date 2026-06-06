@@ -5,11 +5,12 @@ import { publicProcedure } from './base';
 import { listEnvelope } from './envelope';
 
 export const list = publicProcedure.poets.list.handler(async ({ context, input, errors }) => {
-  const queryResult = await poetsQueries.listPoets(
-    context.db,
-    input.page,
-    input.era ? { eraSlug: input.era } : undefined
-  );
+  // The contract already trims q; collapse an empty string to undefined.
+  const q = input.q || undefined;
+  const queryResult = await poetsQueries.listPoets(context.db, input.page, {
+    ...(input.era !== undefined && { eraSlug: input.era }),
+    ...(q !== undefined && { q }),
+  });
   if (queryResult.isErr()) throw errors.INTERNAL_SERVER_ERROR();
   const result = queryResult.value;
   // A page past the last page is an empty page, not a missing resource — return
