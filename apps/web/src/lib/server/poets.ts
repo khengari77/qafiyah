@@ -1,8 +1,8 @@
 import { safe } from '@orpc/client';
 import type { EraSlug, PoetSlug } from '@qafiyah/contracts';
-import { errorStatus } from './api-error';
 import { apiServer } from './client';
 import type { ApiOutputs } from './types';
+import { getOrNull } from './unwrap';
 
 type PoetsList = ApiOutputs['poets']['list'];
 export type Poet = ApiOutputs['poets']['get']['data'];
@@ -24,11 +24,5 @@ export async function getPoetsPage(
   return { poets: data.data, pagination: data.pagination };
 }
 
-export async function getPoet(slug: PoetSlug): Promise<Poet | null> {
-  const { error, data } = await safe(apiServer.poets.get({ slug }));
-  if (error) {
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
-  return data.data;
-}
+export const getPoet = (slug: PoetSlug): Promise<Poet | null> =>
+  getOrNull(apiServer.poets.get({ slug }));

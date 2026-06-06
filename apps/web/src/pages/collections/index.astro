@@ -1,74 +1,14 @@
 ---
-import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
+import PoemListBody from '@/components/poem-list-body.astro';
 import Layout from '@/layouts/layout.astro';
-import { toArabicDigits } from '@/lib/arabic';
-import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { CACHE_INDEX } from '@/lib/server/cache';
-import { allCollections } from '@/lib/server/collections';
-import { taxonomyIndexUrl, taxonomyUrl } from '@/lib/urls';
+import { buildTaxonomyIndexView, loadTaxonomyIndex } from '@/lib/taxonomy-pages';
 
-const collections = await allCollections();
+const terms = await loadTaxonomyIndex('collections');
 Astro.response.headers.set('Cache-Control', CACHE_INDEX);
-
-const title = `${SITE_NAME_AR} | تصفح حسب الدواوين`;
-const description = `دواوين الشعر العربي على ${SITE_NAME_AR}: المعلقات وغيرها — ${toArabicDigits(collections.length)} ديوان مع إحصاءات القصائد لكل ديوان.`;
-
-const collectionJsonLd = {
-  '@context': SCHEMA_ORG_CONTEXT,
-  '@type': 'CollectionPage',
-  name: 'دواوين الشعر',
-  url: `${SITE_URL}${taxonomyIndexUrl('collections')}`,
-  description: `قائمة بجميع دواوين الشعر في موقع ${SITE_NAME_AR} - ${toArabicDigits(collections.length)} ديوان`,
-  isPartOf: { '@type': 'WebSite', name: SITE_NAME_AR, url: SITE_URL },
-  numberOfItems: collections.length,
-  itemListElement: collections.map((c, index) => ({
-    '@type': 'ListItem',
-    position: index + 1,
-    item: {
-      '@type': 'Collection',
-      name: c.name,
-      url: `${SITE_URL}${taxonomyUrl('collections', c.slug)}`,
-      description: `قصائد من ديوان ${c.name} - ${toArabicDigits(c.poemsCount)} قصيدة`,
-    },
-  })),
-};
-
-const crumbsJsonLd = breadcrumbListJsonLd([
-  { name: SITE_NAME_AR, path: '/' },
-  { name: 'الدواوين', path: taxonomyIndexUrl('collections') },
-]);
+const { layout, body } = buildTaxonomyIndexView('collections', terms);
 ---
 
-<Layout
-  title={title}
-  description={description}
-  canonical={taxonomyIndexUrl('collections')}
-  jsonLd={[collectionJsonLd, crumbsJsonLd]}
->
-  <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
-    <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
-      <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
-        {`جميع الدواوين (${toArabicDigits(collections.length)} ديوان)`}
-      </h1>
-      <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
-        {collections.length > 0 ? collections.map(({ name, poemsCount, slug }) => (
-          <a
-            href={taxonomyUrl('collections', slug)}
-            class="hover:cursor-pointer group xxs:gap-2 xs:gap-4 sm:p-8 md:p-10 xs:p-6 p-4 flex-col flex justify-start items-start bg-zinc-100/50 rounded-md border border-zinc-300/50 hover:border-zinc-300/80"
-          >
-            <p class="text-zinc-800 hover:text-zinc-500 hover:underline duration-300 group-hover:underline-offset-auto group-hover:text-zinc-500 group-hover:underline text-sm xxs:text-base xs:text-2xl sm:text-2xl lg:text-2xl 2xl:text-2xl text-wrap">
-              {name}
-            </p>
-            <p class="text-xs xs:text-lg sm:text-xl lg:text-lg text-zinc-600/80 group-hover:text-zinc-500 duration-300 text-wrap">
-              {`${toArabicDigits(poemsCount)} قصيدة`}
-            </p>
-          </a>
-        )) : (
-          <div class="text-red-500 text-center py-8">
-            حدث خطأ أثناء تحميل البيانات. يرجى المحاولة مرة أخرى.
-          </div>
-        )}
-      </div>
-    </div>
-  </section>
+<Layout {...layout}>
+  <PoemListBody {...body} />
 </Layout>

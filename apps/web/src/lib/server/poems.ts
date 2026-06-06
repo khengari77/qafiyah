@@ -8,9 +8,9 @@ import type {
   RhymeSlug,
   ThemeSlug,
 } from '@qafiyah/contracts';
-import { errorStatus } from './api-error';
 import { apiServer } from './client';
 import type { ApiOutputs } from './types';
+import { getOrNull } from './unwrap';
 
 export type Poem = ApiOutputs['poems']['get']['data'];
 
@@ -25,17 +25,11 @@ export type PoemFilters = {
 
 type PoemsListOutput = ApiOutputs['poems']['list'];
 
-export async function getPoem(slug: PoemSlug): Promise<Poem | null> {
-  const { error, data } = await safe(apiServer.poems.get({ slug }));
-  if (error) {
-    // The API returns 404 for a missing or malformed poem slug; that is the only
-    // "no renderable poem" case → null → 404. Genuine errors (500, transport
-    // failure) rethrow → 500.
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
-  return data.data;
-}
+// The API returns 404 for a missing or malformed poem slug; that is the only
+// "no renderable poem" case → null → 404. Genuine errors (500, transport
+// failure) rethrow → 500.
+export const getPoem = (slug: PoemSlug): Promise<Poem | null> =>
+  getOrNull(apiServer.poems.get({ slug }));
 
 export async function listPoems(
   filters: PoemFilters,

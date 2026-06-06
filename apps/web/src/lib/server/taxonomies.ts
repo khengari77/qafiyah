@@ -1,57 +1,24 @@
-import { safe } from '@orpc/client';
 import type { MeterSlug, RhymeSlug, ThemeSlug } from '@qafiyah/contracts';
-import { errorStatus } from './api-error';
 import { apiServer } from './client';
 import type { ApiOutputs } from './types';
+import { getOrNull, unwrap } from './unwrap';
 
 export type Meter = ApiOutputs['meters']['get']['data'];
 export type Rhyme = ApiOutputs['rhymes']['get']['data'];
 export type Theme = ApiOutputs['themes']['get']['data'];
 
-export async function allEras(): Promise<ApiOutputs['eras']['list']['data']> {
-  const { error, data } = await safe(apiServer.eras.list());
-  if (error) throw error;
-  return data.data;
-}
-export async function allMeters(): Promise<ApiOutputs['meters']['list']['data']> {
-  const { error, data } = await safe(apiServer.meters.list());
-  if (error) throw error;
-  return data.data;
-}
-export async function allRhymes(): Promise<ApiOutputs['rhymes']['list']['data']> {
-  const { error, data } = await safe(apiServer.rhymes.list());
-  if (error) throw error;
-  return data.data;
-}
-export async function allThemes(): Promise<ApiOutputs['themes']['list']['data']> {
-  const { error, data } = await safe(apiServer.themes.list());
-  if (error) throw error;
-  return data.data;
-}
+export const allEras = (): Promise<ApiOutputs['eras']['list']['data']> =>
+  unwrap(apiServer.eras.list());
+export const allMeters = (): Promise<ApiOutputs['meters']['list']['data']> =>
+  unwrap(apiServer.meters.list());
+export const allRhymes = (): Promise<ApiOutputs['rhymes']['list']['data']> =>
+  unwrap(apiServer.rhymes.list());
+export const allThemes = (): Promise<ApiOutputs['themes']['list']['data']> =>
+  unwrap(apiServer.themes.list());
 
-export async function getMeter(slug: MeterSlug): Promise<Meter | null> {
-  const { error, data } = await safe(apiServer.meters.get({ slug }));
-  if (error) {
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
-  return data.data;
-}
-
-export async function getRhyme(slug: RhymeSlug): Promise<Rhyme | null> {
-  const { error, data } = await safe(apiServer.rhymes.get({ slug }));
-  if (error) {
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
-  return data.data;
-}
-
-export async function getTheme(slug: ThemeSlug): Promise<Theme | null> {
-  const { error, data } = await safe(apiServer.themes.get({ slug }));
-  if (error) {
-    if (errorStatus(error) === 404) return null;
-    throw error;
-  }
-  return data.data;
-}
+export const getMeter = (slug: MeterSlug): Promise<Meter | null> =>
+  getOrNull(apiServer.meters.get({ slug }));
+export const getRhyme = (slug: RhymeSlug): Promise<Rhyme | null> =>
+  getOrNull(apiServer.rhymes.get({ slug }));
+export const getTheme = (slug: ThemeSlug): Promise<Theme | null> =>
+  getOrNull(apiServer.themes.get({ slug }));
