@@ -12,7 +12,7 @@ import {
 } from '@/constants';
 import type { Poem } from '@/lib/api/rpc';
 import { formatVerseCount } from '@/lib/arabic';
-import { poemUrl, poetUrl, taxonomyUrl } from '@/lib/urls';
+import { poemUrl, poetsUrl, poetUrl } from '@/lib/urls';
 
 function useFontSize(
   minSize = FONT_SIZE_MIN,
@@ -91,7 +91,7 @@ export function PoemDisplay({
               <a href={poetUrl(poet.slug)} className="hover:underline">
                 {poet.name}
               </a>{' '}
-              <a href={taxonomyUrl('eras', era.slug)} className="hover:underline">
+              <a href={poetsUrl({ era: era.slug })} className="hover:underline">
                 {`(${era.name})`}
               </a>
             </h2>

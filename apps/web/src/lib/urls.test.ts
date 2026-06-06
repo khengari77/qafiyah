@@ -34,12 +34,21 @@ describe('taxonomyUrl', () => {
 });
 
 describe('poetsUrl', () => {
-  it('returns bare /poets for the first page', () => {
+  it('returns bare /poets with no options', () => {
     expect(poetsUrl()).toBe('/poets');
-    expect(poetsUrl(1)).toBe('/poets');
+    expect(poetsUrl({ page: 1 })).toBe('/poets');
   });
   it('appends ?page=N beyond the first page', () => {
-    expect(poetsUrl(2)).toBe('/poets?page=2');
+    expect(poetsUrl({ page: 2 })).toBe('/poets?page=2');
+  });
+  it('adds era and page, omitting empties, in era→q→page order', () => {
+    expect(poetsUrl({ era: 'jahili' })).toBe('/poets?era=jahili');
+    expect(poetsUrl({ era: 'jahili', page: 3 })).toBe('/poets?era=jahili&page=3');
+  });
+  it('encodes an Arabic q and round-trips it', () => {
+    const url = poetsUrl({ q: 'متنبي' });
+    expect(url.startsWith('/poets?')).toBe(true);
+    expect(new URL(url, 'http://x').searchParams.get('q')).toBe('متنبي');
   });
 });
 

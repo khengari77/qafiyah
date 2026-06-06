@@ -1,5 +1,5 @@
 import { ORPCError } from '@orpc/client';
-import type { PoetSlug } from '@qafiyah/contracts';
+import type { EraSlug, PoetSlug } from '@qafiyah/contracts';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('./client', () => ({
@@ -26,6 +26,13 @@ describe('getPoetsPage', () => {
     expect(result?.poets).toHaveLength(1);
     expect(result?.pagination.totalItems).toBe(1);
   });
+
+  it('forwards era and q filters to the API request', async () => {
+    listMock.mockResolvedValue({ data: [POET], pagination: PAGINATION });
+    await getPoetsPage(1, { era: 'jahili' as EraSlug, q: 'متنبي' });
+    expect(listMock).toHaveBeenCalledWith({ page: '1', era: 'jahili', q: 'متنبي' });
+  });
+
   it('returns null when the page exceeds the last page', async () => {
     listMock.mockResolvedValue({
       data: [],
@@ -33,6 +40,7 @@ describe('getPoetsPage', () => {
     });
     expect(await getPoetsPage(999)).toBeNull();
   });
+
   it('treats page 1 of an empty collection as a valid empty page', async () => {
     listMock.mockResolvedValue({
       data: [],

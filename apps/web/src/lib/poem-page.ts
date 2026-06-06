@@ -13,7 +13,7 @@ import {
 import type { Poem } from '@/lib/api/rpc';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { flattenVerses } from '@/lib/flatten-verses';
-import { poemUrl, poetsUrl, poetUrl, taxonomyUrl } from '@/lib/urls';
+import { poemUrl, poetsUrl, poetUrl } from '@/lib/urls';
 
 function sanitizeMetaText(value: string): string {
   return value
@@ -41,7 +41,7 @@ function buildJsonLd(
   sanitizedKeywords: string
 ): readonly Readonly<Record<string, unknown>>[] {
   const poetHref = `${SITE_URL}${poetUrl(poem.poet.slug)}`;
-  const eraHref = `${SITE_URL}${taxonomyUrl('eras', poem.era.slug)}`;
+  const eraHref = `${SITE_URL}${poetsUrl({ era: poem.era.slug })}`;
   const article = {
     '@context': SCHEMA_ORG_CONTEXT,
     '@type': 'CreativeWork',

@@ -29,9 +29,18 @@ export function taxonomyUrl(section: TaxonomySection, slug: string, page?: numbe
   return withPage(`/${section}/${slug}`, page);
 }
 
-/** The poets list, e.g. `/poets` or `/poets?page=2`. */
-export function poetsUrl(page?: number): string {
-  return withPage('/poets', page);
+/** The poets list, e.g. `/poets`, `/poets?era=jahili`, or `/poets?q=…&page=2`. */
+export function poetsUrl(opts?: {
+  page?: number | undefined;
+  era?: string | undefined;
+  q?: string | undefined;
+}): string {
+  const params = new URLSearchParams();
+  if (opts?.era) params.set('era', opts.era);
+  if (opts?.q) params.set('q', opts.q);
+  if (opts?.page && opts.page > 1) params.set('page', String(opts.page));
+  const query = params.toString();
+  return query ? `/poets?${query}` : '/poets';
 }
 
 /** One poet's diwan, e.g. `/poets/mutanabbi` or `/poets/mutanabbi?page=4`. */

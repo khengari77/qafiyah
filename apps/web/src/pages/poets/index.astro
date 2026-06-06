@@ -1,4 +1,6 @@
 ---
+import { MAX_QUERY_LENGTH } from '@qafiyah/constants';
+import type { EraSlug } from '@qafiyah/contracts';
 import Breadcrumbs from '@/components/breadcrumbs.astro';
 import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
@@ -7,21 +9,47 @@ import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
 import { parsePageQuery } from '@/lib/page-numbers';
 import { CACHE_LIST } from '@/lib/server/cache';
 import { getPoetsPage } from '@/lib/server/poets';
+import { allEras } from '@/lib/server/taxonomies';
 import { poetsUrl, poetUrl } from '@/lib/urls';
 
 const page = parsePageQuery(Astro.url.searchParams.get('page'));
-const data = page === null ? null : await getPoetsPage(page);
+if (page === null) return Astro.rewrite('/404');
+
+const rawEra = (Astro.url.searchParams.get('era') ?? '').trim();
+const rawQuery = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, MAX_QUERY_LENGTH);
+
+const eras = await allEras();
+const activeEra = rawEra ? eras.find((era) => era.slug === rawEra) : undefined;
+// A non-empty era that matches no known era is a bad URL → 404.
+if (rawEra && !activeEra) return Astro.rewrite('/404');
+
+const eraFilter = activeEra?.slug as EraSlug | undefined;
+const queryFilter = rawQuery || undefined;
+
+const data = await getPoetsPage(page, { era: eraFilter, q: queryFilter });
 if (!data) return Astro.rewrite('/404');
 Astro.response.headers.set('Cache-Control', CACHE_LIST);
+
 const { poets, pagination } = data;
 const pageNumber = pagination.page;
 const totalPoets = pagination.totalItems;
 const totalPages = pagination.totalPages;
 const hasNextPage = pageNumber < totalPages;
 const hasPrevPage = pageNumber > 1;
-const nextPageUrl = poetsUrl(pageNumber + 1);
-const prevPageUrl = poetsUrl(pageNumber - 1);
+const isFiltered = Boolean(eraFilter || queryFilter);
+const eraParam = rawEra || undefined;
+
+const nextPageUrl = poetsUrl({ page: pageNumber + 1, era: eraParam, q: queryFilter });
+const prevPageUrl = poetsUrl({ page: pageNumber - 1, era: eraParam, q: queryFilter });
 const headerTip = `صـ ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`;
+
+function buildHeading(): string {
+  if (activeEra) return `شعراء العصر ال${activeEra.name} (${toArabicDigits(totalPoets)} شاعر)`;
+  if (queryFilter) return `نتائج البحث عن «${queryFilter}» (${toArabicDigits(totalPoets)} شاعر)`;
+  return `جميع الشعراء (${toArabicDigits(totalPoets)} شاعر)`;
+}
+const heading = buildHeading();
+const emptyText = isFiltered ? 'لا يوجد شعراء مطابقون' : 'لا يوجد المزيد من الشعراء';
 
 const title = `${SITE_NAME_AR} | الشعراء`;
 const description = `الشعراء على ${SITE_NAME_AR} — الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}. تصفح دواوين ${toArabicDigits(totalPoets)} شاعرٍ من العصر الجاهلي إلى الحديث.`;
@@ -30,7 +58,7 @@ const collectionJsonLd = {
   '@context': SCHEMA_ORG_CONTEXT,
   '@type': 'CollectionPage',
   name: 'قائمة الشعراء',
-  url: `${SITE_URL}${poetsUrl(pageNumber)}`,
+  url: `${SITE_URL}${poetsUrl({ page: pageNumber })}`,
   description: `قائمة بجميع الشعراء في موقع ${SITE_NAME_AR} - الصفحة ${toArabicDigits(pageNumber)} من ${toArabicDigits(totalPages)}`,
   isPartOf: { '@type': 'WebSite', name: SITE_NAME_AR, url: SITE_URL },
   numberOfItems: totalPoets,
@@ -46,12 +74,27 @@ const crumbItems = [
   { name: 'الشعراء', path: poetsUrl() },
 ];
 const crumbsJsonLd = breadcrumbListJsonLd(crumbItems);
+
+const chipBase =
+  'rounded-md border px-3 py-1 text-sm transition-colors duration-200 hover:cursor-pointer';
+const chipActive = 'border-zinc-800 bg-zinc-800 text-zinc-50';
+const chipIdle = 'border-zinc-300/50 bg-white text-zinc-700 hover:border-zinc-300';
+
+const chips = [
+  { label: 'الكل', href: poetsUrl({ q: queryFilter }), isActive: !activeEra },
+  ...eras.map((era) => ({
+    label: era.name,
+    href: poetsUrl({ era: era.slug, q: queryFilter }),
+    isActive: era.slug === activeEra?.slug,
+  })),
+];
 ---
 
 <Layout
   title={title}
   description={description}
-  canonical={poetsUrl(pageNumber)}
+  canonical={poetsUrl({ page: pageNumber, era: eraParam, q: queryFilter })}
+  robotsIndex={!isFiltered}
   prevUrl={hasPrevPage ? prevPageUrl : undefined}
   nextUrl={hasNextPage ? nextPageUrl : undefined}
   jsonLd={[collectionJsonLd, crumbsJsonLd]}
@@ -59,9 +102,35 @@ const crumbsJsonLd = breadcrumbListJsonLd(crumbItems);
   <section class="w-full flex justify-center items-center flex-col relative overflow-hidden my-14 xs:my-20 lg:my-28">
     <div class="flex justify-start flex-col items-start gap-6 xs:gap-8 sm:gap-14 w-full 3xl:gap-16">
       {pageNumber > 1 && <Breadcrumbs items={crumbItems} />}
-      <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">
-        {`جميع الشعراء (${toArabicDigits(totalPoets)} شاعر)`}
-      </h1>
+      <h1 class="text-lg xxs:text-2xl xs:text-4xl xl:text-4xl font-medium">{heading}</h1>
+
+      <form method="GET" action="/poets" role="search" class="flex w-full flex-col gap-4">
+        {activeEra && <input type="hidden" name="era" value={activeEra.slug} />}
+        <div class="flex w-full flex-row-reverse gap-2">
+          <input
+            type="search"
+            name="q"
+            value={queryFilter ?? ''}
+            maxlength={MAX_QUERY_LENGTH}
+            placeholder="ابحث عن شاعر بالاسم"
+            class="flex-1 rounded-md border border-zinc-300/50 bg-white px-4 py-2 text-base text-zinc-800 outline-none focus-visible:border-zinc-400"
+          />
+          <button
+            type="submit"
+            class="rounded-md border border-zinc-800 bg-zinc-800 px-5 py-2 text-base text-zinc-50 hover:cursor-pointer"
+          >
+            بحث
+          </button>
+        </div>
+        <div class="flex flex-row-reverse flex-wrap gap-2">
+          {chips.map((chip) => (
+            <a href={chip.href} class:list={[chipBase, chip.isActive ? chipActive : chipIdle]}>
+              {chip.label}
+            </a>
+          ))}
+        </div>
+      </form>
+
       <div class="grid grid-cols-1 2xl:grid-cols-2 w-full gap-1 sm:gap-4 2xl:gap-6">
         {poets.length > 0 ? poets.map((poet) => (
           <a
@@ -76,9 +145,10 @@ const crumbsJsonLd = breadcrumbListJsonLd(crumbItems);
             </p>
           </a>
         )) : (
-          <p class="text-center text-zinc-500">لا يوجد المزيد من الشعراء</p>
+          <p class="text-center text-zinc-500">{emptyText}</p>
         )}
       </div>
+
       {totalPages > 1 && (
         <nav class="flex flex-row-reverse w-full justify-between items-center gap-4 text-base md:text-lg mt-8" aria-label="ترقيم الصفحات">
           {hasNextPage ? (
