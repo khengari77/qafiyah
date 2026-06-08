@@ -1,8 +1,8 @@
 ---
 import { MAX_QUERY_LENGTH } from '@qafiyah/constants';
-import type { EraSlug } from '@qafiyah/contracts';
+import { type EraSlug, sanitizeArabicInput } from '@qafiyah/contracts';
 import PoemListBody from '@/components/poem-list-body.astro';
-import { SCHEMA_ORG_CONTEXT, SITE_NAME_AR, SITE_URL } from '@/constants';
+import { SCHEMA_ORG_CONTEXT, SEARCH_TEXTS, SITE_NAME_AR, SITE_URL } from '@/constants';
 import Layout from '@/layouts/layout.astro';
 import { toArabicDigits } from '@/lib/arabic';
 import { breadcrumbListJsonLd } from '@/lib/breadcrumbs';
@@ -17,7 +17,9 @@ const page = parsePageQuery(Astro.url.searchParams.get('page'));
 if (page === null) return Astro.rewrite('/404');
 
 const rawEra = (Astro.url.searchParams.get('era') ?? '').trim();
-const rawQuery = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, MAX_QUERY_LENGTH);
+const rawQuery = sanitizeArabicInput(Astro.url.searchParams.get('q') ?? '')
+  .trim()
+  .slice(0, MAX_QUERY_LENGTH);
 
 const eras = await allEras();
 const activeEra = rawEra ? eras.find((era) => era.slug === rawEra) : undefined;
@@ -112,21 +114,52 @@ const items = poets.map((poet) => ({
   >
     <form method="GET" action="/poets" role="search" class="flex w-full flex-col gap-4">
       {activeEra && <input type="hidden" name="era" value={activeEra.slug} />}
-      <div class="flex w-full flex-row-reverse gap-2">
-        <input
-          type="search"
-          name="q"
-          value={queryFilter ?? ''}
-          maxlength={MAX_QUERY_LENGTH}
-          placeholder="ابحث عن شاعر بالاسم"
-          class="flex-1 rounded-md border border-zinc-300/50 bg-white px-4 py-2 text-base text-zinc-800 outline-none focus-visible:border-zinc-400"
-        />
-        <button
-          type="submit"
-          class="rounded-md border border-zinc-800 bg-zinc-800 px-5 py-2 text-base text-zinc-50 hover:cursor-pointer"
-        >
-          بحث
-        </button>
+      <div class="w-full">
+        <div class="mb-1 flex h-4 items-center">
+          <p
+            id="poets-search-error"
+            role="alert"
+            hidden
+            class="text-right text-red-500 text-xs md:text-base"
+          >
+            {SEARCH_TEXTS.arabicOnlyError}
+          </p>
+        </div>
+        <div class="relative w-full">
+          <input
+            type="search"
+            name="q"
+            value={queryFilter ?? ''}
+            maxlength={MAX_QUERY_LENGTH}
+            placeholder="ابحث عن شاعر بالاسم"
+            class="w-full rounded-md border border-zinc-300/50 bg-white px-4 py-2 pl-10 text-base text-zinc-800 outline-none focus-visible:border-zinc-400"
+          />
+          {
+            queryFilter && (
+              <a
+                href={poetsUrl({ era: eraParam })}
+                aria-label="مسح البحث"
+                class="absolute top-1/2 left-3 -translate-y-1/2 text-zinc-400 transition-colors hover:text-zinc-700"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="h-5 w-5"
+                  aria-hidden="true"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m15 9-6 6" />
+                  <path d="m9 9 6 6" />
+                </svg>
+              </a>
+            )
+          }
+        </div>
       </div>
       <div class="flex flex-row-reverse flex-wrap gap-2">
         {chips.map((chip) => (
@@ -138,3 +171,33 @@ const items = poets.map((poet) => ({
     </form>
   </PoemListBody>
 </Layout>
+
+<style>
+  /* The custom clear link replaces the browser's native search-clear control. */
+  input[type='search']::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+</style>
+
+<script>
+  import { WHITESPACE_RUN_REGEX } from '@qafiyah/constants';
+  import { sanitizeArabicInput } from '@qafiyah/contracts';
+
+  // Progressive enhancement: strip non-Arabic as the user types and show the
+  // "Arabic only" hint while we do (matching the home-page search). The server
+  // sanitizes too (sanitizeArabicInput runs in this page's server code), so
+  // search still works with JS disabled.
+  const input = document.querySelector('form[role="search"] input[name="q"]');
+  const error = document.getElementById('poets-search-error');
+  if (input instanceof HTMLInputElement && error) {
+    input.addEventListener('input', () => {
+      const raw = input.value;
+      const cleaned = sanitizeArabicInput(raw);
+      if (cleaned !== raw) input.value = cleaned;
+      // Whitespace-only differences are benign; flag only stripped non-Arabic.
+      error.hidden = raw.replace(WHITESPACE_RUN_REGEX, ' ') === cleaned;
+    });
+  }
+</script>
