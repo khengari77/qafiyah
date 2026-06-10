@@ -13,23 +13,10 @@ import { useInfiniteQuery } from '@tanstack/react-query';
 import { useQueryState } from 'nuqs';
 import type React from 'react';
 import { useEffect, useRef, useState } from 'react';
-import { match } from 'ts-pattern';
 import { INFINITE_SCROLL_THRESHOLD, SEARCH_RESULTS_STALE_TIME_MS, SEARCH_TEXTS } from '@/constants';
 import { orpc } from '@/lib/api/orpc';
 import type { PoemSearchResult, PoetSearchResult } from '@/lib/api/rpc';
-
-export type FetchStatus =
-  | { readonly kind: 'idle' }
-  | { readonly kind: 'loading' }
-  | {
-      readonly kind: 'success';
-      readonly data: readonly (PoemSearchResult | PoetSearchResult)[];
-    }
-  | {
-      readonly kind: 'success-fetching-more';
-      readonly data: readonly (PoemSearchResult | PoetSearchResult)[];
-    }
-  | { readonly kind: 'error' };
+import { deriveSearchStatus, deriveSectionStatus } from './search-status';
 
 const SEARCH_TYPE_SET: ReadonlySet<SearchType> = new Set(SEARCH_TYPE_VALUES);
 const MATCH_TYPE_SET: ReadonlySet<MatchType> = new Set(MATCH_TYPE_VALUES);
@@ -113,7 +100,7 @@ function useInfiniteScroll(
 type SectionViewModel = {
   readonly items: readonly (PoemSearchResult | PoetSearchResult)[];
   readonly total: number;
-  readonly status: FetchStatus;
+  readonly isFetchingMore: boolean;
   readonly loadMoreRef: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -220,30 +207,26 @@ export function useSearch() {
     poetsInfiniteQuery.data?.pages.flatMap((p) => p.poets?.data ?? []) ?? [];
   const poetsTotal = poetsInfiniteQuery.data?.pages[0]?.poets?.pagination.totalItems ?? 0;
 
-  // — per-section FetchStatus —
-  function buildStatus(
-    q: typeof poemsInfiniteQuery,
-    items: readonly (PoemSearchResult | PoetSearchResult)[],
-    enabled: boolean
-  ): FetchStatus {
-    return match({
-      canSearch: canSearch && enabled,
-      isError: q.isError,
-      isFetchingNextPage: q.isFetchingNextPage,
-      isSuccess: q.isSuccess,
-    })
-      .with({ canSearch: false }, () => ({ kind: 'idle' as const }))
-      .with({ isError: true }, () => ({ kind: 'error' as const }))
-      .with({ isFetchingNextPage: true }, () => ({
-        kind: 'success-fetching-more' as const,
-        data: items,
-      }))
-      .with({ isSuccess: true }, () => ({ kind: 'success' as const, data: items }))
-      .otherwise(() => ({ kind: 'loading' as const }));
-  }
+  // — per-section status, then one unified status for the whole search —
+  const poemsStatus = deriveSectionStatus({
+    canSearch: canSearch && wantPoems,
+    isError: poemsInfiniteQuery.isError,
+    isFetchingNextPage: poemsInfiniteQuery.isFetchingNextPage,
+    isSuccess: poemsInfiniteQuery.isSuccess,
+    items: poemItems,
+  });
+  const poetsStatus = deriveSectionStatus({
+    canSearch: canSearch && wantPoets,
+    isError: poetsInfiniteQuery.isError,
+    isFetchingNextPage: poetsInfiniteQuery.isFetchingNextPage,
+    isSuccess: poetsInfiniteQuery.isSuccess,
+    items: poetItems,
+  });
 
-  const poemsStatus = buildStatus(poemsInfiniteQuery, poemItems, wantPoems);
-  const poetsStatus = buildStatus(poetsInfiniteQuery, poetItems, wantPoets);
+  const searchStatus = deriveSearchStatus([
+    { status: poemsStatus, total: poemsTotal },
+    { status: poetsStatus, total: poetsTotal },
+  ]);
 
   // — per-section infinite scroll —
   const { loadMoreRef: poemsLoadMoreRef } = useInfiniteScroll(
@@ -331,26 +314,24 @@ export function useSearch() {
     setValidationError(null);
   };
 
-  const hasQueryToShow =
-    poemsStatus.kind !== 'loading' &&
-    poetsStatus.kind !== 'loading' &&
-    (hasInputText || hasFilters);
+  const hasQueryToShow = searchStatus.kind !== 'loading' && (hasInputText || hasFilters);
 
   const poems: SectionViewModel = {
     items: poemItems,
     total: poemsTotal,
-    status: poemsStatus,
+    isFetchingMore: poemsInfiniteQuery.isFetchingNextPage,
     loadMoreRef: poemsLoadMoreRef,
   };
 
   const poets: SectionViewModel = {
     items: poetItems,
     total: poetsTotal,
-    status: poetsStatus,
+    isFetchingMore: poetsInfiniteQuery.isFetchingNextPage,
     loadMoreRef: poetsLoadMoreRef,
   };
 
   return {
+    status: searchStatus,
     input: {
       inputValue,
       validationError,

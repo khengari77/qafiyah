@@ -1,5 +1,6 @@
 'use client';
 
+import { match } from 'ts-pattern';
 import {
   getBadgeCount,
   getNoResultsText,
@@ -23,12 +24,12 @@ import {
 } from '@/constants';
 import { FilterBadges, Filters, FiltersButton } from './filters';
 import { SearchInput } from './search-input';
+import { ErrorState, LoadingState, NoResultsState } from './search-states';
 import { SearchSection } from './sections';
 
 export function SearchContainer() {
-  const { input, sections, flags, selection, handlers } = useSearch();
+  const { input, status, sections, flags, selection, handlers } = useSearch();
 
-  const isQuerying = flags.hasCommittedQuery || flags.hasFilters;
   const noResultsText = getNoResultsText({
     hasCommittedQuery: flags.hasCommittedQuery,
     query: input.query,
@@ -145,27 +146,35 @@ export function SearchContainer() {
         </Card>
 
         <div className="flex flex-col gap-10">
-          {flags.wantPoems && (
-            <SearchSection
-              title={SEARCH_TEXTS.poemsSectionTitle}
-              status={sections.poems.status}
-              loadMoreRef={sections.poems.loadMoreRef}
-              isQuerying={isQuerying}
-              noResultsText={noResultsText}
-              resultText={poemsResultText}
-            />
-          )}
+          {match(status)
+            .with({ kind: 'idle' }, () => null)
+            .with({ kind: 'loading' }, () => <LoadingState />)
+            .with({ kind: 'error' }, () => <ErrorState />)
+            .with({ kind: 'empty' }, () => <NoResultsState noResultsText={noResultsText} />)
+            .with({ kind: 'results' }, () => (
+              <>
+                {flags.wantPoems && (
+                  <SearchSection
+                    title={SEARCH_TEXTS.poemsSectionTitle}
+                    items={sections.poems.items}
+                    resultText={poemsResultText}
+                    isFetchingMore={sections.poems.isFetchingMore}
+                    loadMoreRef={sections.poems.loadMoreRef}
+                  />
+                )}
 
-          {flags.wantPoets && (
-            <SearchSection
-              title={SEARCH_TEXTS.poetsSectionTitle}
-              status={sections.poets.status}
-              loadMoreRef={sections.poets.loadMoreRef}
-              isQuerying={isQuerying}
-              noResultsText={noResultsText}
-              resultText={poetsResultText}
-            />
-          )}
+                {flags.wantPoets && (
+                  <SearchSection
+                    title={SEARCH_TEXTS.poetsSectionTitle}
+                    items={sections.poets.items}
+                    resultText={poetsResultText}
+                    isFetchingMore={sections.poets.isFetchingMore}
+                    loadMoreRef={sections.poets.loadMoreRef}
+                  />
+                )}
+              </>
+            ))
+            .exhaustive()}
         </div>
       </div>
     </section>

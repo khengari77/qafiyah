@@ -5,8 +5,8 @@
 Reference for Qafiyah's **Elasticsearch**-based search. It replaced the previous
 custom PostgreSQL Full-Text Search (FTS) implementation (diacritic-normalizing SQL
 functions, `tsvector` generated columns, GIN indexes, and `search_poems`/`search_poets`
-stored procedures), all of which have been removed — see `scripts/sql/0001_drop_search.sql`
-and the `0004` baseline dump.
+stored procedures), all of which have been removed and are now baked into the
+current database dump.
 
 ## Architecture
 
