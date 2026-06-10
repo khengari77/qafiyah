@@ -55,9 +55,10 @@ export function PoetCard({ item }: { item: PoetSearchResult }) {
   return (
     <div className="group flex items-center justify-center overflow-hidden rounded-xl border-0 bg-white p-4 shadow-none ring-1 ring-zinc-300/50 transition-all duration-300 hover:border-zinc-200 md:p-6">
       <a className="items-centers flex w-full flex-row justify-between gap-2" href={poetUrl(slug)}>
-        <h2 className="flex-1 font-bold text-base text-zinc-900 transition-colors hover:underline hover:underline-offset-4 group-hover:text-zinc-900 md:text-lg 2xl:text-xl">
-          {name || 'شاعر'}
-        </h2>
+        <HighlightedText
+          className="flex-1 font-bold text-base text-zinc-900 transition-colors hover:underline hover:underline-offset-4 group-hover:text-zinc-900 md:text-lg 2xl:text-xl"
+          text={name || 'شاعر'}
+        />
 
         <div className="flex items-center justify-center">
           {era.name && (
