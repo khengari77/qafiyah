@@ -14,6 +14,7 @@ COPY package.json bun.lock ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/bot/package.json apps/bot/package.json
 COPY apps/web/package.json apps/web/package.json
+COPY apps/mobile/package.json apps/mobile/package.json
 COPY apps/worker/package.json apps/worker/package.json
 COPY packages/constants/package.json packages/constants/package.json
 COPY packages/contracts/package.json packages/contracts/package.json
@@ -28,6 +29,7 @@ COPY package.json bun.lock ./
 COPY apps/api/package.json apps/api/package.json
 COPY apps/bot/package.json apps/bot/package.json
 COPY apps/web/package.json apps/web/package.json
+COPY apps/mobile/package.json apps/mobile/package.json
 COPY apps/worker/package.json apps/worker/package.json
 COPY packages/constants/package.json packages/constants/package.json
 COPY packages/contracts/package.json packages/contracts/package.json

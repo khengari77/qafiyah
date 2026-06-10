@@ -23,6 +23,7 @@ COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/typescript/package.json packages/typescript/package.json
 COPY packages/search/package.json packages/search/package.json
+COPY apps/mobile/package.json apps/mobile/package.json
 COPY apps/worker/package.json apps/worker/package.json
 RUN bun install --frozen-lockfile
 
@@ -37,6 +38,7 @@ COPY packages/contracts/package.json packages/contracts/package.json
 COPY packages/db/package.json packages/db/package.json
 COPY packages/typescript/package.json packages/typescript/package.json
 COPY packages/search/package.json packages/search/package.json
+COPY apps/mobile/package.json apps/mobile/package.json
 COPY apps/worker/package.json apps/worker/package.json
 # --ignore-scripts: the root `prepare` runs husky (a devDep, absent under
 # --production) and would fail the build; API prod deps need no postinstall.

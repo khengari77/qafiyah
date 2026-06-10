@@ -87,7 +87,7 @@ export function searchPoems(
           slug: s.slug ?? '',
           snippet: firstHighlight(h.highlight, 'content', 'title') ?? verses,
           poet: { name: s.poetNameDisplay ?? s.poetName ?? '', slug: s.poetSlug ?? '' },
-          meter: { name: s.meterName ?? '', slug: '' },
+          meter: { name: s.meterName ?? '', slug: s.meterSlug ?? '' },
           era: { name: s.eraName ?? '', slug: s.eraSlug ?? '' },
           relevance: h._score ?? 0,
         };

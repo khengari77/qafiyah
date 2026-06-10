@@ -114,6 +114,7 @@ describe.skipIf(!RUN_ES_INTEGRATION)('elasticsearch search (integration)', () =>
       })
     )._unsafeUnwrap();
     expect(page.hits.map((h) => h.slug)).toEqual(['poem-2']);
+    expect(page.hits[0]?.meter.slug).toBe('kamil');
   });
   it('returns a highlighted snippet wrapped in <mark>', async () => {
     const page = (
