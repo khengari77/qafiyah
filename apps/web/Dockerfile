@@ -70,7 +70,9 @@ RUN chmod +x /docker-entrypoint.sh \
     && chown -R nginx:nginx /var/cache/nginx
 # SSR_PORT (not PORT) for the Bun origin: the entrypoint maps it to PORT for
 # Astro, so a stray compose `PORT` can't accidentally repoint the SSR origin.
-ENV HOST=127.0.0.1 SSR_PORT=4321
+# NODE_ENV: this stage starts FROM oven/bun (not `base`), so it must re-set
+# production or the SSR runtime loads React's slower development builds.
+ENV NODE_ENV=production HOST=127.0.0.1 SSR_PORT=4321
 EXPOSE 8080
 USER nginx
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
