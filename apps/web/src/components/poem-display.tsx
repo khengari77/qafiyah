@@ -72,6 +72,7 @@ type PoemDisplayProps = {
   readonly verses: Poem['verses'];
   readonly verseCount: Poem['verseCount'];
   readonly poemType: Poem['poemType'];
+  readonly sharePath: string;
 };
 
 export function PoemDisplay({

@@ -67,6 +67,7 @@ const layout = buildPoemLayout(detail, slug as PoemSlug);
           verses={poem.verses}
           verseCount={poem.verseCount}
           poemType={poem.poemType}
+          sharePath={poemUrl(slug as string)}
         />
       </div>
       <AdjacentPoems

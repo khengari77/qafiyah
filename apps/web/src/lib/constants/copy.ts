@@ -47,6 +47,18 @@ export const POEM_TOOLBAR_TEXTS = {
   hideTashkeel: 'إخفاء التشكيل',
 } as const;
 
+export const SHARE_BAR_TEXTS = {
+  label: 'مشاركة',
+  x: 'مشاركة على إكس',
+  facebook: 'مشاركة على فيسبوك',
+  whatsapp: 'مشاركة على واتساب',
+  telegram: 'مشاركة على تيليجرام',
+  reddit: 'مشاركة على ريديت',
+  linkedin: 'مشاركة على لينكدإن',
+  copyLink: 'نسخ الرابط',
+  copied: 'تم نسخ الرابط',
+} as const;
+
 export const NOT_FOUND_MESSAGE_AR = 'الصفحة غير موجودة';
 export const SERVER_ERROR_MESSAGE_AR = 'حدث خطأ في الخادم';
 

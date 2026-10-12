@@ -28,6 +28,21 @@ export function raaqimUrl(): string {
   return `${API_URL}${API_V1_PREFIX}/go/raaqim`;
 }
 
+export const SHARE_NETWORK_VALUES = [
+  'x',
+  'facebook',
+  'whatsapp',
+  'telegram',
+  'reddit',
+  'linkedin',
+] as const;
+
+export type ShareNetwork = (typeof SHARE_NETWORK_VALUES)[number];
+
+export function shareUrl(network: ShareNetwork, path: string): string {
+  return `${API_URL}${API_V1_PREFIX}/go/${network}-share?path=${encodeURIComponent(path)}`;
+}
+
 export function isCanonical(url: URL, canonical: string): boolean {
   return `${url.pathname}${url.search}` === canonical;
 }
