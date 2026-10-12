@@ -59,6 +59,18 @@ export const SHARE_BAR_TEXTS = {
   copied: 'تم نسخ الرابط',
 } as const;
 
+export const SHARE_BUTTON_TEXTS = {
+  label: 'مشاركة القصيدة',
+  open: 'فتح نافذة المشاركة',
+  verses: 'الأبيات',
+  addVerse: 'إضافة بيت',
+  removeVerse: 'حذف بيت',
+  copyText: 'نسخ النص',
+  copiedText: 'تم نسخ النص',
+  copyLink: 'نسخ الرابط',
+  copiedLink: 'تم نسخ الرابط',
+} as const;
+
 export const NOT_FOUND_MESSAGE_AR = 'الصفحة غير موجودة';
 export const SERVER_ERROR_MESSAGE_AR = 'حدث خطأ في الخادم';
 

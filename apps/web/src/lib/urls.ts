@@ -43,6 +43,31 @@ export function shareUrl(network: ShareNetwork, path: string): string {
   return `${API_URL}${API_V1_PREFIX}/go/${network}-share?path=${encodeURIComponent(path)}`;
 }
 
+export type SharePayload = {
+  readonly body: string;
+  readonly title: string;
+  readonly url: string;
+};
+
+export function shareIntent(network: ShareNetwork, payload: SharePayload): string {
+  const { body, title, url } = payload;
+  const text = `${body}\n\n${url}`;
+  switch (network) {
+    case 'x':
+      return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
+    case 'whatsapp':
+      return `https://wa.me/?text=${encodeURIComponent(text)}`;
+    case 'telegram':
+      return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(body)}`;
+    case 'reddit':
+      return `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+    case 'facebook':
+      return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+    case 'linkedin':
+      return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+  }
+}
+
 export function isCanonical(url: URL, canonical: string): boolean {
   return `${url.pathname}${url.search}` === canonical;
 }

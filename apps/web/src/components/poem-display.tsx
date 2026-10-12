@@ -3,6 +3,7 @@
 import { Fragment, type CSSProperties, type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { PoemToolbar } from '@/components/poem-toolbar';
+import { ShareButton } from '@/components/share-bar';
 import { formatArabicCount, stripTashkeel } from '@/lib/arabic';
 import {
   CLASSICAL_LAYOUT_POEM_TYPES,
@@ -84,6 +85,7 @@ export function PoemDisplay({
   verses,
   verseCount,
   poemType,
+  sharePath,
 }: PoemDisplayProps) {
   const isClassical = CLASSICAL_LAYOUT_POEM_TYPES.has(poemType.slug);
   const lineByLine =
@@ -137,7 +139,15 @@ export function PoemDisplay({
           onFontScaleChange={setFontScale}
           onSpacingScaleChange={setSpacingScale}
           onToggleTashkeel={() => setShowTashkeel((shown) => !shown)}
-        />
+        >
+          <ShareButton
+            title={title}
+            poetName={poet.name}
+            eraName={era.name}
+            verses={verses}
+            path={sharePath}
+          />
+        </PoemToolbar>
       </header>
 
       <div className="relative flex w-full flex-col items-center justify-between">
