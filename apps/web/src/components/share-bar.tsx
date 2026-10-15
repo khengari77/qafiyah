@@ -1,12 +1,17 @@
 'use client';
 
 import { Check, Copy, Link2, Minus, Plus, Share2, X } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 
+import { PoemSelectionShare } from '@/components/poem-selection-share';
 import { IconButton } from '@/components/ui/icon-button';
 import { captureEvent } from '@/lib/analytics/capture-event';
 import { toArabicDigits } from '@/lib/arabic';
-import { SHARE_BAR_TEXTS, SHARE_BUTTON_TEXTS } from '@/lib/constants/copy';
+import {
+  POEM_SELECTION_SHARE_TEXTS,
+  SHARE_BAR_TEXTS,
+  SHARE_BUTTON_TEXTS,
+} from '@/lib/constants/copy';
 import { shareIntent, shareUrl, type ShareNetwork } from '@/lib/urls';
 import { cn } from '@/lib/utils';
 import { PROD_SITE_URL } from '@qafiyah/config';
@@ -161,32 +166,79 @@ type ShareButtonProps = {
   readonly poetName: string;
   readonly eraName: string;
   readonly verses: readonly (readonly string[])[];
+  readonly poemRef: RefObject<HTMLElement | null>;
+  readonly signature: string;
   readonly path: string;
 };
 
-export function ShareButton({ title, poetName, eraName, verses, path }: ShareButtonProps) {
+export function ShareButton({
+  title,
+  poetName,
+  eraName,
+  verses,
+  path,
+  poemRef,
+  signature,
+}: ShareButtonProps) {
   const [verseCount, setVerseCount] = useState(0);
+  const [selectedText, setSelectedText] = useState<string | null>(null);
+  const [hasShareFailed, setHasShareFailed] = useState(false);
+  const isSharingRef = useRef(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   const header = `${title}\n${poetName} (${eraName})`;
   const verseBlocks = verses.slice(0, verseCount).map((entry) => entry.join('\n'));
   const body = verseBlocks.length > 0 ? `${header}\n\n${verseBlocks.join('\n\n')}` : header;
   const url = `${PROD_SITE_URL}${path}`;
-  const fullText = `${body}\n\n${url}`;
+  const fullText = selectedText ?? `${body}\n\n${url}`;
+  const handleSelectionShare = async (text: string) => {
+    if (isSharingRef.current) return;
+    setSelectedText(text);
+    setHasShareFailed(false);
+    if (typeof navigator.share === 'function') {
+      isSharingRef.current = true;
+      try {
+        if (typeof navigator.canShare !== 'function' || navigator.canShare({ text })) {
+          await navigator.share({ text });
+          return;
+        }
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') return;
+        setHasShareFailed(true);
+      } finally {
+        isSharingRef.current = false;
+      }
+    }
+    dialogRef.current?.showModal();
+  };
 
   return (
     <>
       <IconButton
-        onClick={() => dialogRef.current?.showModal()}
+        onClick={() => {
+          setSelectedText(null);
+          setHasShareFailed(false);
+          dialogRef.current?.showModal();
+        }}
         aria-haspopup="dialog"
         aria-label={SHARE_BUTTON_TEXTS.open}
         className={DIMMED}
       >
         <Share2 className={ICON} strokeWidth={ICON_STROKE} />
       </IconButton>
+      <PoemSelectionShare
+        poemRef={poemRef}
+        signature={signature}
+        dialogRef={dialogRef}
+        onShare={(text) => {
+          void handleSelectionShare(text);
+        }}
+      />
       <dialog
         ref={dialogRef}
-        aria-label={SHARE_BUTTON_TEXTS.label}
+        aria-label={
+          selectedText === null ? SHARE_BUTTON_TEXTS.label : POEM_SELECTION_SHARE_TEXTS.title
+        }
         className="m-auto max-h-[calc(100dvh-2rem)] w-[min(26rem,calc(100vw-2rem))] overflow-y-auto rounded-md border border-border bg-surface-raised p-4 text-text backdrop:bg-black/20"
       >
         <form method="dialog" className="mb-2 flex justify-end">
@@ -200,34 +252,46 @@ export function ShareButton({ title, poetName, eraName, verses, path }: ShareBut
         >
           {fullText}
         </div>
-        <div className="mt-3 flex items-center justify-between">
-          <span className="text-xs text-text-muted">
-            {SHARE_BUTTON_TEXTS.verses} {toArabicDigits(verseCount)}
-          </span>
-          <div className="flex items-center gap-1">
-            <IconButton
-              aria-disabled={verseCount <= 0}
-              aria-label={SHARE_BUTTON_TEXTS.removeVerse}
-              onClick={() => setVerseCount((current) => Math.max(0, current - 1))}
-              className={STEP_BUTTON}
-            >
-              <Minus className="size-4" strokeWidth={ICON_STROKE} />
-            </IconButton>
-            <IconButton
-              aria-disabled={verseCount >= verses.length}
-              aria-label={SHARE_BUTTON_TEXTS.addVerse}
-              onClick={() => setVerseCount((current) => Math.min(verses.length, current + 1))}
-              className={STEP_BUTTON}
-            >
-              <Plus className="size-4" strokeWidth={ICON_STROKE} />
-            </IconButton>
+        {hasShareFailed && (
+          <p role="alert" className="mt-3 text-sm">
+            {POEM_SELECTION_SHARE_TEXTS.shareFailed}
+          </p>
+        )}
+        {selectedText === null && (
+          <div className="mt-3 flex items-center justify-between">
+            <span className="text-xs text-text-muted">
+              {SHARE_BUTTON_TEXTS.verses} {toArabicDigits(verseCount)}
+            </span>
+            <div className="flex items-center gap-1">
+              <IconButton
+                aria-disabled={verseCount <= 0}
+                aria-label={SHARE_BUTTON_TEXTS.removeVerse}
+                onClick={() => setVerseCount((current) => Math.max(0, current - 1))}
+                className={STEP_BUTTON}
+              >
+                <Minus className="size-4" strokeWidth={ICON_STROKE} />
+              </IconButton>
+              <IconButton
+                aria-disabled={verseCount >= verses.length}
+                aria-label={SHARE_BUTTON_TEXTS.addVerse}
+                onClick={() => setVerseCount((current) => Math.min(verses.length, current + 1))}
+                className={STEP_BUTTON}
+              >
+                <Plus className="size-4" strokeWidth={ICON_STROKE} />
+              </IconButton>
+            </div>
           </div>
-        </div>
+        )}
         <div className="mt-3 flex flex-wrap items-center justify-center gap-1">
           {SHARE_LINKS.map((link) => (
             <a
               key={link.network}
-              href={shareIntent(link.network, { body, title, url })}
+              href={shareIntent(link.network, {
+                body: selectedText ?? body,
+                title,
+                url,
+                text: fullText,
+              })}
               target="_blank"
               rel="noopener noreferrer"
               aria-label={link.label}
@@ -241,6 +305,7 @@ export function ShareButton({ title, poetName, eraName, verses, path }: ShareBut
         </div>
         <div className="mt-3 flex items-center justify-center gap-2">
           <CopyButton
+            key={fullText}
             text={fullText}
             label={SHARE_BUTTON_TEXTS.copyText}
             copiedLabel={SHARE_BUTTON_TEXTS.copiedText}

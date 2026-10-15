@@ -1,6 +1,14 @@
 'use client';
 
-import { Fragment, type CSSProperties, type ReactNode, useEffect, useMemo, useState } from 'react';
+import {
+  Fragment,
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { getPoemCopyText } from '@/components/poem-copy';
 import { PoemToolbar } from '@/components/poem-toolbar';
@@ -92,14 +100,12 @@ export function PoemDisplay({
   poemType,
   sharePath,
 }: PoemDisplayProps) {
+  const poemRef = useRef<HTMLElement>(null);
+  const signature = formatPoemCopySignature(poet.name, canonicalUrl);
   const handleCopy = (event: ClipboardEvent<HTMLElement>) => {
     if (event.defaultPrevented) return;
     const container = event.currentTarget;
-    const text = getPoemCopyText(
-      container.ownerDocument.getSelection(),
-      container,
-      formatPoemCopySignature(poet.name, canonicalUrl)
-    );
+    const text = getPoemCopyText(container.ownerDocument.getSelection(), container, signature);
     if (text === null) return;
     event.clipboardData.setData('text/plain', text);
     event.preventDefault();
@@ -163,12 +169,18 @@ export function PoemDisplay({
             eraName={era.name}
             verses={verses}
             path={sharePath}
+            poemRef={poemRef}
+            signature={signature}
           />
         </PoemToolbar>
       </header>
 
       <div className="relative flex w-full flex-col items-center justify-between">
-        <article className="flex w-full flex-col items-center p-6 md:p-8" onCopy={handleCopy}>
+        <article
+          ref={poemRef}
+          className="flex w-full flex-col items-center p-6 md:p-8"
+          onCopy={handleCopy}
+        >
           <div
             className={cn(
               'flex w-full flex-col text-verse font-normal',

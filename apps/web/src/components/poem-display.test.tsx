@@ -22,7 +22,10 @@ function render(verses: Props['verses'], poemTypeSlug = 'amudi') {
   const html = renderToStaticMarkup(
     <PoemDisplay {...facets} poemType={poemType} verses={verses} />
   );
-  const article = html.slice(html.indexOf('<article'));
+  const article = html.slice(
+    html.indexOf('<article'),
+    html.indexOf('</article>') + '</article>'.length
+  );
   const column = /<div class="([^"]*text-verse[^"]*)"/.exec(article)?.[1] ?? '';
   const entries: Line[][] = [
     ...article.matchAll(/<div class="[^"]*text-center[^"]*"[^>]*>(.*?)<\/div>/g),

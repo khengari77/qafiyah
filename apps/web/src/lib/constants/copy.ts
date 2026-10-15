@@ -86,3 +86,9 @@ export const SERVER_ERROR_TITLE = `${SERVER_ERROR_CODE} | ${SERVER_ERROR_MESSAGE
 export function formatPoemCopySignature(poetName: string, canonicalUrl: string): string {
   return `${poetName} | ${SITE_NAME_AR}: ${canonicalUrl}`;
 }
+
+export const POEM_SELECTION_SHARE_TEXTS = {
+  share: 'مشاركة المحدد',
+  title: 'مشاركة الأبيات المحددة',
+  shareFailed: 'تعذرت المشاركة. اختر وسيلة أخرى أو انسخ الأبيات.',
+} as const;

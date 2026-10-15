@@ -189,3 +189,21 @@ describe('shareIntent', () => {
     expect(Object.fromEntries(intent.searchParams)).toEqual(parameters);
   });
 });
+
+describe('sharing selected verses', () => {
+  it.each(['x', 'whatsapp'] as const)(
+    'preserves the signature without appending another URL on %s',
+    (network) => {
+      const text = 'صدر البيت\nعجز البيت\n\nالمتنبي | قافية: https://qafiyah.com/poems/TnKK';
+      const intent = new URL(
+        shareIntent(network, {
+          body: text,
+          title: 'عنوان القصيدة',
+          url: 'https://qafiyah.com/poems/TnKK',
+          text,
+        })
+      );
+      expect(intent.searchParams.get('text')).toBe(text);
+    }
+  );
+});

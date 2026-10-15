@@ -645,6 +645,14 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 - **Normal approach:** copy the selected text without additions, and offer a separate control to copy an attributed quotation.
 - **Date:** 2026-10-15
 
+### Poem selections expose their own sharing action
+
+- **What:** selecting a complete poem line shows a bottom share button on phones and a button near the selection on desktops.
+- **Where:** `components/poem-selection-share.tsx`, `components/poem-copy.ts`
+- **Why:** readers need the same verse formatting and attribution when sharing selections. The browser's selection-menu Share action has no standard interception hook.
+- **Normal approach:** expose sharing only through the reading toolbar. This action uses native sharing when available. Its fallback reuses the toolbar sharing dialog.
+- **Date:** 2026-10-15
+
 ### Two API clients, and no key ever reaches the browser
 
 - **What:** `apiServer` calls the internal API URL with `INTERNAL_API_KEY`, for server-side rendering. `apiBrowser` has no key, and calls `/api/v1` on the page's own origin. That is a proxy:
