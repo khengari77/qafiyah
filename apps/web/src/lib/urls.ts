@@ -1,6 +1,15 @@
 import { API_URL } from '@/lib/constants/config';
 import { canonicalPoetFilters } from '@/lib/poet-filters';
-import { API_V1_PREFIX, CDN_URL } from '@qafiyah/config';
+import {
+  API_V1_PREFIX,
+  CDN_URL,
+  FACEBOOK_SHARE_URL,
+  LINKEDIN_SHARE_URL,
+  REDDIT_SHARE_URL,
+  TELEGRAM_SHARE_URL,
+  WHATSAPP_SHARE_URL,
+  X_INTENT_TWEET_URL,
+} from '@qafiyah/config';
 
 export type TaxonomySection = 'meters' | 'rhymes' | 'themes' | 'collections';
 
@@ -54,17 +63,17 @@ export function shareIntent(network: ShareNetwork, payload: SharePayload): strin
   const text = `${body}\n\n${url}`;
   switch (network) {
     case 'x':
-      return `https://x.com/intent/tweet?text=${encodeURIComponent(text)}`;
+      return `${X_INTENT_TWEET_URL}?text=${encodeURIComponent(text)}`;
     case 'whatsapp':
-      return `https://wa.me/?text=${encodeURIComponent(text)}`;
+      return `${WHATSAPP_SHARE_URL}?text=${encodeURIComponent(text)}`;
     case 'telegram':
-      return `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(body)}`;
+      return `${TELEGRAM_SHARE_URL}?url=${encodeURIComponent(url)}&text=${encodeURIComponent(body)}`;
     case 'reddit':
-      return `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
+      return `${REDDIT_SHARE_URL}?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
     case 'facebook':
-      return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+      return `${FACEBOOK_SHARE_URL}?u=${encodeURIComponent(url)}`;
     case 'linkedin':
-      return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`;
+      return `${LINKEDIN_SHARE_URL}?url=${encodeURIComponent(url)}`;
   }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Copy, Link2, Minus, Plus, Share2 } from 'lucide-react';
+import { Check, Copy, Link2, Minus, Plus, Share2, X } from 'lucide-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 
 import { IconButton } from '@/components/ui/icon-button';
@@ -93,25 +93,36 @@ function CopyButton({
   readonly copiedLabel: string;
   readonly icon: ReactNode;
 }) {
-  const [isCopied, setIsCopied] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
+  useEffect(() => {
+    if (status !== 'copied') return;
+    const timeout = window.setTimeout(() => setStatus('idle'), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [status]);
+  const statusText = { idle: '', copied: copiedLabel, failed: SHARE_BAR_TEXTS.copyFailed }[status];
   const handleCopy = async () => {
+    setStatus('idle');
     try {
       await navigator.clipboard.writeText(text);
-      setIsCopied(true);
-      window.setTimeout(() => setIsCopied(false), 2000);
+      setStatus('copied');
     } catch {
-      setIsCopied(false);
+      setStatus('failed');
     }
   };
   return (
-    <IconButton
-      onClick={() => {
-        void handleCopy();
-      }}
-      aria-label={isCopied ? copiedLabel : label}
-    >
-      {isCopied ? <Check className={ICON} strokeWidth={ICON_STROKE} /> : icon}
-    </IconButton>
+    <div className="flex flex-col items-center">
+      <IconButton
+        onClick={() => {
+          void handleCopy();
+        }}
+        aria-label={status === 'copied' ? copiedLabel : label}
+      >
+        {status === 'copied' ? <Check className={ICON} strokeWidth={ICON_STROKE} /> : icon}
+      </IconButton>
+      <span role="status" className={status === 'failed' ? 'text-xs text-text' : 'sr-only'}>
+        {statusText}
+      </span>
+    </div>
   );
 }
 
@@ -154,9 +165,8 @@ type ShareButtonProps = {
 };
 
 export function ShareButton({ title, poetName, eraName, verses, path }: ShareButtonProps) {
-  const [open, setOpen] = useState(false);
   const [verseCount, setVerseCount] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
   const header = `${title}\n${poetName} (${eraName})`;
   const verseBlocks = verses.slice(0, verseCount).map((entry) => entry.join('\n'));
@@ -164,112 +174,86 @@ export function ShareButton({ title, poetName, eraName, verses, path }: ShareBut
   const url = `${PROD_SITE_URL}${path}`;
   const fullText = `${body}\n\n${url}`;
 
-  useEffect(() => {
-    if (!open) return;
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !(event.target instanceof Node && containerRef.current.contains(event.target))
-      ) {
-        setOpen(false);
-      }
-    };
-    const handleKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open]);
-
   return (
-    <div ref={containerRef} className="relative">
+    <>
       <IconButton
-        onClick={() => setOpen((current) => !current)}
-        aria-expanded={open}
+        onClick={() => dialogRef.current?.showModal()}
         aria-haspopup="dialog"
         aria-label={SHARE_BUTTON_TEXTS.open}
         className={DIMMED}
       >
         <Share2 className={ICON} strokeWidth={ICON_STROKE} />
       </IconButton>
-      {open && (
-        <>
-          <div
-            aria-hidden="true"
-            className="fixed inset-0 z-40 bg-black/20 md:hidden"
-            onClick={() => setOpen(false)}
-          />
-          <div
-            role="dialog"
-            aria-label={SHARE_BUTTON_TEXTS.label}
-            className="fixed top-1/2 left-1/2 z-50 w-[min(26rem,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-md border border-border bg-surface-raised p-4 md:absolute md:top-full md:mt-3 md:translate-y-0"
-          >
-            <div
-              dir="rtl"
-              className="max-h-72 overflow-auto rounded-sm bg-surface-sunken p-3 text-base leading-8 whitespace-pre-wrap text-text"
+      <dialog
+        ref={dialogRef}
+        aria-label={SHARE_BUTTON_TEXTS.label}
+        className="m-auto max-h-[calc(100dvh-2rem)] w-[min(26rem,calc(100vw-2rem))] overflow-y-auto rounded-md border border-border bg-surface-raised p-4 text-text backdrop:bg-black/20"
+      >
+        <form method="dialog" className="mb-2 flex justify-end">
+          <IconButton type="submit" aria-label={SHARE_BUTTON_TEXTS.close}>
+            <X className={ICON} strokeWidth={ICON_STROKE} />
+          </IconButton>
+        </form>
+        <div
+          dir="rtl"
+          className="max-h-72 overflow-auto rounded-sm bg-surface-sunken p-3 text-base leading-8 whitespace-pre-wrap text-text select-text"
+        >
+          {fullText}
+        </div>
+        <div className="mt-3 flex items-center justify-between">
+          <span className="text-xs text-text-muted">
+            {SHARE_BUTTON_TEXTS.verses} {toArabicDigits(verseCount)}
+          </span>
+          <div className="flex items-center gap-1">
+            <IconButton
+              aria-disabled={verseCount <= 0}
+              aria-label={SHARE_BUTTON_TEXTS.removeVerse}
+              onClick={() => setVerseCount((current) => Math.max(0, current - 1))}
+              className={STEP_BUTTON}
             >
-              {fullText}
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              <span className="text-xs text-text-muted">
-                {SHARE_BUTTON_TEXTS.verses} {toArabicDigits(verseCount)}
-              </span>
-              <div className="flex items-center gap-1">
-                <IconButton
-                  aria-disabled={verseCount <= 0}
-                  aria-label={SHARE_BUTTON_TEXTS.removeVerse}
-                  onClick={() => setVerseCount((current) => Math.max(0, current - 1))}
-                  className={STEP_BUTTON}
-                >
-                  <Minus className="size-4" strokeWidth={ICON_STROKE} />
-                </IconButton>
-                <IconButton
-                  aria-disabled={verseCount >= verses.length}
-                  aria-label={SHARE_BUTTON_TEXTS.addVerse}
-                  onClick={() => setVerseCount((current) => Math.min(verses.length, current + 1))}
-                  className={STEP_BUTTON}
-                >
-                  <Plus className="size-4" strokeWidth={ICON_STROKE} />
-                </IconButton>
-              </div>
-            </div>
-            <div className="mt-3 flex flex-wrap items-center justify-center gap-1">
-              {SHARE_LINKS.map((link) => (
-                <a
-                  key={link.network}
-                  href={shareIntent(link.network, { body, title, url })}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={link.label}
-                  title={link.label}
-                  className={LINK_CLASS}
-                  onClick={() => captureEvent('shared', { network: link.network })}
-                >
-                  <ShareIcon iconPath={link.iconPath} />
-                </a>
-              ))}
-            </div>
-            <div className="mt-3 flex items-center justify-center gap-2">
-              <CopyButton
-                text={fullText}
-                label={SHARE_BUTTON_TEXTS.copyText}
-                copiedLabel={SHARE_BUTTON_TEXTS.copiedText}
-                icon={<Copy className={ICON} strokeWidth={ICON_STROKE} />}
-              />
-              <CopyButton
-                text={url}
-                label={SHARE_BUTTON_TEXTS.copyLink}
-                copiedLabel={SHARE_BUTTON_TEXTS.copiedLink}
-                icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}
-              />
-            </div>
+              <Minus className="size-4" strokeWidth={ICON_STROKE} />
+            </IconButton>
+            <IconButton
+              aria-disabled={verseCount >= verses.length}
+              aria-label={SHARE_BUTTON_TEXTS.addVerse}
+              onClick={() => setVerseCount((current) => Math.min(verses.length, current + 1))}
+              className={STEP_BUTTON}
+            >
+              <Plus className="size-4" strokeWidth={ICON_STROKE} />
+            </IconButton>
           </div>
-        </>
-      )}
-    </div>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-1">
+          {SHARE_LINKS.map((link) => (
+            <a
+              key={link.network}
+              href={shareIntent(link.network, { body, title, url })}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={link.label}
+              title={link.label}
+              className={LINK_CLASS}
+              onClick={() => captureEvent('shared', { network: link.network })}
+            >
+              <ShareIcon iconPath={link.iconPath} />
+            </a>
+          ))}
+        </div>
+        <div className="mt-3 flex items-center justify-center gap-2">
+          <CopyButton
+            text={fullText}
+            label={SHARE_BUTTON_TEXTS.copyText}
+            copiedLabel={SHARE_BUTTON_TEXTS.copiedText}
+            icon={<Copy className={ICON} strokeWidth={ICON_STROKE} />}
+          />
+          <CopyButton
+            text={url}
+            label={SHARE_BUTTON_TEXTS.copyLink}
+            copiedLabel={SHARE_BUTTON_TEXTS.copiedLink}
+            icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}
+          />
+        </div>
+      </dialog>
+    </>
   );
 }

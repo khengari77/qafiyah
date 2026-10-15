@@ -57,11 +57,13 @@ export const SHARE_BAR_TEXTS = {
   linkedin: 'مشاركة على لينكدإن',
   copyLink: 'نسخ الرابط',
   copied: 'تم نسخ الرابط',
+  copyFailed: 'تعذر النسخ. حاول مرة أخرى أو انسخ النص يدويًا.',
 } as const;
 
 export const SHARE_BUTTON_TEXTS = {
   label: 'مشاركة القصيدة',
   open: 'فتح نافذة المشاركة',
+  close: 'إغلاق نافذة المشاركة',
   verses: 'الأبيات',
   addVerse: 'إضافة بيت',
   removeVerse: 'حذف بيت',
