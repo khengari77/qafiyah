@@ -647,7 +647,7 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 
 ### Poem selections expose their own sharing action
 
-- **What:** selecting a complete poem line shows a bottom share button on phones and a button near the selection on desktops.
+- **What:** selecting a complete poem line shows a horizontally centered share button below the final selected line.
 - **Where:** `components/poem-selection-share.tsx`, `components/poem-copy.ts`
 - **Why:** readers need the same verse formatting and attribution when sharing selections. The browser's selection-menu Share action has no standard interception hook.
 - **Normal approach:** expose sharing only through the reading toolbar. This action uses native sharing when available. Its fallback reuses the toolbar sharing dialog.
