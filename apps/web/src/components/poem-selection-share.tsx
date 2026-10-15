@@ -16,6 +16,7 @@ type PoemSelectionShareProps = {
   readonly signature: string;
   readonly dialogRef: RefObject<HTMLDialogElement | null>;
   readonly onShare: (text: string) => void;
+  readonly onSelectionClear: () => void;
 };
 
 export function PoemSelectionShare({
@@ -23,12 +24,12 @@ export function PoemSelectionShare({
   signature,
   dialogRef,
   onShare,
+  onSelectionClear,
 }: PoemSelectionShareProps) {
   const [selection, setSelection] = useState<SelectedPoem | null>(null);
 
   useEffect(() => {
     const updateSelection = () => {
-      if (dialogRef.current?.open === true) return;
       const container = poemRef.current;
       const currentSelection = document.getSelection();
       if (container === null || currentSelection === null) {
@@ -38,8 +39,10 @@ export function PoemSelectionShare({
       const text = getPoemCopyText(currentSelection, container, signature);
       if (text === null) {
         setSelection(null);
+        onSelectionClear();
         return;
       }
+      if (dialogRef.current?.open === true) return;
       const bounds = currentSelection.getRangeAt(0).getBoundingClientRect();
       if (
         bounds.bottom <= 0 ||
@@ -64,15 +67,18 @@ export function PoemSelectionShare({
           : { text, top, left }
       );
     };
+    const dialog = dialogRef.current;
+    dialog?.addEventListener('close', updateSelection);
     document.addEventListener('selectionchange', updateSelection);
     document.addEventListener('scroll', updateSelection, true);
     window.addEventListener('resize', updateSelection);
     return () => {
+      dialog?.removeEventListener('close', updateSelection);
       document.removeEventListener('selectionchange', updateSelection);
       document.removeEventListener('scroll', updateSelection, true);
       window.removeEventListener('resize', updateSelection);
     };
-  }, [poemRef, signature, dialogRef]);
+  }, [poemRef, signature, dialogRef, onSelectionClear]);
 
   const positionStyle: CSSProperties & Record<'--selection-top' | '--selection-left', string> = {
     '--selection-top': `${selection?.top ?? 0}px`,

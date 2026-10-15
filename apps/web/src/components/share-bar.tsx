@@ -230,12 +230,24 @@ export function ShareButton({
         poemRef={poemRef}
         signature={signature}
         dialogRef={dialogRef}
+        onSelectionClear={() => {
+          if (selectedText !== null) dialogRef.current?.close();
+        }}
         onShare={(text) => {
           void handleSelectionShare(text);
         }}
       />
       <dialog
         ref={dialogRef}
+        onPointerDown={(event) => {
+          if (
+            selectedText !== null &&
+            event.target instanceof Element &&
+            event.target.closest('button, a') !== null
+          ) {
+            event.preventDefault();
+          }
+        }}
         aria-label={
           selectedText === null ? SHARE_BUTTON_TEXTS.label : POEM_SELECTION_SHARE_TEXTS.title
         }
