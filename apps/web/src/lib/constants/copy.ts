@@ -1,4 +1,5 @@
 import { toArabicDigits } from '@/lib/arabic';
+import { SITE_NAME_AR } from '@/lib/constants/site-meta';
 
 export const ERROR_TEXTS = {
   unexpected: 'عذرًا، وقع خلل غير متوقّع.',
@@ -81,3 +82,7 @@ export const NOT_FOUND_TITLE = `${NOT_FOUND_CODE} | ${NOT_FOUND_MESSAGE_AR}`;
 
 export const SERVER_ERROR_CODE = toArabicDigits(500);
 export const SERVER_ERROR_TITLE = `${SERVER_ERROR_CODE} | ${SERVER_ERROR_MESSAGE_AR}`;
+
+export function formatPoemCopySignature(poetName: string, canonicalUrl: string): string {
+  return `${poetName} | ${SITE_NAME_AR}: ${canonicalUrl}`;
+}
