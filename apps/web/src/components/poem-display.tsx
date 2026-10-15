@@ -2,8 +2,10 @@
 
 import { Fragment, type CSSProperties, type ReactNode, useEffect, useMemo, useState } from 'react';
 
+import { getPoemCopyText } from '@/components/poem-copy';
 import { PoemToolbar } from '@/components/poem-toolbar';
 import { formatArabicCount, stripTashkeel } from '@/lib/arabic';
+import { formatPoemCopySignature } from '@/lib/constants/copy';
 import {
   CLASSICAL_LAYOUT_POEM_TYPES,
   FREE_VERSE_POEM_TYPE,
@@ -15,6 +17,7 @@ import { poetsUrl, poetUrl } from '@/lib/urls';
 import { cn } from '@/lib/utils';
 
 import type { Poem } from '@/lib/api/result-types';
+import type { ClipboardEvent } from 'react';
 
 const VERSE_GAP = 'gap-[calc(2.5rem*var(--poem-spacing))] sm:gap-[calc(3rem*var(--poem-spacing))]';
 const HEMISTICH_GAP =
@@ -64,6 +67,7 @@ function highlightVerse(text: string, regex: RegExp): ReactNode {
 }
 
 type PoemDisplayProps = {
+  readonly canonicalUrl: string;
   readonly title: string;
   readonly poet: Poem['poet'];
   readonly era: Poem['era'];
@@ -75,6 +79,7 @@ type PoemDisplayProps = {
 };
 
 export function PoemDisplay({
+  canonicalUrl,
   title,
   poet,
   era,
@@ -84,6 +89,18 @@ export function PoemDisplay({
   verseCount,
   poemType,
 }: PoemDisplayProps) {
+  const handleCopy = (event: ClipboardEvent<HTMLElement>) => {
+    if (event.defaultPrevented) return;
+    const container = event.currentTarget;
+    const text = getPoemCopyText(
+      container.ownerDocument.getSelection(),
+      container,
+      formatPoemCopySignature(poet.name, canonicalUrl)
+    );
+    if (text === null) return;
+    event.clipboardData.setData('text/plain', text);
+    event.preventDefault();
+  };
   const isClassical = CLASSICAL_LAYOUT_POEM_TYPES.has(poemType.slug);
   const lineByLine =
     poemType.slug === FREE_VERSE_POEM_TYPE || verses.every((entry) => entry.length === 1);
@@ -140,7 +157,7 @@ export function PoemDisplay({
       </header>
 
       <div className="relative flex w-full flex-col items-center justify-between">
-        <article className="flex w-full flex-col items-center p-6 md:p-8">
+        <article className="flex w-full flex-col items-center p-6 md:p-8" onCopy={handleCopy}>
           <div
             className={cn(
               'flex w-full flex-col text-verse font-normal',
@@ -160,6 +177,7 @@ export function PoemDisplay({
                     HEMISTICH_GAP,
                     isClassical && 'items-stretch'
                   )}
+                  data-verse=""
                 >
                   {entry.map((part, partIndex) => {
                     const text = showTashkeel ? part : stripTashkeel(part);

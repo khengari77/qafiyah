@@ -6,6 +6,7 @@ import { PoemDisplay } from './poem-display';
 type Props = Parameters<typeof PoemDisplay>[0];
 
 const facets = {
+  canonicalUrl: 'https://qafiyah.com/poems/TnKK',
   title: 'عنوان',
   poet: { name: 'شاعر', slug: 'Abcd', hasAvatar: false },
   era: { name: 'العباسي', slug: 'abbasi' },
@@ -24,7 +25,7 @@ function render(verses: Props['verses'], poemTypeSlug = 'amudi') {
   const article = html.slice(html.indexOf('<article'));
   const column = /<div class="([^"]*text-verse[^"]*)"/.exec(article)?.[1] ?? '';
   const entries: Line[][] = [
-    ...article.matchAll(/<div class="[^"]*text-center[^"]*">(.*?)<\/div>/g),
+    ...article.matchAll(/<div class="[^"]*text-center[^"]*"[^>]*>(.*?)<\/div>/g),
   ].map((entry) =>
     [...(entry[1] ?? '').matchAll(/<p([^>]*)>(.*?)<\/p>/g)].map((line) => ({
       attributes: line[1] ?? '',
