@@ -821,11 +821,27 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 
 ### The `/feelings` tree has its own SVG layout
 
-- **What:** `layoutUpright` places each feeling with its own constants, and estimates each label's width from its character count. The server renders the tree, and each label is an SVG `<text>` inside an SVG `<a>` to the feeling's page. The page draws a wide tree and a narrow tree, and a CSS container query shows one of them.
+- **What:** `layoutUpright` places each feeling with its own constants, and estimates each label's width from its character count. The server renders the tree, and each label is an SVG `<text>` inside an SVG `<a>` to the feeling's page. The page draws a wide tree and a narrow tree, and a CSS container query shows one of them. Each tree sits at the top of a frame as tall as the tree, so no empty band sits above or below it.
 - **Where:** `lib/feelings/upright-layout.ts`, `components/feelings/feeling-wheel.tsx`
-- **Why:** issue #263 asks for a tree that grows up from one question, and CSS cannot draw its curved branches. The server cannot measure text, so the label widths are estimates. The tests check that no label leaves the view box at either width. Both trees are in the HTML because the server cannot know the screen width.
+- **Why:** issue #263 asks for a tree that grows up from one root, and CSS cannot draw its curved branches. The server cannot measure text, so the label widths are estimates. At both widths, the tests check that every label stays inside the frame, and that the frame ends just under the lowest label. Both trees are in the HTML because the server cannot know the screen width.
 - **Normal approach:** a row of buttons for each level, laid out by CSS.
 - **Date:** 2026-10-11
+
+### The `/feelings` pages morph in place
+
+- **What:** the feelings pages turn on Astro's `<ClientRouter />`. Between two feelings pages, an `astro:before-swap` listener swaps the head as Astro does, then morphs `#main` with idiomorph.
+  - Each tree node has a stable `id`, so the morph keeps it. Its CSS fade and the zoom `transform` then animate to the new page.
+  - Only a node that the morph adds draws or fades in: idiomorph's `afterNodeAdded` marks it `data-entering`. A full load or a reload shows the whole tree at once.
+  - A node that leaves fades out for 300 ms, then is removed.
+  - `<ClientRouter />` sets `history.scrollRestoration` to `manual` and restores the scroll position with its own script, after the first paint. So a reload of a scrolled feelings page showed the top for a moment. `pagehide` sets it back to `auto`, so the browser restores a reload before it paints, and `pageshow` sets it to `manual` again for the router.
+  - The server still renders every page. A link to any other page loads it in full. An `astro:before-preparation` listener stops the router before it fetches that page. Without it, the server renders that page twice: once for the router's fetch, and once for the full load.
+  - `prefetch: false` in `astro.config.mjs` stops `<ClientRouter />` from prefetching every link on hover. Each prefetch renders a page and calls the API.
+  - The morph does not run the new page's scripts. So a script that a feelings page needs goes on both pages, like the verse copy button's (`components/feelings/verse-copy.astro`).
+- **Where:** `components/feelings/feeling-navigation.astro`, `components/feelings/verse-copy.astro`, `lib/feelings/morph-feeling-page.ts`, `components/feelings/feeling-wheel.tsx`, the `head` slot in `layouts/layout.astro`
+- **Why:** a full page load shows the tree already at the new feeling, so the move between feelings is a jump. The morph keeps the tree on screen and animates its zoom and fades. So the reader sees where they moved. Astro's own swap replaces the whole body, and a view transition cannot animate elements inside an SVG.
+  - PostHog's `capture_pageview: 'history_change'` compares only the path, so a change of only `?page=` is not a pageview.
+- **Normal approach:** links that load each page in full, or Astro's `<ClientRouter />` with its default swap.
+- **Date:** 2026-10-15
 
 ## Search indexer (`apps/search-indexer`)
 

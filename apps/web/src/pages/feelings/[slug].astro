@@ -1,4 +1,6 @@
 ---
+import FeelingNavigation from '@/components/feelings/feeling-navigation.astro';
+import VerseCopy from '@/components/feelings/verse-copy.astro';
 import { FeelingVerseItem } from '@/components/feelings/feeling-verse-item';
 import { FeelingWheel } from '@/components/feelings/feeling-wheel';
 import { Pagination } from '@/components/pagination';
@@ -10,7 +12,7 @@ import { buildFeelingTree, pathOf, type Feeling } from '@/lib/feelings/feeling-t
 import { derivePagination, parsePageQuery } from '@/lib/pagination';
 import { CACHE_HTML } from '@/lib/server/cache';
 import { allFeelings, feelingVerses } from '@/lib/server/feelings';
-import { withBrand, withPageNumber } from '@/lib/seo/meta-text';
+import { buildFeelingSeo } from '@/lib/seo/feelings-page';
 import { feelingUrl, isCanonical } from '@/lib/urls';
 import { cn } from '@/lib/utils';
 
@@ -34,37 +36,39 @@ const feeling = chain.at(-1);
 if (!feeling) return Astro.rewrite('/404');
 const pagination = derivePagination(found.pagination, (n) => feelingUrl(slug, n));
 const count = formatArabicCount({ count: feeling.verseCount, nounForms: VERSES_NOUN_FORMS });
-const lead = `أبيات في ${feeling.name}`;
-const title = withBrand(withPageNumber(lead, page));
-const description = `${lead}: ${count} من الشعر الجاهلي إلى الأندلسي.`;
+const seo = buildFeelingSeo({
+  feeling,
+  parents: chain.slice(0, -1),
+  verses: found.verses,
+  page,
+  totalPages: found.pagination.totalPages,
+});
 Astro.response.headers.set('Cache-Control', CACHE_HTML);
 ---
 
 <Layout
-  title={title}
-  description={description}
+  title={seo.title}
+  description={seo.description}
   canonical={feelingUrl(slug, page)}
-  robotsIndex={false}
+  jsonLd={seo.jsonLd}
   prevUrl={pagination.hasPrevPage ? pagination.prevPageUrl : undefined}
   nextUrl={pagination.hasNextPage ? pagination.nextPageUrl : undefined}
 >
+  <FeelingNavigation slot="head" />
+  <VerseCopy slot="head" />
   <div class="mx-auto flex w-full max-w-4xl flex-col gap-6 py-12" dir="rtl">
     <FeelingWheel tree={tree} path={path} />
-    <section class="flex flex-col gap-3 border-t border-border pt-8">
-      {chain.length > 1 && (
-        <p class={cn(TYPE.caption, 'text-text-subtle')}>{chain.map((f) => f.name).join(' ← ')}</p>
-      )}
-      <h1 class={cn(TYPE.heading, 'text-highlight')}>{feeling.name}</h1>
-      <p class={cn(TYPE.caption, 'text-text-muted')}>{count}</p>
-      <ul class="flex flex-col">
+    <section class="flex flex-col gap-4 pt-8">
+      <div class="flex items-baseline justify-between gap-3">
+        <h1 class={cn(TYPE.caption, 'text-text-muted')}>أبيات في {feeling.name}</h1>
+        <p class={cn(TYPE.micro, 'text-text-subtle')}>{count}</p>
+      </div>
+      <ul class="grid grid-cols-1 md:grid-cols-2 md:gap-x-10">
         {found.verses.map((verse) => (
-          <FeelingVerseItem verse={verse} showFeeling={verse.feeling.slug !== slug} />
+          <FeelingVerseItem verse={verse} />
         ))}
       </ul>
       <Pagination {...pagination} />
-      <p class={cn(TYPE.caption, 'text-text-subtle')}>
-        صُنّفت هذه الأبيات آليًّا بحسب معناها، فقد يخطئ التصنيف في بعضها.
-      </p>
     </section>
   </div>
 </Layout>
