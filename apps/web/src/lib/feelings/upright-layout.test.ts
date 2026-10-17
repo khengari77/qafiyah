@@ -4,7 +4,13 @@ import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
 import { buildFeelingTree } from './feeling-tree';
-import { labelBox, layoutUpright, type Point, type UprightLayout } from './upright-layout';
+import {
+  FRAME_PAD,
+  labelBox,
+  layoutUpright,
+  type Point,
+  type UprightLayout,
+} from './upright-layout';
 
 const SEED = readFileSync(
   fileURLToPath(new URL('../../../../../scripts/db/sql/feelings.sql', import.meta.url)),
@@ -34,9 +40,9 @@ const WIDTHS = [
   { name: 'narrow', narrow: true },
 ] as const;
 
-const toView = ({ viewBox, scale, center }: UprightLayout, point: Point): Point => ({
-  x: viewBox.x + viewBox.w / 2 + scale * (point.x - center.x),
-  y: viewBox.y + viewBox.h / 2 + scale * (point.y - center.y),
+const toView = ({ viewBox, scale, anchor }: UprightLayout, point: Point): Point => ({
+  x: viewBox.x + viewBox.w / 2 + scale * (point.x - anchor.x),
+  y: viewBox.y + FRAME_PAD + scale * (point.y - anchor.y),
 });
 
 const outside = (layout: UprightLayout): readonly string[] =>
@@ -49,7 +55,7 @@ const outside = (layout: UprightLayout): readonly string[] =>
             x < layout.viewBox.x ||
             x > layout.viewBox.x + layout.viewBox.w ||
             y < layout.viewBox.y ||
-            y > layout.viewBox.y + layout.viewBox.h
+            y > layout.viewBox.y + layout.height
         )
     )
     .map((item) => item.name);
@@ -65,6 +71,20 @@ describe('layoutUpright', () => {
     );
     expect(escaped).toEqual([]);
   });
+
+  it.each(WIDTHS)(
+    'ends the $name frame just under its lowest label, with no empty band',
+    ({ narrow }) => {
+      const bands = PATHS.map((path) => {
+        const layout = layoutUpright(SEED_TREE, path, narrow);
+        const lowest = Math.max(
+          ...layout.items.flatMap((item) => labelBox(item).map((point) => toView(layout, point).y))
+        );
+        return layout.viewBox.y + layout.height - lowest;
+      });
+      expect(Math.max(...bands)).toBeLessThanOrEqual(FRAME_PAD + 1);
+    }
+  );
 
   it('places the same feelings in the wide and the narrow tree, so CSS can show either', () => {
     const differ = PATHS.filter((path) => {
