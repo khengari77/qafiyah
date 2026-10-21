@@ -216,6 +216,7 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
           void handleSelectionShare(copy);
         }}
       />
+      {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a click on the backdrop closes the dialog, because Safari lacks closedby, and Escape already closes it from the keyboard */}
       <dialog
         ref={dialogRef}
         onPointerDown={(event) => {
@@ -227,45 +228,50 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
             event.preventDefault();
           }
         }}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) event.currentTarget.close();
+        }}
         aria-labelledby={titleId}
-        className="m-auto w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border bg-surface-raised p-4 text-text shadow-xl backdrop:bg-black/50"
+        className="m-auto w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border bg-surface-raised p-0 text-text shadow-xl backdrop:bg-black/50"
       >
-        <div className="flex items-center justify-between">
-          <h2 id={titleId} className="text-sm text-text-subtle">
-            {selectedPoem === null ? SHARE_BUTTON_TEXTS.label : POEM_SELECTION_SHARE_TEXTS.title}
-          </h2>
-          <form method="dialog">
-            <IconButton type="submit" aria-label={SHARE_BUTTON_TEXTS.close} className="-me-3">
-              <X className={ICON} strokeWidth={ICON_STROKE} />
-            </IconButton>
-          </form>
-        </div>
-        {hasShareFailed && (
-          <p role="alert" className="mt-2 text-sm text-text-muted">
-            {POEM_SELECTION_SHARE_TEXTS.shareFailed}
-          </p>
-        )}
-        <div className="mt-2 flex items-start justify-between">
-          {SHARE_LINKS.map((link) => (
-            <a
-              key={link.network}
-              href={shareIntent(link.network, { body, url, text: shareText })}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={link.label}
-              title={link.label}
-              className={LINK_CLASS}
-              onClick={() => captureEvent('shared', { network: link.network })}
-            >
-              <ShareIcon iconPath={link.iconPath} />
-            </a>
-          ))}
-          <CopyButton
-            text={url}
-            label={SHARE_BUTTON_TEXTS.copyLink}
-            copiedLabel={SHARE_BUTTON_TEXTS.copiedLink}
-            icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}
-          />
+        <div className="p-4">
+          <div className="flex items-center justify-between">
+            <h2 id={titleId} className="text-sm text-text-subtle">
+              {selectedPoem === null ? SHARE_BUTTON_TEXTS.label : POEM_SELECTION_SHARE_TEXTS.title}
+            </h2>
+            <form method="dialog">
+              <IconButton type="submit" aria-label={SHARE_BUTTON_TEXTS.close} className="-me-3">
+                <X className={ICON} strokeWidth={ICON_STROKE} />
+              </IconButton>
+            </form>
+          </div>
+          {hasShareFailed && (
+            <p role="alert" className="mt-2 text-sm text-text-muted">
+              {POEM_SELECTION_SHARE_TEXTS.shareFailed}
+            </p>
+          )}
+          <div className="mt-2 flex items-start justify-between">
+            {SHARE_LINKS.map((link) => (
+              <a
+                key={link.network}
+                href={shareIntent(link.network, { body, url, text: shareText })}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={link.label}
+                title={link.label}
+                className={LINK_CLASS}
+                onClick={() => captureEvent('shared', { network: link.network })}
+              >
+                <ShareIcon iconPath={link.iconPath} />
+              </a>
+            ))}
+            <CopyButton
+              text={url}
+              label={SHARE_BUTTON_TEXTS.copyLink}
+              copiedLabel={SHARE_BUTTON_TEXTS.copiedLink}
+              icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}
+            />
+          </div>
         </div>
       </dialog>
     </>
