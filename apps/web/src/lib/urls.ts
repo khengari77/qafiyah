@@ -4,8 +4,6 @@ import {
   API_V1_PREFIX,
   CDN_URL,
   FACEBOOK_SHARE_URL,
-  LINKEDIN_SHARE_URL,
-  REDDIT_SHARE_URL,
   TELEGRAM_SHARE_URL,
   WHATSAPP_SHARE_URL,
   X_INTENT_TWEET_URL,
@@ -37,26 +35,18 @@ export function raaqimUrl(): string {
   return `${API_URL}${API_V1_PREFIX}/go/raaqim`;
 }
 
-const SHARE_NETWORK_VALUES = [
-  'x',
-  'facebook',
-  'whatsapp',
-  'telegram',
-  'reddit',
-  'linkedin',
-] as const;
+const SHARE_NETWORK_VALUES = ['x', 'whatsapp', 'facebook', 'telegram'] as const;
 
 export type ShareNetwork = (typeof SHARE_NETWORK_VALUES)[number];
 
 export type SharePayload = {
   readonly body: string;
   readonly text?: string;
-  readonly title: string;
   readonly url: string;
 };
 
 export function shareIntent(network: ShareNetwork, payload: SharePayload): string {
-  const { body, title, url } = payload;
+  const { body, url } = payload;
   const text = payload.text ?? `${body}\n\n${url}`;
   switch (network) {
     case 'x':
@@ -65,12 +55,8 @@ export function shareIntent(network: ShareNetwork, payload: SharePayload): strin
       return `${WHATSAPP_SHARE_URL}?text=${encodeURIComponent(text)}`;
     case 'telegram':
       return `${TELEGRAM_SHARE_URL}?url=${encodeURIComponent(url)}&text=${encodeURIComponent(body)}`;
-    case 'reddit':
-      return `${REDDIT_SHARE_URL}?url=${encodeURIComponent(url)}&title=${encodeURIComponent(title)}`;
     case 'facebook':
       return `${FACEBOOK_SHARE_URL}?u=${encodeURIComponent(url)}`;
-    case 'linkedin':
-      return `${LINKEDIN_SHARE_URL}?url=${encodeURIComponent(url)}`;
   }
 }
 

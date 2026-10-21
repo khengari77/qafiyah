@@ -60,8 +60,6 @@ export const SHARE_BAR_TEXTS = {
   facebook: 'مشاركة على فيسبوك',
   whatsapp: 'مشاركة على واتساب',
   telegram: 'مشاركة على تيليجرام',
-  reddit: 'مشاركة على ريديت',
-  linkedin: 'مشاركة على لينكدإن',
   copyLink: 'نسخ الرابط',
   copied: 'تم نسخ الرابط',
   copyFailed: 'تعذر النسخ. حاول مرة أخرى أو انسخ النص يدويًا.',
@@ -71,11 +69,6 @@ export const SHARE_BUTTON_TEXTS = {
   label: 'مشاركة القصيدة',
   open: 'فتح نافذة المشاركة',
   close: 'إغلاق نافذة المشاركة',
-  verses: 'الأبيات',
-  addVerse: 'إضافة بيت',
-  removeVerse: 'حذف بيت',
-  copyText: 'نسخ النص',
-  copiedText: 'تم نسخ النص',
   copyLink: 'نسخ الرابط',
   copiedLink: 'تم نسخ الرابط',
 } as const;
@@ -91,6 +84,14 @@ export const SERVER_ERROR_TITLE = `${SERVER_ERROR_CODE} | ${SERVER_ERROR_MESSAGE
 
 export function formatPoemCopySignature(poetName: string, canonicalUrl: string): string {
   return `${poetName} | ${SITE_NAME_AR}: ${canonicalUrl}`;
+}
+
+export function formatPoemShareBody(
+  verses: readonly (readonly string[])[],
+  poetName: string
+): string {
+  const firstVerse = verses[0];
+  return firstVerse === undefined ? poetName : `${firstVerse.join('\n')}\n\n${poetName}`;
 }
 
 export const POEM_SELECTION_SHARE_TEXTS = {

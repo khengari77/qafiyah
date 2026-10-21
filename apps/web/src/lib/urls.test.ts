@@ -166,7 +166,6 @@ describe('poetAvatarUrl', () => {
 describe('shareIntent', () => {
   const payload = {
     body: 'عنوان القصيدة\nبيت & آخر؟',
-    title: 'عنوان القصيدة',
     url: 'https://qafiyah.com/poems/TnKK',
   };
 
@@ -174,9 +173,7 @@ describe('shareIntent', () => {
     ['x', 'https://x.com/intent/tweet', { text: `${payload.body}\n\n${payload.url}` }],
     ['whatsapp', 'https://wa.me/', { text: `${payload.body}\n\n${payload.url}` }],
     ['telegram', 'https://t.me/share/url', { url: payload.url, text: payload.body }],
-    ['reddit', 'https://www.reddit.com/submit', { url: payload.url, title: payload.title }],
     ['facebook', 'https://www.facebook.com/sharer/sharer.php', { u: payload.url }],
-    ['linkedin', 'https://www.linkedin.com/sharing/share-offsite/', { url: payload.url }],
   ] as const)('encodes the supported content for %s', (network, endpoint, parameters) => {
     const intent = new URL(shareIntent(network, payload));
     expect(`${intent.origin}${intent.pathname}`).toBe(endpoint);
@@ -192,7 +189,6 @@ describe('sharing selected verses', () => {
       const intent = new URL(
         shareIntent(network, {
           body: text,
-          title: 'عنوان القصيدة',
           url: 'https://qafiyah.com/poems/TnKK',
           text,
         })

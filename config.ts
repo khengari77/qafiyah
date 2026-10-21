@@ -33,8 +33,6 @@ export const X_INTENT_TWEET_URL = 'https://x.com/intent/tweet';
 export const FACEBOOK_SHARE_URL = 'https://www.facebook.com/sharer/sharer.php';
 export const WHATSAPP_SHARE_URL = 'https://wa.me/';
 export const TELEGRAM_SHARE_URL = 'https://t.me/share/url';
-export const REDDIT_SHARE_URL = 'https://www.reddit.com/submit';
-export const LINKEDIN_SHARE_URL = 'https://www.linkedin.com/sharing/share-offsite/';
 
 const X_HANDLE = 'qafiyahx';
 export const X_PROFILE_URL = `https://x.com/${X_HANDLE}`;

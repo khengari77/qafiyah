@@ -167,9 +167,7 @@ export function PoemDisplay({
           onToggleTashkeel={() => setShowTashkeel((shown) => !shown)}
         >
           <ShareButton
-            title={title}
             poetName={poet.name}
-            eraName={era.name}
             verses={verses}
             path={sharePath}
             poemRef={poemRef}
