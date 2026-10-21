@@ -7,6 +7,7 @@ import { PoemSelectionShare } from '@/components/poem-selection-share';
 import { IconButton } from '@/components/ui/icon-button';
 import { captureEvent } from '@/lib/analytics/capture-event';
 import { toArabicDigits } from '@/lib/arabic';
+import { SITE_URL } from '@/lib/constants/config';
 import {
   POEM_SELECTION_SHARE_TEXTS,
   SHARE_BAR_TEXTS,
@@ -14,7 +15,6 @@ import {
 } from '@/lib/constants/copy';
 import { shareIntent, shareUrl, type ShareNetwork } from '@/lib/urls';
 import { cn } from '@/lib/utils';
-import { PROD_SITE_URL } from '@qafiyah/config';
 
 import type { PoemCopy } from '@/components/poem-copy';
 
@@ -154,7 +154,7 @@ export function ShareBar({ path, className }: ShareBarProps) {
         </a>
       ))}
       <CopyButton
-        text={`${PROD_SITE_URL}${path}`}
+        text={`${SITE_URL}${path}`}
         label={SHARE_BAR_TEXTS.copyLink}
         copiedLabel={SHARE_BAR_TEXTS.copied}
         icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}
@@ -191,7 +191,7 @@ export function ShareButton({
   const header = `${title}\n${poetName} (${eraName})`;
   const verseBlocks = verses.slice(0, verseCount).map((entry) => entry.join('\n'));
   const body = verseBlocks.length > 0 ? `${header}\n\n${verseBlocks.join('\n\n')}` : header;
-  const url = selectedPoem?.url ?? `${PROD_SITE_URL}${path}`;
+  const url = selectedPoem?.url ?? `${SITE_URL}${path}`;
   const fullText = selectedPoem?.text ?? `${body}\n\n${url}`;
   const handleSelectionShare = async (copy: PoemCopy) => {
     if (isSharingRef.current) return;
