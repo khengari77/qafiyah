@@ -1,7 +1,7 @@
 'use client';
 
 import { Check, Link2, Share2, X } from 'lucide-react';
-import { useEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
 
 import { PoemSelectionShare } from '@/components/poem-selection-share';
 import { IconButton } from '@/components/ui/icon-button';
@@ -166,6 +166,7 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
   const [hasShareFailed, setHasShareFailed] = useState(false);
   const isSharingRef = useRef(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
 
   const url = selectedPoem?.url ?? `${SITE_URL}${path}`;
   const body = selectedPoem?.text ?? formatPoemShareBody(verses, poetName);
@@ -226,22 +227,25 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
             event.preventDefault();
           }
         }}
-        aria-label={
-          selectedPoem === null ? SHARE_BUTTON_TEXTS.label : POEM_SELECTION_SHARE_TEXTS.title
-        }
-        className="m-auto max-h-[calc(100dvh-2rem)] w-[min(26rem,calc(100vw-2rem))] overflow-y-auto rounded-md border border-border bg-surface-raised p-4 text-text backdrop:bg-black/20"
+        aria-labelledby={titleId}
+        className="m-auto w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border bg-surface-raised p-4 text-text shadow-xl backdrop:bg-black/50"
       >
-        <form method="dialog" className="mb-2 flex justify-end">
-          <IconButton type="submit" aria-label={SHARE_BUTTON_TEXTS.close}>
-            <X className={ICON} strokeWidth={ICON_STROKE} />
-          </IconButton>
-        </form>
+        <div className="flex items-center justify-between">
+          <h2 id={titleId} className="text-sm text-text-subtle">
+            {selectedPoem === null ? SHARE_BUTTON_TEXTS.label : POEM_SELECTION_SHARE_TEXTS.title}
+          </h2>
+          <form method="dialog">
+            <IconButton type="submit" aria-label={SHARE_BUTTON_TEXTS.close} className="-me-3">
+              <X className={ICON} strokeWidth={ICON_STROKE} />
+            </IconButton>
+          </form>
+        </div>
         {hasShareFailed && (
-          <p role="alert" className="mt-3 text-sm">
+          <p role="alert" className="mt-2 text-sm text-text-muted">
             {POEM_SELECTION_SHARE_TEXTS.shareFailed}
           </p>
         )}
-        <div className="mt-3 flex flex-wrap items-center justify-center gap-1">
+        <div className="mt-2 flex items-start justify-between">
           {SHARE_LINKS.map((link) => (
             <a
               key={link.network}
@@ -256,8 +260,6 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
               <ShareIcon iconPath={link.iconPath} />
             </a>
           ))}
-        </div>
-        <div className="mt-3 flex items-center justify-center gap-2">
           <CopyButton
             text={url}
             label={SHARE_BUTTON_TEXTS.copyLink}
