@@ -123,7 +123,7 @@ describe('PoemDisplay', () => {
     expect(html).toContain('aria-label="تضييق المسافة بين الأبيات"');
     expect(html).toContain('aria-label="توسيع المسافة بين الأبيات"');
     expect(html).toContain('aria-label="تبديل المظهر"');
-    expect(html).toMatch(/aria-pressed="false" aria-label="إخفاء التشكيل"[^>]*>التشكيل</);
+    expect(html).toMatch(/aria-pressed="false" aria-label="إخفاء التشكيل"[^>]*><svg/);
   });
 
   it('shows the verses with their tashkeel when the page loads', () => {

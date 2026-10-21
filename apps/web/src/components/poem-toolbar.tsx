@@ -1,6 +1,14 @@
 'use client';
 
-import { ListChevronsDownUp, ListChevronsUpDown, Minus, Plus, SunMoon, Type } from 'lucide-react';
+import {
+  Eraser,
+  ListChevronsDownUp,
+  ListChevronsUpDown,
+  Minus,
+  Plus,
+  SunMoon,
+  Type,
+} from 'lucide-react';
 
 import { IconButton } from '@/components/ui/icon-button';
 import { captureEvent } from '@/lib/analytics/capture-event';
@@ -109,11 +117,11 @@ export function PoemToolbar({
         aria-label={POEM_TOOLBAR_TEXTS.hideTashkeel}
         onClick={onToggleTashkeel}
         className={cn(
-          'min-h-11 rounded-md px-2.5 text-sm focus-ring hover:text-text',
+          'inline-flex min-h-11 min-w-11 items-center justify-center rounded-md focus-ring hover:text-text',
           showTashkeel ? cn('text-text-subtle', DIMMED) : 'bg-surface-sunken text-text-muted'
         )}
       >
-        {POEM_TOOLBAR_TEXTS.tashkeel}
+        <Eraser className={ICON} strokeWidth={ICON_STROKE} />
       </button>
       {children}
     </div>

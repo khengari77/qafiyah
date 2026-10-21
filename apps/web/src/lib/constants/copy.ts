@@ -50,7 +50,6 @@ export const POEM_TOOLBAR_TEXTS = {
   spacingIncrease: 'توسيع المسافة بين الأبيات',
   toggleTheme: 'تبديل المظهر',
   cycleFontFamily: 'تبديل الخط',
-  tashkeel: 'التشكيل',
   hideTashkeel: 'إخفاء التشكيل',
 } as const;
 
