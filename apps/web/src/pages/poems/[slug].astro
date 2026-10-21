@@ -6,7 +6,6 @@ import { PoemDisplay } from '@/components/poem-display';
 import Recensions from '@/components/recensions.astro';
 import RelatedPoems from '@/components/related-poems.astro';
 import Layout from '@/layouts/layout.astro';
-import { SITE_URL } from '@/lib/constants/config';
 import { buildPoemLayout } from '@/lib/seo/poem-page';
 import { CACHE_HTML } from '@/lib/server/cache';
 import { getPoem, movedPoemPath } from '@/lib/server/poems';
@@ -60,7 +59,6 @@ const layout = buildPoemLayout(detail, slug as PoemSlug);
       <div class="flex w-full max-w-5xl flex-col items-center gap-10">
         <PoemDisplay
           client:idle
-          canonicalUrl={`${SITE_URL}${layout.canonical}`}
           title={poem.title}
           poet={poem.poet}
           era={poem.era}

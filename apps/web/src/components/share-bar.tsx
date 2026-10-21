@@ -1,22 +1,19 @@
 'use client';
 
 import { Check, Copy, Share2, X } from 'lucide-react';
-import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
 
-import { PoemSelectionShare } from '@/components/poem-selection-share';
 import { IconButton } from '@/components/ui/icon-button';
 import { captureEvent } from '@/lib/analytics/capture-event';
 import { SITE_URL } from '@/lib/constants/config';
 import {
-  formatPoemShareBody,
-  POEM_SELECTION_SHARE_TEXTS,
+  formatPoemText,
   SHARE_BAR_TEXTS,
   SHARE_BUTTON_TEXTS,
+  SHARE_NETWORK_NAMES,
 } from '@/lib/constants/copy';
 import { shareIntent, type ShareNetwork } from '@/lib/urls';
 import { cn } from '@/lib/utils';
-
-import type { PoemCopy } from '@/components/poem-copy';
 
 type ShareBarProps = {
   readonly title: string;
@@ -27,33 +24,36 @@ type ShareBarProps = {
 type ShareLink = {
   readonly network: ShareNetwork;
   readonly label: string;
+  readonly name: string;
   readonly iconPath: string;
 };
 
 const SHARE_LINKS: readonly ShareLink[] = [
   {
-    network: 'x',
-    label: SHARE_BAR_TEXTS.x,
-    iconPath:
-      'M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z',
+    network: 'telegram',
+    label: SHARE_BAR_TEXTS.telegram,
+    name: SHARE_NETWORK_NAMES.telegram,
+    iconPath: 'M15 10l-4 4l6 6l4 -16l-18 7l4 2l2 6l3 -4',
   },
   {
     network: 'whatsapp',
     label: SHARE_BAR_TEXTS.whatsapp,
+    name: SHARE_NETWORK_NAMES.whatsapp,
     iconPath:
-      'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z',
+      'M3 21l1.65 -3.8a9 9 0 1 1 3.4 2.9l-5.05 .9 M9 10a.5 .5 0 0 0 1 0v-1a.5 .5 0 0 0 -1 0v1a5 5 0 0 0 5 5h1a.5 .5 0 0 0 0 -1h-1a.5 .5 0 0 0 0 1',
   },
   {
     network: 'facebook',
     label: SHARE_BAR_TEXTS.facebook,
-    iconPath:
-      'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z',
+    name: SHARE_NETWORK_NAMES.facebook,
+    iconPath: 'M7 10v4h3v7h4v-7h3l1 -4h-4v-2a1 1 0 0 1 1 -1h3v-4h-3a5 5 0 0 0 -5 5v2h-3',
   },
   {
-    network: 'telegram',
-    label: SHARE_BAR_TEXTS.telegram,
+    network: 'x',
+    label: SHARE_BAR_TEXTS.x,
+    name: SHARE_NETWORK_NAMES.x,
     iconPath:
-      'M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z',
+      'M4 4l11.733 16h4.267l-11.733 -16l-4.267 0 M4 20l6.768 -6.768m2.46 -2.46l6.772 -6.772',
   },
 ];
 
@@ -67,7 +67,11 @@ function ShareIcon({ iconPath }: { readonly iconPath: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
-      fill="currentColor"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={ICON_STROKE}
+      strokeLinecap="round"
+      strokeLinejoin="round"
       aria-hidden="true"
       focusable="false"
       className={ICON}
@@ -77,16 +81,18 @@ function ShareIcon({ iconPath }: { readonly iconPath: string }) {
   );
 }
 
-function CopyButton({
+export function CopyButton({
   text,
   label,
   copiedLabel,
   icon,
+  className,
 }: {
   readonly text: string;
   readonly label: string;
   readonly copiedLabel: string;
   readonly icon: ReactNode;
+  readonly className?: string | undefined;
 }) {
   const [status, setStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
   useEffect(() => {
@@ -111,6 +117,7 @@ function CopyButton({
           void handleCopy();
         }}
         aria-label={status === 'copied' ? copiedLabel : label}
+        className={className}
       >
         {status === 'copied' ? <Check className={ICON} strokeWidth={ICON_STROKE} /> : icon}
       </IconButton>
@@ -156,88 +163,42 @@ export function ShareBar({ title, path, className }: ShareBarProps) {
 type ShareButtonProps = {
   readonly poetName: string;
   readonly verses: readonly (readonly string[])[];
-  readonly poemRef: RefObject<HTMLElement | null>;
-  readonly canonicalUrl: string;
   readonly path: string;
 };
 
-export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: ShareButtonProps) {
-  const [selectedPoem, setSelectedPoem] = useState<PoemCopy | null>(null);
-  const [hasShareFailed, setHasShareFailed] = useState(false);
-  const isSharingRef = useRef(false);
+export function ShareButton({ poetName, verses, path }: ShareButtonProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-
-  const url = selectedPoem?.url ?? `${SITE_URL}${path}`;
-  const body = selectedPoem?.text ?? formatPoemShareBody(verses, poetName);
-  const shareText = selectedPoem?.text ?? `${body}\n${url}`;
-  const handleSelectionShare = async (copy: PoemCopy) => {
-    if (isSharingRef.current) return;
-    const { text } = copy;
-    setSelectedPoem(copy);
-    setHasShareFailed(false);
-    if (typeof navigator.share === 'function') {
-      isSharingRef.current = true;
-      try {
-        if (typeof navigator.canShare !== 'function' || navigator.canShare({ text })) {
-          await navigator.share({ text });
-          return;
-        }
-      } catch (error) {
-        if (error instanceof DOMException && error.name === 'AbortError') return;
-        setHasShareFailed(true);
-      } finally {
-        isSharingRef.current = false;
-      }
-    }
-    dialogRef.current?.showModal();
-  };
+  const url = `${SITE_URL}${path}`;
+  const body = formatPoemText(verses.slice(0, 1), poetName);
 
   return (
     <>
       <IconButton
-        onClick={() => {
-          setSelectedPoem(null);
-          setHasShareFailed(false);
-          dialogRef.current?.showModal();
-        }}
+        onClick={() => dialogRef.current?.showModal()}
         aria-haspopup="dialog"
         aria-label={SHARE_BUTTON_TEXTS.open}
-        className={DIMMED}
+        className={cn(DIMMED, 'min-w-9 sm:min-w-11')}
       >
         <Share2 className={ICON} strokeWidth={ICON_STROKE} />
       </IconButton>
-      <PoemSelectionShare
-        poemRef={poemRef}
-        poetName={poetName}
-        canonicalUrl={canonicalUrl}
-        dialogRef={dialogRef}
-        onShare={(copy) => {
-          void handleSelectionShare(copy);
-        }}
-      />
       {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions -- a click on the backdrop closes the dialog, because Safari lacks closedby, and Escape already closes it from the keyboard */}
       <dialog
         ref={dialogRef}
-        onPointerDown={(event) => {
-          if (
-            selectedPoem !== null &&
-            event.target instanceof Element &&
-            event.target.closest('button, a') !== null
-          ) {
-            event.preventDefault();
-          }
-        }}
         onClick={(event) => {
           if (event.target === event.currentTarget) event.currentTarget.close();
         }}
         aria-labelledby={titleId}
-        className="m-auto w-[min(20rem,calc(100vw-2rem))] rounded-md border border-border bg-surface-raised p-0 text-text shadow-xl backdrop:bg-black/50"
+        className="mx-0 mt-auto mb-0 w-full max-w-none rounded-t-3xl bg-surface-raised p-0 text-text shadow-xl backdrop:bg-black/50 motion-safe:transition-[translate,opacity] motion-safe:duration-200 motion-safe:ease-out sm:m-auto sm:w-80 sm:rounded-lg sm:border sm:border-border motion-safe:starting:open:translate-y-full sm:motion-safe:starting:open:translate-y-4 sm:motion-safe:starting:open:opacity-0"
       >
-        <div className="p-4">
-          <div className="flex items-center justify-between">
-            <h2 id={titleId} className="text-sm text-text-subtle">
-              {selectedPoem === null ? SHARE_BUTTON_TEXTS.label : POEM_SELECTION_SHARE_TEXTS.title}
+        <div className="pt-2 pb-[env(safe-area-inset-bottom)] sm:pt-0">
+          <div
+            aria-hidden="true"
+            className="mx-auto h-1.5 w-9 rounded-full bg-text-subtle/30 sm:hidden"
+          />
+          <div className="flex items-center justify-between px-5 py-1 sm:py-2">
+            <h2 id={titleId} className="text-text">
+              {SHARE_BUTTON_TEXTS.label}
             </h2>
             <form method="dialog">
               <IconButton type="submit" aria-label={SHARE_BUTTON_TEXTS.close} className="-me-3">
@@ -245,33 +206,23 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
               </IconButton>
             </form>
           </div>
-          {hasShareFailed && (
-            <p role="alert" className="mt-2 text-sm text-text-muted">
-              {POEM_SELECTION_SHARE_TEXTS.shareFailed}
-            </p>
-          )}
-          <div className="mt-2 flex items-start justify-between">
+          <ul className="flex flex-col px-3 py-2">
             {SHARE_LINKS.map((link) => (
-              <a
-                key={link.network}
-                href={shareIntent(link.network, { body, url, text: shareText })}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={link.label}
-                title={link.label}
-                className={LINK_CLASS}
-                onClick={() => captureEvent('shared', { network: link.network })}
-              >
-                <ShareIcon iconPath={link.iconPath} />
-              </a>
+              <li key={link.network}>
+                <a
+                  href={shareIntent(link.network, { body, url })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={link.label}
+                  className="flex min-h-12 items-center gap-3 rounded-md px-2 text-text-muted transition-colors hover:bg-surface-sunken hover:text-text focus-visible:ring-1 focus-visible:ring-text"
+                  onClick={() => captureEvent('shared', { network: link.network })}
+                >
+                  <ShareIcon iconPath={link.iconPath} />
+                  <span>{link.name}</span>
+                </a>
+              </li>
             ))}
-            <CopyButton
-              text={shareText}
-              label={SHARE_BUTTON_TEXTS.copy}
-              copiedLabel={SHARE_BUTTON_TEXTS.copied}
-              icon={<Copy className={ICON} strokeWidth={ICON_STROKE} />}
-            />
-          </div>
+          </ul>
         </div>
       </dialog>
     </>

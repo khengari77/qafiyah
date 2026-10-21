@@ -6,7 +6,6 @@ import { PoemDisplay } from './poem-display';
 type Props = Parameters<typeof PoemDisplay>[0];
 
 const facets = {
-  canonicalUrl: 'https://qafiyah.com/poems/TnKK',
   title: 'عنوان',
   poet: { name: 'شاعر', slug: 'Abcd', hasAvatar: false },
   era: { name: 'العباسي', slug: 'abbasi' },
@@ -124,6 +123,30 @@ describe('PoemDisplay', () => {
     expect(html).toContain('aria-label="توسيع المسافة بين الأبيات"');
     expect(html).toContain('aria-label="تبديل المظهر"');
     expect(html).toMatch(/aria-pressed="false" aria-label="إخفاء التشكيل"[^>]*><svg/);
+  });
+
+  it('offers only the four networks in the share dialog', () => {
+    const { html } = render([['صدر', 'عجز']]);
+    const dialog = /<dialog[\s\S]*<\/dialog>/.exec(html)?.[0] ?? '';
+    expect([...dialog.matchAll(/<a [^>]*aria-label="([^"]+)"/g)].map((match) => match[1])).toEqual([
+      'مشاركة على تلقرام',
+      'مشاركة على واتس',
+      'مشاركة على فيسبوك',
+      'مشاركة على تويتر',
+    ]);
+    expect(dialog).not.toContain('aria-label="نسخ"');
+  });
+
+  it('lists each network as a row with its name in the share dialog', () => {
+    const { html } = render([['صدر', 'عجز']]);
+    const dialog = /<dialog[\s\S]*<\/dialog>/.exec(html)?.[0] ?? '';
+    const rows = [...dialog.matchAll(/<li><a [^>]*>[\s\S]*?<span>([^<]+)<\/span><\/a><\/li>/g)];
+    expect(rows.map((row) => row[1])).toEqual(['تلقرام', 'واتس', 'فيسبوك', 'تويتر']);
+  });
+
+  it('offers a button that copies the whole poem', () => {
+    const { html } = render([['صدر', 'عجز']]);
+    expect(html).toContain('aria-label="نسخ القصيدة"');
   });
 
   it('shows the verses with their tashkeel when the page loads', () => {

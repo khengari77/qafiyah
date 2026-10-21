@@ -13,6 +13,7 @@ function render(overrides: Partial<Props>) {
     spacingScale: POEM_SCALE.spacing.initial,
     spacingMin: POEM_SCALE.spacing.min,
     showTashkeel: true,
+    copyText: '',
     onFontScaleChange: () => {},
     onSpacingScaleChange: () => {},
     onToggleTashkeel: () => {},

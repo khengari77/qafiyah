@@ -6,7 +6,6 @@ import {
   feelingUrl,
   githubUrl,
   poemUrl,
-  poemHighlightUrl,
   poetAvatarUrl,
   poetsUrl,
   isCanonical,
@@ -178,38 +177,6 @@ describe('shareIntent', () => {
     const intent = new URL(shareIntent(network, payload));
     expect(`${intent.origin}${intent.pathname}`).toBe(endpoint);
     expect(Object.fromEntries(intent.searchParams)).toEqual(parameters);
-  });
-});
-
-describe('sharing selected verses', () => {
-  it.each(['x', 'whatsapp'] as const)(
-    'preserves the signature without appending another URL on %s',
-    (network) => {
-      const text = 'صدر البيت\nعجز البيت\n\nالمتنبي | قافية: https://qafiyah.com/poems/TnKK';
-      const intent = new URL(
-        shareIntent(network, {
-          body: text,
-          url: 'https://qafiyah.com/poems/TnKK',
-          text,
-        })
-      );
-      expect(intent.searchParams.get('text')).toBe(text);
-    }
-  );
-});
-
-describe('poemHighlightUrl', () => {
-  it('shares the same highlight format for relative and canonical poem URLs', () => {
-    const highlights = ['يا ليت', 'هذا, النص'];
-    expect(poemHighlightUrl('https://qafiyah.com/poems/TnKK', highlights)).toBe(
-      `https://qafiyah.com${poemUrl('TnKK', highlights)}`
-    );
-  });
-
-  it('removes stale fragments and skips blank highlights', () => {
-    expect(poemHighlightUrl('https://qafiyah.com/poems/TnKK#h=old', [' '])).toBe(
-      'https://qafiyah.com/poems/TnKK'
-    );
   });
 });
 

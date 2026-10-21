@@ -1,5 +1,4 @@
 import { toArabicDigits } from '@/lib/arabic';
-import { SITE_NAME_AR } from '@/lib/constants/site-meta';
 
 export const ERROR_TEXTS = {
   unexpected: 'عذرًا، وقع خلل غير متوقّع.',
@@ -51,25 +50,32 @@ export const POEM_TOOLBAR_TEXTS = {
   toggleTheme: 'تبديل المظهر',
   cycleFontFamily: 'تبديل الخط',
   hideTashkeel: 'إخفاء التشكيل',
+  copyPoem: 'نسخ القصيدة',
+  poemCopied: 'تم نسخ القصيدة',
 } as const;
 
 export const SHARE_BAR_TEXTS = {
   label: 'مشاركة',
-  x: 'مشاركة على إكس',
+  x: 'مشاركة على تويتر',
   facebook: 'مشاركة على فيسبوك',
-  whatsapp: 'مشاركة على واتساب',
-  telegram: 'مشاركة على تيليجرام',
+  whatsapp: 'مشاركة على واتس',
+  telegram: 'مشاركة على تلقرام',
   copy: 'نسخ',
   copied: 'تم النسخ',
   copyFailed: 'تعذر النسخ. حاول مرة أخرى أو انسخ النص يدويًا.',
+} as const;
+
+export const SHARE_NETWORK_NAMES = {
+  x: 'تويتر',
+  whatsapp: 'واتس',
+  facebook: 'فيسبوك',
+  telegram: 'تلقرام',
 } as const;
 
 export const SHARE_BUTTON_TEXTS = {
   label: 'مشاركة القصيدة',
   open: 'فتح نافذة المشاركة',
   close: 'إغلاق نافذة المشاركة',
-  copy: 'نسخ',
-  copied: 'تم النسخ',
 } as const;
 
 export const NOT_FOUND_MESSAGE_AR = 'الصفحة غير موجودة';
@@ -81,20 +87,10 @@ export const NOT_FOUND_TITLE = `${NOT_FOUND_CODE} | ${NOT_FOUND_MESSAGE_AR}`;
 export const SERVER_ERROR_CODE = toArabicDigits(500);
 export const SERVER_ERROR_TITLE = `${SERVER_ERROR_CODE} | ${SERVER_ERROR_MESSAGE_AR}`;
 
-export function formatPoemCopySignature(poetName: string, canonicalUrl: string): string {
-  return `${poetName} | ${SITE_NAME_AR}: ${canonicalUrl}`;
+export function formatPoemQuote(text: string, url: string): string {
+  return `${text.trim().replaceAll(/\s*\n\s*/gu, '\n')}\n\n${url}`;
 }
 
-export function formatPoemShareBody(
-  verses: readonly (readonly string[])[],
-  poetName: string
-): string {
-  const firstVerse = verses[0];
-  return firstVerse === undefined ? poetName : `${firstVerse.join('\n')}\n\n${poetName}`;
+export function formatPoemText(verses: readonly (readonly string[])[], poetName: string): string {
+  return verses.length === 0 ? poetName : `${verses.flat().join('\n')}\n\n${poetName}`;
 }
-
-export const POEM_SELECTION_SHARE_TEXTS = {
-  share: 'مشاركة المحدد',
-  title: 'مشاركة الأبيات المحددة',
-  shareFailed: 'تعذرت المشاركة. اختر وسيلة أخرى أو انسخ الأبيات.',
-} as const;

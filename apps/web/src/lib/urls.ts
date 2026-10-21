@@ -41,13 +41,12 @@ export type ShareNetwork = (typeof SHARE_NETWORK_VALUES)[number];
 
 export type SharePayload = {
   readonly body: string;
-  readonly text?: string;
   readonly url: string;
 };
 
 export function shareIntent(network: ShareNetwork, payload: SharePayload): string {
   const { body, url } = payload;
-  const text = payload.text ?? `${body}\n${url}`;
+  const text = `${body}\n${url}`;
   switch (network) {
     case 'x':
       return `${X_INTENT_TWEET_URL}?text=${encodeURIComponent(text)}`;
@@ -129,12 +128,8 @@ export function poetAvatarUrl(slug: string): string {
 }
 
 export function poemUrl(slug: string, highlights?: readonly string[]): string {
-  return poemHighlightUrl(`/poems/${slug}`, highlights ?? []);
-}
-
-export function poemHighlightUrl(url: string, highlights: readonly string[]): string {
-  const base = url.split('#')[0] ?? url;
-  const terms = highlights.map((term) => term.trim()).filter(Boolean);
+  const base = `/poems/${slug}`;
+  const terms = highlights?.map((term) => term.trim()).filter(Boolean) ?? [];
   if (terms.length === 0) return base;
   return `${base}#h=${terms.map((term) => encodeURIComponent(term)).join(',')}`;
 }
