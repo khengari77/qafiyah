@@ -4,10 +4,10 @@ import { Fragment, type CSSProperties, type ReactNode, useEffect, useMemo, useSt
 
 import { getPoemSelectionText } from '@/components/poem-copy';
 import { PoemToolbar } from '@/components/poem-toolbar';
-import { ShareButton } from '@/components/share-bar';
+import { ShareButton } from '@/components/share-button';
 import { formatArabicCount, stripTashkeel } from '@/lib/arabic';
 import { SITE_URL } from '@/lib/constants/config';
-import { formatPoemQuote, formatPoemText } from '@/lib/constants/copy';
+import { formatPoemQuote, formatPoemText, SHARE_TEXTS } from '@/lib/constants/copy';
 import {
   CLASSICAL_LAYOUT_POEM_TYPES,
   FREE_VERSE_POEM_TYPE,
@@ -105,6 +105,10 @@ export function PoemDisplay({
   const [fontScale, setFontScale] = useState<number>(POEM_SCALE.font.initial);
   const [spacingScale, setSpacingScale] = useState<number>(POEM_SCALE.spacing.initial);
   const [showTashkeel, setShowTashkeel] = useState(true);
+  const shownVerses = useMemo(
+    () => (showTashkeel ? verses : verses.map((entry) => entry.map((part) => stripTashkeel(part)))),
+    [verses, showTashkeel]
+  );
   const highlightTerms = useHighlightTerms();
   const highlightRegex = useMemo(
     () =>
@@ -148,12 +152,16 @@ export function PoemDisplay({
           spacingScale={spacingScale}
           spacingMin={lineByLine ? POEM_SCALE.spacing.halvesMin : POEM_SCALE.spacing.min}
           showTashkeel={showTashkeel}
-          copyText={`${formatPoemText(verses, poet.name)}\n${SITE_URL}${sharePath}`}
+          copyText={`${formatPoemText(shownVerses, poet.name)}\n${SITE_URL}${sharePath}`}
           onFontScaleChange={setFontScale}
           onSpacingScaleChange={setSpacingScale}
           onToggleTashkeel={() => setShowTashkeel((shown) => !shown)}
         >
-          <ShareButton poetName={poet.name} verses={verses} path={sharePath} />
+          <ShareButton
+            title={SHARE_TEXTS.poemTitle}
+            body={formatPoemText(shownVerses.slice(0, 1), poet.name)}
+            path={sharePath}
+          />
         </PoemToolbar>
       </header>
 

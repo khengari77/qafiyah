@@ -52,17 +52,18 @@ export const POEM_TOOLBAR_TEXTS = {
   hideTashkeel: 'إخفاء التشكيل',
   copyPoem: 'نسخ القصيدة',
   poemCopied: 'تم نسخ القصيدة',
+  copyFailed: 'تعذر النسخ. حاول مرة أخرى أو انسخ النص يدويًا.',
 } as const;
 
-export const SHARE_BAR_TEXTS = {
-  label: 'مشاركة',
+export const SHARE_TEXTS = {
+  open: 'فتح نافذة المشاركة',
+  close: 'إغلاق نافذة المشاركة',
+  poemTitle: 'مشاركة القصيدة',
+  poetTitle: 'مشاركة صفحة الشاعر',
   x: 'مشاركة على تويتر',
   facebook: 'مشاركة على فيسبوك',
   whatsapp: 'مشاركة على واتس',
   telegram: 'مشاركة على تلقرام',
-  copy: 'نسخ',
-  copied: 'تم النسخ',
-  copyFailed: 'تعذر النسخ. حاول مرة أخرى أو انسخ النص يدويًا.',
 } as const;
 
 export const SHARE_NETWORK_NAMES = {
@@ -70,12 +71,6 @@ export const SHARE_NETWORK_NAMES = {
   whatsapp: 'واتس',
   facebook: 'فيسبوك',
   telegram: 'تلقرام',
-} as const;
-
-export const SHARE_BUTTON_TEXTS = {
-  label: 'مشاركة القصيدة',
-  open: 'فتح نافذة المشاركة',
-  close: 'إغلاق نافذة المشاركة',
 } as const;
 
 export const NOT_FOUND_MESSAGE_AR = 'الصفحة غير موجودة';

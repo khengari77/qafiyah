@@ -215,7 +215,7 @@ These departures are not approved yet. A full scan found them on 2026-09-24. The
 
 ### The whole poem hydrates as a React island for the reading toolbar and a private `#h=` fragment
 
-- **What:** `PoemDisplay` renders the title, byline, and every verse as a `client:idle` island. The client-side needs are the reading toolbar (font size, spacing, and tashkeel, which reset on every load, and the theme toggle) and highlighting from a homemade `#h=term1,term2` fragment.
+- **What:** `PoemDisplay` renders the title, byline, and every verse as a `client:idle` island. The client-side needs are the reading toolbar (font size, spacing, and tashkeel, which reset on every load, the theme toggle, the copy poem button, and the share sheet), the link on copied selections, and highlighting from a homemade `#h=term1,term2` fragment.
 - **Where:** `apps/web/src/pages/poems/[slug].astro`, `apps/web/src/components/poem-display.tsx`, `apps/web/src/components/poem-toolbar.tsx`, `apps/web/src/lib/urls.ts`, `apps/web/src/lib/highlight.ts`
 - **Why it's unusual:** the verses ship twice, as HTML and as serialized props. The scale is applied twice: an inline `fontSize` on every hemistich, and a `--poem-scale` variable.
 - **Normal approach:** render the poem statically in Astro, and keep a small island for the toolbar. Highlight with Text Fragments (`#:~:text=`), or with a small script that uses the CSS Custom Highlight API.
@@ -633,9 +633,9 @@ Paths are relative to `apps/web/src/` unless they start at the repo root.
 
 ### Copied poem selections end with the poem's link
 
-- **What:** copying any text inside the poem copies the selected text as is, then a blank line and the poem's link.
+- **What:** copying any text inside the poem copies the selected lines, one on each line, then a blank line and the poem's link. The copy poem button in the toolbar is separate. It copies the whole poem, the poet, and the link.
 - **Where:** `components/poem-display.tsx`, `components/poem-copy.ts`, `lib/constants/copy.ts`
-- **Why:** issue #304 requests attribution so copied verses keep a link to their source. The link is the plain poem URL, with no highlight fragment and no other text.
+- **Why:** issue #304 requests attribution so copied verses keep a link to their source. Most readers select and copy a few lines, and do not use the button. The link is the plain poem URL, with no highlight fragment and no other text.
 - **Normal approach:** copy the selected text without additions, and offer a separate control to copy an attributed quotation.
 - **Date:** 2026-10-15
 

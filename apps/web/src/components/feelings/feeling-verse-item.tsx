@@ -1,7 +1,7 @@
 import { Check, Copy } from 'lucide-react';
 
 import { SITE_URL } from '@/lib/constants/config';
-import { FEELING_TEXTS } from '@/lib/constants/copy';
+import { FEELING_TEXTS, formatPoemText } from '@/lib/constants/copy';
 import { TYPE } from '@/lib/constants/design-tokens';
 import { jumpTerm } from '@/lib/feelings/jump-term';
 import { poemUrl } from '@/lib/urls';
@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils';
 import type { FeelingVerseRow } from '@/lib/server/feelings';
 
 export function verseCopyText(verse: Pick<FeelingVerseRow, 'parts' | 'poet' | 'poem'>): string {
-  return [...verse.parts, '', verse.poet.name, `${SITE_URL}${poemUrl(verse.poem.slug)}`].join('\n');
+  return `${formatPoemText([verse.parts], verse.poet.name)}\n${SITE_URL}${poemUrl(verse.poem.slug)}`;
 }
 
 export function FeelingVerseItem({ verse }: { readonly verse: FeelingVerseRow }) {
