@@ -60,8 +60,8 @@ export const SHARE_BAR_TEXTS = {
   facebook: 'مشاركة على فيسبوك',
   whatsapp: 'مشاركة على واتساب',
   telegram: 'مشاركة على تيليجرام',
-  copyLink: 'نسخ الرابط',
-  copied: 'تم نسخ الرابط',
+  copy: 'نسخ',
+  copied: 'تم النسخ',
   copyFailed: 'تعذر النسخ. حاول مرة أخرى أو انسخ النص يدويًا.',
 } as const;
 
@@ -69,8 +69,8 @@ export const SHARE_BUTTON_TEXTS = {
   label: 'مشاركة القصيدة',
   open: 'فتح نافذة المشاركة',
   close: 'إغلاق نافذة المشاركة',
-  copyLink: 'نسخ الرابط',
-  copiedLink: 'تم نسخ الرابط',
+  copy: 'نسخ',
+  copied: 'تم النسخ',
 } as const;
 
 export const NOT_FOUND_MESSAGE_AR = 'الصفحة غير موجودة';

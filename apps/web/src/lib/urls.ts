@@ -47,7 +47,7 @@ export type SharePayload = {
 
 export function shareIntent(network: ShareNetwork, payload: SharePayload): string {
   const { body, url } = payload;
-  const text = payload.text ?? `${body}\n\n${url}`;
+  const text = payload.text ?? `${body}\n${url}`;
   switch (network) {
     case 'x':
       return `${X_INTENT_TWEET_URL}?text=${encodeURIComponent(text)}`;

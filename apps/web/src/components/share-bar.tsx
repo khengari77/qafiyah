@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Link2, Share2, X } from 'lucide-react';
+import { Check, Copy, Share2, X } from 'lucide-react';
 import { useEffect, useId, useRef, useState, type ReactNode, type RefObject } from 'react';
 
 import { PoemSelectionShare } from '@/components/poem-selection-share';
@@ -144,10 +144,10 @@ export function ShareBar({ title, path, className }: ShareBarProps) {
         </a>
       ))}
       <CopyButton
-        text={url}
-        label={SHARE_BAR_TEXTS.copyLink}
+        text={`${title}\n${url}`}
+        label={SHARE_BAR_TEXTS.copy}
         copiedLabel={SHARE_BAR_TEXTS.copied}
-        icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}
+        icon={<Copy className={ICON} strokeWidth={ICON_STROKE} />}
       />
     </div>
   );
@@ -170,7 +170,7 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
 
   const url = selectedPoem?.url ?? `${SITE_URL}${path}`;
   const body = selectedPoem?.text ?? formatPoemShareBody(verses, poetName);
-  const shareText = selectedPoem?.text ?? `${body}\n\n${url}`;
+  const shareText = selectedPoem?.text ?? `${body}\n${url}`;
   const handleSelectionShare = async (copy: PoemCopy) => {
     if (isSharingRef.current) return;
     const { text } = copy;
@@ -266,10 +266,10 @@ export function ShareButton({ poetName, verses, path, poemRef, canonicalUrl }: S
               </a>
             ))}
             <CopyButton
-              text={url}
-              label={SHARE_BUTTON_TEXTS.copyLink}
-              copiedLabel={SHARE_BUTTON_TEXTS.copiedLink}
-              icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}
+              text={shareText}
+              label={SHARE_BUTTON_TEXTS.copy}
+              copiedLabel={SHARE_BUTTON_TEXTS.copied}
+              icon={<Copy className={ICON} strokeWidth={ICON_STROKE} />}
             />
           </div>
         </div>

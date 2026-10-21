@@ -170,8 +170,8 @@ describe('shareIntent', () => {
   };
 
   it.each([
-    ['x', 'https://x.com/intent/tweet', { text: `${payload.body}\n\n${payload.url}` }],
-    ['whatsapp', 'https://wa.me/', { text: `${payload.body}\n\n${payload.url}` }],
+    ['x', 'https://x.com/intent/tweet', { text: `${payload.body}\n${payload.url}` }],
+    ['whatsapp', 'https://wa.me/', { text: `${payload.body}\n${payload.url}` }],
     ['telegram', 'https://t.me/share/url', { url: payload.url, text: payload.body }],
     ['facebook', 'https://www.facebook.com/sharer/sharer.php', { u: payload.url }],
   ] as const)('encodes the supported content for %s', (network, endpoint, parameters) => {
