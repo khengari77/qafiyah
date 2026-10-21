@@ -17,7 +17,6 @@ type PoemSelectionShareProps = {
   readonly canonicalUrl: string;
   readonly dialogRef: RefObject<HTMLDialogElement | null>;
   readonly onShare: (copy: PoemCopy) => void;
-  readonly onSelectionClear: () => void;
 };
 
 export function PoemSelectionShare({
@@ -26,12 +25,12 @@ export function PoemSelectionShare({
   canonicalUrl,
   dialogRef,
   onShare,
-  onSelectionClear,
 }: PoemSelectionShareProps) {
   const [selection, setSelection] = useState<SelectedPoem | null>(null);
 
   useEffect(() => {
     const updateSelection = () => {
+      if (dialogRef.current?.open === true) return;
       const container = poemRef.current;
       const currentSelection = document.getSelection();
       if (container === null || currentSelection === null) {
@@ -41,10 +40,8 @@ export function PoemSelectionShare({
       const copy = getPoemCopy(currentSelection, container, poetName, canonicalUrl);
       if (copy === null) {
         setSelection(null);
-        onSelectionClear();
         return;
       }
-      if (dialogRef.current?.open === true) return;
       const range = currentSelection.getRangeAt(0);
       const bounds = range.getBoundingClientRect();
       let lastLine = bounds;
@@ -89,7 +86,7 @@ export function PoemSelectionShare({
       document.removeEventListener('scroll', updateSelection, true);
       window.removeEventListener('resize', updateSelection);
     };
-  }, [poemRef, poetName, canonicalUrl, dialogRef, onSelectionClear]);
+  }, [poemRef, poetName, canonicalUrl, dialogRef]);
 
   const positionStyle: CSSProperties & Record<'--selection-top' | '--selection-left', string> = {
     '--selection-top': `${selection?.top ?? 0}px`,

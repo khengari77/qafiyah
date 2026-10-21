@@ -234,9 +234,6 @@ export function ShareButton({
         poetName={poetName}
         canonicalUrl={canonicalUrl}
         dialogRef={dialogRef}
-        onSelectionClear={() => {
-          if (selectedPoem !== null) dialogRef.current?.close();
-        }}
         onShare={(copy) => {
           void handleSelectionShare(copy);
         }}
