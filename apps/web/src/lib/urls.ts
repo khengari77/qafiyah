@@ -37,7 +37,7 @@ export function raaqimUrl(): string {
   return `${API_URL}${API_V1_PREFIX}/go/raaqim`;
 }
 
-export const SHARE_NETWORK_VALUES = [
+const SHARE_NETWORK_VALUES = [
   'x',
   'facebook',
   'whatsapp',
@@ -47,10 +47,6 @@ export const SHARE_NETWORK_VALUES = [
 ] as const;
 
 export type ShareNetwork = (typeof SHARE_NETWORK_VALUES)[number];
-
-export function shareUrl(network: ShareNetwork, path: string): string {
-  return `${API_URL}${API_V1_PREFIX}/go/${network}-share?path=${encodeURIComponent(path)}`;
-}
 
 export type SharePayload = {
   readonly body: string;

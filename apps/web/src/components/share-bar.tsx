@@ -13,12 +13,13 @@ import {
   SHARE_BAR_TEXTS,
   SHARE_BUTTON_TEXTS,
 } from '@/lib/constants/copy';
-import { shareIntent, shareUrl, type ShareNetwork } from '@/lib/urls';
+import { shareIntent, type ShareNetwork } from '@/lib/urls';
 import { cn } from '@/lib/utils';
 
 import type { PoemCopy } from '@/components/poem-copy';
 
 type ShareBarProps = {
+  readonly title: string;
   readonly path: string;
   readonly className?: string;
 };
@@ -133,7 +134,8 @@ function CopyButton({
   );
 }
 
-export function ShareBar({ path, className }: ShareBarProps) {
+export function ShareBar({ title, path, className }: ShareBarProps) {
+  const url = `${SITE_URL}${path}`;
   return (
     <div
       role="group"
@@ -143,18 +145,19 @@ export function ShareBar({ path, className }: ShareBarProps) {
       {SHARE_LINKS.map((link) => (
         <a
           key={link.network}
-          href={shareUrl(link.network, path)}
+          href={shareIntent(link.network, { body: title, title, url })}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={link.label}
           title={link.label}
           className={LINK_CLASS}
+          onClick={() => captureEvent('shared', { network: link.network })}
         >
           <ShareIcon iconPath={link.iconPath} />
         </a>
       ))}
       <CopyButton
-        text={`${SITE_URL}${path}`}
+        text={url}
         label={SHARE_BAR_TEXTS.copyLink}
         copiedLabel={SHARE_BAR_TEXTS.copied}
         icon={<Link2 className={ICON} strokeWidth={ICON_STROKE} />}

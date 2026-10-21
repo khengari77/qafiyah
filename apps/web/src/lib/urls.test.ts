@@ -12,9 +12,7 @@ import {
   isCanonical,
   poetUrl,
   retryUrl,
-  shareUrl,
   shareIntent,
-  SHARE_NETWORK_VALUES,
   taxonomyIndexUrl,
   taxonomyUrl,
   xProfileUrl,
@@ -162,30 +160,6 @@ describe('go builders', () => {
 describe('poetAvatarUrl', () => {
   it('builds the CDN avatar url from the slug', () => {
     expect(poetAvatarUrl('CCMr')).toBe('https://cdn.qafiyah.com/poets/CCMr/avatar.webp');
-  });
-});
-
-describe('shareUrl', () => {
-  const expectedPaths = {
-    x: '/v1/go/x-share',
-    facebook: '/v1/go/facebook-share',
-    whatsapp: '/v1/go/whatsapp-share',
-    telegram: '/v1/go/telegram-share',
-    reddit: '/v1/go/reddit-share',
-    linkedin: '/v1/go/linkedin-share',
-  } as const;
-
-  it('points every network at its share redirect with the encoded path', () => {
-    for (const network of SHARE_NETWORK_VALUES) {
-      const url = new URL(shareUrl(network, '/poems/TnKK'));
-      expect(url.pathname).toBe(expectedPaths[network]);
-      expect(url.searchParams.get('path')).toBe('/poems/TnKK');
-    }
-  });
-
-  it('carries a page query in the shared path through untouched', () => {
-    const url = new URL(shareUrl('x', '/poets/mutanabbi?page=2'));
-    expect(url.searchParams.get('path')).toBe('/poets/mutanabbi?page=2');
   });
 });
 
