@@ -1,8 +1,18 @@
 'use client';
 
-import { Fragment, type CSSProperties, type ReactNode, useEffect, useMemo, useState } from 'react';
+import {
+  Fragment,
+  type CSSProperties,
+  type ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
+import { getPoemCopy } from '@/components/poem-copy';
 import { PoemToolbar } from '@/components/poem-toolbar';
+import { ShareButton } from '@/components/share-bar';
 import { formatArabicCount, stripTashkeel } from '@/lib/arabic';
 import {
   CLASSICAL_LAYOUT_POEM_TYPES,
@@ -15,6 +25,7 @@ import { poetsUrl, poetUrl } from '@/lib/urls';
 import { cn } from '@/lib/utils';
 
 import type { Poem } from '@/lib/api/result-types';
+import type { ClipboardEvent } from 'react';
 
 const VERSE_GAP = 'gap-[calc(2.5rem*var(--poem-spacing))] sm:gap-[calc(3rem*var(--poem-spacing))]';
 const HEMISTICH_GAP =
@@ -64,6 +75,7 @@ function highlightVerse(text: string, regex: RegExp): ReactNode {
 }
 
 type PoemDisplayProps = {
+  readonly canonicalUrl: string;
   readonly title: string;
   readonly poet: Poem['poet'];
   readonly era: Poem['era'];
@@ -72,9 +84,11 @@ type PoemDisplayProps = {
   readonly verses: Poem['verses'];
   readonly verseCount: Poem['verseCount'];
   readonly poemType: Poem['poemType'];
+  readonly sharePath: string;
 };
 
 export function PoemDisplay({
+  canonicalUrl,
   title,
   poet,
   era,
@@ -83,7 +97,22 @@ export function PoemDisplay({
   verses,
   verseCount,
   poemType,
+  sharePath,
 }: PoemDisplayProps) {
+  const poemRef = useRef<HTMLElement>(null);
+  const handleCopy = (event: ClipboardEvent<HTMLElement>) => {
+    if (event.defaultPrevented) return;
+    const container = event.currentTarget;
+    const copy = getPoemCopy(
+      container.ownerDocument.getSelection(),
+      container,
+      poet.name,
+      canonicalUrl
+    );
+    if (copy === null) return;
+    event.clipboardData.setData('text/plain', copy.text);
+    event.preventDefault();
+  };
   const isClassical = CLASSICAL_LAYOUT_POEM_TYPES.has(poemType.slug);
   const lineByLine =
     poemType.slug === FREE_VERSE_POEM_TYPE || verses.every((entry) => entry.length === 1);
@@ -136,11 +165,25 @@ export function PoemDisplay({
           onFontScaleChange={setFontScale}
           onSpacingScaleChange={setSpacingScale}
           onToggleTashkeel={() => setShowTashkeel((shown) => !shown)}
-        />
+        >
+          <ShareButton
+            title={title}
+            poetName={poet.name}
+            eraName={era.name}
+            verses={verses}
+            path={sharePath}
+            poemRef={poemRef}
+            canonicalUrl={canonicalUrl}
+          />
+        </PoemToolbar>
       </header>
 
       <div className="relative flex w-full flex-col items-center justify-between">
-        <article className="flex w-full flex-col items-center p-6 md:p-8">
+        <article
+          ref={poemRef}
+          className="flex w-full flex-col items-center p-6 md:p-8"
+          onCopy={handleCopy}
+        >
           <div
             className={cn(
               'flex w-full flex-col text-verse font-normal',
@@ -162,6 +205,7 @@ export function PoemDisplay({
                     HEMISTICH_GAP,
                     isClassical && 'items-stretch'
                   )}
+                  data-verse=""
                 >
                   {entry.map((part, partIndex) => {
                     const text = showTashkeel ? part : stripTashkeel(part);
@@ -170,6 +214,7 @@ export function PoemDisplay({
                         // oxlint-disable-next-line react/no-array-index-key -- parts keep their order within the stored row and can repeat
                         key={`${partIndex}|${part}`}
                         style={{ fontSize: `${fontScale}em` }}
+                        data-copy-text={showTashkeel ? undefined : part}
                         lang="ar"
                         dir="rtl"
                         className={cn(
